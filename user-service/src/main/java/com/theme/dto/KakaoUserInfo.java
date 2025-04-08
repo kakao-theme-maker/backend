@@ -24,6 +24,7 @@ public class KakaoUserInfo {
                 .userEmail(email)
                 .profileImg(profileImage)
                 .gender(Gender.valueOf(gender))
+                .birth(birth)
                 .build();
     }
 
