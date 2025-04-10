@@ -11,7 +11,5 @@ public class CreateDesignComponentRequest {
 
     private String imageUrl;
 
-    private String rgba;
-
     private Boolean isPublic;
 }

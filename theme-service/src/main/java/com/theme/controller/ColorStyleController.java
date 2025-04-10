@@ -5,11 +5,16 @@ import com.theme.repository.ColorStyleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController // REST API 컨트롤러
-@RequestMapping("/api/color-styles") // 엔드포인트 경로 지시
+@RequestMapping("/api/color-styles")
+@Tag(name = "Design Components", description = "API for managing design components")
+// 엔드포인트 경로 지시
 public class ColorStyleController {
 
     private final ColorStyleRepository colorStyleRepository;
@@ -21,6 +26,7 @@ public class ColorStyleController {
 
     // ColorStyle 생성 API | POST /api/color-styles
     @PostMapping // HTTP POST 요청 처리
+    @Operation(summary = "Get Design Component by ID", description = "Retrieve a single design component by its ID")
     public ResponseEntity<ColorStyle> createColorStyle(@RequestBody ColorStyle colorStyle) { //JSON -> ColorStyle 객체 변환
         ColorStyle savedColorStyle = colorStyleRepository.save(colorStyle);
         return ResponseEntity.ok(savedColorStyle);
@@ -61,7 +67,6 @@ public class ColorStyleController {
                             // 만약 json에 id 값을 추가하면, 바꿀 수 있도록 해야하나? id는 항상 같아야 한다고 생각...
                             existingColorStyle.setExplain(colorStyle.getExplain());
                             existingColorStyle.setIosStyleName(colorStyle.getIosStyleName());
-                            existingColorStyle.setIosStyleProps(colorStyle.getIosStyleProps());
                             existingColorStyle.setAndroidStyleName(colorStyle.getAndroidStyleName());
                             // 업데이트된 엔티티 저장
                             ColorStyle updatedColorStyle = colorStyleRepository.save(existingColorStyle);

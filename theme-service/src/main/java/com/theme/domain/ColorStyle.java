@@ -19,15 +19,11 @@ public class ColorStyle {
     @Column(name = "color_type_id")
     private Integer colorTypeId;
 
-
     @Column(name = "`explain`")
     private String explain;
 
     @Column(name = "ios_style_name")
     private String iosStyleName;
-
-    @Column(name = "ios_style_props")
-    private String iosStyleProps;
 
     @Column(name = "android_style_name")
     private String androidStyleName;

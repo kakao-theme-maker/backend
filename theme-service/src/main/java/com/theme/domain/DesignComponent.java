@@ -30,8 +30,6 @@ public class DesignComponent {
 
     private String imageUrl;
 
-    private String rgba;
-
     private Boolean isPublic;
 
     @CreationTimestamp
