@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpRequest;
@@ -14,6 +15,7 @@ import java.security.Key;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
+@Slf4j
 @Component
 @Profile("auth")
 public class JwtUtils {
@@ -57,6 +59,7 @@ public class JwtUtils {
             Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
             return true;
         }catch (Exception e) {
+            log.error(e.getMessage());
             return false;
         }
     }
@@ -73,6 +76,7 @@ public class JwtUtils {
                     .getBody()
                     .get("email", String.class);
         }catch (Exception e) {
+            log.error(e.getMessage());
             return null;
         }
     }
@@ -87,6 +91,7 @@ public class JwtUtils {
             }
             return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
         }catch (Exception e) {
+            log.error(e.getMessage());
             return null;
         }
     }
