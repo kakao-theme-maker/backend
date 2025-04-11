@@ -33,3 +33,10 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.register('copyConfig', Copy){
+	from "${rootProject.projectDir}/backend_config/dev/gateway-service"
+	include 'application.yml'
+	into './src/main/resources'
+}
+processResources.dependsOn(copyConfig)

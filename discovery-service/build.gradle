@@ -8,3 +8,9 @@ dependencies {
 tasks.register('wrapper', Wrapper) {
     gradleVersion = '8.12.1' // 원하는 Gradle 버전
 }
+tasks.register('copyConfig', Copy){
+    from "${rootProject.projectDir}/backend_config/dev/discovery-service"
+    include 'application.yml'
+    into './src/main/resources/'
+}
+processResources.dependsOn(copyConfig)

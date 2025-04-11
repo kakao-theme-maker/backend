@@ -44,5 +44,6 @@ bin/
 HELP.md
 gradle-app.setting
 
-
+# config files
 **/application.yml
+**/backend_config/
