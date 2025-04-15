@@ -3,3 +3,6 @@ rootProject.name = 'theme'
 include 'gateway-service'
 include 'discovery-service'
 include 'theme-service'
+include 'user-service'
+include 'common'
+

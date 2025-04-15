@@ -46,4 +46,5 @@ gradle-app.setting
 
 # config files
 **/application.yml
+**/application-test.yml
 **/backend_config/

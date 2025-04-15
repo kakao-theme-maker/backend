@@ -1,0 +1,48 @@
+dependencies {
+    // web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // webclient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // eureka-client
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    // jpa
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // mysql
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // common module
+    implementation project(":common")
+    // lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    // java-faker
+    implementation ('com.github.javafaker:javafaker:1.0.2') { exclude module: 'snakeyaml' }
+    implementation group: 'org.yaml', name: 'snakeyaml', version: '2.2'
+    // test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.h2database:h2'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register('copyConfig', Copy){
+    from ("${rootProject.projectDir}/backend_config/dev/user-service"){
+        include 'application.yml'
+    }
+    into "${projectDir}/src/main/resources"
+}
+
+tasks.register('copyTestConfig', Copy){
+    from ("${rootProject.projectDir}/backend_config/dev/user-service"){
+        include 'application-test.yml'
+    }
+    into "${projectDir}/src/test/resources"
+}
+
+processResources.dependsOn(copyConfig)
+processTestResources.dependsOn(copyTestConfig)

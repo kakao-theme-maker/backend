@@ -30,7 +30,6 @@ public class DesignComponentService {
                 .userEmail(entity.getUserEmail())
                 .componentType(convertComponentTypeToDto(entity.getComponentType()))
                 .imageUrl(entity.getImageUrl())
-                .rgba(entity.getRgba())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .isPublic(entity.getIsPublic())
@@ -63,14 +62,12 @@ public class DesignComponentService {
         DesignComponent newComponent = DesignComponent.builder()
                 .userEmail(request.getUserEmail())
                 .imageUrl(request.getImageUrl())
-                .rgba(request.getRgba())
                 .isPublic(request.getIsPublic())
                 .componentType(componentType)
                 .build();
 
         return convertToDto(designComponentRepository.save(newComponent));
     }
-
 
     // READ
     @Transactional(readOnly = true)
@@ -108,7 +105,6 @@ public class DesignComponentService {
 
         Optional.ofNullable(request.getUserEmail()).ifPresent(existing::setUserEmail);
         Optional.ofNullable(request.getImageUrl()).ifPresent(existing::setImageUrl);
-        Optional.ofNullable(request.getRgba()).ifPresent(existing::setRgba);
         Optional.ofNullable(request.getIsPublic()).ifPresent(existing::setIsPublic);
 
         if (componentTypeId != null) {

@@ -17,7 +17,6 @@ public class DesignComponentDto {
     private String userEmail;
     private ComponentTypeDto componentType; // ComponentType 정보를 포함
     private String imageUrl;
-    private String rgba;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isPublic;
