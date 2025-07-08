@@ -21,4 +21,9 @@ public class ThemeImage {
     @MapsId("themeComponentId")
     @JoinColumn(name = "theme_component_id") // DB에서 외래 키 칼럼 이름을 지정
     private ThemeComponent themeComponent;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("designComponentId")
+    @JoinColumn(name = "design_component_id")
+    private DesignComponent designComponent;
 }

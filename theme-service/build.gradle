@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.3'
-
+    id 'application'
 }
 
 group = 'com.kakao'
@@ -25,13 +25,33 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'com.mysql:mysql-connector-j'
 
+    // aws s3 api
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.782'
+
+    // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    // test : h2 database
+    testImplementation 'com.h2database:h2'
+    // test : java-faker
+    testImplementation ('com.github.javafaker:javafaker:1.0.2') { exclude module: 'snakeyaml' }
+    testImplementation group: 'org.yaml', name: 'snakeyaml', version: '2.2'
 }
 
 
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.register('copyTestConfig', Copy){
+    from ("${rootProject.projectDir}/backend_config/dev/theme-service"){
+        include 'application-test.yml'
+    }
+    into "${projectDir}/src/test/resources"
+}
+processTestResources.dependsOn(copyTestConfig)
