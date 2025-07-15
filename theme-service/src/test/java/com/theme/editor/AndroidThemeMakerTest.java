@@ -1,7 +1,8 @@
 package com.theme.editor;
 
-import com.theme.domain.ThemeComponent;
-import com.theme.repository.ThemeComponentRepository;
+import com.theme.android.editor.AndroidThemeMaker;
+import com.theme.theme.domain.ThemeComponent;
+import com.theme.theme.repository.ThemeComponentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
