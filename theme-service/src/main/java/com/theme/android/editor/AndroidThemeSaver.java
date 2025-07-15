@@ -1,6 +1,6 @@
 package com.theme.android.editor;
 
-import com.theme.editor.ThemePathManager;
+import com.theme.utils.ThemePathManager;
 import com.theme.utils.DockerProcessRunner;
 import com.theme.utils.S3FileManager;
 import lombok.RequiredArgsConstructor;

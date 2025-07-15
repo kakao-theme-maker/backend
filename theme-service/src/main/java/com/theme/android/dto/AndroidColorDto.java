@@ -1,6 +1,6 @@
 package com.theme.android.dto;
 
-import com.theme.domain.ColorStyle;
+import com.theme.component.domain.ColorStyle;
 import com.theme.theme.domain.ThemeStyle;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

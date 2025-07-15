@@ -1,7 +1,7 @@
 package com.theme.android.editor;
 
 import com.theme.android.dto.AndroidColorDto;
-import com.theme.editor.ThemePathManager;
+import com.theme.utils.ThemePathManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;

@@ -1,7 +1,7 @@
 package com.theme.android.editor;
 
 import com.theme.android.dto.AndroidComponentDto;
-import com.theme.editor.ThemePathManager;
+import com.theme.utils.ThemePathManager;
 import com.theme.utils.ImageUtils;
 import org.springframework.stereotype.Component;
 

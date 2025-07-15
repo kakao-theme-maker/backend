@@ -1,7 +1,7 @@
 package com.theme.android.dto;
 
-import com.theme.domain.ComponentType;
-import com.theme.domain.DesignComponent;
+import com.theme.component.domain.ComponentType;
+import com.theme.component.domain.DesignComponent;
 import com.theme.theme.domain.ThemeImage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

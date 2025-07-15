@@ -1,10 +1,10 @@
 package com.theme.android.editor;
 
-import com.theme.editor.ThemePathManager;
+import com.theme.utils.ThemePathManager;
 import com.theme.theme.domain.ThemeComponent;
 import com.theme.android.dto.AndroidColorDto;
 import com.theme.android.dto.AndroidComponentDto;
-import com.theme.repository.ThemeComponentRepository;
+import com.theme.theme.repository.ThemeComponentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
