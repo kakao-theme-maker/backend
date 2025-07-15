@@ -32,6 +32,9 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation platform('org.junit:junit-bom:5.10.0')
@@ -48,6 +51,13 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+tasks.register('copyConfig', Copy){
+    from("${rootProject.projectDir}/backend_config/dev/theme-service"){
+        include "application.yml"
+    }
+    into "${projectDir}/src/main/resources"
+}
+
 tasks.register('copyTestConfig', Copy){
     from ("${rootProject.projectDir}/backend_config/dev/theme-service"){
         include 'application-test.yml'
@@ -55,3 +65,4 @@ tasks.register('copyTestConfig', Copy){
     into "${projectDir}/src/test/resources"
 }
 processTestResources.dependsOn(copyTestConfig)
+processResources.dependsOn(copyConfig)
