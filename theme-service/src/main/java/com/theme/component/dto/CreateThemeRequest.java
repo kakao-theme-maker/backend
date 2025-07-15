@@ -1,5 +1,5 @@
 //~ Request : 요청 | 클라이언트 -> 서버
-package com.theme.dto;
+package com.theme.component.dto;
 
 import com.theme.theme.dto.ThemeStyleRequest;
 import jakarta.validation.constraints.NotBlank; //Bean Validation API 유효성 검사 어노테이션

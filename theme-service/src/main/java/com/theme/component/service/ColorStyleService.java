@@ -1,4 +1,4 @@
-package com.theme.service;
+package com.theme.component.service;
 
 public class ColorStyleService {
 }

@@ -1,7 +1,7 @@
-package com.theme.controller;
+package com.theme.component.controller;
 
-import com.theme.domain.ColorStyle;
-import com.theme.repository.ColorStyleRepository;
+import com.theme.component.domain.ColorStyle;
+import com.theme.component.repository.ColorStyleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

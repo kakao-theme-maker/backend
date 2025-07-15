@@ -1,8 +1,8 @@
-package com.theme.controller;
+package com.theme.component.controller;
 
-import com.theme.dto.CreateDesignComponentRequest;
-import com.theme.dto.DesignComponentDto;
-import com.theme.service.DesignComponentService;
+import com.theme.component.dto.CreateDesignComponentRequest;
+import com.theme.component.dto.DesignComponentDto;
+import com.theme.component.service.DesignComponentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

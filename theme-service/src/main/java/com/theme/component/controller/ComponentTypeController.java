@@ -1,7 +1,7 @@
-package com.theme.controller;
+package com.theme.component.controller;
 
-import com.theme.domain.ComponentType;
-import com.theme.service.ComponentTypeService;
+import com.theme.component.domain.ComponentType;
+import com.theme.component.service.ComponentTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

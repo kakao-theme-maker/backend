@@ -1,4 +1,4 @@
-package com.theme.dto;
+package com.theme.component.dto;
 
 import lombok.Data;
 

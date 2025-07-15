@@ -1,4 +1,4 @@
-package com.theme.domain;
+package com.theme.component.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

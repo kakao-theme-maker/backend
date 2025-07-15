@@ -1,4 +1,4 @@
-package com.theme.domain;
+package com.theme.component.domain;
 
 import jakarta.persistence.*; //JPA 어노테이션 사용하기 위해 임포트
 import lombok.AllArgsConstructor;

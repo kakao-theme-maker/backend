@@ -1,8 +1,8 @@
-package com.theme.service;
+package com.theme.component.service;
 
-import com.theme.domain.ComponentType;
+import com.theme.component.domain.ComponentType;
 import com.theme.exception.ResourceNotFoundException;
-import com.theme.repository.ComponentTypeRepository;
+import com.theme.component.repository.ComponentTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

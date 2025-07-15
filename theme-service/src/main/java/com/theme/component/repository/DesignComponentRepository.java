@@ -1,6 +1,6 @@
-package com.theme.repository;
+package com.theme.component.repository;
 
-import com.theme.domain.DesignComponent;
+import com.theme.component.domain.DesignComponent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
