@@ -16,6 +16,8 @@ dependencies {
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
     // java-faker
     implementation ('com.github.javafaker:javafaker:1.0.2') { exclude module: 'snakeyaml' }
     implementation group: 'org.yaml', name: 'snakeyaml', version: '2.2'
@@ -31,11 +33,15 @@ test {
 }
 
 tasks.register('copyConfig', Copy){
-    from ("${rootProject.projectDir}/backend_config/dev/user-service"){
+    from("${rootProject.projectDir}/backend_config/dev/user-service") {
         include 'application.yml'
     }
-    into "${projectDir}/src/main/resources"
+    from("${rootProject.projectDir}/backend_config/dev/common"){
+        include("common.yml")
+    }
+    into './src/main/resources/'
 }
+processResources.dependsOn(copyConfig)
 
 tasks.register('copyTestConfig', Copy){
     from ("${rootProject.projectDir}/backend_config/dev/user-service"){
@@ -43,6 +49,4 @@ tasks.register('copyTestConfig', Copy){
     }
     into "${projectDir}/src/test/resources"
 }
-
-processResources.dependsOn(copyConfig)
 processTestResources.dependsOn(copyTestConfig)
