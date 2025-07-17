@@ -20,14 +20,12 @@ public class SwaggerConfig {
         server.setUrl(serviceUrl);
         return new OpenAPI()
                 .servers(List.of(server))
-                .info(info());
+                .info(getInfo());
     }
 
-    @Bean
-    public Info info() {
+    public Info getInfo() {
         return new Info()
-                .title("Theme Service")
-                .description("theme service api test")
-                .version("1.0.0");
+                .title("User Service API Documentation")
+                .version("1.0");
     }
 }
