@@ -4,7 +4,7 @@ x-common-variables: &common-variables
   SPRING_DATASOURCE_USERNAME: root
   SPRING_DATA_REDIS_HOST: redis
   SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-  GATEWAY_SERVICE_URL: http://gateway-service:8080
+  GATEWAY_SERVICE_URL: http://localhost:28080
 
 services:
   gateway-service:
