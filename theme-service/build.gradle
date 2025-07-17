@@ -48,10 +48,21 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.register('copyTestConfig', Copy){
-    from ("${rootProject.projectDir}/backend_config/dev/theme-service"){
+tasks.register('copyConfig', Copy){
+    from("${rootProject.projectDir}/backend_config/dev/theme-service") {
+        include 'application.yml'
+    }
+    from("${rootProject.projectDir}/backend_config/dev/common"){
+        include("common.yml")
+    }
+    into './src/main/resources/'
+}
+processResources.dependsOn(copyConfig)
+
+tasks.register("copyTestConfig", Copy){
+    from("${rootProject.projectDir}/backend_config/dev/theme-service") {
         include 'application-test.yml'
     }
-    into "${projectDir}/src/test/resources"
+    into './src/test/resources/'
 }
 processTestResources.dependsOn(copyTestConfig)

@@ -35,8 +35,12 @@ tasks.named('test') {
 }
 
 tasks.register('copyConfig', Copy){
-	from "${rootProject.projectDir}/backend_config/dev/gateway-service"
-	include 'application.yml'
-	into './src/main/resources'
+	from("${rootProject.projectDir}/backend_config/dev/gateway-service") {
+		include 'application.yml'
+	}
+	from("${rootProject.projectDir}/backend_config/dev/common"){
+		include("common.yml")
+	}
+	into './src/main/resources/'
 }
 processResources.dependsOn(copyConfig)
