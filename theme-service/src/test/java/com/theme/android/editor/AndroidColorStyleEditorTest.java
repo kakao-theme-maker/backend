@@ -1,7 +1,6 @@
-package com.theme.editor;
+package com.theme.android.editor;
 
 import com.theme.android.dto.AndroidColorDto;
-import com.theme.android.editor.AndroidColorStyleEditor;
 import com.theme.utils.ThemePathManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -23,9 +25,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class AndroidColorStyleEditorTest {
+    @Autowired
     private AndroidColorStyleEditor androidColorStyleEditor;
+
+    @MockitoBean
+    private ThemePathManager themePathManager;
 
     Path testFilePath;
 
@@ -33,7 +39,7 @@ class AndroidColorStyleEditorTest {
     void setup() throws IOException {
         Path original = Paths.get("src/test/resources/colors.xml");
         testFilePath = Files.copy(original, Paths.get("build/tmp/colors.xml"), StandardCopyOption.REPLACE_EXISTING);
-        androidColorStyleEditor = new AndroidColorStyleEditor();
+        androidColorStyleEditor = new AndroidColorStyleEditor(themePathManager);
     }
 
     @AfterEach
@@ -53,7 +59,7 @@ class AndroidColorStyleEditorTest {
                 .build();
         // stub
         try (MockedStatic<ThemePathManager> mockedStatic = Mockito.mockStatic(ThemePathManager.class)) {
-            mockedStatic.when(() -> ThemePathManager.getColorSheetPath(themeId))
+            mockedStatic.when(() -> themePathManager.getColorSheetPath(themeId))
                     .thenReturn(testFilePath);
             // when
             androidColorStyleEditor.editColor(themeId, androidColorDto);
@@ -84,7 +90,7 @@ class AndroidColorStyleEditorTest {
         List <AndroidColorDto> colorDtoList = Arrays.asList(androidColorDto1, androidColorDto2);
         // stub
         try (MockedStatic<ThemePathManager> mockedStatic = Mockito.mockStatic(ThemePathManager.class)) {
-            mockedStatic.when(() -> ThemePathManager.getColorSheetPath(themeId))
+            mockedStatic.when(() -> themePathManager.getColorSheetPath(themeId))
                     .thenReturn(testFilePath);
             // when
             androidColorStyleEditor.editColors(themeId, colorDtoList);
