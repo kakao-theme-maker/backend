@@ -19,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 @RequiredArgsConstructor
 public class AndroidThemeInitializer {
     private final DockerProcessRunner dockerProcessRunner;
+    private final ThemePathManager themePathManager;
     /**
      * docker command builder
      * @param inputPath input apk path
@@ -51,7 +52,7 @@ public class AndroidThemeInitializer {
     public Path copyAndGetSourceThemeDir(String themeId) throws IOException{
         String themeFileName = "sample-theme.apk";
         ClassPathResource resource = new ClassPathResource(themeFileName);
-        Path themePath = ThemePathManager.getThemeSourceDir(themeId);
+        Path themePath = themePathManager.getThemeSourceDir(themeId);
         Files.createDirectories(themePath);
         Path themeFilePath = Paths.get(themePath.toString(), themeFileName);
         try (InputStream is = resource.getInputStream()) {
@@ -65,7 +66,7 @@ public class AndroidThemeInitializer {
     * */
     public void initTheme(String themeId) throws Exception {
         Path sourceThemePath = copyAndGetSourceThemeDir(themeId);
-        Path depackedThemePath = ThemePathManager.getThemeDepackedDir(themeId);
+        Path depackedThemePath = themePathManager.getThemeDepackedDir(themeId);
         depackTheme(sourceThemePath, depackedThemePath);
     }
 }

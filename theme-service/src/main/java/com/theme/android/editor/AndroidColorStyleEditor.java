@@ -2,6 +2,7 @@ package com.theme.android.editor;
 
 import com.theme.android.dto.AndroidColorDto;
 import com.theme.utils.ThemePathManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -19,8 +20,10 @@ import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AndroidColorStyleEditor {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    private final ThemePathManager themePathManager;
 
     private final String COLOR_TAG_NAME = "color";
 
@@ -80,7 +83,7 @@ public class AndroidColorStyleEditor {
      * @param colorDto information about theme's color
     * */
     public void editColor(String themeId, AndroidColorDto colorDto) {
-        Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
+        Path colorSheetPath = themePathManager.getColorSheetPath(themeId);
         Document document = loadDocument(colorSheetPath.toString());
         NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
         Element colorElement = getElementByAttribute(colorList, colorDto.getAttrName());
@@ -96,7 +99,7 @@ public class AndroidColorStyleEditor {
      * @param colorDtoList information list about theme's color
      * */
     public void editColors(String themeId, List<AndroidColorDto> colorDtoList) {
-        Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
+        Path colorSheetPath = themePathManager.getColorSheetPath(themeId);
         Document document = loadDocument(colorSheetPath.toString());
         NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
         for(AndroidColorDto colorDto : colorDtoList) {

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,6 +18,7 @@ import java.nio.file.Paths;
 @RequiredArgsConstructor
 public class AndroidThemeSaver {
     private final DockerProcessRunner dockerProcessRunner;
+    private final ThemePathManager themePathManager;
     private final S3FileManager s3FileManager;
 
     @Value("${aws.s3.theme-bucket-name}")
@@ -39,6 +41,11 @@ public class AndroidThemeSaver {
                 "louie8821/apk_repackager:test",
         };
     }
+
+    public byte[] getOutputFileBytes(Path outputApk) throws IOException {
+        return Files.readAllBytes(outputApk);
+    }
+
     /**
      * resolve paths and depack apk on output paths
      * @param inputPath input apk path
@@ -50,15 +57,15 @@ public class AndroidThemeSaver {
                 outputPath.toAbsolutePath().toString());
         dockerProcessRunner.runDockerProcess(command);
         Path outputApk = Paths.get(outputPath.toString(), "output-signed.apk");
-        return Files.readAllBytes(outputApk);
+        return getOutputFileBytes(outputApk);
     }
     /**
      * initialize the theme on the specific theme path
      * @param themeId theme id
      * */
     public void repackAndSaveTheme(String themeId) throws Exception {
-        Path depackedThemePath = ThemePathManager.getThemeDepackedDir(themeId).toAbsolutePath();
-        Path repackedThemePath = ThemePathManager.getThemeRepackedDir(themeId).toAbsolutePath();
+        Path depackedThemePath = themePathManager.getThemeDepackedDir(themeId).toAbsolutePath();
+        Path repackedThemePath = themePathManager.getThemeRepackedDir(themeId).toAbsolutePath();
         byte[] outputApk = repackAndSignTheme(depackedThemePath, repackedThemePath);
         s3FileManager.uploadFile(outputApk, resolveThemeName(themeId), themeBucketName);
     }

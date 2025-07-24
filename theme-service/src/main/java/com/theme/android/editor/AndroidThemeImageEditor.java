@@ -3,6 +3,7 @@ package com.theme.android.editor;
 import com.theme.android.dto.AndroidComponentDto;
 import com.theme.utils.ThemePathManager;
 import com.theme.utils.ImageUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.FileOutputStream;
@@ -11,7 +12,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class AndroidThemeImageEditor {
+    private final ImageUtils imageUtils;
+    private final ThemePathManager themePathManager;
 
     /**
      * edit an image on the specific theme path
@@ -19,9 +23,9 @@ public class AndroidThemeImageEditor {
      * @param component theme's component info
     * */
     public void editImage(String themeId, AndroidComponentDto component) throws IOException {
-        Path imagePath = ThemePathManager.getImagePath(themeId, component);
+        Path imagePath = themePathManager.getImagePath(themeId, component);
         try(FileOutputStream fos = new FileOutputStream(imagePath.toFile())){
-            byte[] imageBytes = ImageUtils.loadImageBytes(component.getImageUrl());
+            byte[] imageBytes = imageUtils.loadImageBytes(component.getImageUrl());
             if(imageBytes == null) {
                 throw new IOException("AndroidThemeImageEditor.editImage : Image bytes is null");
             }

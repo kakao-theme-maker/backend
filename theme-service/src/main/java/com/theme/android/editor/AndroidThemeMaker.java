@@ -23,7 +23,7 @@ public class AndroidThemeMaker {
     private final AndroidColorStyleEditor androidColorStyleEditor;
     private final AndroidThemeImageEditor androidThemeImageEditor;
     private final ThemeComponentRepository themeComponentRepository;
-
+    private final ThemePathManager themePathManager;
     /**
      * make a theme with the specific theme id
      * @param themeId theme id
@@ -45,7 +45,7 @@ public class AndroidThemeMaker {
             throw new RuntimeException(e);
         }finally {
             try {
-                Path themePath = ThemePathManager.getThemeDir(Integer.toString(themeId));
+                Path themePath = themePathManager.getThemeDir(Integer.toString(themeId));
                 FileUtils.deleteDirectory(themePath.toFile());
             }catch (Exception e){
                 log.error(e.getMessage(), e);
