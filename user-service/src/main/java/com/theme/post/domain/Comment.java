@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
@@ -42,7 +43,7 @@ public class Comment {
   @CreatedDate
   private LocalDateTime createdAt;
 
-  @CreatedDate
+  @LastModifiedDate
   private LocalDateTime updatedAt;
 
   public static Comment createTransient(CommentCreateDto dto, Post post, User user) {
