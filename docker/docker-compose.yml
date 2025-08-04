@@ -7,51 +7,19 @@ x-common-variables: &common-variables
   GATEWAY_SERVICE_URL: http://localhost:28080
 
 services:
-  gateway-service:
+  backend:
     build:
-      dockerfile: gateway-service/Dockerfile
+      dockerfile: Dockerfile
       context: ..
-    container_name: gateway-service
+    container_name: backend
     restart: unless-stopped
     env_file:
       - .env
-    ports:
-      - "28080:8080"
-    environment:
-      <<: *common-variables
-  discovery-service:
-    build:
-      dockerfile: discovery-service/Dockerfile
-      context: ..
-    container_name: discovery-service
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "28761:8761"
-    environment:
-      <<: *common-variables
-  user-service:
-    build:
-      dockerfile: user-service/Dockerfile
-      context: ..
-    container_name: user-service
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      <<: *common-variables
-  theme-service:
-    build:
-      dockerfile: theme-service/Dockerfile
-      context: ..
-    container_name: theme-service
-    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
-    env_file:
-      - .env
+    ports:
+      - "28080:8080"
     environment:
       <<: *common-variables
   database:
@@ -70,3 +38,6 @@ services:
     image: redis:6.2.6-alpine
     command: redis-server /usr/local/etc/redis/redis.conf
     restart: unless-stopped
+    volumes:
+      - ./docker_redis/data:/data
+      - ./docker_redis/config:/usr/local/etc/redis/redis.conf
