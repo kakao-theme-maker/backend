@@ -1,33 +1,38 @@
 package com.komentum.theme.utils;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Component
 public class S3FileManager {
 
-  private AmazonS3 s3Client;
+  private final S3Client s3Client;
+  private final String cloudFront;
 
   public S3FileManager(@Value("${aws.s3.access-key}") String accessKey,
-      @Value("${aws.s3.secret-key}") String secretKey) {
-    AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-    s3Client = AmazonS3ClientBuilder
-        .standard()
-        .withCredentials(new AWSStaticCredentialsProvider(credentials))
-        .withRegion(Regions.US_WEST_2)
+      @Value("${aws.s3.secret-key}") String secretKey, @Value("${aws.s3.region}") String region,
+      @Value("${aws.s3.cloudfront}") String cloudFront) {
+    this.cloudFront = cloudFront;
+    s3Client = S3Client.builder()
+        .region(Region.of(region))
+        .credentialsProvider(
+            StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
         .build();
+  }
+
+  public String resolveFilePath(String fileName) {
+    return String.format("https://%s/%s", cloudFront, fileName);
   }
 
   /**
@@ -37,12 +42,14 @@ public class S3FileManager {
    * @param fileName   name of the file
    * @param bucketName name of the bucket to upload the file to
    */
-  public void uploadFile(byte[] fileBytes, String fileName, String bucketName) {
-    ObjectMetadata metadata = new ObjectMetadata();
-    metadata.setContentLength(fileBytes.length);
-    PutObjectRequest request = new PutObjectRequest(bucketName, fileName,
-        new ByteArrayInputStream(fileBytes), metadata);
-    s3Client.putObject(request);
+  public String uploadFile(byte[] fileBytes, String fileName, String bucketName) {
+    PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+        .bucket(bucketName)
+        .key(fileName)
+        .contentLength((long) fileBytes.length)
+        .build();
+    s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes));
+    return resolveFilePath(fileName);
   }
 
   /**
@@ -52,7 +59,11 @@ public class S3FileManager {
    * @param bucketName name of the bucket to delete the file from
    */
   public void deleteFile(String fileName, String bucketName) {
-    s3Client.deleteObject(bucketName, fileName);
+    DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+        .bucket(bucketName)
+        .key(fileName)
+        .build();
+    s3Client.deleteObject(deleteObjectRequest);
   }
 
   /**
@@ -62,9 +73,11 @@ public class S3FileManager {
    * @param bucketName name of the bucket to get the file from
    */
   public byte[] downloadFile(String fileName, String bucketName) throws IOException {
-    S3Object s3Object = s3Client.getObject(bucketName, fileName);
-    try (S3ObjectInputStream inputStream = s3Object.getObjectContent()) {
-      return inputStream.readAllBytes();
-    }
+    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+        .bucket(bucketName)
+        .key(fileName)
+        .build();
+    ResponseBytes<GetObjectResponse> responseBytes = s3Client.getObjectAsBytes(getObjectRequest);
+    return responseBytes.asByteArray();
   }
 }
