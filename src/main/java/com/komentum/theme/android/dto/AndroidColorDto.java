@@ -1,0 +1,26 @@
+package com.komentum.theme.android.dto;
+
+import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.theme.theme.domain.ThemeStyle;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AndroidColorDto {
+
+  String color;
+  String attrName;
+
+  public static AndroidColorDto fromEntity(ThemeStyle themeStyle) {
+    ColorStyle colorStyle = themeStyle.getColorStyle();
+    return AndroidColorDto.builder()
+        .color(themeStyle.getColor())
+        .attrName(colorStyle.getAndroidStyleName())
+        .build();
+  }
+}
