@@ -1,6 +1,5 @@
 package com.komentum.theme.utils;
 
-import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -23,6 +22,9 @@ public class S3FileManager {
   public S3FileManager(@Value("${aws.s3.access-key}") String accessKey,
       @Value("${aws.s3.secret-key}") String secretKey, @Value("${aws.s3.region}") String region,
       @Value("${aws.s3.cloudfront}") String cloudFront) {
+    if (cloudFront == null || cloudFront.trim().isEmpty()) {
+      throw new IllegalArgumentException("[S3 File Manager] cloudFront is null or empty");
+    }
     this.cloudFront = cloudFront;
     s3Client = S3Client.builder()
         .region(Region.of(region))
@@ -32,6 +34,9 @@ public class S3FileManager {
   }
 
   public String resolveFilePath(String fileName) {
+    if (fileName == null || fileName.trim().isEmpty()) {
+      throw new IllegalArgumentException("[S3 File Manager] fileName is null or empty");
+    }
     return String.format("https://%s/%s", cloudFront, fileName);
   }
 
@@ -72,7 +77,7 @@ public class S3FileManager {
    * @param fileName   name of the file
    * @param bucketName name of the bucket to get the file from
    */
-  public byte[] downloadFile(String fileName, String bucketName) throws IOException {
+  public byte[] downloadFile(String fileName, String bucketName) {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
         .bucket(bucketName)
         .key(fileName)
