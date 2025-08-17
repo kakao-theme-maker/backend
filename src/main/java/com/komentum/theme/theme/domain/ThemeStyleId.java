@@ -19,4 +19,10 @@ public class ThemeStyleId implements Serializable {
 
   @Column(name = "color_type_id")
   private Integer colorTypeId;
+
+  @Column(name = "css_selector")
+  private String cssSelector;
+
+  @Column(name = "property_name")
+  private String propertyName;
 }

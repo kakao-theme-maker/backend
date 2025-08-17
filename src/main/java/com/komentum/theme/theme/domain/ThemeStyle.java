@@ -31,6 +31,14 @@ public class ThemeStyle {
   @Column(name = "color_type_id")
   private Integer colorTypeId;
 
+  @Id
+  @Column(name = "css_selector")
+  private String cssSelector;
+
+  @Id
+  @Column(name = "property_name")
+  private String propertyName;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "theme_component_id", insertable = false, updatable = false)
   private ThemeComponent themeComponent;
