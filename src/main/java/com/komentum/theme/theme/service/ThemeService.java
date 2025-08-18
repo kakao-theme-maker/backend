@@ -1,8 +1,10 @@
 package com.komentum.theme.theme.service;
 
 import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.dto.CreateThemeRequest;
 import com.komentum.theme.component.repository.ColorStyleRepository;
+import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
@@ -28,16 +30,19 @@ public class ThemeService {
   private final ColorStyleRepository colorStyleRepository;
   private final ThemeStyleRepository themeStyleRepository;
   private final ThemeImageRepository themeImageRepository;
+  private final DesignComponentRepository designComponentRepository;
 
   @Autowired
   public ThemeService(ThemeComponentRepository themeComponentRepository,
       ColorStyleRepository colorStyleRepository,
       ThemeStyleRepository themeStyleRepository,
-      ThemeImageRepository themeImageRepository) {
+      ThemeImageRepository themeImageRepository,
+      DesignComponentRepository designComponentRepository) {
     this.themeComponentRepository = themeComponentRepository;
     this.colorStyleRepository = colorStyleRepository;
     this.themeStyleRepository = themeStyleRepository;
     this.themeImageRepository = themeImageRepository;
+    this.designComponentRepository = designComponentRepository;
   }
 
   @Transactional(readOnly = true)
@@ -106,6 +111,8 @@ public class ThemeService {
         ThemeStyle themeStyle = ThemeStyle.builder()
             .themeComponentId(themeComponent.getThemeComponentId())
             .colorTypeId(colorStyle.getColorTypeId())
+            .cssSelector(".theme-color-" + colorStyle.getColorTypeId())
+            .propertyName("color")
             .themeComponent(themeComponent)
             .colorStyle(colorStyle)
             .color(styleRequest.getColor())
@@ -118,6 +125,11 @@ public class ThemeService {
     // 테마 이미지 추가
     if (request.getDesignComponentIds() != null) {
       for (Integer designComponentId : request.getDesignComponentIds()) {
+        // DesignComponent 엔티티 조회
+        DesignComponent designComponent = designComponentRepository.findById(designComponentId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "DesignComponent not found with id: " + designComponentId));
+
         // ThemeImage 객체 생성 시 ThemeImageId를 직접 생성하여 설정
         ThemeImageId imageId = new ThemeImageId(themeComponent.getThemeComponentId(),
             designComponentId);
@@ -125,6 +137,7 @@ public class ThemeService {
         ThemeImage themeImage = new ThemeImage();
         themeImage.setId(imageId);
         themeImage.setThemeComponent(themeComponent);
+        themeImage.setDesignComponent(designComponent);
 
         themeImageRepository.save(themeImage);
       }
@@ -160,6 +173,8 @@ public class ThemeService {
         ThemeStyle themeStyle = ThemeStyle.builder()
             .themeComponentId(themeComponent.getThemeComponentId())
             .colorTypeId(colorStyle.getColorTypeId())
+            .cssSelector(".theme-color-" + colorStyle.getColorTypeId())
+            .propertyName("color")
             .themeComponent(themeComponent)
             .colorStyle(colorStyle)
             .color(styleRequest.getColor())
@@ -175,6 +190,11 @@ public class ThemeService {
     // 새 이미지 추가
     if (request.getDesignComponentIds() != null) {
       for (Integer designComponentId : request.getDesignComponentIds()) {
+        // DesignComponent 엔티티 조회
+        DesignComponent designComponent = designComponentRepository.findById(designComponentId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "DesignComponent not found with id: " + designComponentId));
+
         // ThemeImage 객체 생성 시 ThemeImageId를 직접 생성하여 설정
         ThemeImageId imageId = new ThemeImageId(themeComponent.getThemeComponentId(),
             designComponentId);
@@ -182,6 +202,7 @@ public class ThemeService {
         ThemeImage themeImage = new ThemeImage();
         themeImage.setId(imageId);
         themeImage.setThemeComponent(themeComponent);
+        themeImage.setDesignComponent(designComponent);
 
         themeImageRepository.save(themeImage);
       }
