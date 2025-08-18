@@ -31,6 +31,7 @@ jar {
 
 test {
     useJUnitPlatform()
+//    runtimeOnly 'com.h2database:h2'
 }
 
 dependencies {
@@ -58,12 +59,20 @@ dependencies {
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     // test : h2 database
     testImplementation 'com.h2database:h2'
+    runtimeOnly 'com.h2database:h2'
     // test : java-faker
     implementation('com.github.javafaker:javafaker:1.0.2') { exclude module: 'snakeyaml' }
     implementation 'org.yaml:snakeyaml:2.0'
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    // CSS parsing library
+    implementation 'com.helger:ph-css:7.0.2'
+
+    //
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    testRuntimeOnly 'com.h2database:h2'
 }
 
 tasks.register('copyConfig', Copy) {
