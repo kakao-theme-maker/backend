@@ -1,13 +1,17 @@
 package com.komentum.user.domain;
 
+import com.komentum.global.security.UserRole;
 import com.komentum.post.domain.Prefer;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +28,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "\"user\"")
 @EntityListeners(AuditingEntityListener.class)
 public class User {
 
@@ -38,6 +43,9 @@ public class User {
   String profileImg;
   @Column
   String introduce;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, columnDefinition = "varchar(20) default 'USER'")
+  UserRole role;
   @CreatedDate
   LocalDateTime createdAt;
   @LastModifiedDate
