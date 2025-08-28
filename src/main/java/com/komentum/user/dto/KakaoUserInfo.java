@@ -1,5 +1,6 @@
 package com.komentum.user.dto;
 
+import com.komentum.global.security.UserRole;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ public class KakaoUserInfo {
         .profileImg(profileImage)
         .gender(Gender.valueOf(gender))
         .birth(birth)
+        .role(UserRole.USER)
         .build();
   }
 

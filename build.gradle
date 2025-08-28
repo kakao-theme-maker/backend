@@ -39,6 +39,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     // webclient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // spring-security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     // jpa
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'com.mysql:mysql-connector-j'
@@ -50,17 +52,18 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     // aws s3 api
     implementation 'software.amazon.awssdk:s3:2.31.63'
-    // swagger
+    // dev : swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+    // dev : java-faker
+    implementation('com.github.javafaker:javafaker:1.0.2') { exclude module: 'snakeyaml' }
+    implementation 'org.yaml:snakeyaml:2.0'
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     // test : h2 database
     testImplementation 'com.h2database:h2'
-    // test : java-faker
-    implementation('com.github.javafaker:javafaker:1.0.2') { exclude module: 'snakeyaml' }
-    implementation 'org.yaml:snakeyaml:2.0'
+    // test :
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
