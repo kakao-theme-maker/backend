@@ -20,7 +20,7 @@ public class AndroidColorDto {
     ColorStyle colorStyle = themeStyle.getColorStyle();
     return AndroidColorDto.builder()
         .color(themeStyle.getColor())
-        .attrName(colorStyle.getAndroidStyleName())
+        .attrName(colorStyle.getStylePropsName())
         .build();
   }
 }

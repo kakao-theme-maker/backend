@@ -62,9 +62,7 @@ public class ColorStyleController {
             existingColorStyle -> {
               // 필드값만 업데이트
               // 만약 json에 id 값을 추가하면, 바꿀 수 있도록 해야하나? id는 항상 같아야 한다고 생각...
-              existingColorStyle.setExplain(colorStyle.getExplain());
-              existingColorStyle.setIosStyleName(colorStyle.getIosStyleName());
-              existingColorStyle.setAndroidStyleName(colorStyle.getAndroidStyleName());
+              existingColorStyle.update(colorStyle);
               ColorStyle updatedColorStyle = colorStyleRepository.save(existingColorStyle);
               return ResponseEntity.ok(updatedColorStyle);
             })

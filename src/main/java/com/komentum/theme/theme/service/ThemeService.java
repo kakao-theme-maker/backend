@@ -243,8 +243,8 @@ public class ThemeService {
         .map(style -> ThemeStyleDto.builder()
             .colorTypeId(style.getColorStyle().getColorTypeId())
             .explain(style.getColorStyle().getExplain())
-            .iosStyleName(style.getColorStyle().getIosStyleName())
-            .androidStyleName(style.getColorStyle().getAndroidStyleName())
+            .styleElementName(style.getColorStyle().getStyleElementName())
+            .stylePropsName(style.getColorStyle().getStylePropsName())
             .color(style.getColor())
             .build())
         .collect(Collectors.toList());
