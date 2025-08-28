@@ -13,7 +13,7 @@ public class ThemeStyleDto {
 
   private Integer colorTypeId;
   private String explain;
-  private String iosStyleName;
-  private String androidStyleName;
+  private String styleElementName;
+  private String stylePropsName;
   private String color;
 }
