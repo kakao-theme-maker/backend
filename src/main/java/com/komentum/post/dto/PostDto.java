@@ -49,6 +49,7 @@ public class PostDto {
   }
 
   @Data
+  @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   public static class PostCreateDto {
@@ -59,6 +60,7 @@ public class PostDto {
   }
 
   @Data
+  @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   public static class PostUpdateDto {

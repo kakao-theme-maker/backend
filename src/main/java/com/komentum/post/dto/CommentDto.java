@@ -32,6 +32,7 @@ public class CommentDto {
   }
 
   @Data
+  @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   public static class CommentCreateDto {
@@ -42,6 +43,7 @@ public class CommentDto {
   }
 
   @Data
+  @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   public static class CommentUpdateDto {
