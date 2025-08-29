@@ -32,7 +32,7 @@ public class AndroidColorStyleEditor {
    * @param path path of color.xml
    * @return color.xml document
    */
-  public Document loadDocument(String path) {
+  private Document loadDocument(String path) {
     try {
       File resource = new File(path);
       DocumentBuilder documentBuilder = factory.newDocumentBuilder();
@@ -49,7 +49,7 @@ public class AndroidColorStyleEditor {
    * @param outputFilePath output file's path
    * @param document       updated color.xml document
    */
-  public void transform(String outputFilePath, Document document) {
+  private void transform(String outputFilePath, Document document) {
     try {
       File outputFile = new File(outputFilePath);
       Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -68,7 +68,7 @@ public class AndroidColorStyleEditor {
    * @param attrName attribute name to find
    * @return Element with a specific attribute name
    */
-  public Element getElementByAttribute(NodeList nodeList, String attrName) {
+  private Element getElementByAttribute(NodeList nodeList, String attrName) {
     String ELEMENT_PROPS_NAME = "name";
     for (int i = 0; i < nodeList.getLength(); i++) {
       Element element = (Element) nodeList.item(i);
@@ -77,23 +77,6 @@ public class AndroidColorStyleEditor {
       }
     }
     return null;
-  }
-
-  /**
-   * edit one color with theme's color info
-   *
-   * @param themeId  theme's id
-   * @param colorDto information about theme's color
-   */
-  public void editColor(String themeId, AndroidColorDto colorDto) {
-    Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
-    Document document = loadDocument(colorSheetPath.toString());
-    NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
-    Element colorElement = getElementByAttribute(colorList, colorDto.getAttrName());
-    if (colorElement != null) {
-      colorElement.setTextContent(colorDto.getColor());
-    }
-    transform(colorSheetPath.toString(), document);
   }
 
   /**
