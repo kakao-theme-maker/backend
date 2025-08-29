@@ -16,13 +16,16 @@ import com.komentum.user.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Profile("dev")
@@ -36,6 +39,7 @@ public class TestDataGenerator {
   private final TagRepository tagRepository;
 
   @PostConstruct
+  @Transactional
   public void init() {
     Faker faker = new Faker(Locale.ENGLISH);
     List<User> users = generateTestUsers(faker, 10);
@@ -49,6 +53,7 @@ public class TestDataGenerator {
     if (userRepository.count() > 0) {
       return userRepository.findAll(PageRequest.of(0, 10)).getContent();
     }
+    Set<String> userEmails = new HashSet<>();
     List<User> users = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       User user = User.builder()
@@ -59,7 +64,10 @@ public class TestDataGenerator {
           .profileImg(faker.internet().image())
           .introduce(faker.lorem().word())
           .build();
-      users.add(user);
+      if (!userEmails.contains(user.getUserEmail())) {
+        users.add(user);
+        userEmails.add(user.getUserEmail());
+      }
     }
     return userRepository.saveAll(users);
   }
