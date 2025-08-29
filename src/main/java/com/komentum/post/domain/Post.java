@@ -66,10 +66,10 @@ public class Post {
   }
 
   public void update(PostDto.PostUpdateDto dto) {
-    if (this.title != null) {
+    if (dto.title != null) {
       this.title = dto.getTitle();
     }
-    if (this.content != null) {
+    if (dto.content != null) {
       this.content = dto.getContent();
     }
   }
