@@ -26,9 +26,8 @@ public class CommentController {
 
   @GetMapping("/{postId}/comments")
   public ResponseEntity<List<CommentResponse>> getComments(@PathVariable Long postId,
-      @RequestParam("pageNumber") Integer pageNumber, @RequestParam("pageSize") Integer pageSize) {
-    pageNumber = pageNumber == null ? 0 : pageNumber;
-    pageSize = pageSize == null ? 20 : pageSize;
+      @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
+      @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize) {
     return ResponseEntity.ok(
         commentService.getComments(postId, pageNumber, pageSize).stream().map(CommentResponse::from)
             .toList());

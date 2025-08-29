@@ -26,9 +26,8 @@ public class PostController {
 
   @GetMapping
   public ResponseEntity<List<PostResponse>> getPosts(
-      @RequestParam("pageNumber") Integer pageNumber, @RequestParam("pageSize") Integer pageSize) {
-    pageNumber = pageNumber == null ? 0 : pageNumber;
-    pageSize = pageSize == null ? 20 : pageSize;
+      @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
+      @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize) {
     return ResponseEntity.ok(
         postService.getPosts(pageNumber, pageSize).stream().map(PostResponse::from)
             .toList());
