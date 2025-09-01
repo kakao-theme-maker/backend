@@ -3,6 +3,7 @@ package com.komentum.theme.theme.domain;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -53,13 +54,15 @@ public class ThemeComponent {
 //    private LocalDateTime updatedAt;
 
   //관계 매핑
-  @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeStyle> themeStyles = new HashSet<>();
 
-  @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeImage> themeImages = new HashSet<>();
 
-//    @PrePersist //엔터티가 저장되기 전에 호출되어 생성 시간, 수정 시간 설정.
+  //    @PrePersist //엔터티가 저장되기 전에 호출되어 생성 시간, 수정 시간 설정.
 //    protected void onCreate() {
 //        createdAt = LocalDateTime.now();
 //        updatedAt = LocalDateTime.now();
@@ -69,4 +72,8 @@ public class ThemeComponent {
 //    protected void onUpdate() {
 //        updatedAt = LocalDateTime.now();
 //    }
+  public void addThemeStyle(ThemeStyle themeStyle) {
+    themeStyles.add(themeStyle);
+    themeStyle.setThemeComponent(this);
+  }
 }

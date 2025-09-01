@@ -12,7 +12,9 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "theme_style")
@@ -21,6 +23,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @IdClass(ThemeStyleId.class)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ThemeStyle {
 
   @Id
@@ -31,10 +34,12 @@ public class ThemeStyle {
   @Column(name = "color_type_id")
   private Integer colorTypeId;
 
+  @ToString.Exclude
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "theme_component_id", insertable = false, updatable = false)
   private ThemeComponent themeComponent;
 
+  @ToString.Exclude
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "color_type_id", insertable = false, updatable = false)
   private ColorStyle colorStyle;
