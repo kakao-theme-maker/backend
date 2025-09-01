@@ -10,21 +10,24 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "theme_component")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ThemeComponent {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY) // 기본 키 생성: 데이터베이스가 자동으로 값을 생성한다.
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "theme_component_id")
   private Integer themeComponentId;
 
@@ -46,27 +49,21 @@ public class ThemeComponent {
   @Column(name = "is_public")
   private Boolean isPublic;
 
-//    @Column(name = "created_at")
-//    private LocalDateTime createdAt;
-//
-//    @Column(name = "updated_at")
-//    private LocalDateTime updatedAt;
-
-  //관계 매핑
-  @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<ThemeStyle> themeStyles = new HashSet<>();
-
+  @Setter(AccessLevel.NONE)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeImage> themeImages = new HashSet<>();
 
-//    @PrePersist //엔터티가 저장되기 전에 호출되어 생성 시간, 수정 시간 설정.
-//    protected void onCreate() {
-//        createdAt = LocalDateTime.now();
-//        updatedAt = LocalDateTime.now();
-//    }
-//
-//    @PreUpdate // 수정 시간 갱신
-//    protected void onUpdate() {
-//        updatedAt = LocalDateTime.now();
-//    }
+  @Setter(AccessLevel.NONE)
+  @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<ThemeStyle> themeStyles = new HashSet<>();
+
+  public void addThemeImage(ThemeImage themeImage) {
+    this.themeImages.add(themeImage);
+    themeImage.setThemeComponent(this);
+  }
+
+  public void addThemeStyle(ThemeStyle themeStyle) {
+    this.themeStyles.add(themeStyle);
+    themeStyle.setThemeComponent(this);
+  }
 }
