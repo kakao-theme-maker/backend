@@ -49,10 +49,12 @@ public class ThemeComponent {
   @Column(name = "is_public")
   private Boolean isPublic;
 
+  @Builder.Default
   @Setter(AccessLevel.NONE)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeImage> themeImages = new HashSet<>();
 
+  @Builder.Default
   @Setter(AccessLevel.NONE)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeStyle> themeStyles = new HashSet<>();

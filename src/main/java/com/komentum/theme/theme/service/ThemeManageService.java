@@ -21,10 +21,8 @@ import com.komentum.theme.theme.repository.ThemeImageRepository;
 import com.komentum.theme.theme.repository.ThemeStyleRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +61,6 @@ public class ThemeManageService {
     }
     // 테마 이미지 추가
     if (request.getImages() != null) {
-      Set<ThemeImage> themeImages = new HashSet<>();
       for (ThemeImageRequest imageRequest : request.getImages()) {
         ComponentType proxyComponentType = em.getReference(ComponentType.class,
             imageRequest.getComponentTypeId());
