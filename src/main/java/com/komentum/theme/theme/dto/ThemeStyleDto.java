@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ThemeStyleDto {
 
-  private Integer colorTypeId;
-  private String explain;
-  private String styleElementName;
-  private String stylePropsName;
+  private Integer colorStyleId;
   private String color;
 }

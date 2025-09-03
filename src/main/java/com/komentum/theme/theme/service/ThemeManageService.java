@@ -52,7 +52,7 @@ public class ThemeManageService {
           .map(ThemeStyleRequest::getColorTypeId).toList();
       Map<Integer, ColorStyle> colorstyleMap = colorStyleRepository.findAllById(colorStyleIdList)
           .stream().collect(
-              Collectors.toMap(ColorStyle::getColorTypeId, Function.identity()));
+              Collectors.toMap(ColorStyle::getColorStyleId, Function.identity()));
       request.getStyles().forEach(createDto -> {
         ColorStyle colorStyle = colorstyleMap.get(createDto.getColorTypeId());
         ThemeStyle themeStyle = themeStyleMapper.convertToTransientEntity(createDto, colorStyle);

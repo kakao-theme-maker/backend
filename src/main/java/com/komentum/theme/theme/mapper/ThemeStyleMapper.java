@@ -12,11 +12,8 @@ public class ThemeStyleMapper {
   public ThemeStyleDto convertToDto(ThemeStyle themeStyle) {
     ColorStyle colorStyle = themeStyle.getColorStyle();
     return ThemeStyleDto.builder()
-        .colorTypeId(colorStyle.getColorTypeId())
-        .styleElementName(colorStyle.getStyleElementName())
-        .stylePropsName(colorStyle.getStylePropsName())
+        .colorStyleId(colorStyle.getColorStyleId())
         .color(themeStyle.getColor())
-        .explain(colorStyle.getExplain())
         .build();
   }
 
