@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "theme_component")
@@ -51,11 +52,13 @@ public class ThemeComponent {
 
   @Builder.Default
   @Setter(AccessLevel.NONE)
+  @BatchSize(size = 100)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeImage> themeImages = new HashSet<>();
 
   @Builder.Default
   @Setter(AccessLevel.NONE)
+  @BatchSize(size = 100)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeStyle> themeStyles = new HashSet<>();
 

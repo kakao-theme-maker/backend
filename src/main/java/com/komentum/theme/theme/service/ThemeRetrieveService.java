@@ -8,6 +8,7 @@ import com.komentum.theme.theme.repository.ThemeComponentRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,22 +20,22 @@ public class ThemeRetrieveService {
   private final ThemeComponentMapper themeComponentMapper;
 
   @Transactional(readOnly = true)
-  public List<ThemeComponentDto> getAllThemes() {
-    return themeComponentRepository.fetchJoinAll().stream()
+  public List<ThemeComponentDto> getAllThemes(Pageable pageable) {
+    return themeComponentRepository.findAll(pageable).stream()
         .map(themeComponentMapper::convertToDto)
         .collect(Collectors.toList());
   }
 
   @Transactional(readOnly = true)
-  public List<ThemeComponentDto> getThemesByUserEmail(String userEmail) {
-    return themeComponentRepository.fetchJoinByUserEmail(userEmail).stream()
+  public List<ThemeComponentDto> getThemesByUserEmail(String userEmail, Pageable pageable) {
+    return themeComponentRepository.findByUserEmail(userEmail, pageable).stream()
         .map(themeComponentMapper::convertToDto)
         .collect(Collectors.toList());
   }
 
   @Transactional(readOnly = true)
-  public List<ThemeComponentDto> getPublicThemes() {
-    return themeComponentRepository.fetchJoinByIsPublicTrue().stream()
+  public List<ThemeComponentDto> getPublicThemes(Pageable pageable) {
+    return themeComponentRepository.findByIsPublicTrue(pageable).stream()
         .map(themeComponentMapper::convertToDto)
         .collect(Collectors.toList());
   }
@@ -47,17 +48,17 @@ public class ThemeRetrieveService {
   }
 
   @Transactional(readOnly = true)
-  public List<ThemeComponentDto> getCompletedThemes() {
-    List<ThemeComponent> completedThemes = themeComponentRepository.fetchJoinByIsDoneTrue();
+  public List<ThemeComponentDto> getCompletedThemes(Pageable pageable) {
+    List<ThemeComponent> completedThemes = themeComponentRepository.findByIsDoneTrue(pageable);
     return completedThemes.stream()
         .map(themeComponentMapper::convertToDto)
         .collect(Collectors.toList());
   }
 
   @Transactional(readOnly = true)
-  public List<ThemeComponentDto> getCompletedThemesByUser(String userEmail) {
-    List<ThemeComponent> completedThemes = themeComponentRepository.fetchJoinByUserEmailAndIsDoneTrue(
-        userEmail);
+  public List<ThemeComponentDto> getCompletedThemesByUser(String userEmail, Pageable pageable) {
+    List<ThemeComponent> completedThemes = themeComponentRepository.findByIsDoneTrueAndUserEmail(
+        userEmail, pageable);
     return completedThemes.stream()
         .map(themeComponentMapper::convertToDto)
         .collect(Collectors.toList());
