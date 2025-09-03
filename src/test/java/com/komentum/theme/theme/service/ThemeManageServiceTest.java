@@ -49,23 +49,6 @@ class ThemeManageServiceTest {
     themeDataGenerator.deleteTestData();
   }
 
-  private List<ThemeImageRequest> getImageRequests() {
-    return themeDataGenerator.initialComponentTypes.stream()
-        .map(componentType -> ThemeImageRequest.builder()
-            .componentTypeId(componentType.getComponentTypeId())
-            .designComponentId(
-                themeDataGenerator.initialDesignComponents.get(0).getDesignComponentId())
-            .build()).toList();
-  }
-
-  private List<ThemeStyleRequest> getStyleRequests() {
-    return themeDataGenerator.initialColorStyles.stream()
-        .map(colorStyle -> ThemeStyleRequest.builder()
-            .colorTypeId(colorStyle.getColorTypeId())
-            .color("#ffffffff")
-            .build()).toList();
-  }
-
   @Test
   @Transactional
   @DisplayName("success test of creating new theme")
@@ -73,8 +56,8 @@ class ThemeManageServiceTest {
     // given
     CreateThemeRequest createThemeRequest = CreateThemeRequest.builder()
         .themeName("themeName")
-        .images(getImageRequests())
-        .styles(getStyleRequests())
+        .images(themeDataGenerator.getImageRequests())
+        .styles(themeDataGenerator.getStyleRequests())
         .isPublic(true)
         .versionName("versionName")
         .userEmail("test@test.com")
@@ -94,8 +77,8 @@ class ThemeManageServiceTest {
   @DisplayName("success test of updating theme")
   public void updateTheme_success() {
     // given
-    List<ThemeImageRequest> images = getImageRequests();
-    List<ThemeStyleRequest> styles = getStyleRequests();
+    List<ThemeImageRequest> images = themeDataGenerator.getImageRequests();
+    List<ThemeStyleRequest> styles = themeDataGenerator.getStyleRequests();
     images = images.subList(0, initialImagePerTheme / 2);
     styles = styles.subList(0, initialStylePerTheme / 2);
     ThemeComponent toUpdate = themeDataGenerator.initialThemes.get(0);

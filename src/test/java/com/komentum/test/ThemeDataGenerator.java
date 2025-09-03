@@ -11,6 +11,8 @@ import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeStyle;
+import com.komentum.theme.theme.dto.ThemeImageRequest;
+import com.komentum.theme.theme.dto.ThemeStyleRequest;
 import com.komentum.theme.theme.repository.ThemeComponentRepository;
 import com.komentum.theme.theme.repository.ThemeImageRepository;
 import com.komentum.theme.theme.repository.ThemeStyleRepository;
@@ -53,6 +55,23 @@ public class ThemeDataGenerator {
     initialDesignComponents = generateDesignComponents(initialComponentTypes);
     initialThemes = generateThemeComponents(themeCount, initialColorStyles, initialComponentTypes,
         initialDesignComponents);
+  }
+
+  public List<ThemeImageRequest> getImageRequests() {
+    return initialComponentTypes.stream()
+        .map(componentType -> ThemeImageRequest.builder()
+            .componentTypeId(componentType.getComponentTypeId())
+            .designComponentId(
+                initialDesignComponents.get(0).getDesignComponentId())
+            .build()).toList();
+  }
+
+  public List<ThemeStyleRequest> getStyleRequests() {
+    return initialColorStyles.stream()
+        .map(colorStyle -> ThemeStyleRequest.builder()
+            .colorTypeId(colorStyle.getColorStyleId())
+            .color("#ffffffff")
+            .build()).toList();
   }
 
   public void deleteTestData() {
@@ -148,8 +167,8 @@ public class ThemeDataGenerator {
           .userEmail(userEmail)
           .versionName(faker.name().fullName())
           .versionNumber(Integer.toString(faker.number().numberBetween(1, 100)))
-          .isDone(false)
-          .isPublic(false)
+          .isDone(i % 2 == 0)
+          .isPublic(i % 2 == 0)
           .build();
       generateTransientThemeImages(themeComponent, componentTypes,
           designComponents);
