@@ -8,15 +8,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Entity // JPA 엔티티 선언
-@Table(name = "color_style") //color_style과 매핑
-@Data
-@Builder // 빌더 패턴 사용하여 객체 생성할 수 있도록 함.
-@NoArgsConstructor // 어떠한 변수도 사용하지 않는 기본 생성자를 자동완성 시켜주는 어노테이션
-@AllArgsConstructor // 모든 필드를 초기화하는 생성자를 자동완성 시켜주는 어노테이션
+@Entity
+@Table(name = "color_style")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ColorStyle {
 
   @Id //PK
