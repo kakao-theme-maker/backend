@@ -52,13 +52,9 @@ public class DesignComponentService {
         .build();
   }
 
-  // CREATE
-  public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request) {
-    // componentTypeId 추출
-    Integer componentTypeId = request.getComponentTypeId();
-
-    ComponentType componentType = componentTypeRepository.findById(componentTypeId)
-        .orElseThrow(() -> new RuntimeException("ComponentType not found"));
+  public DesignComponent createDesignComponent(CreateDesignComponentRequest request) {
+    ComponentType componentType = componentTypeRepository.findById(request.getComponentTypeId())
+        .orElseThrow(() -> new ResourceNotFoundException("ComponentType not found with id: " + request.getComponentTypeId()));
 
     DesignComponent newComponent = DesignComponent.builder()
         .userEmail(request.getUserEmail())
@@ -67,61 +63,39 @@ public class DesignComponentService {
         .componentType(componentType)
         .build();
 
-    return convertToDto(designComponentRepository.save(newComponent));
-  }
-
-  // READ
-  @Transactional(readOnly = true)
-  public DesignComponentDto getDesignComponentById(Integer id) {
-    DesignComponent component = designComponentRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("DesignComponent not found"));
-    return convertToDto(component);
+    return designComponentRepository.save(newComponent);
   }
 
   @Transactional(readOnly = true)
-  public List<DesignComponentDto> getAllDesignComponents() {
-    return designComponentRepository.findAllWithComponentType().stream()
-        .map(this::convertToDto)
-        .collect(Collectors.toList());
+  public DesignComponent getDesignComponentById(Integer id) {
+    return designComponentRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
   }
 
   @Transactional(readOnly = true)
-  public List<DesignComponentDto> getByUserEmail(String userEmail) {
-    return designComponentRepository.findByUserEmailWithComponentType(userEmail).stream()
-        .map(this::convertToDto)
-        .collect(Collectors.toList());
+  public List<DesignComponent> getAllDesignComponents() {
+    return designComponentRepository.findAll();
   }
 
-  @Transactional(readOnly = true)
-  public List<DesignComponentDto> getPublicComponents() {
-    return designComponentRepository.findPublicWithComponentType().stream()
-        .map(this::convertToDto)
-        .collect(Collectors.toList());
-  }
+  public DesignComponent updateDesignComponent(Integer id, DesignComponent designComponentDetails) {
+    DesignComponent designComponent = getDesignComponentById(id);
 
-  // UPDATE
-  public DesignComponentDto updateComponent(Integer id, DesignComponentDto request,
-      Integer componentTypeId) {
-    DesignComponent existing = designComponentRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("DesignComponent not found"));
+    Optional.ofNullable(designComponentDetails.getUserEmail()).ifPresent(designComponent::setUserEmail);
+    Optional.ofNullable(designComponentDetails.getImageUrl()).ifPresent(designComponent::setImageUrl);
+    Optional.ofNullable(designComponentDetails.getIsPublic()).ifPresent(designComponent::setIsPublic);
 
-    Optional.ofNullable(request.getUserEmail()).ifPresent(existing::setUserEmail);
-    Optional.ofNullable(request.getImageUrl()).ifPresent(existing::setImageUrl);
-    Optional.ofNullable(request.getIsPublic()).ifPresent(existing::setIsPublic);
-
-    if (componentTypeId != null) {
-      ComponentType type = componentTypeRepository.findById(componentTypeId)
+    if (designComponentDetails.getComponentType() != null) {
+      ComponentType componentType = componentTypeRepository.findById(designComponentDetails.getComponentType().getComponentTypeId())
           .orElseThrow(() -> new ResourceNotFoundException("ComponentType not found"));
-      existing.setComponentType(type);
+      designComponent.setComponentType(componentType);
     }
 
-    return convertToDto(designComponentRepository.save(existing));
+    return designComponentRepository.save(designComponent);
   }
 
-  // DELETE
-  public void deleteComponent(Integer id) {
+  public void deleteDesignComponent(Integer id) {
     if (!designComponentRepository.existsById(id)) {
-      throw new ResourceNotFoundException("DesignComponent not found");
+      throw new ResourceNotFoundException("DesignComponent not found with id: " + id);
     }
     designComponentRepository.deleteById(id);
   }

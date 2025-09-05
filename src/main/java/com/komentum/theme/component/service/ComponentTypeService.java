@@ -31,11 +31,9 @@ public class ComponentTypeService {
     return componentTypeRepository.findAll();
   }
 
-  @Transactional
   public ComponentType updateComponentType(Integer id, ComponentType componentTypeDetails) {
     ComponentType componentType = getComponentTypeById(id);
 
-    // Null 체크 후 부분 업데이트
     Optional.ofNullable(componentTypeDetails.getExplain()).ifPresent(componentType::setExplain);
     Optional.ofNullable(componentTypeDetails.getIosComponentPath())
         .ifPresent(componentType::setIosComponentPath);
@@ -51,7 +49,6 @@ public class ComponentTypeService {
     return componentTypeRepository.save(componentType);
   }
 
-  @Transactional
   public void deleteComponentType(Integer id) {
     if (!componentTypeRepository.existsById(id)) {
       throw new ResourceNotFoundException("ComponentType not found with id: " + id);
