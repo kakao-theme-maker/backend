@@ -4,22 +4,17 @@ import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.dto.ThemeImageDto;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class ThemeImageMapper {
+@Mapper(componentModel = "spring")
+public interface ThemeImageMapper {
 
-  public ThemeImageDto convertToDto(ThemeImage themeImage) {
-    return ThemeImageDto.builder()
-        .designComponentId(themeImage.getDesignComponent().getDesignComponentId())
-        .build();
-  }
+  @Mapping(source = "designComponent.designComponentId", target = "designComponentId")
+  ThemeImageDto convertToDto(ThemeImage themeImage);
 
-  public ThemeImage convertToTransientEntity(ComponentType componentType,
-      DesignComponent designComponent) {
-    return ThemeImage.builder()
-        .designComponent(designComponent)
-        .componentType(componentType)
-        .build();
-  }
+  @Mapping(target = "themeImageId", ignore = true)
+  @Mapping(target = "themeComponent", ignore = true)
+  @Mapping(target = "designComponent", source = "designComponent")
+  ThemeImage convertToTransientEntity(ComponentType componentType, DesignComponent designComponent);
 }
