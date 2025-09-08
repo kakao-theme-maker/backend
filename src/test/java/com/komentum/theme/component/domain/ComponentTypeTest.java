@@ -1,5 +1,6 @@
 package com.komentum.theme.component.domain;
 
+import com.komentum.theme.component.enums.Platform;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -14,10 +15,9 @@ class ComponentTypeTest {
         ComponentType componentType = ComponentType.builder()
                 .componentTypeId(1)
                 .explain("테스트 컴포넌트")
-                .iosComponentPath("/ios/test")
-                .iosComponentName("TestComponent")
-                .androidComponentPath("/android/test")
-                .androidComponentName("AndroidTest")
+                .platform(Platform.IOS)
+                .componentPath("/ios/test")
+                .componentName("TestComponent")
                 .sizeX(100)
                 .sizeY(50)
                 .build();
@@ -25,10 +25,9 @@ class ComponentTypeTest {
         // Then
         assertThat(componentType.getComponentTypeId()).isEqualTo(1);
         assertThat(componentType.getExplain()).isEqualTo("테스트 컴포넌트");
-        assertThat(componentType.getIosComponentPath()).isEqualTo("/ios/test");
-        assertThat(componentType.getIosComponentName()).isEqualTo("TestComponent");
-        assertThat(componentType.getAndroidComponentPath()).isEqualTo("/android/test");
-        assertThat(componentType.getAndroidComponentName()).isEqualTo("AndroidTest");
+        assertThat(componentType.getPlatform()).isEqualTo(Platform.IOS);
+        assertThat(componentType.getComponentPath()).isEqualTo("/ios/test");
+        assertThat(componentType.getComponentName()).isEqualTo("TestComponent");
         assertThat(componentType.getSizeX()).isEqualTo(100);
         assertThat(componentType.getSizeY()).isEqualTo(50);
     }
@@ -43,7 +42,7 @@ class ComponentTypeTest {
         // Then
         assertThat(componentType.getExplain()).isEqualTo("최소 컴포넌트");
         assertThat(componentType.getComponentTypeId()).isNull();
-        assertThat(componentType.getIosComponentPath()).isNull();
+        assertThat(componentType.getComponentPath()).isNull();
         assertThat(componentType.getSizeX()).isNull();
     }
 
@@ -55,17 +54,20 @@ class ComponentTypeTest {
         // Then
         assertThat(componentType.getComponentTypeId()).isNull();
         assertThat(componentType.getExplain()).isNull();
-        assertThat(componentType.getIosComponentPath()).isNull();
+        assertThat(componentType.getComponentPath()).isNull();
     }
 
     @Test
     void allArgsConstructor_ShouldCreateComponentTypeWithAllFields() {
         // When
-        ComponentType componentType = new ComponentType(1, "전체 생성자 테스트", "/ios/full", "FullComponent", "/android/full", "AndroidFull", 200, 100, new ArrayList<>(), null, null);
+        ComponentType componentType = new ComponentType(1, "전체 생성자 테스트", Platform.IOS, "/ios/full", "FullComponent", 200, 100, new ArrayList<>(), null, null);
 
         // Then
         assertThat(componentType.getComponentTypeId()).isEqualTo(1);
         assertThat(componentType.getExplain()).isEqualTo("전체 생성자 테스트");
+        assertThat(componentType.getPlatform()).isEqualTo(Platform.IOS);
+        assertThat(componentType.getComponentPath()).isEqualTo("/ios/full");
+        assertThat(componentType.getComponentName()).isEqualTo("FullComponent");
         assertThat(componentType.getSizeX()).isEqualTo(200);
         assertThat(componentType.getSizeY()).isEqualTo(100);
     }

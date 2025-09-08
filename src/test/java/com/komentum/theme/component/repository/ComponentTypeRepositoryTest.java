@@ -1,6 +1,7 @@
 package com.komentum.theme.component.repository;
 
 import com.komentum.theme.component.domain.ComponentType;
+import com.komentum.theme.component.enums.Platform;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -27,10 +28,9 @@ class ComponentTypeRepositoryTest {
         // Given
         ComponentType componentType = ComponentType.builder()
                 .explain("버튼 컴포넌트")
-                .iosComponentPath("/ios/button")
-                .iosComponentName("ButtonComponent")
-                .androidComponentPath("/android/button")
-                .androidComponentName("AndroidButton")
+                .platform(Platform.IOS)
+                .componentPath("/ios/button")
+                .componentName("ButtonComponent")
                 .sizeX(100)
                 .sizeY(50)
                 .build();
@@ -50,10 +50,9 @@ class ComponentTypeRepositoryTest {
         // Given
         ComponentType componentType = ComponentType.builder()
                 .explain("아이콘 컴포넌트")
-                .iosComponentPath("/ios/icon")
-                .iosComponentName("IconComponent")
-                .androidComponentPath("/android/icon")
-                .androidComponentName("AndroidIcon")
+                .platform(Platform.IOS)
+                .componentPath("/ios/icon")
+                .componentName("IconComponent")
                 .sizeX(24)
                 .sizeY(24)
                 .build();
@@ -65,7 +64,7 @@ class ComponentTypeRepositoryTest {
         // Then
         assertThat(found).isPresent();
         assertThat(found.get().getExplain()).isEqualTo("아이콘 컴포넌트");
-        assertThat(found.get().getIosComponentName()).isEqualTo("IconComponent");
+        assertThat(found.get().getComponentName()).isEqualTo("IconComponent");
     }
 
     @Test
@@ -82,14 +81,18 @@ class ComponentTypeRepositoryTest {
         // Given
         ComponentType buttonType = ComponentType.builder()
                 .explain("버튼")
-                .iosComponentPath("/ios/button")
+                .platform(Platform.IOS)
+                .componentPath("/ios/button")
+                .componentName("ButtonComponent")
                 .sizeX(100)
                 .sizeY(50)
                 .build();
 
         ComponentType iconType = ComponentType.builder()
                 .explain("아이콘")
-                .iosComponentPath("/ios/icon")
+                .platform(Platform.IOS)
+                .componentPath("/ios/icon")
+                .componentName("IconComponent")
                 .sizeX(24)
                 .sizeY(24)
                 .build();
@@ -112,7 +115,9 @@ class ComponentTypeRepositoryTest {
         // Given
         ComponentType componentType = ComponentType.builder()
                 .explain("삭제할 컴포넌트")
-                .iosComponentPath("/ios/delete")
+                .platform(Platform.IOS)
+                .componentPath("/ios/delete")
+                .componentName("DeleteComponent")
                 .sizeX(50)
                 .sizeY(50)
                 .build();

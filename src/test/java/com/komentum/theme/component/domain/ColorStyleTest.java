@@ -1,5 +1,6 @@
 package com.komentum.theme.component.domain;
 
+import com.komentum.theme.component.enums.Platform;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,15 +13,19 @@ class ColorStyleTest {
         ColorStyle colorStyle = ColorStyle.builder()
                 .colorTypeId(1)
                 .explain("배경색 스타일")
-                .iosStyleName(".container|background-color")
-                .androidStyleName("background_color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".container")
+                .stylePropsName("background-color")
                 .build();
 
         // Then
         assertThat(colorStyle.getColorTypeId()).isEqualTo(1);
         assertThat(colorStyle.getExplain()).isEqualTo("배경색 스타일");
-        assertThat(colorStyle.getIosStyleName()).isEqualTo(".container|background-color");
-        assertThat(colorStyle.getAndroidStyleName()).isEqualTo("background_color");
+        assertThat(colorStyle.getPlatform()).isEqualTo(Platform.IOS);
+        assertThat(colorStyle.getStyleSheetPath()).isEqualTo("styles/ios.css");
+        assertThat(colorStyle.getStyleElementName()).isEqualTo(".container");
+        assertThat(colorStyle.getStylePropsName()).isEqualTo("background-color");
     }
 
     @Test
@@ -33,8 +38,10 @@ class ColorStyleTest {
         // Then
         assertThat(colorStyle.getExplain()).isEqualTo("최소 스타일");
         assertThat(colorStyle.getColorTypeId()).isNull();
-        assertThat(colorStyle.getIosStyleName()).isNull();
-        assertThat(colorStyle.getAndroidStyleName()).isNull();
+        assertThat(colorStyle.getPlatform()).isNull();
+        assertThat(colorStyle.getStyleSheetPath()).isNull();
+        assertThat(colorStyle.getStyleElementName()).isNull();
+        assertThat(colorStyle.getStylePropsName()).isNull();
     }
 
     @Test
@@ -45,22 +52,26 @@ class ColorStyleTest {
         // Then
         assertThat(colorStyle.getColorTypeId()).isNull();
         assertThat(colorStyle.getExplain()).isNull();
-        assertThat(colorStyle.getIosStyleName()).isNull();
-        assertThat(colorStyle.getAndroidStyleName()).isNull();
+        assertThat(colorStyle.getPlatform()).isNull();
+        assertThat(colorStyle.getStyleSheetPath()).isNull();
+        assertThat(colorStyle.getStyleElementName()).isNull();
+        assertThat(colorStyle.getStylePropsName()).isNull();
     }
 
     @Test
     void allArgsConstructor_ShouldCreateColorStyleWithAllFields() {
         // When
         ColorStyle colorStyle = new ColorStyle(
-                1, "전체 생성자 테스트", ".test|color", "test_color"
+                1, "전체 생성자 테스트", Platform.IOS, "styles/ios.css", ".test", "color"
         );
 
         // Then
         assertThat(colorStyle.getColorTypeId()).isEqualTo(1);
         assertThat(colorStyle.getExplain()).isEqualTo("전체 생성자 테스트");
-        assertThat(colorStyle.getIosStyleName()).isEqualTo(".test|color");
-        assertThat(colorStyle.getAndroidStyleName()).isEqualTo("test_color");
+        assertThat(colorStyle.getPlatform()).isEqualTo(Platform.IOS);
+        assertThat(colorStyle.getStyleSheetPath()).isEqualTo("styles/ios.css");
+        assertThat(colorStyle.getStyleElementName()).isEqualTo(".test");
+        assertThat(colorStyle.getStylePropsName()).isEqualTo("color");
     }
 
     @Test
@@ -71,14 +82,18 @@ class ColorStyleTest {
         // When
         colorStyle.setColorTypeId(5);
         colorStyle.setExplain("수정된 설명");
-        colorStyle.setIosStyleName(".modified|color");
-        colorStyle.setAndroidStyleName("modified_color");
+        colorStyle.setPlatform(Platform.IOS);
+        colorStyle.setStyleSheetPath("styles/ios.css");
+        colorStyle.setStyleElementName(".modified");
+        colorStyle.setStylePropsName("color");
 
         // Then
         assertThat(colorStyle.getColorTypeId()).isEqualTo(5);
         assertThat(colorStyle.getExplain()).isEqualTo("수정된 설명");
-        assertThat(colorStyle.getIosStyleName()).isEqualTo(".modified|color");
-        assertThat(colorStyle.getAndroidStyleName()).isEqualTo("modified_color");
+        assertThat(colorStyle.getPlatform()).isEqualTo(Platform.IOS);
+        assertThat(colorStyle.getStyleSheetPath()).isEqualTo("styles/ios.css");
+        assertThat(colorStyle.getStyleElementName()).isEqualTo(".modified");
+        assertThat(colorStyle.getStylePropsName()).isEqualTo("color");
     }
 
 

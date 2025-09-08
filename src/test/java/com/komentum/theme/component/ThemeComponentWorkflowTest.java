@@ -3,6 +3,7 @@ package com.komentum.theme.component;
 import com.komentum.theme.component.domain.ColorStyle;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.component.enums.Platform;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.repository.ColorStyleRepository;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
@@ -50,10 +51,9 @@ class ThemeComponentWorkflowTest {
         // === 1단계: ComponentType 생성 ===
         ComponentType componentType = ComponentType.builder()
                 .explain("통합테스트 버튼 컴포넌트")
-                .iosComponentPath("/ios/integration-button")
-                .androidComponentPath("/android/integration-button")
-                .iosComponentName("IntegrationButton")
-                .androidComponentName("AndroidIntegrationButton")
+                .platform(Platform.IOS)
+                .componentPath("/ios/integration-button")
+                .componentName("IntegrationButton")
                 .sizeX(120)
                 .sizeY(60)
                 .build();
@@ -85,16 +85,19 @@ class ThemeComponentWorkflowTest {
         // === 3단계: ColorStyle 생성 ===
         ColorStyle colorStyle = ColorStyle.builder()
                 .explain("통합테스트 버튼 배경색")
-                .iosStyleName(".integration-button|background-color")
-                .androidStyleName("integration_button_bg")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".integration-button")
+                .stylePropsName("background-color")
                 .build();
 
         ColorStyle savedColorStyle = colorStyleService.createColorStyle(colorStyle);
         
         assertThat(savedColorStyle.getColorTypeId()).isNotNull();
         assertThat(savedColorStyle.getExplain()).isEqualTo("통합테스트 버튼 배경색");
-        assertThat(savedColorStyle.getIosStyleName()).isEqualTo(".integration-button|background-color");
-        assertThat(savedColorStyle.getAndroidStyleName()).isEqualTo("integration_button_bg");
+        assertThat(savedColorStyle.getPlatform()).isEqualTo(Platform.IOS);
+        assertThat(savedColorStyle.getStyleElementName()).isEqualTo(".integration-button");
+        assertThat(savedColorStyle.getStylePropsName()).isEqualTo("background-color");
 
         // === 4단계: 연관관계 및 데이터 무결성 검증 ===
         // Repository 직접 조회로 연관관계 확인 (지연 로딩 문제 회피)
@@ -115,10 +118,9 @@ class ThemeComponentWorkflowTest {
         // === 1단계: 초기 데이터 생성 ===
         ComponentType originalType = componentTypeService.createComponentType(ComponentType.builder()
                 .explain("수정 테스트 컴포넌트")
-                .iosComponentPath("/ios/update-test")
-                .androidComponentPath("/android/update-test")
-                .iosComponentName("UpdateTestComponent")
-                .androidComponentName("AndroidUpdateTest")
+                .platform(Platform.IOS)
+                .componentPath("/ios/update-test")
+                .componentName("UpdateTestComponent")
                 .sizeX(100)
                 .sizeY(50)
                 .build());
@@ -133,8 +135,10 @@ class ThemeComponentWorkflowTest {
 
         ColorStyle originalStyle = colorStyleService.createColorStyle(ColorStyle.builder()
                 .explain("원본 색상 설명")
-                .iosStyleName(".original|color")
-                .androidStyleName("original_android_color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".original")
+                .stylePropsName("color")
                 .build());
 
         // === 2단계: 부분 업데이트 테스트 ===
@@ -150,8 +154,8 @@ class ThemeComponentWorkflowTest {
         assertThat(updatedType.getExplain()).isEqualTo("수정된 컴포넌트 설명");
         assertThat(updatedType.getSizeX()).isEqualTo(150);
         assertThat(updatedType.getSizeY()).isEqualTo(50);  // 기존 값 유지
-        assertThat(updatedType.getIosComponentPath()).isEqualTo("/ios/update-test");  // 기존 값 유지
-        assertThat(updatedType.getAndroidComponentName()).isEqualTo("AndroidUpdateTest");  // 기존 값 유지
+        assertThat(updatedType.getComponentPath()).isEqualTo("/ios/update-test");  // 기존 값 유지
+        assertThat(updatedType.getComponentName()).isEqualTo("UpdateTestComponent");  // 기존 값 유지
 
         // DesignComponent 부분 업데이트
         DesignComponent designUpdate = DesignComponent.builder()
@@ -172,15 +176,16 @@ class ThemeComponentWorkflowTest {
         // ColorStyle 부분 업데이트
         ColorStyle styleUpdate = ColorStyle.builder()
                 .explain("수정된 색상 설명")
-                .androidStyleName("updated_android_color")
-                // iosStyleName은 변경하지 않음
+                .platform(Platform.ANDROID)
+                .styleSheetPath("android/colors.xml")
+                .styleElementName("View")
+                .stylePropsName("updated_android_color")
                 .build();
 
         ColorStyle updatedStyle = colorStyleService.updateColorStyle(originalStyle.getColorTypeId(), styleUpdate);
         
         assertThat(updatedStyle.getExplain()).isEqualTo("수정된 색상 설명");
-        assertThat(updatedStyle.getAndroidStyleName()).isEqualTo("updated_android_color");
-        assertThat(updatedStyle.getIosStyleName()).isEqualTo(".original|color");  // 기존 값 유지
+        assertThat(updatedStyle.getStylePropsName()).isEqualTo("updated_android_color");
 
         // === 3단계: 업데이트 후 연관관계 재검증 ===
         DesignComponent finalDesign = designComponentService.getDesignComponentById(originalDesign.getDesignComponentId());
@@ -193,8 +198,9 @@ class ThemeComponentWorkflowTest {
         // === 1단계: 공유될 ComponentType 생성 ===
         ComponentType sharedType = componentTypeService.createComponentType(ComponentType.builder()
                 .explain("공유 컴포넌트 타입")
-                .iosComponentPath("/ios/shared")
-                .androidComponentPath("/android/shared")
+                .platform(Platform.IOS)
+                .componentPath("/ios/shared")
+                .componentName("SharedComponent")
                 .sizeX(200)
                 .sizeY(100)
                 .build());
@@ -256,7 +262,9 @@ class ThemeComponentWorkflowTest {
         // === 1단계: 연관관계 데이터 생성 ===
         ComponentType componentType = componentTypeService.createComponentType(ComponentType.builder()
                 .explain("삭제 테스트 컴포넌트")
-                .iosComponentPath("/ios/delete-test")
+                .platform(Platform.IOS)
+                .componentPath("/ios/delete-test")
+                .componentName("DeleteTestComponent")
                 .build());
 
         CreateDesignComponentRequest designRequest = new CreateDesignComponentRequest();
@@ -269,8 +277,10 @@ class ThemeComponentWorkflowTest {
 
         ColorStyle colorStyle = colorStyleService.createColorStyle(ColorStyle.builder()
                 .explain("삭제 테스트 색상")
-                .iosStyleName(".delete-test|color")
-                .androidStyleName("delete_test_color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".delete-test")
+                .stylePropsName("color")
                 .build());
 
         // === 2단계: 데이터 존재 확인 ===
@@ -334,7 +344,9 @@ class ThemeComponentWorkflowTest {
         for (int i = 0; i < 3; i++) {
             types[i] = componentTypeService.createComponentType(ComponentType.builder()
                     .explain("벌크 테스트 타입 " + i)
-                    .iosComponentPath("/ios/bulk-" + i)
+                    .platform(Platform.IOS)
+                    .componentPath("/ios/bulk-" + i)
+                    .componentName("BulkComponent" + i)
                     .sizeX(100 + i * 20)
                     .sizeY(50 + i * 10)
                     .build());
@@ -357,8 +369,10 @@ class ThemeComponentWorkflowTest {
         for (int i = 0; i < 5; i++) {
             colorStyleService.createColorStyle(ColorStyle.builder()
                     .explain("벌크 색상 " + i)
-                    .iosStyleName(".bulk-" + i + "|color")
-                    .androidStyleName("bulk_color_" + i)
+                    .platform(Platform.IOS)
+                    .styleSheetPath("styles/ios.css")
+                    .styleElementName(".bulk-" + i)
+                    .stylePropsName("color")
                     .build());
         }
 
@@ -388,12 +402,16 @@ class ThemeComponentWorkflowTest {
         // === 1단계: 두 개의 ComponentType 생성 ===
         ComponentType type1 = componentTypeService.createComponentType(ComponentType.builder()
                 .explain("첫 번째 타입")
-                .iosComponentPath("/ios/type1")
+                .platform(Platform.IOS)
+                .componentPath("/ios/type1")
+                .componentName("Type1Component")
                 .build());
 
         ComponentType type2 = componentTypeService.createComponentType(ComponentType.builder()
                 .explain("두 번째 타입")
-                .iosComponentPath("/ios/type2")
+                .platform(Platform.IOS)
+                .componentPath("/ios/type2")
+                .componentName("Type2Component")
                 .build());
 
         // === 2단계: type1을 참조하는 DesignComponent 생성 ===
@@ -438,7 +456,9 @@ class ThemeComponentWorkflowTest {
         // === 연관관계 없는 ComponentType 처리 테스트 ===
         ComponentType lonelyType = componentTypeService.createComponentType(ComponentType.builder()
                 .explain("독립적인 컴포넌트")
-                .iosComponentPath("/ios/lonely")
+                .platform(Platform.IOS)
+                .componentPath("/ios/lonely")
+                .componentName("LonelyComponent")
                 .sizeX(75)
                 .sizeY(25)
                 .build());

@@ -1,6 +1,7 @@
 package com.komentum.theme.component.repository;
 
 import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.theme.component.enums.Platform;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -27,8 +28,10 @@ class ColorStyleRepositoryTest {
         // Given
         ColorStyle colorStyle = ColorStyle.builder()
                 .explain("배경색 스타일")
-                .iosStyleName(".container|background-color")
-                .androidStyleName("background_color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".container")
+                .stylePropsName("background-color")
                 .build();
 
         // When
@@ -44,8 +47,10 @@ class ColorStyleRepositoryTest {
         // Given
         ColorStyle colorStyle = ColorStyle.builder()
                 .explain("텍스트 색상")
-                .iosStyleName(".text|color")
-                .androidStyleName("text_color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".text")
+                .stylePropsName("color")
                 .build();
         ColorStyle saved = entityManager.persistAndFlush(colorStyle);
 
@@ -71,10 +76,18 @@ class ColorStyleRepositoryTest {
         // Given
         ColorStyle style1 = ColorStyle.builder()
                 .explain("스타일1")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".style1")
+                .stylePropsName("color")
                 .build();
         
         ColorStyle style2 = ColorStyle.builder()
                 .explain("스타일2")
+                .platform(Platform.ANDROID)
+                .styleSheetPath("android/colors.xml")
+                .styleElementName("View")
+                .stylePropsName("style2_color")
                 .build();
 
         entityManager.persist(style1);
@@ -93,6 +106,10 @@ class ColorStyleRepositoryTest {
         // Given
         ColorStyle colorStyle = ColorStyle.builder()
                 .explain("삭제할 스타일")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".delete")
+                .stylePropsName("color")
                 .build();
         ColorStyle saved = entityManager.persistAndFlush(colorStyle);
 

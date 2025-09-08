@@ -52,4 +52,46 @@ public class ColorStyle {
     this.styleElementName = colorStyle.styleElementName;
     this.stylePropsName = colorStyle.stylePropsName;
   }
+
+  @Deprecated
+  public String getIosStyleName() {
+    if (platform == Platform.IOS) {
+      return styleElementName + "|" + stylePropsName;
+    }
+    return null;
+  }
+
+  @Deprecated
+  public String getAndroidStyleName() {
+    if (platform == Platform.ANDROID) {
+      return stylePropsName;
+    }
+    return null;
+  }
+
+  public static class ColorStyleBuilder {
+    @Deprecated
+    public ColorStyleBuilder iosStyleName(String iosStyleName) {
+      this.platform = Platform.IOS;
+      if (iosStyleName != null && iosStyleName.contains("|")) {
+        String[] parts = iosStyleName.split("\\|");
+        this.styleElementName = parts[0];
+        this.stylePropsName = parts[1];
+      } else {
+        this.styleElementName = iosStyleName;
+        this.stylePropsName = "color";
+      }
+      this.styleSheetPath = "styles/ios.css";
+      return this;
+    }
+
+    @Deprecated
+    public ColorStyleBuilder androidStyleName(String androidStyleName) {
+      this.platform = Platform.ANDROID;
+      this.styleElementName = "View";
+      this.stylePropsName = androidStyleName;
+      this.styleSheetPath = "android/colors.xml";
+      return this;
+    }
+  }
 }

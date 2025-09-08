@@ -1,6 +1,7 @@
 package com.komentum.theme.component.controller;
 
 import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.theme.component.enums.Platform;
 import com.komentum.theme.component.service.ColorStyleService;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.theme.exception.GlobalExceptionHandler;
@@ -50,15 +51,19 @@ class ColorStyleControllerTest {
     void createColorStyle_ShouldReturnCreatedColorStyle() throws Exception {
         ColorStyle colorStyle = ColorStyle.builder()
                 .explain("배경색 스타일")
-                .iosStyleName(".container|background-color")
-                .androidStyleName("background_color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".container")
+                .stylePropsName("background-color")
                 .build();
 
         ColorStyle savedStyle = ColorStyle.builder()
                 .colorTypeId(1)
                 .explain("배경색 스타일")
-                .iosStyleName(".container|background-color")
-                .androidStyleName("background_color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".container")
+                .stylePropsName("background-color")
                 .build();
 
         when(colorStyleService.createColorStyle(any(ColorStyle.class))).thenReturn(savedStyle);
@@ -69,7 +74,9 @@ class ColorStyleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.colorTypeId").value(1))
                 .andExpect(jsonPath("$.explain").value("배경색 스타일"))
-                .andExpect(jsonPath("$.iosStyleName").value(".container|background-color"));
+                .andExpect(jsonPath("$.platform").value("IOS"))
+                .andExpect(jsonPath("$.styleElementName").value(".container"))
+                .andExpect(jsonPath("$.stylePropsName").value("background-color"));
 
         verify(colorStyleService).createColorStyle(any(ColorStyle.class));
     }
@@ -79,7 +86,10 @@ class ColorStyleControllerTest {
         ColorStyle colorStyle = ColorStyle.builder()
                 .colorTypeId(1)
                 .explain("조회 테스트")
-                .iosStyleName(".test|color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".test")
+                .stylePropsName("color")
                 .build();
 
         when(colorStyleService.getColorStyleById(1)).thenReturn(colorStyle);
@@ -137,7 +147,10 @@ class ColorStyleControllerTest {
         ColorStyle updatedStyle = ColorStyle.builder()
                 .colorTypeId(1)
                 .explain("수정된 설명")
-                .iosStyleName(".container|background-color")
+                .platform(Platform.IOS)
+                .styleSheetPath("styles/ios.css")
+                .styleElementName(".container")
+                .stylePropsName("background-color")
                 .build();
 
         when(colorStyleService.updateColorStyle(eq(1), any(ColorStyle.class))).thenReturn(updatedStyle);
@@ -147,7 +160,9 @@ class ColorStyleControllerTest {
                 .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.explain").value("수정된 설명"))
-                .andExpect(jsonPath("$.iosStyleName").value(".container|background-color"));
+                .andExpect(jsonPath("$.platform").value("IOS"))
+                .andExpect(jsonPath("$.styleElementName").value(".container"))
+                .andExpect(jsonPath("$.stylePropsName").value("background-color"));
 
         verify(colorStyleService).updateColorStyle(eq(1), any(ColorStyle.class));
     }
