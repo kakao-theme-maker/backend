@@ -75,11 +75,11 @@ public class ThemeDataGenerator {
   }
 
   public void deleteTestData() {
-    themeComponentRepository.deleteAll();
     themeImageRepository.deleteAll();
     themeStyleRepository.deleteAll();
-    colorStyleRepository.deleteAll();
+    themeComponentRepository.deleteAll();
     designComponentRepository.deleteAll();
+    colorStyleRepository.deleteAll();
     componentTypeRepository.deleteAll();
   }
 
