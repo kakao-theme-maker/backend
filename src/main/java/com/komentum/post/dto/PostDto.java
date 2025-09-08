@@ -1,7 +1,9 @@
 package com.komentum.post.dto;
 
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.Tag;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +21,8 @@ public class PostDto {
     public String title;
     public String content;
     public String createdAt;
-    public Long prefer;
+    public Long prefers;
+    public List<Tag> tags;
 
     public static PostResponse from(Post post) {
       String createdAtString = DateTimeFormatter.ISO_LOCAL_DATE.format(post.getCreatedAt());
@@ -31,9 +34,10 @@ public class PostDto {
           .build();
     }
 
-    public static PostResponse from(PostRawData postRawData) {
-      PostResponse postResponse = from(postRawData.getPost());
-      postResponse.setPrefer(postRawData.getPrefer());
+    public static PostResponse from(PostDetail postDetail) {
+      PostResponse postResponse = from(postDetail.getPost());
+      postResponse.setPrefers(postDetail.getPrefers());
+      postResponse.setTags(postDetail.getTags());
       return postResponse;
     }
   }
@@ -42,10 +46,24 @@ public class PostDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class PostRawData {
+  public static class PostDetail {
 
     public Post post;
-    public Long prefer;
+    public Long prefers;
+    public List<Tag> tags;
+
+    public static PostDetail from(PostDetailProjection projection) {
+      return PostDetail.builder()
+          .post(projection.getPost())
+          .prefers(projection.getPrefers())
+          .build();
+    }
+
+    public static PostDetail from(Post post) {
+      return PostDetail.builder()
+          .post(post)
+          .build();
+    }
   }
 
   @Data
