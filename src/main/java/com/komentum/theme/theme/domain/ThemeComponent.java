@@ -16,8 +16,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.BatchSize;
 
+@Slf4j
 @Entity
 @Table(name = "theme_component")
 @Getter
@@ -63,11 +65,27 @@ public class ThemeComponent {
   private Set<ThemeStyle> themeStyles = new HashSet<>();
 
   public void addThemeImage(ThemeImage themeImage) {
+    boolean alreadyExists = this.themeImages.stream()
+        .anyMatch(existingImage ->
+            existingImage.getComponentType().getComponentTypeId()
+                .equals(themeImage.getComponentType().getComponentTypeId())
+        );
+    if (alreadyExists) {
+      throw new IllegalArgumentException(
+          "Image already exists : " + themeImage.getComponentType().getComponentTypeId());
+    }
     this.themeImages.add(themeImage);
     themeImage.setThemeComponent(this);
   }
 
   public void addThemeStyle(ThemeStyle themeStyle) {
+    boolean alreadyExists = this.themeStyles.stream()
+        .anyMatch(existingStyle -> existingStyle.getColorStyle().getColorStyleId()
+            .equals(themeStyle.getColorStyle().getColorStyleId()));
+    if (alreadyExists) {
+      throw new IllegalArgumentException(
+          "Style already exists : " + themeStyle.getColorStyle().getColorStyleId());
+    }
     this.themeStyles.add(themeStyle);
     themeStyle.setThemeComponent(this);
   }

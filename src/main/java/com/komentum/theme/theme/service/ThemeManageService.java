@@ -11,8 +11,6 @@ import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeStyle;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
-import com.komentum.theme.theme.dto.ThemeImageRequest;
-import com.komentum.theme.theme.dto.ThemeStyleRequest;
 import com.komentum.theme.theme.mapper.ThemeComponentMapper;
 import com.komentum.theme.theme.mapper.ThemeImageMapper;
 import com.komentum.theme.theme.mapper.ThemeStyleMapper;
@@ -21,9 +19,7 @@ import com.komentum.theme.theme.repository.ThemeImageRepository;
 import com.komentum.theme.theme.repository.ThemeStyleRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -45,32 +41,31 @@ public class ThemeManageService {
   private final ThemeImageMapper themeImageMapper;
 
   @Transactional
-  void addThemeImageAndStyle(ThemeComponent themeComponent, CreateThemeRequest request) {
-    // 테마 스타일 추가
-    if (request.getStyles() != null) {
-      List<Integer> colorStyleIdList = request.getStyles().stream()
-          .map(ThemeStyleRequest::getColorTypeId).toList();
-      Map<Integer, ColorStyle> colorstyleMap = colorStyleRepository.findAllById(colorStyleIdList)
-          .stream().collect(
-              Collectors.toMap(ColorStyle::getColorStyleId, Function.identity()));
-      request.getStyles().forEach(createDto -> {
-        ColorStyle colorStyle = colorstyleMap.get(createDto.getColorTypeId());
-        ThemeStyle themeStyle = themeStyleMapper.convertToTransientEntity(createDto, colorStyle);
-        themeComponent.addThemeStyle(themeStyle);
-      });
-    }
-    // 테마 이미지 추가
-    if (request.getImages() != null) {
-      for (ThemeImageRequest imageRequest : request.getImages()) {
-        ComponentType proxyComponentType = em.getReference(ComponentType.class,
-            imageRequest.getComponentTypeId());
-        DesignComponent proxyDesignComponent = em.getReference(DesignComponent.class,
-            imageRequest.getDesignComponentId());
-        ThemeImage themeImage = themeImageMapper.convertToTransientEntity(proxyComponentType,
-            proxyDesignComponent);
-        themeComponent.addThemeImage(themeImage);
-      }
-    }
+  void applyThemeImageAndStyle(ThemeComponent themeComponent, CreateThemeRequest request) {
+    // 기존 theme image와 style 조회
+    Set<ThemeImage> currentImages = themeComponent.getThemeImages();
+    Set<ThemeStyle> currentStyles = themeComponent.getThemeStyles();
+    // 요청으로 받은 theme image와 style을 Entity로 변환
+    Set<ThemeImage> requestedImages = request.getImages().stream().map(ti -> {
+      ComponentType componentType = em.getReference(ComponentType.class, ti.getComponentTypeId());
+      DesignComponent designComponent = em.getReference(DesignComponent.class,
+          ti.getDesignComponentId());
+      return themeImageMapper.convertToTransientEntity(componentType, designComponent);
+    }).collect(Collectors.toSet());
+    Set<ThemeStyle> requestedStyles = request.getStyles().stream().map(ts -> {
+      ColorStyle colorStyle = em.getReference(ColorStyle.class, ts.getColorTypeId());
+      return themeStyleMapper.convertToTransientEntity(ts, colorStyle);
+    }).collect(Collectors.toSet());
+    // 기존 theme image / style에 있지만 요청받은 theme image / style에 없는 데이터 제거
+    currentImages.retainAll(requestedImages);
+    currentStyles.retainAll(requestedStyles);
+    em.flush();
+    // 요청 받은 theme image / style 중 현재 theme image / style에 있는 것을 제거하여 중복 제거
+    requestedImages.removeAll(currentImages);
+    requestedStyles.removeAll(currentStyles);
+    // 새로운 theme image / style을 themeComponent에 추가
+    requestedImages.forEach(themeComponent::addThemeImage);
+    requestedStyles.forEach(themeComponent::addThemeStyle);
   }
 
   @Transactional
@@ -78,7 +73,7 @@ public class ThemeManageService {
     // 테마 컴포넌트 생성
     ThemeComponent themeComponent = themeComponentMapper.convertToTransientEntity(request, "1");
     // 테마 스타일 및 이미지 추가
-    addThemeImageAndStyle(themeComponent, request);
+    applyThemeImageAndStyle(themeComponent, request);
     // 테마 컴포넌트 저장
     return themeComponentMapper.convertToDto(themeComponentRepository.save(themeComponent));
   }
@@ -99,10 +94,8 @@ public class ThemeManageService {
     } else {
       throw new RuntimeException("Version number is not numeric");
     }
-    // 테마 스타일과 이미지 초기화 후 갱신
-    themeComponent.getThemeImages().clear();
-    themeComponent.getThemeStyles().clear();
-    addThemeImageAndStyle(themeComponent, request);
+    // 테마 스타일과 이미지 갱신
+    applyThemeImageAndStyle(themeComponent, request);
     // 결과 반환
     return themeComponentMapper.convertToDto(themeComponentRepository.save(themeComponent));
   }

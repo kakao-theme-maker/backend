@@ -16,5 +16,6 @@ public interface ThemeImageMapper {
   @Mapping(target = "themeImageId", ignore = true)
   @Mapping(target = "themeComponent", ignore = true)
   @Mapping(target = "designComponent", source = "designComponent")
+  @Mapping(target = "componentType", source = "componentType")
   ThemeImage convertToTransientEntity(ComponentType componentType, DesignComponent designComponent);
 }
