@@ -1,8 +1,11 @@
 package com.komentum.theme.component.domain;
 
+import com.komentum.theme.component.enums.Platform;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,22 +39,20 @@ public class ComponentType {
   @Column(name = "`explain`")
   private String explain;
 
-  @Column(name = "ios_component_path")
-  private String iosComponentPath;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Platform platform;
 
-  @Column(name = "ios_component_name")
-  private String iosComponentName;
+  @Column(name = "component_path", nullable = false)
+  private String componentPath;
 
-  @Column(name = "android_component_path")
-  private String androidComponentPath;
+  @Column(name = "component_name", nullable = false)
+  private String componentName;
 
-  @Column(name = "android_component_name")
-  private String androidComponentName;
-
-  @Column(name = "sizeX")
+  @Column(name = "size_x")
   private Integer sizeX;
 
-  @Column(name = "sizeY")
+  @Column(name = "size_y")
   private Integer sizeY;
 
   @OneToMany(mappedBy = "componentType", cascade = CascadeType.ALL, orphanRemoval = true)

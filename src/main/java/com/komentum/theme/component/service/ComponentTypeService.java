@@ -35,14 +35,9 @@ public class ComponentTypeService {
     ComponentType componentType = getComponentTypeById(id);
 
     Optional.ofNullable(componentTypeDetails.getExplain()).ifPresent(componentType::setExplain);
-    Optional.ofNullable(componentTypeDetails.getIosComponentPath())
-        .ifPresent(componentType::setIosComponentPath);
-    Optional.ofNullable(componentTypeDetails.getIosComponentName())
-        .ifPresent(componentType::setIosComponentName);
-    Optional.ofNullable(componentTypeDetails.getAndroidComponentPath())
-        .ifPresent(componentType::setAndroidComponentPath);
-    Optional.ofNullable(componentTypeDetails.getAndroidComponentName())
-        .ifPresent(componentType::setAndroidComponentName);
+    Optional.ofNullable(componentTypeDetails.getPlatform()).ifPresent(componentType::setPlatform);
+    Optional.ofNullable(componentTypeDetails.getComponentPath()).ifPresent(componentType::setComponentPath);
+    Optional.ofNullable(componentTypeDetails.getComponentName()).ifPresent(componentType::setComponentName);
     Optional.ofNullable(componentTypeDetails.getSizeX()).ifPresent(componentType::setSizeX);
     Optional.ofNullable(componentTypeDetails.getSizeY()).ifPresent(componentType::setSizeY);
 

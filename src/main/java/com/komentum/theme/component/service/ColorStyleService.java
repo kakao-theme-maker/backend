@@ -35,8 +35,10 @@ public class ColorStyleService {
     ColorStyle colorStyle = getColorStyleById(id);
 
     Optional.ofNullable(colorStyleDetails.getExplain()).ifPresent(colorStyle::setExplain);
-    Optional.ofNullable(colorStyleDetails.getIosStyleName()).ifPresent(colorStyle::setIosStyleName);
-    Optional.ofNullable(colorStyleDetails.getAndroidStyleName()).ifPresent(colorStyle::setAndroidStyleName);
+    Optional.ofNullable(colorStyleDetails.getPlatform()).ifPresent(colorStyle::setPlatform);
+    Optional.ofNullable(colorStyleDetails.getStyleSheetPath()).ifPresent(colorStyle::setStyleSheetPath);
+    Optional.ofNullable(colorStyleDetails.getStyleElementName()).ifPresent(colorStyle::setStyleElementName);
+    Optional.ofNullable(colorStyleDetails.getStylePropsName()).ifPresent(colorStyle::setStylePropsName);
 
     return colorStyleRepository.save(colorStyle);
   }

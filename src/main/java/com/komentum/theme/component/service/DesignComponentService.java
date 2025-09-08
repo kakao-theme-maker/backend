@@ -43,10 +43,9 @@ public class DesignComponentService {
     return DesignComponentDto.ComponentTypeDto.builder()
         .componentTypeId(entity.getComponentTypeId())
         .explain(entity.getExplain())
-        .iosComponentPath(entity.getIosComponentPath())
-        .iosComponentName(entity.getIosComponentName())
-        .androidComponentPath(entity.getAndroidComponentPath())
-        .androidComponentName(entity.getAndroidComponentName())
+        .platform(entity.getPlatform())
+        .componentPath(entity.getComponentPath())
+        .componentName(entity.getComponentName())
         .sizeX(entity.getSizeX())
         .sizeY(entity.getSizeY())
         .build();

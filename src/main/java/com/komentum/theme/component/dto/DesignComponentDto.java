@@ -1,5 +1,6 @@
 package com.komentum.theme.component.dto;
 
+import com.komentum.theme.component.enums.Platform;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,10 +30,9 @@ public class DesignComponentDto {
 
     private Integer componentTypeId;
     private String explain;
-    private String iosComponentPath;
-    private String iosComponentName;
-    private String androidComponentPath;
-    private String androidComponentName;
+    private Platform platform;
+    private String componentPath;
+    private String componentName;
     private Integer sizeX;
     private Integer sizeY;
   }
