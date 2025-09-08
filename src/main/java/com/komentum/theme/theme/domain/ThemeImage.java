@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +18,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "theme_image")
+@Table(name = "theme_image", uniqueConstraints = {
+    @UniqueConstraint(name = "THEME_COMPONENT_COMPONENT_TYPE_UNIQUE", columnNames = {
+        "theme_component_id", "component_type_id"})})
 @Getter
 @Setter
 @Builder
