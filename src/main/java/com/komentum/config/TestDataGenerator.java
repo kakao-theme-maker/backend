@@ -1,6 +1,7 @@
 package com.komentum.config;
 
 import com.github.javafaker.Faker;
+import com.komentum.global.security.UserRole;
 import com.komentum.post.domain.Comment;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
@@ -19,10 +20,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("dev")
 @RequiredArgsConstructor
 public class TestDataGenerator {
 
@@ -50,6 +53,7 @@ public class TestDataGenerator {
     for (int i = 0; i < size; i++) {
       User user = User.builder()
           .userEmail(faker.internet().emailAddress())
+          .role(UserRole.USER)
           .birth(LocalDate.now().minusYears(i))
           .gender(i % 2 == 0 ? Gender.male : Gender.female)
           .profileImg(faker.internet().image())

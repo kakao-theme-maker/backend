@@ -4,18 +4,17 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Profile("auth")
 public class JwtUtils {
 
   private final Key SECRET_KEY;
@@ -92,6 +91,25 @@ public class JwtUtils {
   public String resolveJwtToken(HttpRequest request) {
     try {
       String authorization = request.getHeaders().getFirst(AuthProperty.ACCESS_TOKEN_HEADER);
+      if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
+        return null;
+      }
+      return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * extract token from HttpServletRequest
+   *
+   * @param request HttpServletRequest
+   * @return jwt token without prefix or null if token not exists
+   */
+  public String resolveJwtToken(HttpServletRequest request) {
+    try {
+      String authorization = request.getHeader(AuthProperty.ACCESS_TOKEN_HEADER);
       if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
         return null;
       }

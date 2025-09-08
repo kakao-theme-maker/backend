@@ -1,7 +1,10 @@
 package com.komentum.theme.component.domain;
 
+import com.komentum.theme.component.enums.Platform;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,9 +32,24 @@ public class ColorStyle {
   @Column(name = "`explain`")
   private String explain;
 
-  @Column(name = "ios_style_name")
-  private String iosStyleName;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Platform platform;
 
-  @Column(name = "android_style_name")
-  private String androidStyleName;
+  @Column(name = "style_sheet_path", nullable = false)
+  private String styleSheetPath;
+
+  @Column(name = "style_element_name", nullable = false)
+  private String styleElementName;
+
+  @Column(name = "style_props_name", nullable = false)
+  private String stylePropsName;
+
+  public void update(ColorStyle colorStyle) {
+    this.explain = colorStyle.explain;
+    this.platform = colorStyle.platform;
+    this.styleSheetPath = colorStyle.styleSheetPath;
+    this.styleElementName = colorStyle.styleElementName;
+    this.stylePropsName = colorStyle.stylePropsName;
+  }
 }
