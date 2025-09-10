@@ -1,39 +1,46 @@
 package com.komentum.theme.theme.domain;
 
+import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.Setter;
 
 @Entity
-@Table(name = "theme_image")
-@Data
+@Table(name = "theme_image", uniqueConstraints = {
+    @UniqueConstraint(name = "THEME_COMPONENT_COMPONENT_TYPE_UNIQUE", columnNames = {
+        "theme_component_id", "component_type_id"})})
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ThemeImage {
 
-  @EmbeddedId //복합키를 나타내는 어노테이션
-  private ThemeImageId id; //기본키
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long themeImageId;
 
-  @ToString.Exclude
-  @ManyToOne(fetch = FetchType.LAZY) //다대일 관계를 나타냄 fetch = FetchType.LAZY : 연관된 데이터를 필요할 때만 로드
-  @MapsId("themeComponentId")
-  @JoinColumn(name = "theme_component_id") // DB에서 외래 키 칼럼 이름을 지정
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "theme_component_id")
   private ThemeComponent themeComponent;
 
-  @ToString.Exclude
   @ManyToOne(fetch = FetchType.LAZY)
-  @MapsId("designComponentId")
   @JoinColumn(name = "design_component_id")
   private DesignComponent designComponent;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "component_type_id")
+  private ComponentType componentType;
 }
