@@ -63,10 +63,12 @@ dependencies {
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     // test : h2 database
     testImplementation 'com.h2database:h2'
-    // test :
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    // mapstruct
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 }
 
 tasks.register('copyConfig', Copy) {

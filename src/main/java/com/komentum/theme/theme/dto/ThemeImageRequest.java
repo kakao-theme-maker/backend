@@ -2,15 +2,17 @@ package com.komentum.theme.theme.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ThemeStyleDto {
+public class ThemeImageRequest {
 
-  private Integer colorStyleId;
-  private String color;
+  Integer designComponentId;
+  Integer componentTypeId;
 }
