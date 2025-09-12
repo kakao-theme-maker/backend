@@ -1,16 +1,24 @@
 package com.komentum.theme.android.editor;
 
+import com.komentum.global.utils.FileManager;
 import com.komentum.theme.android.dto.AndroidComponentDto;
-import com.komentum.theme.utils.ImageUtils;
 import com.komentum.theme.utils.ThemePathManager;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class AndroidThemeImageEditor {
+
+  private final FileManager fileManager;
 
   /**
    * edit an image on the specific theme path
@@ -20,14 +28,15 @@ public class AndroidThemeImageEditor {
    */
   public void editImage(String themeId, AndroidComponentDto component) throws IOException {
     Path imagePath = ThemePathManager.getImagePath(themeId, component);
-    try (FileOutputStream fos = new FileOutputStream(imagePath.toFile())) {
-      byte[] imageBytes = ImageUtils.loadImageBytes(component.getImageUrl());
-      if (imageBytes == null) {
-        throw new IOException("AndroidThemeImageEditor.editImage : Image bytes is null");
-      }
-      fos.write(imageBytes);
-      fos.flush();
+    byte[] imageBytes = fileManager.downloadFile(component.getImageUrl());
+    Path tempPath = Paths.get(imagePath + ".tmp");
+    try (OutputStream os = Files.newOutputStream(tempPath,
+        StandardOpenOption.CREATE,
+        StandardOpenOption.TRUNCATE_EXISTING)) {
+      os.write(imageBytes);
+      os.flush();
     }
+    Files.move(tempPath, imagePath, StandardCopyOption.REPLACE_EXISTING);
   }
 
   /**

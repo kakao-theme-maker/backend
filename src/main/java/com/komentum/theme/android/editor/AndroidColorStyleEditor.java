@@ -32,7 +32,7 @@ public class AndroidColorStyleEditor {
    * @param path path of color.xml
    * @return color.xml document
    */
-  private Document loadDocument(String path) {
+  public Document loadDocument(String path) {
     try {
       File resource = new File(path);
       DocumentBuilder documentBuilder = factory.newDocumentBuilder();
@@ -53,7 +53,7 @@ public class AndroidColorStyleEditor {
     try {
       File outputFile = new File(outputFilePath);
       Transformer transformer = TransformerFactory.newInstance().newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+      transformer.setOutputProperty(OutputKeys.INDENT, "no");
       transformer.transform(new DOMSource(document), new StreamResult(outputFile));
     } catch (Exception e) {
       log.error(e.getMessage());
@@ -86,6 +86,7 @@ public class AndroidColorStyleEditor {
    * @param colorDtoList information list about theme's color
    */
   public void editColors(String themeId, List<AndroidColorDto> colorDtoList) {
+    // 색상은 소문자 8자리 헥사코드이어야함 ( 안그러면 빌드가 안됨 )
     Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
     Document document = loadDocument(colorSheetPath.toString());
     NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AndroidColorDto {
 
+  String sheetPath;
   String color;
   String attrName;
 
@@ -21,6 +22,7 @@ public class AndroidColorDto {
     return AndroidColorDto.builder()
         .color(themeStyle.getColor())
         .attrName(colorStyle.getStylePropsName())
+        .sheetPath(colorStyle.getStyleSheetPath())
         .build();
   }
 }

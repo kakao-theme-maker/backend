@@ -22,7 +22,7 @@ public class AndroidComponentDto {
 
   public static AndroidComponentDto fromEntity(ThemeImage themeImage) {
     DesignComponent component = themeImage.getDesignComponent();
-    ComponentType componentType = component.getComponentType();
+    ComponentType componentType = themeImage.getComponentType();
     return AndroidComponentDto.builder()
         .imageUrl(component.getImageUrl())
         .AndroidComponentName(componentType.getAndroidComponentName())
