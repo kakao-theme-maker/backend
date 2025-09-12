@@ -44,7 +44,7 @@ class ThemeManageControllerTest {
   void setUp() {
     themeDataGenerator.deleteTestData();
     userDataGenerator.deleteAllUsers();
-    themeDataGenerator.generateTestData(10, 5, 4);
+    themeDataGenerator.generateTestData(10);
     userDataGenerator.generateTestUser(themeDataGenerator.userEmail);
   }
 

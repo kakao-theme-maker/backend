@@ -4,10 +4,10 @@ import com.github.javafaker.Faker;
 import com.komentum.theme.component.domain.ColorStyle;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.enums.Platform;
 import com.komentum.theme.component.repository.ColorStyleRepository;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
+import com.komentum.theme.component.service.ThemeDataJsonReader;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeStyle;
@@ -16,6 +16,7 @@ import com.komentum.theme.theme.dto.ThemeStyleRequest;
 import com.komentum.theme.theme.repository.ThemeComponentRepository;
 import com.komentum.theme.theme.repository.ThemeImageRepository;
 import com.komentum.theme.theme.repository.ThemeStyleRepository;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ThemeDataGenerator {
+
+  @Autowired
+  private ThemeDataJsonReader themeDataJsonReader;
 
   @Autowired
   private ThemeComponentRepository themeComponentRepository;
@@ -49,9 +53,9 @@ public class ThemeDataGenerator {
   public List<ComponentType> initialComponentTypes = new ArrayList<>();
   public List<DesignComponent> initialDesignComponents = new ArrayList<>();
 
-  public void generateTestData(int themeCount, int stylePerTheme, int imagePerTheme) {
-    initialColorStyles = generateColorStyles(stylePerTheme);
-    initialComponentTypes = generateComponentTypes(imagePerTheme);
+  public void generateTestData(int themeCount) {
+    initialColorStyles = generateColorStyles();
+    initialComponentTypes = generateComponentTypes();
     initialDesignComponents = generateDesignComponents(initialComponentTypes);
     initialThemes = generateThemeComponents(themeCount, initialColorStyles, initialComponentTypes,
         initialDesignComponents);
@@ -83,34 +87,22 @@ public class ThemeDataGenerator {
     componentTypeRepository.deleteAll();
   }
 
-  public List<ColorStyle> generateColorStyles(int amount) {
-    List<ColorStyle> colorStyles = new ArrayList<>();
-    for (int i = 0; i < amount; i++) {
-      colorStyles.add(ColorStyle.builder()
-          .styleSheetPath("style/sheet/path")
-          .platform(Platform.ANDROID)
-          .styleElementName("color")
-          .stylePropsName("HeaderColor")
-          .explain("explain")
-          .build());
+  public List<ColorStyle> generateColorStyles() {
+    try {
+      List<ColorStyle> colorStyles = themeDataJsonReader.readJsonColorStyles();
+      return colorStyleRepository.saveAll(colorStyles);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    return colorStyleRepository.saveAll(colorStyles);
   }
 
-  public List<ComponentType> generateComponentTypes(int amount) {
-    List<ComponentType> componentTypes = new ArrayList<>();
-    for (int i = 0; i < amount; i++) {
-      componentTypes.add(ComponentType.builder()
-          .androidComponentPath("android/path")
-          .androidComponentName("filename.png")
-          .iosComponentPath("ios/path")
-          .iosComponentName("fileName.png")
-          .sizeX(faker.number().numberBetween(1000, 2000))
-          .sizeY(faker.number().numberBetween(3000, 4000))
-          .explain("explain")
-          .build());
+  public List<ComponentType> generateComponentTypes() {
+    try {
+      List<ComponentType> componentTypes = themeDataJsonReader.readJsonComponentTypes();
+      return componentTypeRepository.saveAll(componentTypes);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    return componentTypeRepository.saveAll(componentTypes);
   }
 
   public List<DesignComponent> generateDesignComponents(List<ComponentType> componentTypes) {
@@ -133,7 +125,7 @@ public class ThemeDataGenerator {
       ThemeStyle themeStyle = ThemeStyle.builder()
           .themeComponent(themeComponent)
           .colorStyle(colorStyle)
-          .color(faker.color().hex())
+          .color((faker.color().hex() + "FF").toLowerCase())
           .build();
       themeStyles.add(themeStyle);
       themeComponent.addThemeStyle(themeStyle);

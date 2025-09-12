@@ -40,7 +40,7 @@ class ThemeRetrieveControllerTest {
   @BeforeEach
   void setUp() {
     themeDataGenerator.deleteTestData();
-    themeDataGenerator.generateTestData(10, 5, 4);
+    themeDataGenerator.generateTestData(10);
     userDataGenerator.generateTestUser(themeDataGenerator.userEmail);
   }
 
