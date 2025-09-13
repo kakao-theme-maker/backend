@@ -1,6 +1,5 @@
 package com.komentum.theme.component.dto;
 
-import com.komentum.theme.component.enums.Platform;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,13 +14,12 @@ public class DesignComponentDto {
 
   private Integer designComponentId;
   private String userEmail;
-  private ComponentTypeDto componentType; // ComponentType 정보를 포함
+  private ComponentTypeDto componentType;
   private String imageUrl;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean isPublic;
 
-  // 내부 ComponentType DTO
   @Data
   @Builder
   @NoArgsConstructor
@@ -30,9 +28,10 @@ public class DesignComponentDto {
 
     private Integer componentTypeId;
     private String explain;
-    private Platform platform;
-    private String componentPath;
-    private String componentName;
+    private String iosComponentPath;
+    private String iosComponentName;
+    private String androidComponentPath;
+    private String androidComponentName;
     private Integer sizeX;
     private Integer sizeY;
   }
