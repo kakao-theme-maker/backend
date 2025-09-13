@@ -1,9 +1,12 @@
 package com.komentum.theme.component.controller;
 
-import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.theme.component.dto.ColorStyleResponse;
+import com.komentum.theme.component.dto.CreateColorStyleRequest;
+import com.komentum.theme.component.dto.UpdateColorStyleRequest;
 import com.komentum.theme.component.service.ColorStyleService;
+import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,25 +23,30 @@ public class ColorStyleController {
 
   private final ColorStyleService colorStyleService;
 
-  @Autowired
   public ColorStyleController(ColorStyleService colorStyleService) {
     this.colorStyleService = colorStyleService;
   }
 
   @PostMapping
-  public ResponseEntity<ColorStyle> createColorStyle(@RequestBody ColorStyle colorStyle) {
-    return ResponseEntity.ok(colorStyleService.createColorStyle(colorStyle));
+  public ResponseEntity<ColorStyleResponse> createColorStyle(@Valid @RequestBody CreateColorStyleRequest request) {
+    var createdColorStyle = colorStyleService.createColorStyle(request);
+    return ResponseEntity.ok(ColorStyleResponse.from(createdColorStyle));
   }
 
   @GetMapping
-  public ResponseEntity<List<ColorStyle>> getAllColorStyles() {
-    return ResponseEntity.ok(colorStyleService.getAllColorStyles());
+  public ResponseEntity<List<ColorStyleResponse>> getAllColorStyles() {
+    var colorStyles = colorStyleService.getAllColorStyles()
+        .stream()
+        .map(ColorStyleResponse::from)
+        .collect(Collectors.toList());
+    return ResponseEntity.ok(colorStyles);
   }
 
   @GetMapping("/{colorTypeId}")
-  public ResponseEntity<ColorStyle> getColorStyleById(
+  public ResponseEntity<ColorStyleResponse> getColorStyleById(
       @PathVariable("colorTypeId") Integer colorTypeId) {
-    return ResponseEntity.ok(colorStyleService.getColorStyleById(colorTypeId));
+    var colorStyle = colorStyleService.getColorStyleById(colorTypeId);
+    return ResponseEntity.ok(ColorStyleResponse.from(colorStyle));
   }
 
   @DeleteMapping("/{colorTypeId}")
@@ -48,8 +56,9 @@ public class ColorStyleController {
   }
 
   @PutMapping("/{colorTypeId}")
-  public ResponseEntity<ColorStyle> updateColorStyle(
-      @PathVariable("colorTypeId") Integer colorTypeId, @RequestBody ColorStyle colorStyle) {
-    return ResponseEntity.ok(colorStyleService.updateColorStyle(colorTypeId, colorStyle));
+  public ResponseEntity<ColorStyleResponse> updateColorStyle(
+      @PathVariable("colorTypeId") Integer colorTypeId, @Valid @RequestBody UpdateColorStyleRequest request) {
+    var updatedColorStyle = colorStyleService.updateColorStyle(colorTypeId, request);
+    return ResponseEntity.ok(ColorStyleResponse.from(updatedColorStyle));
   }
 }
