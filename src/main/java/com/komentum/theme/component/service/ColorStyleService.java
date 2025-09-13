@@ -1,6 +1,8 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.theme.component.dto.CreateColorStyleRequest;
+import com.komentum.theme.component.dto.UpdateColorStyleRequest;
 import com.komentum.theme.component.repository.ColorStyleRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import java.util.List;
@@ -16,7 +18,15 @@ public class ColorStyleService {
 
   private final ColorStyleRepository colorStyleRepository;
 
-  public ColorStyle createColorStyle(ColorStyle colorStyle) {
+
+  public ColorStyle createColorStyle(CreateColorStyleRequest request) {
+    ColorStyle colorStyle = ColorStyle.builder()
+        .explain(request.getExplain())
+        .platform(request.getPlatform())
+        .styleSheetPath(request.getStyleSheetPath())
+        .styleElementName(request.getStyleElementName())
+        .stylePropsName(request.getStylePropsName())
+        .build();
     return colorStyleRepository.save(colorStyle);
   }
 
@@ -31,14 +41,15 @@ public class ColorStyleService {
     return colorStyleRepository.findAll();
   }
 
-  public ColorStyle updateColorStyle(Integer id, ColorStyle colorStyleDetails) {
+
+  public ColorStyle updateColorStyle(Integer id, UpdateColorStyleRequest request) {
     ColorStyle colorStyle = getColorStyleById(id);
 
-    Optional.ofNullable(colorStyleDetails.getExplain()).ifPresent(colorStyle::setExplain);
-    Optional.ofNullable(colorStyleDetails.getPlatform()).ifPresent(colorStyle::setPlatform);
-    Optional.ofNullable(colorStyleDetails.getStyleSheetPath()).ifPresent(colorStyle::setStyleSheetPath);
-    Optional.ofNullable(colorStyleDetails.getStyleElementName()).ifPresent(colorStyle::setStyleElementName);
-    Optional.ofNullable(colorStyleDetails.getStylePropsName()).ifPresent(colorStyle::setStylePropsName);
+    Optional.ofNullable(request.getExplain()).ifPresent(colorStyle::setExplain);
+    Optional.ofNullable(request.getPlatform()).ifPresent(colorStyle::setPlatform);
+    Optional.ofNullable(request.getStyleSheetPath()).ifPresent(colorStyle::setStyleSheetPath);
+    Optional.ofNullable(request.getStyleElementName()).ifPresent(colorStyle::setStyleElementName);
+    Optional.ofNullable(request.getStylePropsName()).ifPresent(colorStyle::setStylePropsName);
 
     return colorStyleRepository.save(colorStyle);
   }
