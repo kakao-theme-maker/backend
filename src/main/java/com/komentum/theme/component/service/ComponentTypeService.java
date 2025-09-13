@@ -1,6 +1,8 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.theme.component.domain.ComponentType;
+import com.komentum.theme.component.dto.CreateComponentTypeRequest;
+import com.komentum.theme.component.dto.UpdateComponentTypeRequest;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import java.util.List;
@@ -16,7 +18,15 @@ public class ComponentTypeService {
   private final ComponentTypeRepository componentTypeRepository;
 
   @Transactional
-  public ComponentType createComponentType(ComponentType componentType) {
+  public ComponentType createComponentType(CreateComponentTypeRequest request) {
+    ComponentType componentType = ComponentType.builder()
+        .explain(request.getExplain())
+        .platform(request.getPlatform())
+        .componentPath(request.getComponentPath())
+        .componentName(request.getComponentName())
+        .sizeX(request.getSizeX())
+        .sizeY(request.getSizeY())
+        .build();
     return componentTypeRepository.save(componentType);
   }
 
@@ -31,15 +41,15 @@ public class ComponentTypeService {
     return componentTypeRepository.findAll();
   }
 
-  public ComponentType updateComponentType(Integer id, ComponentType componentTypeDetails) {
+  public ComponentType updateComponentType(Integer id, UpdateComponentTypeRequest request) {
     ComponentType componentType = getComponentTypeById(id);
 
-    Optional.ofNullable(componentTypeDetails.getExplain()).ifPresent(componentType::setExplain);
-    Optional.ofNullable(componentTypeDetails.getPlatform()).ifPresent(componentType::setPlatform);
-    Optional.ofNullable(componentTypeDetails.getComponentPath()).ifPresent(componentType::setComponentPath);
-    Optional.ofNullable(componentTypeDetails.getComponentName()).ifPresent(componentType::setComponentName);
-    Optional.ofNullable(componentTypeDetails.getSizeX()).ifPresent(componentType::setSizeX);
-    Optional.ofNullable(componentTypeDetails.getSizeY()).ifPresent(componentType::setSizeY);
+    Optional.ofNullable(request.getExplain()).ifPresent(componentType::setExplain);
+    Optional.ofNullable(request.getPlatform()).ifPresent(componentType::setPlatform);
+    Optional.ofNullable(request.getComponentPath()).ifPresent(componentType::setComponentPath);
+    Optional.ofNullable(request.getComponentName()).ifPresent(componentType::setComponentName);
+    Optional.ofNullable(request.getSizeX()).ifPresent(componentType::setSizeX);
+    Optional.ofNullable(request.getSizeY()).ifPresent(componentType::setSizeY);
 
     return componentTypeRepository.save(componentType);
   }
