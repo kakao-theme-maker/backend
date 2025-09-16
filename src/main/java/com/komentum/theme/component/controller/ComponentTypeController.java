@@ -1,7 +1,10 @@
 package com.komentum.theme.component.controller;
 
 import com.komentum.theme.component.domain.ComponentType;
+import com.komentum.theme.component.dto.CreateComponentTypeRequest;
+import com.komentum.theme.component.dto.UpdateComponentTypeRequest;
 import com.komentum.theme.component.service.ComponentTypeService;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +30,8 @@ public class ComponentTypeController {
 
   @PostMapping
   public ResponseEntity<ComponentType> createComponentType(
-      @RequestBody ComponentType componentType) {
-    return ResponseEntity.ok(componentTypeService.createComponentType(componentType));
+      @Valid @RequestBody CreateComponentTypeRequest request) {
+    return ResponseEntity.ok(componentTypeService.createComponentType(request));
   }
 
   @GetMapping("/{id}")
@@ -43,8 +46,8 @@ public class ComponentTypeController {
 
   @PutMapping("/{id}")
   public ResponseEntity<ComponentType> updateComponentType(@PathVariable("id") Integer id,
-      @RequestBody ComponentType componentTypeDetails) {
-    return ResponseEntity.ok(componentTypeService.updateComponentType(id, componentTypeDetails));
+      @Valid @RequestBody UpdateComponentTypeRequest request) {
+    return ResponseEntity.ok(componentTypeService.updateComponentType(id, request));
   }
 
   @DeleteMapping("/{id}")
