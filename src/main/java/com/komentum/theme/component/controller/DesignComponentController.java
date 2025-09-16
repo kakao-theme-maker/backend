@@ -2,6 +2,7 @@ package com.komentum.theme.component.controller;
 
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
+import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.service.DesignComponentService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -61,11 +62,9 @@ public class DesignComponentController {
   @PutMapping("/{id}")
   public ResponseEntity<DesignComponentDto> updateDesignComponent(
       @PathVariable("id") Integer id,
-      @Valid @RequestBody DesignComponentDto request,
-      @RequestParam(value = "componentTypeId", required = false) Integer componentTypeId
+      @Valid @RequestBody UpdateDesignComponentRequest request
   ) {
-    DesignComponentDto updated = designComponentService.updateComponent(id, request,
-        componentTypeId);
+    DesignComponentDto updated = designComponentService.updateDesignComponent(id, request);
     return ResponseEntity.ok(updated);
   }
 
