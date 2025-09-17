@@ -1,7 +1,6 @@
 package com.komentum.theme.android.editor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -17,7 +16,9 @@ import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeStyle;
+import com.komentum.theme.utils.ImageUtils;
 import com.komentum.theme.utils.ThemePathManager;
+import com.komentum.theme.utils.XmlEditor;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -48,6 +49,9 @@ class AndroidThemeMakerTest {
 
   @Autowired
   private FileManager s3FileManager;
+
+  @Autowired
+  private XmlEditor xmlEditor;
 
   @Autowired
   private AndroidThemeMaker androidThemeMaker;
@@ -96,20 +100,16 @@ class AndroidThemeMakerTest {
     assertThat(
         Files.exists(Paths.get(repackedThemePath.toString(), generatedThemeFileName))).isTrue();
     // saved images validation
-    BufferedImage expectedImage = ImageIO.read(new ByteArrayInputStream(sampleImageBytes));
     for (ThemeImage themeImage : targetComponent.getThemeImages()) {
       AndroidComponentDto component = AndroidComponentDto.fromEntity(themeImage);
       Path savedImagePath = ThemePathManager.getImagePath(
           targetComponent.getThemeComponentId().toString(), component);
-      BufferedImage actualImage = ImageIO.read(Files.newInputStream(savedImagePath));
-      for (int y = 0; y < expectedImage.getHeight(); y++) {
-        for (int x = 0; x < expectedImage.getWidth(); x++) {
-          assertEquals(expectedImage.getRGB(x, y), actualImage.getRGB(x, y));
-        }
-      }
+      BufferedImage savedImage = ImageIO.read(savedImagePath.toFile());
+      BufferedImage expectedImage = ImageIO.read(new ByteArrayInputStream(sampleImageBytes));
+      assertThat(ImageUtils.compareImages(expectedImage, savedImage)).isTrue();
     }
     // saved color validation
-    NodeList savedColorTags = androidColorStyleEditor.loadDocument(
+    NodeList savedColorTags = xmlEditor.loadDocument(
             ThemePathManager.getColorSheetPath(
                 targetComponent.getThemeComponentId().toString()).toString())
         .getElementsByTagName("color");
