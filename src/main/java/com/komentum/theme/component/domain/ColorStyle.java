@@ -26,8 +26,8 @@ public class ColorStyle {
 
   @Id //PK
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "color_type_id")
-  private Integer colorTypeId;
+  @Column(name = "color_style_id")
+  private Integer colorStyleId;
 
   @Column(name = "`explain`")
   private String explain;

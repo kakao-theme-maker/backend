@@ -13,10 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface ThemeStyleRepository extends JpaRepository<ThemeStyle, ThemeStyleId> {
 
-  List<ThemeStyle> findByThemeComponentId(Integer themeComponentId); // component 리스트 반환
+  @Query("select ts from ThemeStyle ts join fetch ThemeComponent tc where tc.themeComponentId = :themeComponentId")
+  List<ThemeStyle> findByThemeComponentId(
+      @Param("themeComponentId") Integer themeComponentId); // component 리스트 반환
 
   @Modifying
-  @Query("DELETE FROM ThemeStyle ts WHERE ts.themeComponentId = :themeComponentId")
+  @Query("DELETE FROM ThemeStyle ts WHERE ts.themeComponent.themeComponentId = :themeComponentId")
   void deleteByThemeComponentId(
       @Param("themeComponentId") Integer themeComponentId); // component 삭제
 
