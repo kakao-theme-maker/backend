@@ -2,16 +2,11 @@ package com.komentum.theme.android.editor;
 
 import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.utils.ThemePathManager;
-import java.io.File;
+import com.komentum.theme.utils.XmlEditor;
 import java.nio.file.Path;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -20,46 +15,14 @@ import org.w3c.dom.NodeList;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AndroidColorStyleEditor {
+
+  private final XmlEditor xmlEditor;
 
   DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
   private final String COLOR_TAG_NAME = "color";
-
-  /**
-   * load color.xml document
-   *
-   * @param path path of color.xml
-   * @return color.xml document
-   */
-  public Document loadDocument(String path) {
-    try {
-      File resource = new File(path);
-      DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-      return documentBuilder.parse(resource);
-    } catch (Exception e) {
-      log.error(e.getMessage());
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * save updated color.xml on the output file path
-   *
-   * @param outputFilePath output file's path
-   * @param document       updated color.xml document
-   */
-  private void transform(String outputFilePath, Document document) {
-    try {
-      File outputFile = new File(outputFilePath);
-      Transformer transformer = TransformerFactory.newInstance().newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "no");
-      transformer.transform(new DOMSource(document), new StreamResult(outputFile));
-    } catch (Exception e) {
-      log.error(e.getMessage());
-      throw new RuntimeException(e);
-    }
-  }
 
   /**
    * get the first element with a specific attribute name from the node list
@@ -88,7 +51,7 @@ public class AndroidColorStyleEditor {
   public void editColors(String themeId, List<AndroidColorDto> colorDtoList) {
     // 색상은 소문자 8자리 헥사코드이어야함 ( 안그러면 빌드가 안됨 )
     Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
-    Document document = loadDocument(colorSheetPath.toString());
+    Document document = xmlEditor.loadDocument(colorSheetPath.toString());
     NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
     for (AndroidColorDto colorDto : colorDtoList) {
       Element colorElement = getElementByAttribute(colorList, colorDto.getAttrName());
@@ -96,6 +59,6 @@ public class AndroidColorStyleEditor {
         colorElement.setTextContent(colorDto.getColor());
       }
     }
-    transform(colorSheetPath.toString(), document);
+    xmlEditor.transform(colorSheetPath.toString(), document);
   }
 }
