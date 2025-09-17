@@ -20,6 +20,7 @@ public class AndroidThemeMaker {
 
   private final AndroidThemeInitializer androidThemeInitializer;
   private final AndroidThemeSaver androidThemeSaver;
+  private final AndroidMetaDataEditor androidMetaDataEditor;
   private final AndroidColorStyleEditor androidColorStyleEditor;
   private final AndroidThemeImageEditor androidThemeImageEditor;
   private final ThemeComponentRepository themeComponentRepository;
@@ -49,6 +50,8 @@ public class AndroidThemeMaker {
           .map(AndroidComponentDto::fromEntity).toList();
       androidThemeInitializer.initTheme(Integer.toString(themeId));
       androidThemeImageEditor.editImages(Integer.toString(themeId), componentDtoList);
+      androidMetaDataEditor.editMetaData(Integer.toString(themeId), themeComponent.getThemeName(),
+          themeComponent.getVersionNumber(), themeComponent.getVersionName());
       androidColorStyleEditor.editColors(Integer.toString(themeId), colorDtoList);
       return androidThemeSaver.repackAndSaveTheme(Integer.toString(themeId));
     } catch (Exception e) {

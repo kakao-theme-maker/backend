@@ -62,4 +62,8 @@ public class ThemePathManager {
   public static Path getColorSheetPath(String themeId) {
     return Paths.get(getThemeDepackedDir(themeId).toString(), "res", "values", "colors.xml");
   }
+
+  public static Path getThemeResourcePath(String themeId) {
+    return Paths.get(getThemeDepackedDir(themeId).toString(), "res");
+  }
 }
