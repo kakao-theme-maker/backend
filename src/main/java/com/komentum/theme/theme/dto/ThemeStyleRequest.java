@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class ThemeStyleRequest {
 
   @NotNull
-  private Integer colorTypeId;
+  private Integer colorStyleId;
 
   private String color;
 }

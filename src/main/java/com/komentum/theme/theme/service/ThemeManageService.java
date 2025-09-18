@@ -53,7 +53,7 @@ public class ThemeManageService {
       return themeImageMapper.convertToTransientEntity(componentType, designComponent);
     }).collect(Collectors.toSet());
     Set<ThemeStyle> requestedStyles = request.getStyles().stream().map(ts -> {
-      ColorStyle colorStyle = em.getReference(ColorStyle.class, ts.getColorTypeId());
+      ColorStyle colorStyle = em.getReference(ColorStyle.class, ts.getColorStyleId());
       return themeStyleMapper.convertToTransientEntity(ts, colorStyle);
     }).collect(Collectors.toSet());
     // 기존 theme image / style에 있지만 요청받은 theme image / style에 없는 데이터 제거

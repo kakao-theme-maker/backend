@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ColorStyleResponse {
 
-  private Integer colorTypeId;
+  private Integer colorStyleId;
   private String explain;
   private Platform platform;
   private String styleSheetPath;
@@ -22,7 +22,7 @@ public class ColorStyleResponse {
 
   public static ColorStyleResponse from(ColorStyle colorStyle) {
     return ColorStyleResponse.builder()
-        .colorTypeId(colorStyle.getColorTypeId())
+        .colorStyleId(colorStyle.getColorStyleId())
         .explain(colorStyle.getExplain())
         .platform(colorStyle.getPlatform())
         .styleSheetPath(colorStyle.getStyleSheetPath())
