@@ -42,23 +42,23 @@ public class ColorStyleController {
     return ResponseEntity.ok(colorStyles);
   }
 
-  @GetMapping("/{colorTypeId}")
+  @GetMapping("/{colorStyleId}")
   public ResponseEntity<ColorStyleResponse> getColorStyleById(
-      @PathVariable("colorTypeId") Integer colorTypeId) {
-    var colorStyle = colorStyleService.getColorStyleById(colorTypeId);
+      @PathVariable("colorStyleId") Integer colorStyleId) {
+    var colorStyle = colorStyleService.getColorStyleById(colorStyleId);
     return ResponseEntity.ok(ColorStyleResponse.from(colorStyle));
   }
 
-  @DeleteMapping("/{colorTypeId}")
-  public ResponseEntity<Void> deleteColorStyle(@PathVariable("colorTypeId") Integer colorTypeId) {
-    colorStyleService.deleteColorStyle(colorTypeId);
+  @DeleteMapping("/{colorStyleId}")
+  public ResponseEntity<Void> deleteColorStyle(@PathVariable("colorStyleId") Integer colorStyleId) {
+    colorStyleService.deleteColorStyle(colorStyleId);
     return ResponseEntity.noContent().build();
   }
 
-  @PutMapping("/{colorTypeId}")
+  @PutMapping("/{colorStyleId}")
   public ResponseEntity<ColorStyleResponse> updateColorStyle(
-      @PathVariable("colorTypeId") Integer colorTypeId, @Valid @RequestBody UpdateColorStyleRequest request) {
-    var updatedColorStyle = colorStyleService.updateColorStyle(colorTypeId, request);
+      @PathVariable("colorStyleId") Integer colorStyleId, @Valid @RequestBody UpdateColorStyleRequest request) {
+    var updatedColorStyle = colorStyleService.updateColorStyle(colorStyleId, request);
     return ResponseEntity.ok(ColorStyleResponse.from(updatedColorStyle));
   }
 }
