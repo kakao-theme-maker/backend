@@ -52,8 +52,4 @@ public class ColorStyle {
     this.styleElementName = colorStyle.styleElementName;
     this.stylePropsName = colorStyle.stylePropsName;
   }
-
-
-  public static class ColorStyleBuilder {
-  }
 }
