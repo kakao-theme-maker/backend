@@ -32,6 +32,7 @@ public class DesignComponent {
 
   private String imageUrl;
 
+  @Column(name = "is_public")
   private Boolean isPublic;
 
   @CreationTimestamp
