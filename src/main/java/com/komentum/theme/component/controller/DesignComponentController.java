@@ -2,9 +2,14 @@ package com.komentum.theme.component.controller;
 
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
+import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.service.DesignComponentService;
+import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,23 +23,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/design-components")
+@RequiredArgsConstructor
 public class DesignComponentController {
 
   private final DesignComponentService designComponentService;
 
-  @Autowired
-  public DesignComponentController(DesignComponentService designComponentService) {
-    this.designComponentService = designComponentService;
-  }
-
   @PostMapping
   public ResponseEntity<DesignComponentDto> createDesignComponent(
-      @RequestBody CreateDesignComponentRequest request // 모든 데이터를 DTO로 받음
+      @Valid @RequestBody CreateDesignComponentRequest request
   ) {
     DesignComponentDto saved = designComponentService.createDesignComponent(request);
     return ResponseEntity.ok(saved);
   }
-
 
   @GetMapping("/{id}")
   public ResponseEntity<DesignComponentDto> getDesignComponentById(@PathVariable("id") Integer id) {
@@ -42,8 +42,9 @@ public class DesignComponentController {
   }
 
   @GetMapping
-  public ResponseEntity<List<DesignComponentDto>> getAllDesignComponents() {
-    return ResponseEntity.ok(designComponentService.getAllDesignComponents());
+  public ResponseEntity<Page<DesignComponentDto>> getAllDesignComponents(
+      @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+    return ResponseEntity.ok(designComponentService.getAllDesignComponents(pageable));
   }
 
   @GetMapping("/user/{userEmail}")
@@ -58,21 +59,18 @@ public class DesignComponentController {
     return ResponseEntity.ok(designComponentService.getPublicComponents());
   }
 
-  // componentTypeId 수정 에러
   @PutMapping("/{id}")
   public ResponseEntity<DesignComponentDto> updateDesignComponent(
       @PathVariable("id") Integer id,
-      @RequestBody DesignComponentDto request,
-      @RequestParam(value = "componentTypeId", required = false) Integer componentTypeId
+      @Valid @RequestBody UpdateDesignComponentRequest request
   ) {
-    DesignComponentDto updated = designComponentService.updateComponent(id, request,
-        componentTypeId);
+    DesignComponentDto updated = designComponentService.updateDesignComponent(id, request);
     return ResponseEntity.ok(updated);
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteDesignComponent(@PathVariable("id") Integer id) {
     designComponentService.deleteComponent(id);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 }
