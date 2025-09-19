@@ -11,14 +11,21 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AndroidThemeImageEditor {
 
   private final FileManager fileManager;
+
+  private static final int IMAGE_EDITOR_THREAD_POOL_SIZE = 4;
 
   /**
    * edit an image on the specific theme path
@@ -45,9 +52,20 @@ public class AndroidThemeImageEditor {
    * @param themeId    theme id
    * @param components theme's component info list
    */
-  public void editImages(String themeId, List<AndroidComponentDto> components) throws IOException {
-    for (AndroidComponentDto component : components) {
-      editImage(themeId, component);
-    }
+  public void editImages(String themeId, List<AndroidComponentDto> components) {
+    ExecutorService executorService = Executors.newFixedThreadPool(IMAGE_EDITOR_THREAD_POOL_SIZE);
+    List<CompletableFuture<Void>> futures = components.stream()
+        .map(component -> CompletableFuture.runAsync(() -> {
+          try {
+            editImage(themeId, component);
+          } catch (IOException e) {
+            log.error(e.getMessage());
+            log.error("[ AndroidThemeImageEditor ] failed to edit image on {}",
+                component.getAndroidComponentPath());
+            throw new RuntimeException(e);
+          }
+        }, executorService)).toList();
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    executorService.shutdown();
   }
 }
