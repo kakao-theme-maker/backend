@@ -25,8 +25,8 @@ public class AndroidComponentDto {
     ComponentType componentType = themeImage.getComponentType();
     return AndroidComponentDto.builder()
         .imageUrl(component.getImageUrl())
-        .AndroidComponentName(componentType.getAndroidComponentName())
-        .AndroidComponentPath(componentType.getAndroidComponentPath())
+        .AndroidComponentName(componentType.getComponentName())
+        .AndroidComponentPath(componentType.getComponentPath())
         .sizeX(componentType.getSizeX())
         .sizeY(componentType.getSizeY()).build();
   }
