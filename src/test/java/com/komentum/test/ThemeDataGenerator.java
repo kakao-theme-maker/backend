@@ -124,7 +124,7 @@ public class ThemeDataGenerator {
       ThemeStyle themeStyle = ThemeStyle.builder()
           .themeComponent(themeComponent)
           .colorStyle(colorStyle)
-          .color((faker.color().hex() + "FF").toLowerCase())
+          .color((faker.color().hex() + "FF"))
           .build();
       themeStyles.add(themeStyle);
       themeComponent.addThemeStyle(themeStyle);
