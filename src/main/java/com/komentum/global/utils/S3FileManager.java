@@ -1,6 +1,6 @@
 package com.komentum.global.utils;
 
-import java.util.Optional;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -26,11 +26,9 @@ public class S3FileManager implements FileManager {
   public S3FileManager(@Value("${aws.s3.access-key}") String accessKey,
       @Value("${aws.s3.secret-key}") String secretKey, @Value("${aws.s3.region}") String region,
       @Value("${aws.s3.cloudfront}") String cloudFront,
-      @Value("{aws.s3.theme-bucket-name}") String bucketName) {
-    this.cloudFront = Optional.ofNullable(cloudFront)
-        .orElseThrow(() -> new IllegalArgumentException("cloudFront is null"));
-    this.bucketName = Optional.ofNullable(bucketName)
-        .orElseThrow(() -> new IllegalArgumentException("bucket is null"));
+      @Value("${aws.s3.theme-bucket-name}") String bucketName) {
+    this.cloudFront = Objects.requireNonNull(cloudFront, "cloudFront is Null");
+    this.bucketName = Objects.requireNonNull(bucketName, "bucketName is Null");
     s3Client = S3Client.builder()
         .region(Region.of(region))
         .credentialsProvider(
