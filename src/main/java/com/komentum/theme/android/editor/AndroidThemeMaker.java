@@ -47,7 +47,7 @@ public class AndroidThemeMaker {
       List<AndroidColorDto> colorDtoList = themeComponent.getThemeStyles().stream()
           .map(AndroidColorDto::fromEntity).toList();
       List<AndroidComponentDto> componentDtoList = themeComponent.getThemeImages().stream()
-          .map(themeImage -> AndroidComponentDto.fromEntity(themeImage, themeImage.getComponentType())).toList();
+          .map(AndroidComponentDto::fromEntity).toList();
       androidThemeInitializer.initTheme(Integer.toString(themeId));
       androidThemeImageEditor.editImages(Integer.toString(themeId), componentDtoList);
       androidMetaDataEditor.editMetaData(Integer.toString(themeId), themeComponent.getThemeName(),
