@@ -1,21 +1,24 @@
 package com.komentum.theme.utils;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.awt.image.BufferedImage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ImageUtils {
 
-  public static byte[] loadImageBytes(String imageUrl) {
-    try {
-      Path imagePath = Paths.get(imageUrl);
-      return Files.readAllBytes(imagePath);
-    } catch (IOException e) {
-      log.error(e.getMessage());
-      return null;
+  public static boolean compareImages(BufferedImage image1, BufferedImage image2) {
+    int width = image1.getWidth();
+    int height = image1.getHeight();
+    if (image2.getWidth() != width || image2.getHeight() != height) {
+      return false;
     }
+    for (int x = 0; x < width; x++) {
+      for (int y = 0; y < height; y++) {
+        if (image1.getRGB(x, y) != image2.getRGB(x, y)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 }

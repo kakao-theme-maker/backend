@@ -20,9 +20,19 @@ public class AndroidThemeMaker {
 
   private final AndroidThemeInitializer androidThemeInitializer;
   private final AndroidThemeSaver androidThemeSaver;
+  private final AndroidMetaDataEditor androidMetaDataEditor;
   private final AndroidColorStyleEditor androidColorStyleEditor;
   private final AndroidThemeImageEditor androidThemeImageEditor;
   private final ThemeComponentRepository themeComponentRepository;
+
+  public void removeLocalThemeFiles(int themeId) {
+    try {
+      Path themePath = ThemePathManager.getThemeDir(Integer.toString(themeId));
+      FileUtils.deleteDirectory(themePath.toFile());
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+  }
 
   /**
    * make a theme with the specific theme id
@@ -30,28 +40,23 @@ public class AndroidThemeMaker {
    * @param themeId theme id
    */
   @Transactional
-  public void makeTheme(int themeId) {
+  public String makeTheme(int themeId) {
     try {
       ThemeComponent themeComponent = themeComponentRepository.findById(themeId)
           .orElseThrow(() -> new RuntimeException("ThemeComponent is not found"));
       List<AndroidColorDto> colorDtoList = themeComponent.getThemeStyles().stream()
           .map(AndroidColorDto::fromEntity).toList();
       List<AndroidComponentDto> componentDtoList = themeComponent.getThemeImages().stream()
-          .map(AndroidComponentDto::fromEntity).toList();
+          .map(themeImage -> AndroidComponentDto.fromEntity(themeImage, themeImage.getComponentType())).toList();
       androidThemeInitializer.initTheme(Integer.toString(themeId));
       androidThemeImageEditor.editImages(Integer.toString(themeId), componentDtoList);
+      androidMetaDataEditor.editMetaData(Integer.toString(themeId), themeComponent.getThemeName(),
+          themeComponent.getVersionNumber(), themeComponent.getVersionName());
       androidColorStyleEditor.editColors(Integer.toString(themeId), colorDtoList);
-      androidThemeSaver.repackAndSaveTheme(Integer.toString(themeId));
+      return androidThemeSaver.repackAndSaveTheme(Integer.toString(themeId));
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       throw new RuntimeException(e);
-    } finally {
-      try {
-        Path themePath = ThemePathManager.getThemeDir(Integer.toString(themeId));
-        FileUtils.deleteDirectory(themePath.toFile());
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-      }
     }
   }
 }

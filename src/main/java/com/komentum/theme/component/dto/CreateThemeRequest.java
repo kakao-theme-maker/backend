@@ -1,6 +1,7 @@
 //~ Request : 요청 | 클라이언트 -> 서버
 package com.komentum.theme.component.dto;
 
+import com.komentum.theme.theme.dto.ThemeImageRequest;
 import com.komentum.theme.theme.dto.ThemeStyleRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,5 +26,5 @@ public class CreateThemeRequest {
   private String versionName;
   private Boolean isPublic;
   private List<ThemeStyleRequest> styles; // 테마에 포함되는 스타일 목록
-  private List<Integer> designComponentIds; // 테마에 포함되는 디자인 컴포넌트 아이디 목록
+  private List<ThemeImageRequest> images; // 테마에 포함되는 디자인 컴포넌트 아이디 목록
 }

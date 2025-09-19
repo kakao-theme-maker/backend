@@ -25,7 +25,7 @@ public class ThemePathManager {
    */
   public static Path getThemeDir(String themeId) {
     Path basePath = Path.of(getBasePath());
-    return Paths.get(basePath.toAbsolutePath().toString(), "sheet", "android", themeId);
+    return Paths.get(basePath.toAbsolutePath().toString(), "theme", "android", themeId);
   }
 
   /**
@@ -61,5 +61,9 @@ public class ThemePathManager {
    */
   public static Path getColorSheetPath(String themeId) {
     return Paths.get(getThemeDepackedDir(themeId).toString(), "res", "values", "colors.xml");
+  }
+
+  public static Path getThemeResourcePath(String themeId) {
+    return Paths.get(getThemeDepackedDir(themeId).toString(), "res");
   }
 }
