@@ -40,28 +40,30 @@ public class ThemeDataJsonReader {
     String sheetPropsName;
   }
 
+  private static final String COMPONENT_TYPE_JSON_PATH = "src/main/resources/theme-data/component_type.json";
+  private static final String COLOR_STYLE_JSON_PATH = "src/main/resources/theme-data/color_style.json";
+
   private <T> List<T> readThemeDataList(String pathString, Class<T> clazz) throws IOException {
     return objectMapper.readValue(new File(pathString),
         objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
   }
 
   public List<ComponentType> readJsonComponentTypes() throws IOException {
-    String filePath = "src/main/resources/theme-data/component_type.json";
     List<ComponentType> componentTypes = new ArrayList<>();
-    readThemeDataList(filePath, JsonComponentType.class).forEach(jsonComponentType -> {
-      ComponentType componentType = ComponentType.builder()
-          .platform(Platform.ANDROID)
-          .componentPath(jsonComponentType.componentPath)
-          .componentName(jsonComponentType.componentName).build();
-      componentTypes.add(componentType);
-    });
+    readThemeDataList(COMPONENT_TYPE_JSON_PATH, JsonComponentType.class).forEach(
+        jsonComponentType -> {
+          ComponentType componentType = ComponentType.builder()
+              .platform(Platform.ANDROID)
+              .componentPath(jsonComponentType.componentPath)
+              .componentName(jsonComponentType.componentName).build();
+          componentTypes.add(componentType);
+        });
     return componentTypes;
   }
 
   public List<ColorStyle> readJsonColorStyles() throws IOException {
-    String filePath = "src/main/resources/theme-data/color_style.json";
     List<ColorStyle> colorStyles = new ArrayList<>();
-    readThemeDataList(filePath, JsonColorStyle.class).forEach(jsonColorStyle -> {
+    readThemeDataList(COLOR_STYLE_JSON_PATH, JsonColorStyle.class).forEach(jsonColorStyle -> {
       ColorStyle colorStyle = ColorStyle.builder()
           .explain(jsonColorStyle.explain)
           .stylePropsName(jsonColorStyle.sheetPropsName)

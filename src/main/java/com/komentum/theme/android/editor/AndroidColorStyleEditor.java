@@ -1,11 +1,11 @@
 package com.komentum.theme.android.editor;
 
+import com.komentum.global.utils.RegexValidator;
 import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.utils.ThemePathManager;
 import com.komentum.theme.utils.XmlEditor;
 import java.nio.file.Path;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilderFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,9 +20,8 @@ public class AndroidColorStyleEditor {
 
   private final XmlEditor xmlEditor;
 
-  DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-  private final String COLOR_TAG_NAME = "color";
+  private final static String COLOR_TAG_NAME = "color";
+  private final static String ELEMENT_PROPS_NAME = "name";
 
   /**
    * get the first element with a specific attribute name from the node list
@@ -32,7 +31,6 @@ public class AndroidColorStyleEditor {
    * @return Element with a specific attribute name
    */
   private Element getElementByAttribute(NodeList nodeList, String attrName) {
-    String ELEMENT_PROPS_NAME = "name";
     for (int i = 0; i < nodeList.getLength(); i++) {
       Element element = (Element) nodeList.item(i);
       if (element.getAttribute(ELEMENT_PROPS_NAME).equals(attrName)) {
@@ -49,15 +47,18 @@ public class AndroidColorStyleEditor {
    * @param colorDtoList information list about theme's color
    */
   public void editColors(String themeId, List<AndroidColorDto> colorDtoList) {
-    // 색상은 소문자 8자리 헥사코드이어야함 ( 안그러면 빌드가 안됨 )
     Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
     Document document = xmlEditor.loadDocument(colorSheetPath.toString());
     NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
     for (AndroidColorDto colorDto : colorDtoList) {
       Element colorElement = getElementByAttribute(colorList, colorDto.getAttrName());
-      if (colorElement != null) {
-        colorElement.setTextContent(colorDto.getColor());
+      if (colorElement == null) {
+        throw new IllegalArgumentException("cannot find color element on colors.xml");
       }
+      if (!RegexValidator.isValidHexColor(colorDto.getColor())) {
+        throw new IllegalArgumentException("invalid hex color");
+      }
+      colorElement.setTextContent(colorDto.getColor());
     }
     xmlEditor.transform(colorSheetPath.toString(), document);
   }
