@@ -50,9 +50,9 @@ public class ThemeDataJsonReader {
     List<ComponentType> componentTypes = new ArrayList<>();
     readThemeDataList(filePath, JsonComponentType.class).forEach(jsonComponentType -> {
       ComponentType componentType = ComponentType.builder()
-          .androidComponentName(jsonComponentType.componentName)
-          .androidComponentPath(jsonComponentType.componentPath)
-          .build();
+          .platform(Platform.ANDROID)
+          .componentPath(jsonComponentType.componentPath)
+          .componentName(jsonComponentType.componentName).build();
       componentTypes.add(componentType);
     });
     return componentTypes;

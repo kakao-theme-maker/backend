@@ -56,7 +56,7 @@ public class ThemeDataGenerator {
   public void generateTestData(int themeCount) {
     initialColorStyles = generateColorStyles();
     initialComponentTypes = generateComponentTypes();
-    initialDesignComponents = generateDesignComponents(initialComponentTypes);
+    initialDesignComponents = generateDesignComponents(initialComponentTypes.size());
     initialThemes = generateThemeComponents(themeCount, initialColorStyles, initialComponentTypes,
         initialDesignComponents);
   }
@@ -73,7 +73,7 @@ public class ThemeDataGenerator {
   public List<ThemeStyleRequest> getStyleRequests() {
     return initialColorStyles.stream()
         .map(colorStyle -> ThemeStyleRequest.builder()
-            .colorTypeId(colorStyle.getColorStyleId())
+            .colorStyleId(colorStyle.getColorStyleId())
             .color("#ffffffff")
             .build()).toList();
   }
@@ -105,11 +105,10 @@ public class ThemeDataGenerator {
     }
   }
 
-  public List<DesignComponent> generateDesignComponents(List<ComponentType> componentTypes) {
+  public List<DesignComponent> generateDesignComponents(int size) {
     List<DesignComponent> designComponents = new ArrayList<>();
-    for (ComponentType componentType : componentTypes) {
+    for (int i = 0; i < size; i++) {
       designComponents.add(DesignComponent.builder()
-          .componentType(componentType)
           .imageUrl(faker.internet().image())
           .userEmail(faker.internet().emailAddress())
           .isPublic(faker.bool().bool())
