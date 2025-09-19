@@ -34,14 +34,15 @@ class ThemeManageServiceTest {
   private ThemeComponentRepository themeComponentRepository;
 
   private final int initialThemeCounts = 10;
-  private final int initialStylePerTheme = 5;
-  private final int initialImagePerTheme = 4;
+  private int initialStylePerTheme;
+  private int initialImagePerTheme;
 
   @BeforeEach
   void setUp() {
     themeDataGenerator.deleteTestData();
-    themeDataGenerator.generateTestData(initialThemeCounts, initialStylePerTheme,
-        initialImagePerTheme);
+    themeDataGenerator.generateTestData(initialThemeCounts);
+    this.initialStylePerTheme = themeDataGenerator.initialColorStyles.size();
+    this.initialImagePerTheme = themeDataGenerator.initialComponentTypes.size();
   }
 
   @AfterEach

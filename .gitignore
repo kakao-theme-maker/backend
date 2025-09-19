@@ -49,4 +49,8 @@ gradle-app.setting
 **/application-test.yml
 **/backend_config/
 **/common.yml
+
+# Docker
 .env
+key.jks
+

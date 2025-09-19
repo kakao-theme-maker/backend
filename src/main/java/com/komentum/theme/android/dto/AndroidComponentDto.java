@@ -20,13 +20,14 @@ public class AndroidComponentDto {
   Integer sizeX;
   Integer sizeY;
 
-  public static AndroidComponentDto fromEntity(ThemeImage themeImage, ComponentType componentType) {
+  public static AndroidComponentDto fromEntity(ThemeImage themeImage) {
     DesignComponent component = themeImage.getDesignComponent();
+    ComponentType componentType = themeImage.getComponentType();
     return AndroidComponentDto.builder()
-            .imageUrl(component.getImageUrl())
-            .AndroidComponentName(componentType.getComponentName())
-            .AndroidComponentPath(componentType.getComponentPath())
-            .sizeX(componentType.getSizeX())
-            .sizeY(componentType.getSizeY()).build();
+        .imageUrl(component.getImageUrl())
+        .AndroidComponentName(componentType.getComponentName())
+        .AndroidComponentPath(componentType.getComponentPath())
+        .sizeX(componentType.getSizeX())
+        .sizeY(componentType.getSizeY()).build();
   }
 }

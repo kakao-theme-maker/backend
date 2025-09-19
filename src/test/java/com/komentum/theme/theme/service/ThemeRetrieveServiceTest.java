@@ -27,14 +27,15 @@ class ThemeRetrieveServiceTest {
   private ThemeDataGenerator themeDataGenerator;
 
   private final int initialThemeCount = 10;
-  private final int initialStylePerTheme = 5;
-  private final int initialImagePerTheme = 4;
+  private int initialStylePerTheme = 5;
+  private int initialImagePerTheme = 4;
 
   @BeforeEach
   void setUp() {
     themeDataGenerator.deleteTestData();
-    themeDataGenerator.generateTestData(initialThemeCount, initialStylePerTheme,
-        initialImagePerTheme);
+    themeDataGenerator.generateTestData(initialThemeCount);
+    this.initialStylePerTheme = themeDataGenerator.initialColorStyles.size();
+    this.initialImagePerTheme = themeDataGenerator.initialComponentTypes.size();
   }
 
   @AfterEach
