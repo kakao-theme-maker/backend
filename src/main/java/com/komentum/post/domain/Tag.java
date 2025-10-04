@@ -1,5 +1,6 @@
 package com.komentum.post.domain;
 
+import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,9 +35,15 @@ public class Tag {
   @OnDelete(action = OnDeleteAction.CASCADE)
   private Post post;
 
-  public static Tag createTransient(String tagName, Post post) {
+  public static Tag createTransient(TagUpdateDto updateDto, Post post) {
     return Tag.builder()
-        .tagName(tagName)
+        .tagName(updateDto.getTagName())
+        .post(post).build();
+  }
+
+  public static Tag createTransient(TagCreateDto createDto, Post post) {
+    return Tag.builder()
+        .tagName(createDto.getTagName())
         .post(post).build();
   }
 

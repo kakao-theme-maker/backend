@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostDetailProjection {
+public class PostSummary {
 
   private Post post;
   private Long prefers;

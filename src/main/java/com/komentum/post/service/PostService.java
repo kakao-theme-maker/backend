@@ -1,17 +1,17 @@
 package com.komentum.post.service;
 
+import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.PostDto.PostDetail;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
+import com.komentum.post.dto.PostSummary;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.TagRepository;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,49 +23,40 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
 
   private final PostRepository postRepository;
-  private final TagRepository tagRepository;
-  private final UserRepository userRepository;
 
-  public List<PostDetail> getPosts(int pageNumber, int pageSize) {
+  @Transactional(readOnly = true)
+  public List<PostSummary> getPostSummaries(int pageNumber, int pageSize) {
     Pageable pageable = PageRequest.of(pageNumber, pageSize);
-    List<PostDetail> postDetails = postRepository.getPostDetailMappings(pageable).stream()
-        .map(PostDetail::from).toList();
-    List<Long> postIds = postDetails.stream()
-        .map(post -> post.getPost().getPostId()).toList();
-    Map<Post, List<Tag>> tagsByPost = tagRepository.findAllByPostIds(postIds).stream()
-        .collect(Collectors.groupingBy(Tag::getPost));
-    postDetails.forEach(post -> post.setTags(tagsByPost.get(post.getPost())));
-    return postDetails;
+    return postRepository.getPostSummary(pageable);
   }
 
-  public PostDetail getPostById(Long postId) {
-    PostDetail postDetail = PostDetail.from(postRepository.getPreferPostsByPostId(postId));
-    List<Tag> tagByPost = tagRepository.findAllByPostIds(List.of(postDetail.getPost().getPostId()));
-    postDetail.setTags(tagByPost);
-    return postDetail;
+  @Transactional(readOnly = true)
+  public PostSummary getPostSummaryByPostId(Long postId) {
+    return postRepository.getPostSummaryByPostId(postId)
+        .orElseThrow(() -> new CustomEntityNotFoundException(Post.class, postId));
   }
 
-  @Transactional
-  public PostDetail createPost(PostCreateDto postCreateDto) {
-    User targetUser = userRepository.findById(postCreateDto.getUserEmail())
-        .orElseThrow(() -> new RuntimeException("User not found"));
-    Post post = postRepository.save(Post.createTransient(postCreateDto, targetUser));
-    return PostDetail.from(post);
+  @Transactional(readOnly = true)
+  public Post getPostByPostId(Long postId) {
+    return postRepository.findById(postId)
+        .orElseThrow(() -> new CustomEntityNotFoundException(Post.class, postId));
   }
 
   @Transactional
-  public PostDetail updatePost(Long postId, PostUpdateDto postUpdateDto) {
-    PostDetail target = getPostById(postId);
-    Post targetPost = target.getPost();
+  public Post createPost(PostCreateDto postCreateDto, User targetUser) {
+    return postRepository.save(Post.createTransient(postCreateDto, targetUser));
+  }
+
+  @Transactional
+  public Post updatePost(Long postId, PostUpdateDto postUpdateDto) {
+    Post targetPost = getPostByPostId(postId);
     targetPost.update(postUpdateDto);
-    target.setPost(postRepository.save(targetPost));
-    return target;
+    return targetPost;
   }
 
   @Transactional
   public void deletePost(Long postId) {
-    PostDetail target = getPostById(postId);
-    Post targetPost = target.getPost();
+    Post targetPost = getPostByPostId(postId);
     postRepository.deleteById(targetPost.getPostId());
   }
 }

@@ -29,13 +29,13 @@ public class PostController {
       @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
       @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize) {
     return ResponseEntity.ok(
-        postService.getPosts(pageNumber, pageSize).stream().map(PostResponse::from)
+        postService.getPostSummaries(pageNumber, pageSize).stream().map(PostResponse::from)
             .toList());
   }
 
   @GetMapping("/{postId}")
   public ResponseEntity<PostResponse> getPost(@PathVariable Long postId) {
-    return ResponseEntity.ok(PostResponse.from(postService.getPostById(postId)));
+    return ResponseEntity.ok(PostResponse.from(postService.getPostSummaryByPostId(postId)));
   }
 
   @PostMapping

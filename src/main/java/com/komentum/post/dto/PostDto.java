@@ -11,36 +11,43 @@ import lombok.NoArgsConstructor;
 
 public class PostDto {
 
-  @Data
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  public static class PostResponse {
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PostResponse {
 
-    public Long postId;
-    public String title;
-    public String content;
-    public String createdAt;
-    public Long prefers;
-    public List<Tag> tags;
+      public Long postId;
+      public String title;
+      public String content;
+      public String createdAt;
+      public Long prefers;
+      public List<Tag> tags;
 
-    public static PostResponse from(Post post) {
-      String createdAtString = DateTimeFormatter.ISO_LOCAL_DATE.format(post.getCreatedAt());
-      return PostResponse.builder()
-          .postId(post.getPostId())
-          .title(post.getTitle())
-          .content(post.getContent())
-          .createdAt(createdAtString)
-          .build();
+      private static PostResponse from(Post post) {
+        String createdAtString = DateTimeFormatter.ISO_LOCAL_DATE.format(post.getCreatedAt());
+        return PostResponse.builder()
+            .postId(post.getPostId())
+            .title(post.getTitle())
+            .content(post.getContent())
+            .createdAt(createdAtString)
+            .build();
+      }
+
+      public static PostResponse from(PostSummary postSummary, List<Tag> tags) {
+        PostResponse postResponse = from(postSummary.getPost());
+        postResponse.setTags(tags);
+        postResponse.setPrefers(postSummary.getPrefers());
+        return postResponse;
+      }
+
+      public static PostResponse from(PostDetail postDetail) {
+        PostResponse postResponse = from(postDetail.getPost());
+        postResponse.setPrefers(postDetail.getPrefers());
+        postResponse.setTags(postDetail.getTags());
+        return postResponse;
+      }
     }
-
-    public static PostResponse from(PostDetail postDetail) {
-      PostResponse postResponse = from(postDetail.getPost());
-      postResponse.setPrefers(postDetail.getPrefers());
-      postResponse.setTags(postDetail.getTags());
-      return postResponse;
-    }
-  }
 
   @Data
   @Builder
@@ -52,7 +59,7 @@ public class PostDto {
     public Long prefers;
     public List<Tag> tags;
 
-    public static PostDetail from(PostDetailProjection projection) {
+    public static PostDetail from(PostSummary projection) {
       return PostDetail.builder()
           .post(projection.getPost())
           .prefers(projection.getPrefers())

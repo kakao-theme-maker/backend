@@ -13,9 +13,17 @@ public class TagDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class TagCreateDto {
+  public static class TagBatchCreateDto {
 
-    List<String> tagNames;
+    List<TagCreateDto> tagNames;
+  }
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class TagCreateDto {
+    String tagName;
   }
 
   @Data

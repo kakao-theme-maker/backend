@@ -1,6 +1,6 @@
 package com.komentum.post.controller;
 
-import com.komentum.post.dto.TagDto.TagCreateDto;
+import com.komentum.post.dto.TagDto.TagBatchCreateDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.service.TagService;
@@ -31,9 +31,9 @@ public class TagController {
 
   @PostMapping("/{postId}/tags")
   public ResponseEntity<List<TagResponse>> createTag(@PathVariable Long postId,
-      @RequestBody TagCreateDto tagCreateDto) {
+      @RequestBody TagBatchCreateDto tagBatchCreateDto) {
     return ResponseEntity.ok(
-        tagService.createTag(postId, tagCreateDto).stream().map(TagResponse::from).toList());
+        tagService.createTag(postId, tagBatchCreateDto).stream().map(TagResponse::from).toList());
   }
 
   @PutMapping("/tags/{tagId}")
