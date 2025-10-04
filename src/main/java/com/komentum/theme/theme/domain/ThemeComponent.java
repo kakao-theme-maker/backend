@@ -3,6 +3,7 @@ package com.komentum.theme.theme.domain;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,21 +11,27 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.BatchSize;
 
+@Slf4j
 @Entity
 @Table(name = "theme_component")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ThemeComponent {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY) // 기본 키 생성: 데이터베이스가 자동으로 값을 생성한다.
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "theme_component_id")
   private Integer themeComponentId;
 
@@ -46,27 +53,41 @@ public class ThemeComponent {
   @Column(name = "is_public")
   private Boolean isPublic;
 
-//    @Column(name = "created_at")
-//    private LocalDateTime createdAt;
-//
-//    @Column(name = "updated_at")
-//    private LocalDateTime updatedAt;
-
-  //관계 매핑
-  @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<ThemeStyle> themeStyles = new HashSet<>();
-
+  @Builder.Default
+  @Setter(AccessLevel.NONE)
+  @BatchSize(size = 100)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeImage> themeImages = new HashSet<>();
 
-//    @PrePersist //엔터티가 저장되기 전에 호출되어 생성 시간, 수정 시간 설정.
-//    protected void onCreate() {
-//        createdAt = LocalDateTime.now();
-//        updatedAt = LocalDateTime.now();
-//    }
-//
-//    @PreUpdate // 수정 시간 갱신
-//    protected void onUpdate() {
-//        updatedAt = LocalDateTime.now();
-//    }
+  @Builder.Default
+  @Setter(AccessLevel.NONE)
+  @BatchSize(size = 100)
+  @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<ThemeStyle> themeStyles = new HashSet<>();
+
+  public void addThemeImage(ThemeImage themeImage) {
+    boolean alreadyExists = this.themeImages.stream()
+        .anyMatch(existingImage ->
+            existingImage.getComponentType().getComponentTypeId()
+                .equals(themeImage.getComponentType().getComponentTypeId())
+        );
+    if (alreadyExists) {
+      throw new IllegalArgumentException(
+          "Image already exists : " + themeImage.getComponentType().getComponentTypeId());
+    }
+    this.themeImages.add(themeImage);
+    themeImage.setThemeComponent(this);
+  }
+
+  public void addThemeStyle(ThemeStyle themeStyle) {
+    boolean alreadyExists = this.themeStyles.stream()
+        .anyMatch(existingStyle -> existingStyle.getColorStyle().getColorStyleId()
+            .equals(themeStyle.getColorStyle().getColorStyleId()));
+    if (alreadyExists) {
+      throw new IllegalArgumentException(
+          "Style already exists : " + themeStyle.getColorStyle().getColorStyleId());
+    }
+    this.themeStyles.add(themeStyle);
+    themeStyle.setThemeComponent(this);
+  }
 }

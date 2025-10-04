@@ -1,14 +1,13 @@
 package com.komentum.theme.android.editor;
 
+import com.komentum.global.utils.S3FileManager;
 import com.komentum.theme.utils.DockerProcessRunner;
-import com.komentum.theme.utils.S3FileManager;
 import com.komentum.theme.utils.ThemePathManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -18,9 +17,6 @@ public class AndroidThemeSaver {
 
   private final DockerProcessRunner dockerProcessRunner;
   private final S3FileManager s3FileManager;
-
-  @Value("${aws.s3.theme-bucket-name}")
-  private String themeBucketName;
 
   private String resolveThemeName(String themeId) {
     return String.format("theme-%s.apk", themeId);
@@ -36,7 +32,7 @@ public class AndroidThemeSaver {
    */
   public String[] commandBuilder(String inputPath, String targetPath) {
     return new String[]{
-        "docker", "run", "--rm",
+        "docker", "run", "--platform=linux/amd64", "--rm",
         "-v", String.format("%s:/input", inputPath),
         "-v", String.format("%s:/output", targetPath),
         "louie8821/apk_repackager:test",
@@ -63,10 +59,10 @@ public class AndroidThemeSaver {
    *
    * @param themeId theme id
    */
-  public void repackAndSaveTheme(String themeId) throws Exception {
+  public String repackAndSaveTheme(String themeId) throws Exception {
     Path depackedThemePath = ThemePathManager.getThemeDepackedDir(themeId).toAbsolutePath();
     Path repackedThemePath = ThemePathManager.getThemeRepackedDir(themeId).toAbsolutePath();
     byte[] outputApk = repackAndSignTheme(depackedThemePath, repackedThemePath);
-    s3FileManager.uploadFile(outputApk, resolveThemeName(themeId), themeBucketName);
+    return s3FileManager.uploadFile(outputApk, resolveThemeName(themeId));
   }
 }

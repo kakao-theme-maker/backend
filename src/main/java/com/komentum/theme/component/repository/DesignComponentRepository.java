@@ -11,17 +11,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DesignComponentRepository extends JpaRepository<DesignComponent, Integer> {
 
-  // 즉시 로딩을 위한 커스텀 쿼리
-  @Query("SELECT dc FROM DesignComponent dc JOIN FETCH dc.componentType WHERE dc.designComponentId = :id")
-  Optional<DesignComponent> findByIdWithComponentType(@Param("id") Integer id);
+  // 기본 조회 메서드들
+  Optional<DesignComponent> findByDesignComponentId(Integer id);
 
-  @Query("SELECT dc FROM DesignComponent dc JOIN FETCH dc.componentType")
-  List<DesignComponent> findAllWithComponentType();
+  List<DesignComponent> findByUserEmail(String email);
 
-  @Query("SELECT dc FROM DesignComponent dc JOIN FETCH dc.componentType WHERE dc.userEmail = :email")
-  List<DesignComponent> findByUserEmailWithComponentType(@Param("email") String email);
-
-  @Query("SELECT dc FROM DesignComponent dc JOIN FETCH dc.componentType WHERE dc.isPublic = true")
-  List<DesignComponent> findPublicWithComponentType();
+  List<DesignComponent> findByIsPublic(Boolean isPublic);
 }
 

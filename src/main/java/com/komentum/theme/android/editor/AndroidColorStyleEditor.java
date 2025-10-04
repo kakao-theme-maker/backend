@@ -1,17 +1,12 @@
 package com.komentum.theme.android.editor;
 
+import com.komentum.global.utils.RegexValidator;
 import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.utils.ThemePathManager;
-import java.io.File;
+import com.komentum.theme.utils.XmlEditor;
 import java.nio.file.Path;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -20,46 +15,13 @@ import org.w3c.dom.NodeList;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AndroidColorStyleEditor {
 
-  DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+  private final XmlEditor xmlEditor;
 
-  private final String COLOR_TAG_NAME = "color";
-
-  /**
-   * load color.xml document
-   *
-   * @param path path of color.xml
-   * @return color.xml document
-   */
-  public Document loadDocument(String path) {
-    try {
-      File resource = new File(path);
-      DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-      return documentBuilder.parse(resource);
-    } catch (Exception e) {
-      log.error(e.getMessage());
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * save updated color.xml on the output file path
-   *
-   * @param outputFilePath output file's path
-   * @param document       updated color.xml document
-   */
-  public void transform(String outputFilePath, Document document) {
-    try {
-      File outputFile = new File(outputFilePath);
-      Transformer transformer = TransformerFactory.newInstance().newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.transform(new DOMSource(document), new StreamResult(outputFile));
-    } catch (Exception e) {
-      log.error(e.getMessage());
-      throw new RuntimeException(e);
-    }
-  }
+  private final static String COLOR_TAG_NAME = "color";
+  private final static String ELEMENT_PROPS_NAME = "name";
 
   /**
    * get the first element with a specific attribute name from the node list
@@ -68,8 +30,7 @@ public class AndroidColorStyleEditor {
    * @param attrName attribute name to find
    * @return Element with a specific attribute name
    */
-  public Element getElementByAttribute(NodeList nodeList, String attrName) {
-    String ELEMENT_PROPS_NAME = "name";
+  private Element getElementByAttribute(NodeList nodeList, String attrName) {
     for (int i = 0; i < nodeList.getLength(); i++) {
       Element element = (Element) nodeList.item(i);
       if (element.getAttribute(ELEMENT_PROPS_NAME).equals(attrName)) {
@@ -80,23 +41,6 @@ public class AndroidColorStyleEditor {
   }
 
   /**
-   * edit one color with theme's color info
-   *
-   * @param themeId  theme's id
-   * @param colorDto information about theme's color
-   */
-  public void editColor(String themeId, AndroidColorDto colorDto) {
-    Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
-    Document document = loadDocument(colorSheetPath.toString());
-    NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
-    Element colorElement = getElementByAttribute(colorList, colorDto.getAttrName());
-    if (colorElement != null) {
-      colorElement.setTextContent(colorDto.getColor());
-    }
-    transform(colorSheetPath.toString(), document);
-  }
-
-  /**
    * edit all color with theme's color info list
    *
    * @param themeId      theme's id
@@ -104,14 +48,18 @@ public class AndroidColorStyleEditor {
    */
   public void editColors(String themeId, List<AndroidColorDto> colorDtoList) {
     Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
-    Document document = loadDocument(colorSheetPath.toString());
+    Document document = xmlEditor.loadDocument(colorSheetPath.toString());
     NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
     for (AndroidColorDto colorDto : colorDtoList) {
       Element colorElement = getElementByAttribute(colorList, colorDto.getAttrName());
-      if (colorElement != null) {
-        colorElement.setTextContent(colorDto.getColor());
+      if (colorElement == null) {
+        throw new IllegalArgumentException("cannot find color element on colors.xml");
       }
+      if (!RegexValidator.isValidHexColor(colorDto.getColor())) {
+        throw new IllegalArgumentException("invalid hex color");
+      }
+      colorElement.setTextContent(colorDto.getColor());
     }
-    transform(colorSheetPath.toString(), document);
+    xmlEditor.transform(colorSheetPath.toString(), document);
   }
 }

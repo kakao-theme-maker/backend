@@ -18,5 +18,5 @@ public class ThemeStyleId implements Serializable {
   private Integer themeComponentId;
 
   @Column(name = "color_type_id")
-  private Integer colorTypeId;
+  private Integer colorStyleId;
 }
