@@ -37,6 +37,8 @@ public class AndroidThemeImageEditor {
     Path imagePath = ThemePathManager.getImagePath(themeId, component);
     byte[] imageBytes = fileManager.downloadFile(component.getImageUrl());
     Path tempPath = Paths.get(imagePath + ".tmp");
+    // Ensure parent directory exists
+    Files.createDirectories(tempPath.getParent());
     try (OutputStream os = Files.newOutputStream(tempPath,
         StandardOpenOption.CREATE,
         StandardOpenOption.TRUNCATE_EXISTING)) {
