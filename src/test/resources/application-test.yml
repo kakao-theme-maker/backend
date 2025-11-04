@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    show-sql: false
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+jwt:
+  secret: dGVzdC1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tdGVzdGluZy1wdXJwb3Nlcy1vbmx5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZy1mb3ItSFMyNTYtYWxnb3JpdGht
+
+auth:
+  kakao:
+    client-id: test-client-id
+    client-secret: test-client-secret
+    redirect-uri: http://localhost:8080/auth/kakao/callback
+
+aws:
+  s3:
+    access-key: test-access-key
+    secret-key: test-secret-key
+    region: us-east-1
+    theme-bucket-name: test-bucket
+    cloudfront: https://test-cloudfront.example.com
+
+security:
+  white-list:
+    - /allow/all
+    - /auth/**
+    - /test/**
+    - /swagger-ui/**
+    - /v3/api-docs/**
+    - /actuator/**
+  white-list-get:
+    - /allow/get
+    - /api/**
