@@ -77,8 +77,9 @@ public class AndroidThemeInitializer {
     Path depackedThemePath = ThemePathManager.getThemeDepackedDir(themeId);
     depackTheme(sourceThemePath, depackedThemePath);
     // Fix permissions for files created by Docker (which runs as root)
+    // Use 755 for directories and 644 for files
     try {
-      ProcessBuilder pb = new ProcessBuilder("chmod", "-R", "777", depackedThemePath.toString());
+      ProcessBuilder pb = new ProcessBuilder("chmod", "-R", "u+rwX,go+rX", depackedThemePath.toString());
       Process p = pb.start();
       p.waitFor();
     } catch (IOException | InterruptedException e) {

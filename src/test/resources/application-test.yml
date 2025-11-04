@@ -20,6 +20,8 @@ spring:
       port: 6379
 
 jwt:
+  # Test-only JWT secret (base64 encoded "test-secret-key-for-jwt-token-testing-purposes-only-must-be-at-least-256-bits-long-for-HS256-algorithm")
+  # This is intentionally hardcoded for test reproducibility and should never be used in production
   secret: dGVzdC1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tdGVzdGluZy1wdXJwb3Nlcy1vbmx5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZy1mb3ItSFMyNTYtYWxnb3JpdGht
 
 auth:
