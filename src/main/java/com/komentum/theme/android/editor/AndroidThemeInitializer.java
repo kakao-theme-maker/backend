@@ -76,5 +76,13 @@ public class AndroidThemeInitializer {
     Path sourceThemePath = copyAndGetSourceThemeDir(themeId);
     Path depackedThemePath = ThemePathManager.getThemeDepackedDir(themeId);
     depackTheme(sourceThemePath, depackedThemePath);
+    // Fix permissions for files created by Docker (which runs as root)
+    try {
+      ProcessBuilder pb = new ProcessBuilder("chmod", "-R", "777", depackedThemePath.toString());
+      Process p = pb.start();
+      p.waitFor();
+    } catch (IOException | InterruptedException e) {
+      log.warn("Failed to change permissions on depacked theme directory: {}", e.getMessage());
+    }
   }
 }
