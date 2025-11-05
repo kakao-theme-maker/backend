@@ -9,8 +9,8 @@ import com.komentum.config.EnableTestProfile;
 import com.komentum.config.PostTestDataGenerator;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.PostDto.PostCreateDto;
-import com.komentum.post.dto.PostDto.PostResponse;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
+import com.komentum.post.dto.PostDto.ThemeBoardDetailDto;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.user.domain.User;
 import com.komentum.utils.MockMvcUtils;
@@ -80,11 +80,13 @@ class PostControllerTest {
         .param("pageNumber", String.valueOf(pageNumber))
         .param("pageSize", String.valueOf(pageSizeOverflow));
     // then - get 5 of 10
-    List<PostResponse> postResponsesExpected5 = mockMvcUtils.performAuthRequestForList(mockMvc,
+    List<ThemeBoardDetailDto> postResponsesExpected5 = mockMvcUtils.performAuthRequestForList(
+        mockMvc,
         requestBuilderExpected5, jwtToken);
     assertEquals(pageSize, postResponsesExpected5.size());
     // then - get all by big size page
-    List<PostResponse> postResponsesExpected10 = mockMvcUtils.performAuthRequestForList(mockMvc,
+    List<ThemeBoardDetailDto> postResponsesExpected10 = mockMvcUtils.performAuthRequestForList(
+        mockMvc,
         requestBuilderExpected10, jwtToken);
     assertEquals(postResponsesExpected10.size(), postRepository.count());
   }
@@ -104,10 +106,12 @@ class PostControllerTest {
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/posts")
         .content(objectMapper.writeValueAsString(postCreateDto));
     // then
-    PostResponse postResponse = mockMvcUtils.performAuthRequest(mockMvc, requestBuilder, jwtToken,
-        PostResponse.class);
-    assert (postRepository.findById(postResponse.getPostId()).isPresent());
-    assertEquals(postCreateDto.getTitle(), postResponse.getTitle());
+    ThemeBoardDetailDto themeBoardDetailDto = mockMvcUtils.performAuthRequest(mockMvc,
+        requestBuilder,
+        jwtToken,
+        ThemeBoardDetailDto.class);
+    assert (postRepository.findById(themeBoardDetailDto.getPostId()).isPresent());
+    assertEquals(postCreateDto.getTitle(), themeBoardDetailDto.getTitle());
   }
 
   @Test
@@ -125,10 +129,12 @@ class PostControllerTest {
             toUpdate.getPostId())
         .content(objectMapper.writeValueAsString(postUpdateDto));
     // then
-    PostResponse postResponse = mockMvcUtils.performAuthRequest(mockMvc, requestBuilder, jwtToken,
-        PostResponse.class);
-    assertEquals(updateValue, postResponse.getTitle());
-    assertEquals(toUpdate.getContent(), postResponse.getContent());
+    ThemeBoardDetailDto themeBoardDetailDto = mockMvcUtils.performAuthRequest(mockMvc,
+        requestBuilder,
+        jwtToken,
+        ThemeBoardDetailDto.class);
+    assertEquals(updateValue, themeBoardDetailDto.getTitle());
+    assertEquals(toUpdate.getContent(), themeBoardDetailDto.getContent());
   }
 
   @Test

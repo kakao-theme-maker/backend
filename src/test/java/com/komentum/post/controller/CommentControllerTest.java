@@ -11,7 +11,7 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.dto.CommentDto.CommentCreateDto;
 import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
-import com.komentum.post.dto.PostDto.PostResponse;
+import com.komentum.post.dto.PostDto.ThemeBoardDetailDto;
 import com.komentum.post.repository.CommentRepository;
 import com.komentum.user.domain.User;
 import com.komentum.utils.MockMvcUtils;
@@ -82,7 +82,7 @@ class CommentControllerTest {
         requestBuilderExpected5, jwtToken);
     assertEquals(pageSize, expected5.size());
     // then - get all by big size page
-    List<PostResponse> expected10 = mockMvcUtils.performAuthRequestForList(mockMvc,
+    List<ThemeBoardDetailDto> expected10 = mockMvcUtils.performAuthRequestForList(mockMvc,
         requestBuilderExpected10, jwtToken);
     assertEquals(expected10.size(), commentRepository.count());
   }
