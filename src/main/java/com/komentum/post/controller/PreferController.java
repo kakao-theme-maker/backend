@@ -2,6 +2,7 @@ package com.komentum.post.controller;
 
 import com.komentum.post.dto.PreferDto.PreferCreateDto;
 import com.komentum.post.dto.PreferDto.PreferDeleteDto;
+import com.komentum.post.facade.PreferManagementFacade;
 import com.komentum.post.service.PreferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PreferController {
 
+  private final PreferManagementFacade preferManagementFacade;
   private final PreferService preferService;
 
   @GetMapping("/{postId}/prefer")
@@ -28,14 +30,14 @@ public class PreferController {
   @PostMapping("/{postId}/prefer")
   public ResponseEntity<Void> savePrefer(@PathVariable Long postId,
       @RequestBody PreferCreateDto createDto) {
-    preferService.savePrefer(postId, createDto);
+    preferManagementFacade.addPreferToPost(postId, createDto);
     return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/{postId}/prefer")
   public ResponseEntity<Void> deletePrefer(@PathVariable Long postId,
       @RequestBody PreferDeleteDto deleteDto) {
-    preferService.deletePrefer(postId, deleteDto);
+    preferManagementFacade.deletePreferFromPost(postId, deleteDto);
     return ResponseEntity.noContent().build();
   }
 }
