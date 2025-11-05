@@ -2,15 +2,13 @@ package com.komentum.post.service;
 
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
-import com.komentum.post.dto.TagDto.TagBatchCreateDto;
+import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
-import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.TagRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Service;
 public class TagService {
 
   public final TagRepository tagRepository;
-  public final PostRepository postRepository;
 
   public List<Tag> findAllByPostId(Long postId) {
     return tagRepository.findAllByPost_PostId(postId);
@@ -29,10 +26,10 @@ public class TagService {
     return tagRepository.findAllByPost_PostId(postId);
   }
 
-  public Map<Long, Tag> getTagPerPosts(List<Long> postIds){
+  public Map<Long, List<Tag>> getTagPerPosts(List<Long> postIds) {
     return tagRepository.fetchJoinAllByPostIds(postIds)
-            .stream()
-            .collect(Collectors.toMap(t -> t.getPost().getPostId(), Function.identity()));
+        .stream()
+        .collect(Collectors.groupingBy(t -> t.getPost().getPostId()));
   }
 
   public List<Tag> synchronizeTags(Post post, List<TagUpdateDto> updateDtoList) {
@@ -54,10 +51,8 @@ public class TagService {
     return tagRepository.saveAll(tagsToAdd);
   }
 
-  public List<Tag> createTag(Long postId, TagBatchCreateDto createDto) {
-    Post targetPost = postRepository.findById(postId)
-        .orElseThrow(() -> new RuntimeException("Post not found"));
-    List<Tag> tags = createDto.getTagNames().stream()
+  public List<Tag> createTags(Post targetPost, List<TagCreateDto> tagCreateDtoList) {
+    List<Tag> tags = tagCreateDtoList.stream()
         .map(tag -> Tag.createTransient(tag, targetPost)).toList();
     return tagRepository.saveAll(tags);
   }

@@ -1,20 +1,24 @@
 package com.komentum.post.controller;
 
+import com.komentum.global.dto.PageableRequestDto;
 import com.komentum.post.dto.PostDto.PostCreateDto;
-import com.komentum.post.dto.PostDto.PostResponse;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
+import com.komentum.post.dto.PostDto.ThemeBoardDetailDto;
+import com.komentum.post.dto.PostDto.ThemeBoardPreviewDto;
+import com.komentum.post.facade.ThemeBoardManagementFacade;
 import com.komentum.post.service.PostService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,31 +26,31 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PostController {
 
+  private final ThemeBoardManagementFacade themeBoardManagementFacade;
   private final PostService postService;
 
   @GetMapping
-  public ResponseEntity<List<PostResponse>> getPosts(
-      @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
-      @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize) {
+  public ResponseEntity<List<ThemeBoardPreviewDto>> getPosts(
+      @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
     return ResponseEntity.ok(
-        postService.getPostSummaries(pageNumber, pageSize).stream().map(PostResponse::from)
-            .toList());
+        themeBoardManagementFacade.findThemeBoardPreviews(pageableRequestDto.toPageable()));
   }
 
   @GetMapping("/{postId}")
-  public ResponseEntity<PostResponse> getPost(@PathVariable Long postId) {
-    return ResponseEntity.ok(PostResponse.from(postService.getPostSummaryByPostId(postId)));
+  public ResponseEntity<ThemeBoardDetailDto> getPost(@PathVariable Long postId) {
+    return ResponseEntity.ok(themeBoardManagementFacade.findThemeBoardDetail(postId));
   }
 
   @PostMapping
-  public ResponseEntity<PostResponse> createPost(@RequestBody PostCreateDto postDto) {
-    return ResponseEntity.ok(PostResponse.from(postService.createPost(postDto)));
+  public ResponseEntity<ThemeBoardDetailDto> createPost(@RequestBody PostCreateDto createDto) {
+    return ResponseEntity.ok(themeBoardManagementFacade.createThemeBoardWithTags(createDto));
   }
 
   @PutMapping("/{postId}")
-  public ResponseEntity<PostResponse> updatePost(@PathVariable Long postId,
-      @RequestBody PostUpdateDto postDto) {
-    return ResponseEntity.ok(PostResponse.from(postService.updatePost(postId, postDto)));
+  public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable Long postId,
+      @RequestBody PostUpdateDto updateDto) {
+    return ResponseEntity.ok(
+        themeBoardManagementFacade.updateThemeBoardWithTags(postId, updateDto));
   }
 
   @DeleteMapping("/{postId}")
