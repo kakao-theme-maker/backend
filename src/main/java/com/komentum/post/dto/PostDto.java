@@ -1,8 +1,10 @@
 package com.komentum.post.dto;
 
+import com.komentum.global.utils.DateUtils;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
-import java.time.format.DateTimeFormatter;
+import com.komentum.post.dto.TagDto.TagCreateDto;
+import com.komentum.post.dto.TagDto.TagUpdateDto;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,64 +13,60 @@ import lombok.NoArgsConstructor;
 
 public class PostDto {
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PostResponse {
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class ThemeBoardDetailDto {
 
-      public Long postId;
-      public String title;
-      public String content;
-      public String createdAt;
-      public Long prefers;
-      public List<Tag> tags;
+    private Long boardId;
+    private String title;
+    private String content;
+    private Long themeComponentId;
+    private String userEmail;
+    private String createdAt;
+    private String profileImageUrl;
+    private Long prefers;
+    private List<Tag> tags;
 
-      private static PostResponse from(Post post) {
-        String createdAtString = DateTimeFormatter.ISO_LOCAL_DATE.format(post.getCreatedAt());
-        return PostResponse.builder()
-            .postId(post.getPostId())
-            .title(post.getTitle())
-            .content(post.getContent())
-            .createdAt(createdAtString)
-            .build();
-      }
 
-      public static PostResponse from(PostSummary postSummary, List<Tag> tags) {
-        PostResponse postResponse = from(postSummary.getPost());
-        postResponse.setTags(tags);
-        postResponse.setPrefers(postSummary.getPrefers());
-        return postResponse;
-      }
-
-      public static PostResponse from(PostDetail postDetail) {
-        PostResponse postResponse = from(postDetail.getPost());
-        postResponse.setPrefers(postDetail.getPrefers());
-        postResponse.setTags(postDetail.getTags());
-        return postResponse;
-      }
+    public static ThemeBoardDetailDto fromNewBoard(Post post) {
+      return ThemeBoardDetailDto.builder()
+          .boardId(post.getPostId())
+          .title(post.getTitle())
+          .content(post.getContent())
+          .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
+          .build();
     }
+
+    public static ThemeBoardDetailDto from(PostSummary postSummary, List<Tag> tags) {
+      ThemeBoardDetailDto themeBoardDetailDto = fromNewBoard(postSummary.getPost());
+      themeBoardDetailDto.setTags(tags);
+      themeBoardDetailDto.setPrefers(postSummary.getPrefers());
+      return themeBoardDetailDto;
+    }
+  }
 
   @Data
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class PostDetail {
+  public static class ThemeBoardPreviewDto {
 
-    public Post post;
-    public Long prefers;
-    public List<Tag> tags;
+    private Long boardId;
+    private String title;
+    private String profileImageUrl;
+    private String userEmail;
+    private String createdAt;
+    private Long prefers;
 
-    public static PostDetail from(PostSummary projection) {
-      return PostDetail.builder()
-          .post(projection.getPost())
-          .prefers(projection.getPrefers())
-          .build();
-    }
-
-    public static PostDetail from(Post post) {
-      return PostDetail.builder()
-          .post(post)
+    public static ThemeBoardPreviewDto from(Post post, Long prefers) {
+      return ThemeBoardPreviewDto.builder()
+          .boardId(post.getPostId())
+          .title(post.getTitle())
+          .userEmail(post.getUser().getUserEmail())
+          .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
+          .prefers(prefers)
           .build();
     }
   }
@@ -79,9 +77,12 @@ public class PostDto {
   @AllArgsConstructor
   public static class PostCreateDto {
 
-    public String userEmail;
-    public String title;
-    public String content;
+    private String title;
+    private String content;
+    private String userEmail;
+    private List<TagCreateDto> tags;
+    private boolean isPublic;
+    private long themeComponentId;
   }
 
   @Data
@@ -90,7 +91,10 @@ public class PostDto {
   @AllArgsConstructor
   public static class PostUpdateDto {
 
-    public String title;
-    public String content;
+    String title;
+    String content;
+    String userEmail;
+    List<TagUpdateDto> postTags;
+    boolean isPublic;
   }
 }

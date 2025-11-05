@@ -37,7 +37,6 @@ public class CommentDto {
   @AllArgsConstructor
   public static class CommentCreateDto {
 
-    long postId;
     String content;
     String userEmail;
   }

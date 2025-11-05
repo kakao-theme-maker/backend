@@ -1,6 +1,7 @@
 package com.komentum.post.domain;
 
-import com.komentum.post.dto.PostDto;
+import com.komentum.post.dto.PostDto.PostCreateDto;
+import com.komentum.post.dto.PostDto.PostUpdateDto;
 import com.komentum.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,18 +51,18 @@ public class Post {
   @LastModifiedDate
   private LocalDateTime updatedAt;
 
-  public static Post createTransient(PostDto.PostCreateDto dto, User user) {
+  public static Post createTransient(PostCreateDto dto, User user) {
     return Post.builder()
         .title(dto.getTitle())
         .user(user)
         .content(dto.getContent()).build();
   }
 
-  public void update(PostDto.PostUpdateDto dto) {
-    if (dto.title != null) {
+  public void update(PostUpdateDto dto) {
+    if (dto.getTitle() != null) {
       this.title = dto.getTitle();
     }
-    if (dto.content != null) {
+    if (dto.getContent() != null) {
       this.content = dto.getContent();
     }
   }
