@@ -1,5 +1,6 @@
 package com.komentum.theme.theme.service;
 
+import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
@@ -62,5 +63,11 @@ public class ThemeRetrieveService {
     return completedThemes.stream()
         .map(themeComponentMapper::convertToDto)
         .collect(Collectors.toList());
+  }
+
+  @Transactional(readOnly = true)
+  public ThemeComponent getThemeEntityById(Integer id) {
+    return themeComponentRepository.findById(id)
+        .orElseThrow(() -> new CustomEntityNotFoundException(ThemeComponent.class, id));
   }
 }

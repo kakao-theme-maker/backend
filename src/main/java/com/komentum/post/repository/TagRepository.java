@@ -16,7 +16,7 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
   List<Tag> findAllByPostIds(@Param("postIds") List<Long> postIds);
 
   @Query("select t from Tag t " +
-          "join fetch t.post p on t.post.postId = p.postId " +
-          "where t.post.postId in :postIds")
+      "join fetch t.post p " +
+      "where t.post.postId in :postIds")
   List<Tag> fetchJoinAllByPostIds(@Param("postIds") List<Long> postIds);
 }

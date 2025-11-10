@@ -1,10 +1,10 @@
 package com.komentum.post.controller;
 
 import com.komentum.global.dto.PageableRequestDto;
-import com.komentum.post.dto.PostDto.PostCreateDto;
-import com.komentum.post.dto.PostDto.PostUpdateDto;
-import com.komentum.post.dto.PostDto.ThemeBoardDetailDto;
-import com.komentum.post.dto.PostDto.ThemeBoardPreviewDto;
+import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
+import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
+import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
+import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.facade.ThemeBoardManagementFacade;
 import com.komentum.post.service.PostService;
 import jakarta.validation.Valid;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/api/theme-boards")
 @RequiredArgsConstructor
-public class PostController {
+public class ThemeBoardController {
 
   private final ThemeBoardManagementFacade themeBoardManagementFacade;
   private final PostService postService;
@@ -36,26 +36,27 @@ public class PostController {
         themeBoardManagementFacade.findThemeBoardPreviews(pageableRequestDto.toPageable()));
   }
 
-  @GetMapping("/{postId}")
-  public ResponseEntity<ThemeBoardDetailDto> getPost(@PathVariable Long postId) {
-    return ResponseEntity.ok(themeBoardManagementFacade.findThemeBoardDetail(postId));
+  @GetMapping("/{board_id}")
+  public ResponseEntity<ThemeBoardDetailDto> getPost(@PathVariable("board_id") Long boardId) {
+    return ResponseEntity.ok(themeBoardManagementFacade.findThemeBoardDetail(boardId));
   }
 
   @PostMapping
-  public ResponseEntity<ThemeBoardDetailDto> createPost(@RequestBody PostCreateDto createDto) {
+  public ResponseEntity<ThemeBoardDetailDto> createPost(
+      @RequestBody ThemeBoardCreateDto createDto) {
     return ResponseEntity.ok(themeBoardManagementFacade.createThemeBoardWithTags(createDto));
   }
 
-  @PutMapping("/{postId}")
-  public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable Long postId,
-      @RequestBody PostUpdateDto updateDto) {
+  @PutMapping("/{board_id}")
+  public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable("board_id") Long boardId,
+      @RequestBody ThemeBoardUpdateDto updateDto) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.updateThemeBoardWithTags(postId, updateDto));
+        themeBoardManagementFacade.updateThemeBoardWithTags(boardId, updateDto));
   }
 
-  @DeleteMapping("/{postId}")
-  public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
-    postService.deletePost(postId);
+  @DeleteMapping("/{board_id}")
+  public ResponseEntity<Void> deletePost(@PathVariable("board_id") Long boardId) {
+    themeBoardManagementFacade.deleteThemeBoard(boardId);
     return ResponseEntity.noContent().build();
   }
 }

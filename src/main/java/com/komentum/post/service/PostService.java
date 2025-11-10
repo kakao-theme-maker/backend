@@ -3,8 +3,8 @@ package com.komentum.post.service;
 import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.PostDto.PostCreateDto;
-import com.komentum.post.dto.PostDto.PostUpdateDto;
 import com.komentum.post.dto.PostSummary;
+import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.user.domain.User;
 import java.util.List;
@@ -37,14 +37,14 @@ public class PostService {
   }
 
   @Transactional
-  public Post createPost(PostCreateDto postCreateDto, User targetUser) {
-    return postRepository.save(Post.createTransient(postCreateDto, targetUser));
+  public Post createPost(PostCreateDto postCreateDto, User author) {
+    return postRepository.save(Post.createTransient(postCreateDto, author));
   }
 
   @Transactional
-  public Post updatePost(Long postId, PostUpdateDto postUpdateDto) {
+  public Post updatePost(Long postId, ThemeBoardUpdateDto themeBoardUpdateDto) {
     Post targetPost = getPostByPostId(postId);
-    targetPost.update(postUpdateDto);
+    targetPost.update(themeBoardUpdateDto);
     return targetPost;
   }
 

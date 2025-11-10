@@ -45,7 +45,7 @@ public class TagService {
     Map<String, Tag> prevTagMap = prevTags.stream()
         .collect(Collectors.toMap(Tag::getTagName, Function.identity()));
     List<Tag> tagsToAdd = updateDtoList.stream()
-        .filter(t -> prevTagMap.containsKey(t.getTagName()))
+        .filter(t -> !prevTagMap.containsKey(t.getTagName()))
         .map(t -> Tag.createTransient(t, post))
         .toList();
     return tagRepository.saveAll(tagsToAdd);

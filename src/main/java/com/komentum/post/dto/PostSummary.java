@@ -17,4 +17,8 @@ public class PostSummary {
 
   private Post post;
   private Long prefers;
+
+  public Long findPostId() {
+    return post.getPostId();
+  }
 }

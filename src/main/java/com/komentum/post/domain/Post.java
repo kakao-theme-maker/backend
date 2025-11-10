@@ -1,7 +1,7 @@
 package com.komentum.post.domain;
 
 import com.komentum.post.dto.PostDto.PostCreateDto;
-import com.komentum.post.dto.PostDto.PostUpdateDto;
+import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,20 +45,24 @@ public class Post {
   @Column(columnDefinition = "text")
   private String content;
 
+  @Column
+  private String profileImageUrl;
+
   @CreatedDate
   private LocalDateTime createdAt;
 
   @LastModifiedDate
   private LocalDateTime updatedAt;
 
-  public static Post createTransient(PostCreateDto dto, User user) {
+  public static Post createTransient(PostCreateDto createDto, User user) {
     return Post.builder()
-        .title(dto.getTitle())
+        .title(createDto.getTitle())
         .user(user)
-        .content(dto.getContent()).build();
+        .profileImageUrl(createDto.getProfileImageUrl())
+        .content(createDto.getContent()).build();
   }
 
-  public void update(PostUpdateDto dto) {
+  public void update(ThemeBoardUpdateDto dto) {
     if (dto.getTitle() != null) {
       this.title = dto.getTitle();
     }
