@@ -6,10 +6,14 @@ import com.komentum.post.domain.Comment;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
 import com.komentum.post.domain.Tag;
+import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.repository.CommentRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PreferRepository;
 import com.komentum.post.repository.TagRepository;
+import com.komentum.post.repository.ThemeBoardRepository;
+import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.theme.repository.ThemeComponentRepository;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
@@ -37,6 +41,8 @@ public class TestDataGenerator {
   private final CommentRepository commentRepository;
   private final PreferRepository preferRepository;
   private final TagRepository tagRepository;
+  private final ThemeComponentRepository themeComponentRepository;
+  private final ThemeBoardRepository themeBoardRepository;
 
   @PostConstruct
   @Transactional
@@ -44,6 +50,8 @@ public class TestDataGenerator {
     Faker faker = new Faker(Locale.ENGLISH);
     List<User> users = generateTestUsers(faker, 10);
     List<Post> posts = generateTestPosts(faker, users, 5);
+    List<ThemeComponent> themeComponents = generateTestThemeComponents(faker, users, posts.size());
+    List<ThemeBoard> themeBoards = generateTestThemeBoards(faker, posts, themeComponents);
     List<Comment> comments = generateTestComments(faker, posts, users, 3);
     List<Tag> tags = generateTestTags(faker, posts, 3);
     List<Prefer> prefers = generateTestPrefers(faker, posts, users, 5);
@@ -146,5 +154,38 @@ public class TestDataGenerator {
       }
     }
     return preferRepository.saveAll(prefers);
+  }
+
+  public List<ThemeComponent> generateTestThemeComponents(Faker faker, List<User> users, int size) {
+    if (themeComponentRepository.count() > 0) {
+      return themeComponentRepository.findAll(PageRequest.of(0, 10)).getContent();
+    }
+    List<ThemeComponent> themeComponents = new ArrayList<>();
+    for (int i = 0; i < size; i++) {
+      themeComponents.add(themeComponentRepository.save(ThemeComponent.builder()
+          .themeName(faker.lorem().word())
+          .userEmail(users.get(0).getUserEmail())
+          .versionName(faker.lorem().word())
+          .versionNumber("0")
+          .isDone(true)
+          .build()));
+    }
+    return themeComponentRepository.saveAll(themeComponents);
+  }
+
+  public List<ThemeBoard> generateTestThemeBoards(Faker faker, List<Post> posts,
+      List<ThemeComponent> themeComponents) {
+    if (themeBoardRepository.count() > 0) {
+      return themeBoardRepository.findAll(PageRequest.of(0, 10)).getContent();
+    }
+    List<ThemeBoard> themeBoards = new ArrayList<>();
+    int size = Math.max(posts.size(), themeComponents.size());
+    for (int i = 0; i < size; i++) {
+      themeBoards.add(themeBoardRepository.save(ThemeBoard.builder()
+          .post(posts.get(i))
+          .themeComponent(themeComponents.get(i))
+          .build()));
+    }
+    return themeBoards;
   }
 }
