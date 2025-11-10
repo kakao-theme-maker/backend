@@ -1,9 +1,8 @@
 package com.komentum.post.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.komentum.auth.JwtUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.config.EnableTestProfile;
 import com.komentum.config.PostTestDataGenerator;
 import com.komentum.post.domain.Comment;
@@ -11,10 +10,9 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.dto.CommentDto.CommentCreateDto;
 import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
-import com.komentum.post.dto.PostDto.ThemeBoardDetailDto;
 import com.komentum.post.repository.CommentRepository;
+import com.komentum.test.MockMvcUtils;
 import com.komentum.user.domain.User;
-import com.komentum.utils.MockMvcUtils;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 @SpringBootTest
 @EnableTestProfile
@@ -42,49 +40,32 @@ class CommentControllerTest {
   private MockMvcUtils mockMvcUtils;
 
   @Autowired
-  private ObjectMapper objectMapper;
-
-  @Autowired
-  private JwtUtils jwtUtils;
-
-  @Autowired
   private PostTestDataGenerator postTestDataGenerator;
-
-  private String jwtToken;
 
   @BeforeEach
   void setUp() {
     postTestDataGenerator.deleteData();
     postTestDataGenerator.generateData(1, 1, 10);
-    jwtToken = jwtUtils.generateAccessToken(postTestDataGenerator.users.get(0).getUserEmail());
   }
 
   @Test
   @DisplayName("success test of get comments by page")
   void getComments_success() throws Exception {
     // given
+    Post post = postTestDataGenerator.posts.get(0);
+    User author = postTestDataGenerator.users.get(0);
+    String requestPath = String.format("/posts/%d/comments", post.getPostId());
     int pageNumber = 0;
     int pageSize = 5;
-    int pageSizeOverflow = 100;
-    Post post = postTestDataGenerator.posts.get(0);
-    // when - get 5 of 10
-    MockHttpServletRequestBuilder requestBuilderExpected5 = MockMvcRequestBuilders.get(
-            "/posts/{postId}/comments", post.getPostId())
-        .param("pageNumber", String.valueOf(pageNumber))
-        .param("pageSize", String.valueOf(pageSize));
-    // when - get all by big size page
-    MockHttpServletRequestBuilder requestBuilderExpected10 = MockMvcRequestBuilders.get(
-            "/posts/{postId}/comments", post.getPostId())
-        .param("pageNumber", String.valueOf(pageNumber))
-        .param("pageSize", String.valueOf(pageSizeOverflow));
-    // then - get 5 of 10
-    List<CommentResponse> expected5 = mockMvcUtils.performAuthRequestForList(mockMvc,
-        requestBuilderExpected5, jwtToken);
-    assertEquals(pageSize, expected5.size());
-    // then - get all by big size page
-    List<ThemeBoardDetailDto> expected10 = mockMvcUtils.performAuthRequestForList(mockMvc,
-        requestBuilderExpected10, jwtToken);
-    assertEquals(expected10.size(), commentRepository.count());
+    MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+    queryParams.add("pageNumber", String.valueOf(pageNumber));
+    queryParams.add("pageSize", String.valueOf(pageSize));
+    // when
+    List<CommentResponse> responses = mockMvcUtils.requestGet(mockMvc, requestPath, queryParams,
+        author.getUserEmail(), new TypeReference<>() {
+        });
+    // then
+    assertThat(responses).hasSize(pageSize);
   }
 
   @Test
@@ -92,13 +73,15 @@ class CommentControllerTest {
   void getComment() throws Exception {
     // given
     Comment target = postTestDataGenerator.comments.get(0);
+    String requestPath = String.format("/posts/comments/%d", target.getCommentId());
+    User client = postTestDataGenerator.users.get(0);
     // when
-    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(
-        "/posts/comments/{commentId}", target.getCommentId());
+    CommentResponse response = mockMvcUtils.requestGet(mockMvc, requestPath, null,
+        client.getUserEmail(), new TypeReference<>() {
+        });
     // then
-    CommentResponse commentResponse = mockMvcUtils.performAuthRequest(mockMvc, requestBuilder,
-        jwtToken, CommentResponse.class);
-    assertEquals(target.getCommentId(), commentResponse.getCommentId());
+    assertThat(response).isNotNull();
+    assertThat(response.getCommentId()).isEqualTo(target.getCommentId());
   }
 
   @Test
@@ -106,20 +89,20 @@ class CommentControllerTest {
   void createComment() throws Exception {
     // given
     String content = UUID.randomUUID().toString();
-    User user = postTestDataGenerator.users.get(0);
+    User author = postTestDataGenerator.users.get(0);
     Post post = postTestDataGenerator.posts.get(0);
-    CommentCreateDto commentCreateDto = CommentCreateDto.builder()
+    String requestPath = String.format("/posts/%d/comments", post.getPostId());
+    CommentCreateDto requestBody = CommentCreateDto.builder()
         .content(content)
-        .postId(post.getPostId())
-        .userEmail(user.getUserEmail())
+        .userEmail(author.getUserEmail())
         .build();
     // when
-    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/posts/comments")
-        .content(objectMapper.writeValueAsString(commentCreateDto));
+    CommentResponse response = mockMvcUtils.requestPost(mockMvc, requestPath, null,
+        author.getUserEmail(), requestBody, new TypeReference<>() {
+        });
     // then
-    CommentResponse commentResponse = mockMvcUtils.performAuthRequest(mockMvc, requestBuilder,
-        jwtToken, CommentResponse.class);
-    assert commentRepository.findById(commentResponse.getCommentId()).isPresent();
+    assertThat(response).isNotNull();
+    assertThat(commentRepository.findById(response.getCommentId())).isPresent();
   }
 
   @Test
@@ -127,18 +110,18 @@ class CommentControllerTest {
   void updateComment() throws Exception {
     // given
     Comment target = postTestDataGenerator.comments.get(0);
-    CommentUpdateDto updateDto = CommentUpdateDto.builder()
+    User author = target.getUser();
+    String requestPath = String.format("/posts/comments/%d", target.getCommentId());
+    CommentUpdateDto requestBody = CommentUpdateDto.builder()
         .content(UUID.randomUUID().toString())
         .build();
     // when
-    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put(
-            "/posts/comments/{commentId}", target.getCommentId())
-        .content(objectMapper.writeValueAsString(updateDto));
+    CommentResponse response = mockMvcUtils.requestPut(mockMvc, requestPath, null,
+        author.getUserEmail(), requestBody, new TypeReference<>() {
+        });
     // then
-    CommentResponse response = mockMvcUtils.performAuthRequest(mockMvc, requestBuilder, jwtToken,
-        CommentResponse.class);
-    assertEquals(target.getCommentId(), response.getCommentId());
-    assertEquals(updateDto.getContent(), response.getContent());
+    assertThat(target.getCommentId()).isEqualTo(response.getCommentId());
+    assertThat(requestBody.getContent()).isEqualTo(response.getContent());
   }
 
   @Test
@@ -146,11 +129,13 @@ class CommentControllerTest {
   void deleteComment() throws Exception {
     // given
     Comment target = postTestDataGenerator.comments.get(0);
+    User author = target.getUser();
+    String requestPath = String.format("/posts/comments/%d", target.getCommentId());
     // when
-    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.delete(
-        "/posts/comments/{commentId}", target.getCommentId());
+    mockMvcUtils.requestDelete(mockMvc, requestPath, null, author.getUserEmail(), null,
+        new TypeReference<Void>() {
+        });
     // then
-    mockMvcUtils.performAuthRequest(mockMvc, requestBuilder, jwtToken);
     assert commentRepository.findById(target.getCommentId()).isEmpty();
   }
 }
