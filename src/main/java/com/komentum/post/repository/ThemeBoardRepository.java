@@ -16,6 +16,9 @@ public interface ThemeBoardRepository extends JpaRepository<ThemeBoard, Long> {
 
   void deleteByThemeComponent_ThemeComponentId(Integer themeComponentId);
 
-  @Query("select tb from ThemeBoard tb where tb.post.postId in :postIds")
+  @Query("select tb "
+      + "from ThemeBoard tb "
+      + "join fetch ThemeComponent tc "
+      + "where tb.post.postId in :postIds")
   List<ThemeBoard> findAllByPostIds(List<Long> postIds);
 }
