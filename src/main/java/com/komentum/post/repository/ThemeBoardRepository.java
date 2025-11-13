@@ -18,7 +18,7 @@ public interface ThemeBoardRepository extends JpaRepository<ThemeBoard, Long> {
 
   @Query("select tb "
       + "from ThemeBoard tb "
-      + "join fetch ThemeComponent tc "
+      + "join fetch tb.themeComponent tc "
       + "where tb.post.postId in :postIds")
   List<ThemeBoard> findAllByPostIds(List<Long> postIds);
 }
