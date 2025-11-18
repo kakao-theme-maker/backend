@@ -32,7 +32,8 @@ public class AndroidThemeSaver {
    */
   public String[] commandBuilder(String inputPath, String targetPath) {
     return new String[]{
-            "docker", "run", "--platform=linux/amd64", "--rm",
+        "docker", "run", "--platform=linux/amd64", "--rm",
+
         "-v", String.format("%s:/input", inputPath),
         "-v", String.format("%s:/output", targetPath),
         "louie8821/apk_repackager:test",
