@@ -7,7 +7,6 @@ import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ThemeBoardService {
 
   private final ThemeBoardRepository themeBoardRepository;
-
-  @Transactional(readOnly = true)
-  public List<ThemeBoard> findAll(Pageable pageable) {
-    return themeBoardRepository.findAll(pageable).getContent();
-  }
 
   @Transactional(readOnly = true)
   public List<ThemeBoard> findAllByPostIds(List<Long> postIds) {
