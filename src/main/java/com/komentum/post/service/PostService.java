@@ -20,17 +20,6 @@ public class PostService {
   private final PostRepository postRepository;
 
   @Transactional(readOnly = true)
-  public List<PostSummary> getPostSummaries(Pageable pageable) {
-    return postRepository.getPostSummary(pageable);
-  }
-
-  @Transactional(readOnly = true)
-  public PostSummary getPostSummaryByPostId(Long postId) {
-    return postRepository.getPostSummaryByPostId(postId)
-        .orElseThrow(() -> new CustomEntityNotFoundException(Post.class, postId));
-  }
-
-  @Transactional(readOnly = true)
   public Post getPostByPostId(Long postId) {
     return postRepository.findById(postId)
         .orElseThrow(() -> new CustomEntityNotFoundException(Post.class, postId));

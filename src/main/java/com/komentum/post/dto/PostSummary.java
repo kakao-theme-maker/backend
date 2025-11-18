@@ -1,6 +1,7 @@
 package com.komentum.post.dto;
 
 import com.komentum.post.domain.Post;
+import com.komentum.user.domain.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,9 +17,14 @@ import lombok.Setter;
 public class PostSummary {
 
   private Post post;
+  private User author;
   private Long prefers;
 
   public Long findPostId() {
     return post.getPostId();
+  }
+
+  public String findProfileImageName() {
+    return post.getProfileImageName();
   }
 }
