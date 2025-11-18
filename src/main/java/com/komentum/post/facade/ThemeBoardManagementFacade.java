@@ -8,6 +8,8 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
+import com.komentum.post.mapper.PostDtoMapper;
+import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 // Exit Plan: 150 lines
 @Service
@@ -30,61 +33,70 @@ import org.springframework.transaction.annotation.Transactional;
 public class ThemeBoardManagementFacade {
 
   private final PostService postService;
+  private final PostRepositorySupport postRepositorySupport;
   private final TagService tagService;
   private final UserRetrieveService userRetrieveService;
   private final ThemeBoardService themeBoardService;
   private final ThemeRetrieveService themeRetrieveService;
+  private final BoardManagementHelper boardManagementHelper;
+
+  // mapper
+  private final PostDtoMapper postDtoMapper;
 
   @Transactional(readOnly = true)
-  public ThemeBoardDetailDto findThemeBoardDetail(Long postId) {
-    PostSummary postSummary = postService.getPostSummaryByPostId(postId);
-    List<Tag> tags = tagService.getTagsByPostId(postId);
-    return ThemeBoardDetailDto.from(postSummary, tags);
+  public ThemeBoardDetailDto findThemeBoardDetail(Long boardId) {
+    PostSummary postSummary = postRepositorySupport.findPostSummaryByPostId(boardId);
+    List<Tag> tags = tagService.getTagsByPostId(boardId);
+    ThemeBoard themeBoard = themeBoardService.findByPostId(boardId);
+    String profileImageUrl = boardManagementHelper.findProfileImageUrl(
+        postSummary.findProfileImageName());
+    return ThemeBoardDetailDto.from(postSummary.getPost(), themeBoard.getThemeComponent(),
+        postSummary.getAuthor(), tags, postSummary.getPrefers(), profileImageUrl);
   }
 
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
-    List<PostSummary> postSummaries = postService.getPostSummaries(pageable);
+    List<PostSummary> postSummaries = postRepositorySupport.findPostSummaries(pageable);
     Map<Long, PostSummary> postSummaryMap = postSummaries.stream()
         .collect(Collectors.toMap(PostSummary::findPostId, Function.identity()));
-    List<Long> postIds = postSummaries.stream().map(PostSummary::findPostId).toList();
+    List<Long> postIds = postSummaryMap.keySet().stream().toList();
     Map<Long, ThemeBoard> postThemeMap = themeBoardService.findAllByPostIds(postIds).stream()
         .collect(Collectors.toMap(ThemeBoard::findPostId, Function.identity()));
     return postSummaryMap.values()
         .stream()
         .map(postSummary -> {
-          ThemeBoard themeBoard = postThemeMap.get(postSummary.getPost().getPostId());
-          return ThemeBoardPreviewDto.from(themeBoard.getPost(), themeBoard.getThemeComponent(),
-              postSummary.getPrefers());
+          ThemeBoard themeBoard = postThemeMap.get(postSummary.findPostId());
+          String profileImageUrl = boardManagementHelper.findProfileImageUrl(
+              postSummary.findProfileImageName());
+          return ThemeBoardPreviewDto.from(postSummary.getPost(), themeBoard.getThemeComponent(),
+              postSummary.getAuthor(),
+              postSummary.getPrefers(), profileImageUrl);
         })
         .toList();
   }
 
   @Transactional
   public ThemeBoardDetailDto createThemeBoardWithTags(
-      ThemeBoardCreateDto themeBoardCreateDto) {
-    User author = userRetrieveService.findUserEntity(themeBoardCreateDto.getUserEmail());
-    Post savedPost = postService.createPost(themeBoardCreateDto.toPostCreateDto(), author);
-    List<Tag> tags = tagService.createTags(savedPost, themeBoardCreateDto.getPostTags());
-    ThemeComponent themeComponent = themeRetrieveService.getThemeEntityBiId(
-        themeBoardCreateDto.getThemeComponentId());
+      ThemeBoardCreateDto createDto, MultipartFile profileImage) {
+    User author = userRetrieveService.findUserEntity(createDto.getUserEmail());
+    Post savedPost = boardManagementHelper.createPostAndProfileImage(
+        postDtoMapper.toPostCreateDto(createDto), author, profileImage);
+    tagService.createTags(savedPost, createDto.getPostTags());
+    ThemeComponent themeComponent = themeRetrieveService.getThemeEntityById(
+        createDto.getThemeComponentId());
     themeBoardService.save(savedPost, themeComponent);
-    return ThemeBoardDetailDto.from(new PostSummary(savedPost, 0L), tags);
+    return findThemeBoardDetail(savedPost.getPostId());
   }
 
   @Transactional
   public ThemeBoardDetailDto updateThemeBoardWithTags(Long boardId,
       ThemeBoardUpdateDto updateDto) {
     User editor = userRetrieveService.findUserEntity(updateDto.getUserEmail());
-    PostSummary postSummary = postService.getPostSummaryByPostId(boardId);
-    if (!postSummary.getPost().getUser().equals(editor)) {
-      throw new IllegalArgumentException("You are not allowed to change theme board");
-    }
-    Post post = postSummary.getPost();
-    post.update(updateDto);
-    List<Tag> updatedTags = tagService.synchronizeTags(postSummary.getPost(),
+    Post updatedPost = postService.updatePost(boardId, editor,
+        postDtoMapper.toPostUpdateDto(updateDto));
+    tagService.synchronizeTags(updatedPost,
         updateDto.getPostTags());
-    return ThemeBoardDetailDto.from(postSummary, updatedTags);
+    return findThemeBoardDetail(boardId);
   }
 
   @Transactional
