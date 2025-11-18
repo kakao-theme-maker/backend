@@ -3,7 +3,7 @@ package com.komentum.post.service;
 import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
-import com.komentum.post.domain.QDesignComponentBoard;
+import com.komentum.post.domain.QDesignBoard;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -21,9 +21,9 @@ public class DesignBoardService {
 
   @Transactional(readOnly = true)
   public List<DesignBoard> findAllByPostIds(List<Long> postIds) {
-    QDesignComponentBoard qDesignComponentBoard = QDesignComponentBoard.designComponentBoard;
-    return queryFactory.selectFrom(qDesignComponentBoard)
-        .where(qDesignComponentBoard.post.postId.in(postIds))
+    QDesignBoard designBoard = QDesignBoard.designBoard;
+    return queryFactory.selectFrom(designBoard)
+        .where(designBoard.post.postId.in(postIds))
         .fetch();
   }
 

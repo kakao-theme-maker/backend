@@ -57,13 +57,11 @@ public class DesignBoardManagementFacade {
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable) {
     List<PostSummary> postSummaries = postRepositorySupport.findPostSummaries(pageable);
-    Map<Long, PostSummary> postSummaryMap = postSummaries.stream()
-        .collect(Collectors.toMap(PostSummary::findPostId, Function.identity()));
-    List<Long> postIds = postSummaryMap.keySet().stream().toList();
-    Map<Long, DesignBoard> postBoardDetailMap = designBoardService.findAllByPostIds(
-            postIds).stream()
+    List<Long> postIds = postSummaries.stream().map(PostSummary::findPostId).toList();
+    Map<Long, DesignBoard> postBoardDetailMap = designBoardService.findAllByPostIds(postIds)
+        .stream()
         .collect(Collectors.toMap(DesignBoard::findPostId, Function.identity()));
-    return postSummaryMap.values().stream().map(postSummary -> {
+    return postSummaries.stream().map(postSummary -> {
       DesignBoard designBoard = postBoardDetailMap.get(postSummary.findPostId());
       String profileImageUrl = boardManagementHelper.findProfileImageUrl(
           postSummary.findProfileImageName());
