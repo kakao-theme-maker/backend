@@ -1,9 +1,11 @@
 package com.komentum.post.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.config.EnableTestProfile;
+import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagResponse;
@@ -19,13 +21,18 @@ import com.komentum.user.domain.User;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -46,6 +53,9 @@ class ThemeBoardControllerTest {
 
   @Autowired
   private MockMvcUtils mockMvcUtils;
+
+  @Autowired
+  private FileManager fileManager;
 
   @BeforeEach
   void setUp() {
@@ -85,17 +95,33 @@ class ThemeBoardControllerTest {
     User author = themeBoardDataGenerator.getUsers().get(0);
     ThemeComponent nonThemeBoardTheme = themeBoardDataGenerator.getNonThemeBoardThemeComponents()
         .get(0);
-    String[] tags = new String[]{UUID.randomUUID().toString(), UUID.randomUUID().toString()};
-    ThemeBoardCreateDto requestBody = ThemeBoardCreateDto.builder()
+    String[] tags = IntStream.range(0, 5)
+        .mapToObj(r -> UUID.randomUUID().toString())
+        .toArray(String[]::new);
+    String testProfileUrl = UUID.randomUUID().toString();
+    ThemeBoardCreateDto createDto = ThemeBoardCreateDto.builder()
         .title(UUID.randomUUID().toString())
         .content(UUID.randomUUID().toString())
         .userEmail(author.getUserEmail())
         .themeComponentId(nonThemeBoardTheme.getThemeComponentId())
+        .publicFlag(true)
         .postTags(Arrays.stream(tags).map(t -> TagCreateDto.builder().tagName(t).build()).toList())
         .build();
+    MockMultipartFile testProfileImage = mockMvcUtils.fileToTestFormData("profile_image",
+        "profile_image.png",
+        MediaType.IMAGE_PNG, "test data".getBytes());
+    MockMultipartFile boardInfo = mockMvcUtils.jsonToTestFormData("board_info",
+        createDto);
+    List<MockMultipartFile> formDataList = List.of(testProfileImage, boardInfo);
+    // stub
+    Mockito.when(fileManager.uploadFile(any(), any()))
+        .thenReturn(testProfileImage.getOriginalFilename());
+    Mockito.when(fileManager.resolveFilePath(any()))
+        .thenReturn(testProfileUrl);
     // when
-    ThemeBoardDetailDto response = mockMvcUtils.requestPost(mockMvc, requestPath, null,
-        author.getUserEmail(), requestBody, new TypeReference<>() {
+    ThemeBoardDetailDto response = mockMvcUtils.performMultipartRequest(mockMvc, requestPath,
+        HttpMethod.POST, null,
+        author.getUserEmail(), formDataList, new TypeReference<>() {
         });
     // then : DB 저장 여부
     assertThat(postRepository.findById(response.getBoardId()))
@@ -105,7 +131,9 @@ class ThemeBoardControllerTest {
         .extracting(TagResponse::getTagName)
         .containsExactlyInAnyOrder(tags);
     assertThat(response.getTitle())
-        .isEqualTo(requestBody.getTitle());
+        .isEqualTo(createDto.getTitle());
+    assertThat(response.getProfileImageUrl())
+        .isEqualTo(testProfileUrl);
   }
 
   @Test
