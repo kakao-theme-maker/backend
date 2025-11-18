@@ -15,7 +15,17 @@ public class PostDto {
 
     String title;
     String content;
-    String profileImageUrl;
-    boolean isPublic;
+    boolean publicFlag;
+  }
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class PostUpdateDto {
+
+    String title;
+    String content;
+    boolean publicFlag;
   }
 }
