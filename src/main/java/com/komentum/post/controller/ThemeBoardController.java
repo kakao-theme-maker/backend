@@ -6,7 +6,6 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.facade.ThemeBoardManagementFacade;
-import com.komentum.post.service.PostService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class ThemeBoardController {
 
   private final ThemeBoardManagementFacade themeBoardManagementFacade;
-  private final PostService postService;
 
   @GetMapping
   public ResponseEntity<List<ThemeBoardPreviewDto>> getPosts(
@@ -45,8 +43,8 @@ public class ThemeBoardController {
 
   @PostMapping
   public ResponseEntity<ThemeBoardDetailDto> createPost(
-      @RequestParam("board_info") ThemeBoardCreateDto createDto,
-      @RequestParam("profile_image") MultipartFile profileImage) {
+      @RequestPart("board_info") ThemeBoardCreateDto createDto,
+      @RequestPart("profile_image") MultipartFile profileImage) {
     return ResponseEntity.ok(
         themeBoardManagementFacade.createThemeBoardWithTags(createDto, profileImage));
   }
