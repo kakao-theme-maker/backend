@@ -49,8 +49,16 @@ public class DesignComponentService {
   @Transactional(readOnly = true)
   public DesignComponentDto getDesignComponentById(Integer id) {
     DesignComponent component = designComponentRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
+        .orElseThrow(
+            () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
     return convertToDto(component);
+  }
+
+  @Transactional
+  public DesignComponent getEntityById(Integer id) {
+    return designComponentRepository.findById(id)
+        .orElseThrow(
+            () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
   }
 
   // 페이지네이션 지원 메서드 (새로 추가)
@@ -77,7 +85,8 @@ public class DesignComponentService {
   // UPDATE
   public DesignComponentDto updateComponent(Integer id, DesignComponentDto request) {
     DesignComponent existing = designComponentRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
+        .orElseThrow(
+            () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
 
     Optional.ofNullable(request.getUserEmail()).ifPresent(existing::setUserEmail);
     Optional.ofNullable(request.getImageUrl()).ifPresent(existing::setImageUrl);
@@ -99,9 +108,11 @@ public class DesignComponentService {
     deleteComponent(id);
   }
 
-  public DesignComponentDto updateDesignComponent(Integer id, UpdateDesignComponentRequest request) {
+  public DesignComponentDto updateDesignComponent(Integer id,
+      UpdateDesignComponentRequest request) {
     DesignComponent existing = designComponentRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
+        .orElseThrow(
+            () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
 
     Optional.ofNullable(request.getUserEmail()).ifPresent(existing::setUserEmail);
     Optional.ofNullable(request.getImageUrl()).ifPresent(existing::setImageUrl);
