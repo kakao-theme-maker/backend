@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/theme-boards")
@@ -43,8 +45,10 @@ public class ThemeBoardController {
 
   @PostMapping
   public ResponseEntity<ThemeBoardDetailDto> createPost(
-      @RequestBody ThemeBoardCreateDto createDto) {
-    return ResponseEntity.ok(themeBoardManagementFacade.createThemeBoardWithTags(createDto));
+      @RequestParam("board_info") ThemeBoardCreateDto createDto,
+      @RequestParam("profile_image") MultipartFile profileImage) {
+    return ResponseEntity.ok(
+        themeBoardManagementFacade.createThemeBoardWithTags(createDto, profileImage));
   }
 
   @PutMapping("/{board_id}")
