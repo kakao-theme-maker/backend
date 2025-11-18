@@ -69,21 +69,43 @@ dependencies {
     // mapstruct
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    //QueryDsl
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
+// ### config settings start
 tasks.register('copyConfig', Copy) {
     from("${rootProject.projectDir}/backend_config/dev/monolithic") {
         include 'application.yml'
     }
     into './src/main/resources/'
 }
-
 tasks.register("copyTestConfig", Copy) {
     from("${rootProject.projectDir}/backend_config/dev/monolithic") {
         include 'application-test.yml'
     }
     into './src/test/resources/'
 }
-
 processResources.dependsOn(copyConfig)
 processTestResources.dependsOn(copyTestConfig)
+// ### config settings end
+
+
+// ### query-dsl settings start
+def generated = 'src/main/generated'
+// query-dsl가 생성한 QClass를 src/main/generated에 추가
+tasks.withType(JavaCompile) {
+    options.getGeneratedSourceOutputDirectory().set(file(generated))
+}
+// src/main/generated의 코드를 Java 코드로 인식하도록 설정
+sourceSets {
+    main.java.srcDirs += [generated]
+}
+// gradle clean 시 QClass 삭제
+clean {
+    delete file(generated)
+}
+// ### query-dsl settings end
