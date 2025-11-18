@@ -57,14 +57,10 @@ public class ThemeBoardManagementFacade {
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
     List<PostSummary> postSummaries = postRepositorySupport.findPostSummaries(pageable);
-    Map<Long, PostSummary> postSummaryMap = postSummaries.stream()
-        .collect(Collectors.toMap(PostSummary::findPostId, Function.identity()));
-    List<Long> postIds = postSummaryMap.keySet().stream().toList();
+    List<Long> postIds = postSummaries.stream().map(PostSummary::findPostId).toList();
     Map<Long, ThemeBoard> postThemeMap = themeBoardService.findAllByPostIds(postIds).stream()
         .collect(Collectors.toMap(ThemeBoard::findPostId, Function.identity()));
-    return postSummaryMap.values()
-        .stream()
-        .map(postSummary -> {
+    return postSummaries.stream().map(postSummary -> {
           ThemeBoard themeBoard = postThemeMap.get(postSummary.findPostId());
           String profileImageUrl = boardManagementHelper.findProfileImageUrl(
               postSummary.findProfileImageName());

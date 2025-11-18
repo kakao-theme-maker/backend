@@ -46,26 +46,20 @@ public class ThemeBoardDto {
 
     private List<TagResponse> tags;
 
-    public static ThemeBoardDetailDto fromNewBoard(Post post, String profileImageUrl) {
+    public static ThemeBoardDetailDto from(Post post, ThemeComponent themeComponent, User author,
+        List<Tag> tags,
+        Long prefers, String profileImageUrl) {
       return ThemeBoardDetailDto.builder()
           .boardId(post.getPostId())
           .title(post.getTitle())
           .content(post.getContent())
-          .profileImageUrl(profileImageUrl)
+          .themeComponentId(themeComponent.getThemeComponentId())
+          .userEmail(author.getUserEmail())
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
+          .profileImageUrl(profileImageUrl)
+          .prefers(prefers)
+          .tags(tags.stream().map(TagResponse::from).toList())
           .build();
-    }
-
-    public static ThemeBoardDetailDto from(Post post, ThemeComponent themeComponent, User author,
-        List<Tag> tags,
-        Long prefers, String profileImageUrl) {
-      ThemeBoardDetailDto themeBoardDetailDto = fromNewBoard(post, profileImageUrl);
-      themeBoardDetailDto.setTags(
-          tags.stream().map(TagResponse::from).toList());
-      themeBoardDetailDto.setPrefers(prefers);
-      themeBoardDetailDto.setUserEmail(author.getUserEmail());
-      themeBoardDetailDto.setThemeComponentId(themeComponent.getThemeComponentId());
-      return themeBoardDetailDto;
     }
   }
 
