@@ -14,8 +14,8 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.repository.PostRepository;
+import com.komentum.test.BoardDetailDataGenerator;
 import com.komentum.test.MockMvcUtils;
-import com.komentum.test.ThemeBoardDataGenerator;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.Arrays;
@@ -49,7 +49,7 @@ class ThemeBoardControllerTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private ThemeBoardDataGenerator themeBoardDataGenerator;
+  private BoardDetailDataGenerator boardDetailDataGenerator;
 
   @Autowired
   private MockMvcUtils mockMvcUtils;
@@ -59,13 +59,13 @@ class ThemeBoardControllerTest {
 
   @BeforeEach
   void setUp() {
-    themeBoardDataGenerator.deleteThemeBoards();
-    themeBoardDataGenerator.generateThemeBoards(5, 2, 2);
+    boardDetailDataGenerator.deleteThemeBoards();
+    boardDetailDataGenerator.generateThemeBoards(5, 2, 2);
   }
 
   @AfterEach
   void tearDown() {
-    themeBoardDataGenerator.deleteThemeBoards();
+    boardDetailDataGenerator.deleteThemeBoards();
   }
 
   @Test
@@ -75,7 +75,7 @@ class ThemeBoardControllerTest {
     int pageNumber = 0;
     int pageSize = 5;
     String requestPath = "/api/theme-boards";
-    User client = themeBoardDataGenerator.getUsers().get(0);
+    User client = boardDetailDataGenerator.getUsers().get(0);
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("pageNumber", String.valueOf(pageNumber));
     params.add("pageSize", String.valueOf(pageSize));
@@ -92,8 +92,8 @@ class ThemeBoardControllerTest {
   void createPost_success() throws Exception {
     // given
     String requestPath = "/api/theme-boards";
-    User author = themeBoardDataGenerator.getUsers().get(0);
-    ThemeComponent nonThemeBoardTheme = themeBoardDataGenerator.getNonThemeBoardThemeComponents()
+    User author = boardDetailDataGenerator.getUsers().get(0);
+    ThemeComponent nonThemeBoardTheme = boardDetailDataGenerator.getNonThemeBoardThemeComponents()
         .get(0);
     String[] tags = IntStream.range(0, 5)
         .mapToObj(r -> UUID.randomUUID().toString())
@@ -140,7 +140,7 @@ class ThemeBoardControllerTest {
   @DisplayName("success test of update post")
   void updatePost() throws Exception {
     // given
-    Post toUpdate = themeBoardDataGenerator.getPosts().get(0);
+    Post toUpdate = boardDetailDataGenerator.getPosts().get(0);
     String requestPath = String.format("/api/theme-boards/%d", toUpdate.getPostId());
     User author = toUpdate.getUser();
     String[] tags = new String[]{UUID.randomUUID().toString(), UUID.randomUUID().toString()};
@@ -165,7 +165,7 @@ class ThemeBoardControllerTest {
   @DisplayName("success test of delete post")
   void deletePost() throws Exception {
     // given
-    Post toDelete = themeBoardDataGenerator.getPosts().get(0);
+    Post toDelete = boardDetailDataGenerator.getPosts().get(0);
     User author = toDelete.getUser();
     String requestPath = String.format("/api/theme-boards/%d", toDelete.getPostId());
     // when
