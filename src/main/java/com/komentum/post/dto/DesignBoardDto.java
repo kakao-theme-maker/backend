@@ -114,9 +114,6 @@ public class DesignBoardDto {
     @JsonProperty("user_email")
     String userEmail;
 
-    @JsonProperty("profile_image")
-    String profileImage;
-
     @JsonProperty("post_tags")
     List<TagCreateDto> postTags;
 
