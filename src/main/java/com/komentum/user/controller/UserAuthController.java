@@ -1,6 +1,7 @@
 package com.komentum.user.controller;
 
 import com.komentum.auth.AuthProperty;
+import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.UserAuthRequest;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.service.UserAuthService;
@@ -33,6 +34,21 @@ public class UserAuthController {
       @RequestBody UserAuthRequest userAuthRequest) {
     return userAuthService.processKakaoAuth(userAuthRequest.getAuthCode())
         .map(ResponseEntity::ok);
+  }
+
+  // Local 회원가입 기능
+  @PostMapping("/auth/local/sign-up")
+  public ResponseEntity<String> singUpLocal(
+          @RequestBody LocalLoginRequestDto localLoginRequestDto){
+    userAuthService.processLocalSingUp(localLoginRequestDto);
+    return ResponseEntity.ok("signup success");
+  }
+
+  // Local 로그인 기능
+  @PostMapping("/auth/local/sign-in")
+  public ResponseEntity<UserAuthResponse> signInLocal(
+          @RequestBody LocalLoginRequestDto localLoginRequestDto){
+    return ResponseEntity.ok(userAuthService.processLocalsignIn(localLoginRequestDto));
   }
 
   /**

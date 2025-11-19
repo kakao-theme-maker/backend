@@ -4,8 +4,10 @@ import com.komentum.auth.AuthProperty;
 import com.komentum.auth.JwtUtils;
 import com.komentum.user.client.KakaoAuthHttpClient;
 import com.komentum.user.domain.User;
+import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -21,21 +23,31 @@ public class UserAuthService {
   private final JwtUtils jwtUtils;
   private final KakaoAuthHttpClient kakaoAuthHttpClient;
   private final TransactionTemplate transactionTemplate;
+  private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
   public UserAuthService(
-      UserRepository userRepository,
-      TokenService tokenService,
-      KakaoAuthHttpClient kakaoAuthHttpClient,
-      TransactionTemplate transactionTemplate,
-      JwtUtils jwtUtils
+          UserRepository userRepository,
+          TokenService tokenService,
+          KakaoAuthHttpClient kakaoAuthHttpClient,
+          TransactionTemplate transactionTemplate,
+          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder
   ) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.jwtUtils = jwtUtils;
     this.kakaoAuthHttpClient = kakaoAuthHttpClient;
     this.transactionTemplate = transactionTemplate;
+    this.bCryptPasswordEncoder = bCryptPasswordEncoder;
   }
-
+  public UserAuthResponse initializeToken(String email){
+    String accessToken = jwtUtils.generateAccessToken(email);
+    String refreshToken = jwtUtils.generateRefreshToken(email);
+    if (!tokenService.saveAccessAndRefreshToken(email, accessToken,
+            refreshToken)) {
+      throw new RuntimeException("failed to save access and refresh token");
+    }
+    return new UserAuthResponse(accessToken, refreshToken);
+  }
   /**
    * 카카오 로그인 및 회원가입
    */
@@ -48,16 +60,32 @@ public class UserAuthService {
                   if (user == null) {
                     user = userRepository.save(userInfo.toEntity());
                   }
-                  String accessToken = jwtUtils.generateAccessToken(user.getUserEmail());
-                  String refreshToken = jwtUtils.generateRefreshToken(user.getUserEmail());
-                  if (!tokenService.saveAccessAndRefreshToken(user.getUserEmail(), accessToken,
-                      refreshToken)) {
-                    throw new RuntimeException("failed to save access and refresh token");
-                  }
-                  return new UserAuthResponse(accessToken, refreshToken);
+                  return initializeToken(user.getUserEmail());
                 }
             )).subscribeOn(Schedulers.boundedElastic())
         );
+  }
+
+
+  // 로컬 회원가입
+  public void processLocalSingUp(LocalLoginRequestDto dto){
+    User user = userRepository.findById(dto.getEmail()).orElse(null);
+    if (user == null) {
+      userRepository.save(dto.toEntity(bCryptPasswordEncoder));
+    }
+  }
+
+  // 로컬 로그인
+  public UserAuthResponse processLocalsignIn(LocalLoginRequestDto dto){
+    User user = userRepository.findById(dto.getEmail()).orElse(null);
+    if (user == null) {
+      throw new RuntimeException("This is member information that does not exist.");
+    }
+    if  (user.getUserEmail().equals(dto.getEmail()) &&
+            bCryptPasswordEncoder.matches(dto.getPassword(), user.getEncryptedPassword())) {
+      return initializeToken(user.getUserEmail());
+    }
+    throw new RuntimeException("incorrect information");
   }
 
   /**
