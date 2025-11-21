@@ -6,6 +6,7 @@ import com.komentum.user.dto.UserAuthRequest;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.service.UserAuthService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -48,7 +49,7 @@ public class UserAuthController {
   @PostMapping("/auth/local/sign-in")
   public ResponseEntity<UserAuthResponse> signInLocal(
           @RequestBody LocalLoginRequestDto localLoginRequestDto){
-    return ResponseEntity.ok(userAuthService.processLocalsignIn(localLoginRequestDto));
+    return ResponseEntity.ok(userAuthService.processLocalSignIn(localLoginRequestDto));
   }
 
   /**
@@ -61,6 +62,17 @@ public class UserAuthController {
     userAuthService.handleLogout(accessToken);
     return ResponseEntity.ok("logout success");
   }
+
+  // 로컬 로그아웃 기능
+  @PostMapping("/auth/local/sign-out")
+  public ResponseEntity<String> signOutLocal(
+          @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String accessToken){
+    accessToken = accessToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
+    userAuthService.handleLogout(accessToken);
+    return ResponseEntity.ok("logout success");
+  }
+
+
 
   /**
    * 토큰 재발급
