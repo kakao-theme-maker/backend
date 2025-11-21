@@ -76,7 +76,7 @@ public class UserAuthService {
   }
 
   // 로컬 로그인
-  public UserAuthResponse processLocalsignIn(LocalLoginRequestDto dto){
+  public UserAuthResponse processLocalSignIn(LocalLoginRequestDto dto){
     User user = userRepository.findById(dto.getEmail()).orElse(null);
     if (user == null) {
       throw new RuntimeException("This is member information that does not exist.");
