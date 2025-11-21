@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -68,6 +69,7 @@ class ThemeManageControllerTest {
         .build();
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/themes")
+        .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(createThemeRequest));
     request = mockMvcUtils.generateAuthJsonRequest(request, themeDataGenerator.userEmail);
     // then
@@ -91,6 +93,7 @@ class ThemeManageControllerTest {
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put("/api/themes/{id}",
             target.getThemeComponentId())
+        .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(createThemeRequest));
     request = mockMvcUtils.generateAuthJsonRequest(request, themeDataGenerator.userEmail);
     // then
