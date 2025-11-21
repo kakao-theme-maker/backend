@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @Component
 public class RedisSingleDataService {
@@ -20,7 +22,7 @@ public class RedisSingleDataService {
 
   public boolean set(String key, String value, int seconds) {
     try {
-      redisTemplate.opsForValue().set(key, value, seconds);
+      redisTemplate.opsForValue().set(key, value, seconds, TimeUnit.SECONDS);
       return true;
     } catch (Exception e) {
       log.error(e.getMessage());
