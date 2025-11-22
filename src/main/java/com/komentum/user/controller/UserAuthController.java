@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/auth")
 public class UserAuthController {
 
   private final UserAuthService userAuthService;
@@ -30,7 +30,7 @@ public class UserAuthController {
    * @param userAuthRequest 사용자 auth code
    * @return 토큰들을 ResponseEntity 로 감싸서 반환
    */
-  @PostMapping("/auth/kakao/login")
+  @PostMapping("/kakao/login")
   public Mono<ResponseEntity<UserAuthResponse>> loginWithKakao(
       @RequestBody UserAuthRequest userAuthRequest) {
     return userAuthService.processKakaoAuth(userAuthRequest.getAuthCode())
@@ -38,7 +38,7 @@ public class UserAuthController {
   }
 
   // Local 회원가입 기능
-  @PostMapping("/auth/local/sign-up")
+  @PostMapping("/local/sign-up")
   public ResponseEntity<String> singUpLocal(
           @RequestBody LocalLoginRequestDto localLoginRequestDto){
     userAuthService.processLocalSingUp(localLoginRequestDto);
@@ -46,7 +46,7 @@ public class UserAuthController {
   }
 
   // Local 로그인 기능
-  @PostMapping("/auth/local/sign-in")
+  @PostMapping("/local/sign-in")
   public ResponseEntity<UserAuthResponse> signInLocal(
           @RequestBody LocalLoginRequestDto localLoginRequestDto){
     return ResponseEntity.ok(userAuthService.processLocalSignIn(localLoginRequestDto));
@@ -55,7 +55,7 @@ public class UserAuthController {
   /**
    * 카카오 로그아웃 기능
    */
-  @PostMapping("/auth/kakao/logout")
+  @PostMapping("/kakao/logout")
   public ResponseEntity<String> logoutWithKakao(
       @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String accessToken) {
     accessToken = accessToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
@@ -64,7 +64,7 @@ public class UserAuthController {
   }
 
   // 로컬 로그아웃 기능
-  @PostMapping("/auth/local/sign-out")
+  @PostMapping("/local/sign-out")
   public ResponseEntity<String> signOutLocal(
           @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String accessToken){
     accessToken = accessToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
@@ -77,7 +77,7 @@ public class UserAuthController {
   /**
    * 토큰 재발급
    */
-  @PostMapping("/auth/token")
+  @PostMapping("/token")
   public ResponseEntity<UserAuthResponse> generateToken(
       @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String refreshToken) {
     refreshToken = refreshToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
