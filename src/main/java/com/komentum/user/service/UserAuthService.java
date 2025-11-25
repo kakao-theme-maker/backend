@@ -68,7 +68,7 @@ public class UserAuthService {
 
 
   // 로컬 회원가입
-  public void processLocalSingUp(LocalLoginRequestDto dto){
+  public void processLocalSignUp(LocalLoginRequestDto dto){
     User user = userRepository.findById(dto.getEmail()).orElse(null);
     if (user == null) {
       userRepository.save(dto.toEntity(bCryptPasswordEncoder));

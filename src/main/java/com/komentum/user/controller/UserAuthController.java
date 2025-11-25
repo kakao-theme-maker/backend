@@ -6,7 +6,6 @@ import com.komentum.user.dto.UserAuthRequest;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.service.UserAuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -41,7 +40,7 @@ public class UserAuthController {
   @PostMapping("/local/sign-up")
   public ResponseEntity<String> singUpLocal(
           @RequestBody LocalLoginRequestDto localLoginRequestDto){
-    userAuthService.processLocalSingUp(localLoginRequestDto);
+    userAuthService.processLocalSignUp(localLoginRequestDto);
     return ResponseEntity.ok("signup success");
   }
 
