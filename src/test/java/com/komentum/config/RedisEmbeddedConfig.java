@@ -74,5 +74,12 @@ public class RedisEmbeddedConfig {
 
     }
 
+    public int getRedisPort(){
+        if (redisServer == null){
+            throw new IllegalStateException("Redis server has not been initialized");
+        }
+        return redisServer.ports().get(0);
+    }
+
 
 }

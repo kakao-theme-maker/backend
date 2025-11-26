@@ -12,10 +12,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.komentum.user.redis.RedisSingleDataService;
 import com.komentum.test.RedisEmbeddedTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.RedisTemplate;
 
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 @SpringBootTest()
@@ -29,6 +31,12 @@ public class RedisEmbeddedTest {
     @Autowired
     
     private RedisSingleDataService redisSingleDataService;
+
+    @Autowired
+    private RedisEmbeddedConfig redisEmbeddedConfig;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
     @BeforeEach
     void shutDown() {
@@ -74,6 +82,19 @@ public class RedisEmbeddedTest {
 
         // then
         assertThat(redisSingleDataService.get(KEY)).isNull();
+    }
+
+    @Test
+    @DisplayName("Redis port 테스트")
+    void testEmbeddedRedisIsRunning() {
+        int port = redisEmbeddedConfig.getRedisPort();
+        System.out.println("Embedded Redis Port = " + port);
+
+        // ping 테스트
+        String pong = redisTemplate.getConnectionFactory().getConnection().ping();
+        System.out.println("PING: " + pong);
+
+        assertEquals("PONG", pong);
     }
 
 
