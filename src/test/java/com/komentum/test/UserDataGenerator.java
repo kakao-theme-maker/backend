@@ -8,16 +8,22 @@ import com.komentum.user.repository.UserRepository;
 import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Component
 public class UserDataGenerator {
+  private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
   @Autowired
   UserRepository userRepository;
 
   Faker faker = new Faker();
 
-  public void generateTestUser(String userEmail) {
+    public UserDataGenerator(BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
+
+    public void generateTestUser(String userEmail) {
     userRepository.save(User.builder()
         .profileImg(faker.internet().image())
         .birth(LocalDate.now())
@@ -25,6 +31,18 @@ public class UserDataGenerator {
         .role(UserRole.USER)
         .userEmail(userEmail)
         .build());
+  }
+
+
+  public void generateTestLocalUser(String userEmail, String password) {
+    userRepository.save(User.builder()
+            .profileImg(faker.internet().image())
+            .birth(LocalDate.now())
+            .gender(Gender.male)
+            .role(UserRole.USER)
+            .userEmail(userEmail)
+            .encryptedPassword(bCryptPasswordEncoder.encode(password))
+            .build());
   }
 
   public void deleteAllUsers() {

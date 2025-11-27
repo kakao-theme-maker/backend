@@ -38,6 +38,8 @@ public class User {
   @Column
   Gender gender;
   @Column
+  String encryptedPassword;
+  @Column
   LocalDate birth;
   @Column
   String profileImg;
