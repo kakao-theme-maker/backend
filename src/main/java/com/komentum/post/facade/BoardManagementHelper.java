@@ -18,38 +18,38 @@ public class BoardManagementHelper {
   private final FileManager fileManager;
   private final PostService postService;
 
-  private String saveProfileImageAndGetFileName(MultipartFile profileImage) {
+  private String savePreviewImageAndGetFileName(MultipartFile previewImage) {
     try {
-      String extension = StringUtils.getFilenameExtension(profileImage.getOriginalFilename());
+      String extension = StringUtils.getFilenameExtension(previewImage.getOriginalFilename());
       if (extension == null || extension.isEmpty()) {
         extension = "bin";
       }
       String randomFileName = UUID.randomUUID() + "." + extension;
-      String imageUrl = fileManager.uploadFile(profileImage.getBytes(), randomFileName);
+      String imageUrl = fileManager.uploadFile(previewImage.getBytes(), randomFileName);
       if (imageUrl == null) {
-        throw new RuntimeException("Failed to upload profile image file");
+        throw new RuntimeException("Failed to upload preview image file");
       }
       return randomFileName;
     } catch (Exception e) {
-      throw new RuntimeException("Failed to process profile image file", e);
+      throw new RuntimeException("Failed to process preview image file", e);
     }
   }
 
-  public Post createPostAndProfileImage(PostCreateDto postCreateDto, User author,
-      MultipartFile profileImage) {
+  public Post createPostAndPreviewImage(PostCreateDto postCreateDto, User author,
+      MultipartFile previewImage) {
     String savedFileName = null;
-    if (profileImage != null && !profileImage.isEmpty()) {
-      savedFileName = saveProfileImageAndGetFileName(profileImage);
+    if (previewImage != null && !previewImage.isEmpty()) {
+      savedFileName = savePreviewImageAndGetFileName(previewImage);
     }
     return postService.createPost(postCreateDto, author, savedFileName);
   }
 
-  public String findProfileImageUrl(String fileName) {
+  public String findPreviewImageUrl(String fileName) {
     return fileManager.resolveFilePath(fileName);
   }
 
-  public String findProfileImageUrl(Long postId) {
+  public String findPreviewImageUrl(Long postId) {
     Post targetPost = postService.getPostByPostId(postId);
-    return fileManager.resolveFilePath(targetPost.getProfileImageName());
+    return fileManager.resolveFilePath(targetPost.getPreviewImageName());
   }
 }

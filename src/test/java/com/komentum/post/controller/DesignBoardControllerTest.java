@@ -158,13 +158,13 @@ public class DesignBoardControllerTest {
         .publicFlag(true)
         .build();
     MockMultipartFile boardInfo = mockMvcUtils.jsonToTestFormData("board_info", createDto);
-    MockMultipartFile profileImage = mockMvcUtils.fileToTestFormData("profile_image",
-        "profile_image.png", MediaType.IMAGE_PNG, "test data".getBytes());
-    List<MockMultipartFile> formDataList = List.of(boardInfo, profileImage);
+    MockMultipartFile previewImage = mockMvcUtils.fileToTestFormData("preview_image",
+        "preview_image.png", MediaType.IMAGE_PNG, "test data".getBytes());
+    List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
     // stub
-    String expectedProfileImageUrl = UUID.randomUUID().toString();
+    String expectedPreviewImageUrl = UUID.randomUUID().toString();
     Mockito.when(fileManager.resolveFilePath(anyString()))
-        .thenReturn(expectedProfileImageUrl);
+        .thenReturn(expectedPreviewImageUrl);
     Mockito.when(
             fileManager.uploadFile(any(byte[].class), anyString()))
         .thenReturn(UUID.randomUUID().toString());

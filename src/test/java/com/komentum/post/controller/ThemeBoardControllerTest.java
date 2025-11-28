@@ -98,7 +98,7 @@ class ThemeBoardControllerTest {
     String[] tags = IntStream.range(0, 5)
         .mapToObj(r -> UUID.randomUUID().toString())
         .toArray(String[]::new);
-    String testProfileUrl = UUID.randomUUID().toString();
+    String testPreviewImageUrl = UUID.randomUUID().toString();
     ThemeBoardCreateDto createDto = ThemeBoardCreateDto.builder()
         .title(UUID.randomUUID().toString())
         .content(UUID.randomUUID().toString())
@@ -107,17 +107,17 @@ class ThemeBoardControllerTest {
         .publicFlag(true)
         .postTags(Arrays.stream(tags).map(t -> TagCreateDto.builder().tagName(t).build()).toList())
         .build();
-    MockMultipartFile testProfileImage = mockMvcUtils.fileToTestFormData("profile_image",
-        "profile_image.png",
+    MockMultipartFile testPreviewImage = mockMvcUtils.fileToTestFormData("preview_image",
+        "preview_image.png",
         MediaType.IMAGE_PNG, "test data".getBytes());
     MockMultipartFile boardInfo = mockMvcUtils.jsonToTestFormData("board_info",
         createDto);
-    List<MockMultipartFile> formDataList = List.of(testProfileImage, boardInfo);
+    List<MockMultipartFile> formDataList = List.of(testPreviewImage, boardInfo);
     // stub
     Mockito.when(fileManager.uploadFile(any(), any()))
-        .thenReturn(testProfileImage.getOriginalFilename());
+        .thenReturn(testPreviewImage.getOriginalFilename());
     Mockito.when(fileManager.resolveFilePath(any()))
-        .thenReturn(testProfileUrl);
+        .thenReturn(testPreviewImageUrl);
     // when
     ThemeBoardDetailDto response = mockMvcUtils.performMultipartRequest(mockMvc, requestPath,
         HttpMethod.POST, null,
@@ -132,8 +132,8 @@ class ThemeBoardControllerTest {
         .containsExactlyInAnyOrder(tags);
     assertThat(response.getTitle())
         .isEqualTo(createDto.getTitle());
-    assertThat(response.getProfileImageUrl())
-        .isEqualTo(testProfileUrl);
+    assertThat(response.getPreviewImageUrl())
+        .isEqualTo(testPreviewImageUrl);
   }
 
   @Test

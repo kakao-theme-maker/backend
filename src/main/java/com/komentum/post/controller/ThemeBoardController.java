@@ -44,7 +44,7 @@ public class ThemeBoardController {
   @PostMapping
   public ResponseEntity<ThemeBoardDetailDto> createPost(
       @RequestPart("board_info") ThemeBoardCreateDto createDto,
-      @RequestPart("profile_image") MultipartFile profileImage) {
+      @RequestPart("preview_image") MultipartFile profileImage) {
     return ResponseEntity.ok(
         themeBoardManagementFacade.createThemeBoardWithTags(createDto, profileImage));
   }

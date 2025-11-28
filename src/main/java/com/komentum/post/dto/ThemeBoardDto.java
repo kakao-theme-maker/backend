@@ -39,8 +39,8 @@ public class ThemeBoardDto {
     @JsonProperty("created_at")
     private String createdAt;
 
-    @JsonProperty("profile_image_url")
-    private String profileImageUrl;
+    @JsonProperty("preview_image_url")
+    private String previewImageUrl;
 
     private Long prefers;
 
@@ -48,7 +48,7 @@ public class ThemeBoardDto {
 
     public static ThemeBoardDetailDto from(Post post, ThemeComponent themeComponent, User author,
         List<Tag> tags,
-        Long prefers, String profileImageUrl) {
+        Long prefers, String previewImageUrl) {
       return ThemeBoardDetailDto.builder()
           .boardId(post.getPostId())
           .title(post.getTitle())
@@ -56,7 +56,7 @@ public class ThemeBoardDto {
           .themeComponentId(themeComponent.getThemeComponentId())
           .userEmail(author.getUserEmail())
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
-          .profileImageUrl(profileImageUrl)
+          .previewImageUrl(previewImageUrl)
           .prefers(prefers)
           .tags(tags.stream().map(TagResponse::from).toList())
           .build();
@@ -77,8 +77,8 @@ public class ThemeBoardDto {
 
     private String title;
 
-    @JsonProperty("profile_image_url")
-    private String profileImageUrl;
+    @JsonProperty("preview_image_url")
+    private String previewImageUrl;
 
     @JsonProperty("user_email")
     private String userEmail;
@@ -89,13 +89,13 @@ public class ThemeBoardDto {
     private Long prefers;
 
     public static ThemeBoardPreviewDto from(Post post, ThemeComponent themeComponent, User author,
-        Long prefers, String profileImageUrl) {
+        Long prefers, String previewImageUrl) {
       return ThemeBoardPreviewDto.builder()
           .boardId(post.getPostId())
           .title(post.getTitle())
           .userEmail(author.getUserEmail())
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
-          .profileImageUrl(profileImageUrl)
+          .previewImageUrl(previewImageUrl)
           .themeComponentId(themeComponent.getThemeComponentId())
           .prefers(prefers)
           .build();
@@ -114,9 +114,6 @@ public class ThemeBoardDto {
 
     @JsonProperty("user_email")
     String userEmail;
-
-    @JsonProperty("profile_image")
-    String profileImage;
 
     @JsonProperty("post_tags")
     List<TagCreateDto> postTags;

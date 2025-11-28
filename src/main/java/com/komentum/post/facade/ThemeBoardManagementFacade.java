@@ -48,10 +48,10 @@ public class ThemeBoardManagementFacade {
     PostSummary postSummary = postRepositorySupport.findPostSummaryByPostId(boardId);
     List<Tag> tags = tagService.getTagsByPostId(boardId);
     ThemeBoard themeBoard = themeBoardService.findByPostId(boardId);
-    String profileImageUrl = boardManagementHelper.findProfileImageUrl(
-        postSummary.findProfileImageName());
+    String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
+        postSummary.findPreviewImageName());
     return ThemeBoardDetailDto.from(postSummary.getPost(), themeBoard.getThemeComponent(),
-        postSummary.getAuthor(), tags, postSummary.getPrefers(), profileImageUrl);
+        postSummary.getAuthor(), tags, postSummary.getPrefers(), previewImageUrl);
   }
 
   @Transactional(readOnly = true)
@@ -62,21 +62,21 @@ public class ThemeBoardManagementFacade {
         .collect(Collectors.toMap(ThemeBoard::findPostId, Function.identity()));
     return postSummaries.stream().map(postSummary -> {
           ThemeBoard themeBoard = postThemeMap.get(postSummary.findPostId());
-          String profileImageUrl = boardManagementHelper.findProfileImageUrl(
-              postSummary.findProfileImageName());
+          String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
+              postSummary.findPreviewImageName());
           return ThemeBoardPreviewDto.from(postSummary.getPost(), themeBoard.getThemeComponent(),
               postSummary.getAuthor(),
-              postSummary.getPrefers(), profileImageUrl);
+              postSummary.getPrefers(), previewImageUrl);
         })
         .toList();
   }
 
   @Transactional
   public ThemeBoardDetailDto createThemeBoardWithTags(
-      ThemeBoardCreateDto createDto, MultipartFile profileImage) {
+      ThemeBoardCreateDto createDto, MultipartFile previewImage) {
     User author = userRetrieveService.findUserEntity(createDto.getUserEmail());
-    Post savedPost = boardManagementHelper.createPostAndProfileImage(
-        postDtoMapper.toPostCreateDto(createDto), author, profileImage);
+    Post savedPost = boardManagementHelper.createPostAndPreviewImage(
+        postDtoMapper.toPostCreateDto(createDto), author, previewImage);
     tagService.createTags(savedPost, createDto.getPostTags());
     ThemeComponent themeComponent = themeRetrieveService.getThemeEntityById(
         createDto.getThemeComponentId());

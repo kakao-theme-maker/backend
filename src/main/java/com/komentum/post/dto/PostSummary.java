@@ -24,7 +24,7 @@ public class PostSummary {
     return post.getPostId();
   }
 
-  public String findProfileImageName() {
-    return post.getProfileImageName();
+  public String findPreviewImageName() {
+    return post.getPreviewImageName();
   }
 }

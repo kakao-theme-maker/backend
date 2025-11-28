@@ -46,7 +46,7 @@ public class Post {
   private String content;
 
   @Column(nullable = true)
-  private String profileImageName;
+  private String previewImageName;
 
   @CreatedDate
   private LocalDateTime createdAt;
@@ -54,11 +54,11 @@ public class Post {
   @LastModifiedDate
   private LocalDateTime updatedAt;
 
-  public static Post createTransient(PostCreateDto createDto, User user, String profileImageName) {
+  public static Post createTransient(PostCreateDto createDto, User user, String previewImageName) {
     return Post.builder()
         .title(createDto.getTitle())
         .user(user)
-        .profileImageName(profileImageName)
+        .previewImageName(previewImageName)
         .content(createDto.getContent()).build();
   }
 

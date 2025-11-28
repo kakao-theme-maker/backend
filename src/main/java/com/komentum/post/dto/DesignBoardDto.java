@@ -39,15 +39,15 @@ public class DesignBoardDto {
     @JsonProperty("created_at")
     private String createdAt;
 
-    @JsonProperty("profile_image_url")
-    private String profileImageUrl;
+    @JsonProperty("preview_image_url")
+    private String previewImageUrl;
 
     private Long prefers;
 
     private List<TagResponse> tags;
 
     public static DesignBoardDetailDto from(Post post, DesignComponent designComponent,
-        User author, List<Tag> tags, Long prefers, String profileImageUrl) {
+        User author, List<Tag> tags, Long prefers, String previewImageUrl) {
       return DesignBoardDetailDto.builder()
           .boardId(post.getPostId())
           .title(post.getTitle())
@@ -55,7 +55,7 @@ public class DesignBoardDto {
           .designComponentId(designComponent.getDesignComponentId())
           .userEmail(author.getUserEmail())
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
-          .profileImageUrl(profileImageUrl)
+          .previewImageUrl(previewImageUrl)
           .prefers(prefers)
           .tags(tags.stream().map(TagResponse::from).toList())
           .build();
@@ -76,8 +76,8 @@ public class DesignBoardDto {
 
     private String title;
 
-    @JsonProperty("profile_image_url")
-    private String profileImageUrl;
+    @JsonProperty("preview_image_url")
+    private String previewImageUrl;
 
     @JsonProperty("user_email")
     private String userEmail;
@@ -88,12 +88,12 @@ public class DesignBoardDto {
     private Long prefers;
 
     public static DesignBoardPreviewDto from(Post post, DesignComponent designComponent,
-        User author, Long prefers, String profileImageUrl) {
+        User author, Long prefers, String previewImageUrl) {
       return DesignBoardPreviewDto.builder()
           .boardId(post.getPostId())
           .designComponentId(designComponent.getDesignComponentId())
           .title(post.getTitle())
-          .profileImageUrl(profileImageUrl)
+          .previewImageUrl(previewImageUrl)
           .userEmail(author.getUserEmail())
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
           .prefers(prefers)

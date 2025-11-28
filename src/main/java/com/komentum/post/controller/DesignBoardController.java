@@ -45,7 +45,7 @@ public class DesignBoardController {
   @PostMapping
   public ResponseEntity<DesignBoardDetailDto> createDesignBoard(
       @RequestPart("board_info") DesignBoardCreateDto createDto,
-      @RequestPart("profile_image") MultipartFile profileImage
+      @RequestPart("preview_image") MultipartFile profileImage
   ) {
     return ResponseEntity.ok(
         designBoardManagementFacade.createBoardWithTags(createDto, profileImage));

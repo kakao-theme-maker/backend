@@ -47,11 +47,11 @@ public class DesignBoardManagementFacade {
     PostSummary postSummary = postRepositorySupport.findPostSummaryByPostId(boardId);
     DesignBoard designBoard = designBoardService.findByPostId(boardId);
     List<Tag> tags = tagService.getTagsByPostId(boardId);
-    String profileImageUrl = boardManagementHelper.findProfileImageUrl(
-        postSummary.findProfileImageName());
+    String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
+        postSummary.findPreviewImageName());
     return DesignBoardDetailDto.from(postSummary.getPost(),
         designBoard.getDesignComponent(), postSummary.getAuthor(), tags,
-        postSummary.getPrefers(), profileImageUrl);
+        postSummary.getPrefers(), previewImageUrl);
   }
 
   @Transactional(readOnly = true)
@@ -63,20 +63,20 @@ public class DesignBoardManagementFacade {
         .collect(Collectors.toMap(DesignBoard::findPostId, Function.identity()));
     return postSummaries.stream().map(postSummary -> {
       DesignBoard designBoard = postBoardDetailMap.get(postSummary.findPostId());
-      String profileImageUrl = boardManagementHelper.findProfileImageUrl(
-          postSummary.findProfileImageName());
+      String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
+          postSummary.findPreviewImageName());
       return DesignBoardPreviewDto.from(postSummary.getPost(),
           designBoard.getDesignComponent(), postSummary.getAuthor(),
-          postSummary.getPrefers(), profileImageUrl);
+          postSummary.getPrefers(), previewImageUrl);
     }).toList();
   }
 
   @Transactional
   public DesignBoardDetailDto createBoardWithTags(
-      DesignBoardCreateDto createDto, MultipartFile profileImage) {
+      DesignBoardCreateDto createDto, MultipartFile previewImage) {
     User author = userRetrieveService.findUserEntity(createDto.getUserEmail());
-    Post savedPost = boardManagementHelper.createPostAndProfileImage(
-        postDtoMapper.toPostCreateDto(createDto), author, profileImage);
+    Post savedPost = boardManagementHelper.createPostAndPreviewImage(
+        postDtoMapper.toPostCreateDto(createDto), author, previewImage);
     tagService.createTags(savedPost, createDto.getPostTags());
     DesignComponent designComponent = designComponentService.getEntityById(
         createDto.getDesignComponentId());
