@@ -5,6 +5,7 @@ import com.komentum.global.utils.S3FileManager;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 @TestConfiguration
@@ -12,7 +13,8 @@ import org.springframework.context.annotation.Profile;
 public class GlobalTestMockManager {
 
   @Bean
-  public FileManager s3FileManager() {
+  @Primary
+  public FileManager fileManager() {
     return Mockito.mock(S3FileManager.class);
   }
 }

@@ -5,12 +5,9 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.dto.CommentDto.CommentCreateDto;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
 import com.komentum.post.repository.CommentRepository;
-import com.komentum.post.repository.PostRepository;
 import com.komentum.user.domain.User;
-import com.komentum.user.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
 
   private final CommentRepository commentRepository;
-  private final PostRepository postRepository;
-  private final UserRepository userRepository;
 
-  public List<Comment> getComments(Long postId, int pageNumber, int pageSize) {
-    Pageable pageable = PageRequest.of(pageNumber, pageSize);
+  public List<Comment> getComments(Long postId, Pageable pageable) {
     return commentRepository.findAllByPost_PostId(postId, pageable);
   }
 
@@ -34,12 +28,8 @@ public class CommentService {
   }
 
   @Transactional
-  public Comment saveComment(CommentCreateDto commentCreateDto) {
-    Post post = postRepository.findById(commentCreateDto.getPostId())
-        .orElseThrow(() -> new RuntimeException("Post not found"));
-    User user = userRepository.findById(commentCreateDto.getUserEmail())
-        .orElseThrow(() -> new RuntimeException("User not found"));
-    Comment comment = Comment.createTransient(commentCreateDto, post, user);
+  public Comment saveComment(Post post, User author, CommentCreateDto commentCreateDto) {
+    Comment comment = Comment.createTransient(commentCreateDto, post, author);
     return commentRepository.save(comment);
   }
 

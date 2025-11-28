@@ -15,8 +15,12 @@ public class UserRetrieveService {
   }
 
   public UserResponseDto getUserByEmail(String email) {
-    User user = userRepository.findById(email)
-        .orElseThrow(() -> new RuntimeException("user not found"));
+    User user = findUserEntity(email);
     return UserResponseDto.from(user);
+  }
+
+  public User findUserEntity(String email){
+    return userRepository.findById(email)
+        .orElseThrow(() -> new RuntimeException("user not found"));
   }
 }

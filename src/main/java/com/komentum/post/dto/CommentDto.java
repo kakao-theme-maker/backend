@@ -32,16 +32,17 @@ public class CommentDto {
   }
 
   @Data
+  @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   public static class CommentCreateDto {
 
-    long postId;
     String content;
     String userEmail;
   }
 
   @Data
+  @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   public static class CommentUpdateDto {

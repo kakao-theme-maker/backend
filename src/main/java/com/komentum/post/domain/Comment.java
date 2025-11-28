@@ -9,12 +9,15 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -32,9 +35,13 @@ public class Comment {
   private Long commentId;
 
   @ManyToOne
+  @JoinColumn(name = "post_id")
+  @OnDelete(action = OnDeleteAction.CASCADE)
   private Post post;
 
   @ManyToOne
+  @JoinColumn(name = "user_id")
+  @OnDelete(action = OnDeleteAction.CASCADE)
   private User user;
 
   @Column

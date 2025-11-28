@@ -54,3 +54,5 @@ gradle-app.setting
 .env
 key.jks
 
+# QueryDsl
+**/src/main/generated

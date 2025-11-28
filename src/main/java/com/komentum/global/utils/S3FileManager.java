@@ -36,7 +36,7 @@ public class S3FileManager implements FileManager {
         .build();
   }
 
-  private String resolveFilePath(String fileName) {
+  public String resolveFilePath(String fileName) {
     if (fileName == null || fileName.trim().isEmpty()) {
       throw new IllegalArgumentException("[S3 File Manager] fileName is null or empty");
     }

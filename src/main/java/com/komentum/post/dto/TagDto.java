@@ -1,5 +1,6 @@
 package com.komentum.post.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.post.domain.Tag;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -13,9 +14,19 @@ public class TagDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  public static class TagBatchCreateDto {
+
+    List<TagCreateDto> tagNames;
+  }
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class TagCreateDto {
 
-    List<String> tagNames;
+    @JsonProperty("tag_name")
+    String tagName;
   }
 
   @Data
@@ -33,7 +44,10 @@ public class TagDto {
   @AllArgsConstructor
   public static class TagResponse {
 
+    @JsonProperty("tag_id")
     Long tagId;
+
+    @JsonProperty("tag_name")
     String tagName;
 
     public static TagResponse from(Tag tag) {
