@@ -4,8 +4,10 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.service.PostService;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserResponseDto;
+import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.SubscriptionRepository;
 import com.komentum.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,5 +39,30 @@ public class UserRetrieveService {
   public User findUserEntity(String email){
     return userRepository.findById(email)
         .orElseThrow(() -> new RuntimeException("user not found"));
+  }
+
+  // 유저 정보 수정
+  @Transactional
+  public UserResponseDto updateUser(String email, UserUpdateDto updateDto){
+    User user = findUserEntity(email);
+    if(updateDto.getUserName() != null ){
+      user.setName(updateDto.getUserName());
+    }
+    if(updateDto.getUserProfileUrl()!= null){
+      user.setProfileImg(updateDto.getUserProfileUrl());
+    }
+    if(updateDto.getGender() != null){
+      user.setGender(updateDto.getGender());
+    }
+    if (updateDto.getBirth() != null){
+      user.setBirth(updateDto.getBirth());
+    }
+    //팔로워 수
+    int followers = subscriptionRepository.countBySubscriber_UserEmail(email);
+    //팔로잉 수
+    int following = subscriptionRepository.countByUser_UserEmail(email);
+    //업로드 수
+    int uploads = postService.countPost(email);
+    return UserResponseDto.from(user, followers, following, uploads);
   }
 }
