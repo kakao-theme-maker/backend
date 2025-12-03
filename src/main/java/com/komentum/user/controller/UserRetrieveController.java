@@ -5,8 +5,8 @@ import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.service.UserRetrieveService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -19,8 +19,8 @@ public class UserRetrieveController {
   }
 
   // 유저 조회
-  @GetMapping("/email")
-  public ResponseEntity<UserInquiryResponseDto<UserResponseDto>> getUserByEmail(@RequestParam("email") String email) {
+  @GetMapping("/{email:.+}")
+  public ResponseEntity<UserInquiryResponseDto<UserResponseDto>> getUserByEmail(@PathVariable("email") String email) {
     try {
       UserResponseDto user = userRetrieveService.getUserByEmail(email);
       // 유저 조회 성공

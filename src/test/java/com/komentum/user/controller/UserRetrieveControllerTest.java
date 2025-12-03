@@ -1,6 +1,10 @@
 package com.komentum.user.controller;
 
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.config.EnableTestProfile;
 import com.komentum.user.dto.UserResponseDto;
 import java.time.LocalDateTime;
@@ -9,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -46,7 +51,18 @@ public class UserRetieveControllerTest {
             .build();
 
     //when
-    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users/${email}");
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users/" + userEmail)
+        .contentType(MediaType.APPLICATION_JSON);
+
+    //then
+    String response = mockMvc.perform(request)
+        .andExpect(status().is2xxSuccessful())
+        .andReturn().getResponse().getContentAsString();
+
+    UserResponseDto result = new ObjectMapper().readValue(response, UserResponseDto.class);
+
+    assertThat(result.getUserEmail());
+    assert
 
 
   }
