@@ -22,6 +22,7 @@ import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.dto.UserResponseDto;
+import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -71,6 +72,7 @@ public class UserRetrieveControllerTest {
     userDataGenerator.deleteAllUsers();
   }
 
+  // 물어볼거: post까지 주입하면, 의존성이 너무 증가하는 것 아닌지?
   // upload 확인용
   private void addPostForUser(String email) {
     User user = userRepository.findByUserEmail(email)
@@ -84,6 +86,7 @@ public class UserRetrieveControllerTest {
     postRepository.save(post);
   }
 
+  // 물어볼거: 유저 정보 조회 및 수정에 관한 테스트파일인데, 토큰발급까지 관여하는 것이 괜찮은지?
   // 정보를 조회하기 위해서 token이 필요함
   private String checkToken() throws Exception {
     //jwt 발급
@@ -130,6 +133,7 @@ public class UserRetrieveControllerTest {
 
     //when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users/" + userEmail)
+        //물어볼거: 토큰을 넣지 않으면 security 검증에서 에러가 발생하는데, 이게 옳바른 것인지?
         .header("Authorization","Bearer " + token);
 
     //then
@@ -137,7 +141,7 @@ public class UserRetrieveControllerTest {
         .andExpect(status().is2xxSuccessful())
         .andReturn().getResponse().getContentAsString();
 
-    //UserInquiryResponseDto가 래핑된 값
+    //UserInquiryResponseDto는 래핑된 값
     UserInquiryResponseDto<UserResponseDto> wrapper =
         objectMapper.readValue(response, new TypeReference<>() {});
 
@@ -147,5 +151,51 @@ public class UserRetrieveControllerTest {
         .usingRecursiveComparison()
         .ignoringFields("createdAt")
         .isEqualTo(userResponseDto);
+  }
+
+  @Test
+  @DisplayName("유저 정보 수정")
+  void updateUserTest() throws Exception{
+    // given
+    String updatedUserName = "updatedName";
+    String updatedUserProfileUrl = "https://updatedUrl";
+    Gender updatedGender = Gender.male;
+    LocalDate updatedBirth = LocalDate.of(2000,1,1);
+
+    UserUpdateDto updateDto = UserUpdateDto.builder()
+        .userName(updatedUserName)
+        .userProfileUrl(updatedUserProfileUrl)
+        .gender(updatedGender)
+        .birth(updatedBirth)
+        .build();
+    String token = checkToken();
+
+    //when
+    MockHttpServletRequestBuilder request =
+        MockMvcRequestBuilders.put("/api/users/" +email)
+            .content(objectMapper.writeValueAsString(updateDto))
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer "+token);
+
+    String response = mockMvc.perform(request)
+        .andExpect(status().is2xxSuccessful())
+        .andReturn().getResponse().getContentAsString();
+
+    //then
+    UserInquiryResponseDto<UserResponseDto> wrapper =
+        objectMapper.readValue(response, new TypeReference<>() {});
+
+    UserResponseDto result = wrapper.getData();
+
+    // 응답 검증
+    assertThat(result.getUserName()).isEqualTo(updatedUserName);
+    assertThat(result.getUserProfileUrl()).isEqualTo(updatedUserProfileUrl);
+
+    // DB 검증
+    User updatedUser = userRepository.findByUserEmail(email).orElseThrow();
+    assertThat(updatedUser.getName()).isEqualTo(updatedUserName);
+    assertThat(updatedUser.getProfileImg()).isEqualTo(updatedUserProfileUrl);
+    assertThat(updatedUser.getGender()).isEqualTo(updatedGender);
+    assertThat(updatedUser.getBirth()).isEqualTo(updatedBirth);
   }
 }
