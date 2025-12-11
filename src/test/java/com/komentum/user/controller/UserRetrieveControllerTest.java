@@ -4,19 +4,13 @@ package com.komentum.user.controller;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.komentum.auth.JwtUtils;
 import com.komentum.config.EnableTestProfile;
-import com.komentum.config.RedisEmbeddedConfig;
-import com.komentum.global.dto.UserInquiryResponseDto;
-import com.komentum.global.security.UserRole;
-import com.komentum.post.domain.DesignBoard;
+import com.komentum.global.dto.CustomResponse;
 import com.komentum.post.domain.Post;
-import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
-import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.UserDataGenerator;
-import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
@@ -25,7 +19,6 @@ import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.UserRepository;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -43,7 +35,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 @EnableTestProfile
 @AutoConfigureMockMvc
 @SpringBootTest
-// @Import(RedisEmbeddedConfig.class)
 public class UserRetrieveControllerTest {
 
   String email = "admin1@gmail.com";
@@ -59,6 +50,8 @@ public class UserRetrieveControllerTest {
   private UserRepository userRepository;
   @Autowired
   private PostRepository postRepository;
+  @Autowired
+  private JwtUtils jwtUtils;
 
   @BeforeEach
   void setUp(){
@@ -86,27 +79,6 @@ public class UserRetrieveControllerTest {
     postRepository.save(post);
   }
 
-  // 물어볼거: 유저 정보 조회 및 수정에 관한 테스트파일인데, 토큰발급까지 관여하는 것이 괜찮은지?
-  // 정보를 조회하기 위해서 token이 필요함
-  private String checkToken() throws Exception {
-    //jwt 발급
-    LocalLoginRequestDto loginRequestDto = LocalLoginRequestDto.builder()
-        .email(email)
-        .password(password)
-        .build();
-
-    String token = objectMapper.readValue(
-        mockMvc.perform(
-                MockMvcRequestBuilders.post("/api/auth/local/sign-in")
-                    .content(objectMapper.writeValueAsString(loginRequestDto))
-                    .contentType(MediaType.APPLICATION_JSON)
-            ).andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), UserAuthResponse.class).getAccessToken();
-
-    return token;
-
-  }
-
   @Test
   @DisplayName("유저 조회")
   void inquiryUserTest() throws Exception{
@@ -129,7 +101,7 @@ public class UserRetrieveControllerTest {
             .following(following)
             .build();
 
-    String token = checkToken();
+    String token = jwtUtils.generateAccessToken(email);
 
     //when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users/" + userEmail)
@@ -142,7 +114,7 @@ public class UserRetrieveControllerTest {
         .andReturn().getResponse().getContentAsString();
 
     //UserInquiryResponseDto는 래핑된 값
-    UserInquiryResponseDto<UserResponseDto> wrapper =
+    CustomResponse<UserResponseDto> wrapper =
         objectMapper.readValue(response, new TypeReference<>() {});
 
     UserResponseDto result = wrapper.getData();
@@ -168,7 +140,7 @@ public class UserRetrieveControllerTest {
         .gender(updatedGender)
         .birth(updatedBirth)
         .build();
-    String token = checkToken();
+    String token = jwtUtils.generateAccessToken(email);
 
     //when
     MockHttpServletRequestBuilder request =
@@ -182,7 +154,7 @@ public class UserRetrieveControllerTest {
         .andReturn().getResponse().getContentAsString();
 
     //then
-    UserInquiryResponseDto<UserResponseDto> wrapper =
+    CustomResponse<UserResponseDto> wrapper =
         objectMapper.readValue(response, new TypeReference<>() {});
 
     UserResponseDto result = wrapper.getData();
