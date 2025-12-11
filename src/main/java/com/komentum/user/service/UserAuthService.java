@@ -5,8 +5,10 @@ import com.komentum.auth.JwtUtils;
 import com.komentum.user.client.KakaoAuthHttpClient;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
+import com.komentum.user.dto.PasswordChangeRequsetDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,6 +88,20 @@ public class UserAuthService {
       return initializeToken(user.getUserEmail());
     }
     throw new RuntimeException("incorrect information");
+  }
+
+  // 비밀번호 변경
+  @Transactional
+  public void changePassword(String userEmail, PasswordChangeRequsetDto passwordChangeRequsetDto){
+    User user = userRepository.findById(userEmail).orElse(null);
+    // 기존 비밀번호 검증
+    if (user == null){
+      throw new IllegalStateException("유저 정보 오류");
+    }
+    if(!bCryptPasswordEncoder.matches(passwordChangeRequsetDto.getCurrentPassword(), user.getEncryptedPassword())){
+      throw new IllegalStateException("현재 비밀번호가 일치하지 않습니다.");
+    }
+    user.setEncryptedPassword(bCryptPasswordEncoder.encode(passwordChangeRequsetDto.getNewPassword()));
   }
 
   /**
