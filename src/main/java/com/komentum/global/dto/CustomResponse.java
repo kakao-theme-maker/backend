@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder
 // 커스텀 응답 객체 DTO
 public class CustomResponse<T> {
-  private boolean status;
+  private Integer status;
   private String message;
   private T data;
 
@@ -23,7 +23,7 @@ public class CustomResponse<T> {
 
   public static <T> CustomResponse<T> ok(T data){
     return CustomResponse.<T>builder()
-        .status(true)
+        .status(200)
         .message("Success")
         .data(data)
         .build();
@@ -31,7 +31,7 @@ public class CustomResponse<T> {
 
   public static <T> CustomResponse<T> error(String message){
     return CustomResponse.<T>builder()
-        .status(false)
+        .status(500)
         .message(message)
         .data(null)
         .build();
