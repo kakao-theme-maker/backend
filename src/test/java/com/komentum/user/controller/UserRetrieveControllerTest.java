@@ -148,7 +148,6 @@ public class UserRetrieveControllerTest {
     String response = mockMvc.perform(request)
         .andExpect(status().is2xxSuccessful())
         .andReturn().getResponse().getContentAsString();
-
     //then
     CustomResponse<UserResponseDto> wrapper =
         objectMapper.readValue(response, new TypeReference<>() {});
