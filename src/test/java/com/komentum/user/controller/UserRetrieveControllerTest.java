@@ -65,7 +65,6 @@ public class UserRetrieveControllerTest {
     userDataGenerator.deleteAllUsers();
   }
 
-  // 물어볼거: post까지 주입하면, 의존성이 너무 증가하는 것 아닌지?
   // upload 확인용
   private void addPostForUser(String email) {
     User user = userRepository.findByUserEmail(email)
@@ -105,7 +104,6 @@ public class UserRetrieveControllerTest {
 
     //when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users/" + userEmail)
-        //물어볼거: 토큰을 넣지 않으면 security 검증에서 에러가 발생하는데, 이게 옳바른 것인지?
         .header("Authorization","Bearer " + token);
 
     //then
