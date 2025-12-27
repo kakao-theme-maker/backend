@@ -1,5 +1,6 @@
 package com.komentum.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.user.domain.User;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -13,11 +14,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserResponseDto {
 
+  @JsonProperty("user_email")
   private String userEmail;
-  private String userProfileUrl;
+
+  @JsonProperty("profile_image")
+  private String profileImage;
+
   // 유저 조회에 필요한 정보 추가
-  private String userName;
+  private String name;
+
+  @JsonProperty("created_at")
   private LocalDateTime createdAt;
+
   private int followers;
   private int following;
   private int uploads;
@@ -27,8 +35,8 @@ public class UserResponseDto {
   public static UserResponseDto from(User user, int followers, int following, int uploads) {
     return UserResponseDto.builder()
         .userEmail(user.getUserEmail())
-        .userName(user.getName())
-        .userProfileUrl(user.getProfileImg())
+        .name(user.getName())
+        .profileImage(user.getProfileImg())
         .uploads(uploads)
         .followers(followers)
         .following(following)

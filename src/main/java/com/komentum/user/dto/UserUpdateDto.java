@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserUpdateDto {
-  private String userName;
-  private String userProfileUrl;
+  private String name;
+  private String profileImage;
   private Gender gender;
   private LocalDate birth;
 

@@ -45,11 +45,11 @@ public class UserRetrieveService {
   @Transactional
   public UserResponseDto updateUser(String email, UserUpdateDto updateDto){
     User user = findUserEntity(email);
-    if(updateDto.getUserName() != null ){
-      user.setName(updateDto.getUserName());
+    if(updateDto.getName() != null ){
+      user.setName(updateDto.getName());
     }
-    if(updateDto.getUserProfileUrl()!= null){
-      user.setProfileImg(updateDto.getUserProfileUrl());
+    if(updateDto.getProfileImage()!= null){
+      user.setProfileImg(updateDto.getProfileImage());
     }
     if(updateDto.getGender() != null){
       user.setGender(updateDto.getGender());

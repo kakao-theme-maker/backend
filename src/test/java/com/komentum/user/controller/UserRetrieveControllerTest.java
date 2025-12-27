@@ -13,8 +13,6 @@ import com.komentum.post.repository.PostRepository;
 import com.komentum.test.UserDataGenerator;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
-import com.komentum.user.dto.LocalLoginRequestDto;
-import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.UserRepository;
@@ -93,8 +91,8 @@ public class UserRetrieveControllerTest {
     UserResponseDto userResponseDto =
         UserResponseDto.builder()
             .userEmail(userEmail)
-            .userName(userName)
-            .userProfileUrl(userProfileUrl)
+            .name(userName)
+            .profileImage(userProfileUrl)
             .uploads(uploads)
             .followers(followers)
             .following(following)
@@ -133,8 +131,8 @@ public class UserRetrieveControllerTest {
     LocalDate updatedBirth = LocalDate.of(2000,1,1);
 
     UserUpdateDto updateDto = UserUpdateDto.builder()
-        .userName(updatedUserName)
-        .userProfileUrl(updatedUserProfileUrl)
+        .name(updatedUserName)
+        .profileImage(updatedUserProfileUrl)
         .gender(updatedGender)
         .birth(updatedBirth)
         .build();
@@ -158,8 +156,8 @@ public class UserRetrieveControllerTest {
     UserResponseDto result = wrapper.getData();
 
     // 응답 검증
-    assertThat(result.getUserName()).isEqualTo(updatedUserName);
-    assertThat(result.getUserProfileUrl()).isEqualTo(updatedUserProfileUrl);
+    assertThat(result.getName()).isEqualTo(updatedUserName);
+    assertThat(result.getProfileImage()).isEqualTo(updatedUserProfileUrl);
 
     // DB 검증
     User updatedUser = userRepository.findByUserEmail(email).orElseThrow();
