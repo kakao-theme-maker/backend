@@ -19,10 +19,10 @@ public class Subscription {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   @ManyToOne
-  @JoinColumn(name = "subscriber_id")
+  @JoinColumn(name = "subscriber_id") // 구독 한 사람
   private User subscriber;
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id") // 구독 당한 사람
   private User user;
   @CreatedDate
   private LocalDateTime subscribedAt;

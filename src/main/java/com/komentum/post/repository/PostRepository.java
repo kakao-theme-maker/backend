@@ -7,4 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
+  //업로드 수 count
+  int countByUser_UserEmail(String userUserEmail);
+
 }

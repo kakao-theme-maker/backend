@@ -31,6 +31,8 @@ public class User {
   @Column(unique = true, nullable = false)
   String userEmail;
   @Column
+  String name;
+  @Column
   Gender gender;
   @Column
   String encryptedPassword;
