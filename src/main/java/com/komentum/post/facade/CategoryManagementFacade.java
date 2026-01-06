@@ -17,7 +17,7 @@ public class CategoryManagementFacade {
 
   private final CategoryService categoryService;
   private final UserRetrieveService userRetrieveService;
-
+  
   @Transactional(readOnly = true)
   public List<CategoryResponseDto> findAllByUser(String userEmail) {
     return categoryService.findAllByUser(userEmail)

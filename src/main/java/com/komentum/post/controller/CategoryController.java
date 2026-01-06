@@ -24,24 +24,36 @@ public class CategoryController {
 
   private final CategoryManagementFacade categoryManagementFacade;
 
+  /**
+   * 특정 사용자가 생성한 모든 카테고리 조회
+   * */
   @GetMapping
   public ResponseEntity<List<CategoryResponseDto>> findAllByUser(
       @RequestParam("user_email") String userEmail) {
     return ResponseEntity.ok(categoryManagementFacade.findAllByUser(userEmail));
   }
 
+  /**
+   * 특정 사용자가 새로운 카테고리 생성
+   * */
   @PostMapping
   public ResponseEntity<CategoryResponseDto> saveCategory(
       @RequestBody CategoryCreateDto createDto) {
     return ResponseEntity.ok(categoryManagementFacade.saveCategory(createDto));
   }
 
+  /**
+   * 특정 사용자가 생성한 카테고리 수정
+   * */
   @PatchMapping("/{category_id}")
   public ResponseEntity<CategoryResponseDto> updateCategory(
       @PathVariable("category_id") Long categoryId, @RequestBody CategoryUpdateDto updateDto) {
     return ResponseEntity.ok(categoryManagementFacade.updateCategory(categoryId, updateDto));
   }
 
+  /**
+   * 특정 사용자가 생성한 카테고리 삭제
+   * */
   @DeleteMapping("/{category_id}")
   public ResponseEntity<Void> deleteCategory(@PathVariable("category_id") Long categoryId,
       @RequestParam("user_email") String userEmail) {
