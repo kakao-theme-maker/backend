@@ -25,15 +25,14 @@ public class DevAuthController {
   private final UserRepository userRepository;
   private final TokenService tokenService;
   private final JwtUtils jwtUtils;
-  private final String testUserEmail = "test@test.com";
 
   @PostMapping("/users/auth")
   public ResponseEntity<UserAuthResponse> getTestUserAuth() {
-    User user = userRepository.findByUserEmail(testUserEmail).orElse(null);
+    User user = userRepository.findAll().get(0);
     if (user == null) {
       Faker faker = new Faker();
       user = userRepository.save(User.builder()
-          .userEmail(testUserEmail)
+          .userEmail(user.getUserEmail())
           .role(UserRole.USER)
           .birth(LocalDate.now().minusYears(10))
           .gender(Gender.male)
