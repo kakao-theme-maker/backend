@@ -1,9 +1,8 @@
-package com.komentum.global.security;
+package com.komentum.global.dto;
 
-import java.util.ArrayList;
+import com.komentum.global.security.UserRole;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,16 +11,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class CustomUserDetails implements UserDetails {
 
   private final UserRole userRole;
+  private final String userEmail;
 
   @Builder
-  public CustomUserDetails(UserRole userRole) {
+  public CustomUserDetails(String userEmail, UserRole userRole) {
     this.userRole = userRole;
+    this.userEmail = userEmail;
   }
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    List<String> authorities = new ArrayList<>(List.of(userRole.name()));
-    return authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    return List.of(
+        new SimpleGrantedAuthority(userRole.name())
+    );
   }
 
   @Override
@@ -31,6 +33,6 @@ public class CustomUserDetails implements UserDetails {
 
   @Override
   public String getUsername() {
-    return null;
+    return userEmail;
   }
 }
