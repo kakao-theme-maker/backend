@@ -32,7 +32,7 @@ public class DevAuthController {
     if (user == null) {
       Faker faker = new Faker();
       user = userRepository.save(User.builder()
-          .userEmail(user.getUserEmail())
+          .userEmail("test@test.com")
           .role(UserRole.USER)
           .birth(LocalDate.now().minusYears(10))
           .gender(Gender.male)
