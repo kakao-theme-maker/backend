@@ -48,15 +48,11 @@ public class UserPostControllerTest {
   private JwtUtils jwtUtils;
 
   // fileManger.resolveFilePath 미작동으로 인해
-  @MockitoBean
+  @Autowired
   FileManager fileManager;
 
   @Autowired
   private ObjectMapper objectMapper;
-
-  // NoSuchBeanDefinitionException: No qualifying bean of type 'S3FileManager' 에러로 인해
-   @MockitoBean
-   S3FileManager s3FileManager;
 
   @BeforeEach
   void setUp(){
@@ -68,6 +64,7 @@ public class UserPostControllerTest {
   @AfterEach
   void tearDown(){
     userDataGenerator.deleteAllUsers();
+    postRepository.deleteAll();
   }
 
   void addPost(String email){
@@ -88,6 +85,8 @@ public class UserPostControllerTest {
     // resolveFilePath가 일단 mocked 객체 리턴
     given(fileManager.resolveFilePath(any()))
         .willReturn("http://mocked-url");
+    // addPost 에서 저장한 post 리스트 저장 (응답 검증용)
+    List<Post> givenPost = postRepository.findByUser_UserEmail(userEmail);
 
     String token = jwtUtils.generateAccessToken(userEmail);
 
@@ -106,12 +105,13 @@ public class UserPostControllerTest {
     // 유저 게시글 목록 전부 반환하는 지 확인
     assertThat(result).hasSize(6);
 
-    UserPostListResponseDto firstPost = result.get(0);
-
     // postId, 생성&수정 시간, previewImageUrl 반환하는 지 확인
-    assertThat(firstPost.getPostId()).isNotNull();
-    assertThat(firstPost.getCreatedAt()).isNotNull();
-    assertThat(firstPost.getUpdatedAt()).isNotNull();
-    assertThat(firstPost.getPreviewImageUrl()).isNotBlank();
+    for (int i = 0; i<6; i++) {
+      UserPostListResponseDto post = result.get(i);
+      assertThat(post.getPostId()).isEqualTo(givenPost.get(i).getPostId());
+      assertThat(post.getCreatedAt()).isEqualTo(givenPost.get(i).getCreatedAt());
+      assertThat(post.getUpdatedAt()).isEqualTo(givenPost.get(i).getUpdatedAt());
+      assertThat(post.getPreviewImageUrl()).isNotBlank();
+    }
   }
 }
