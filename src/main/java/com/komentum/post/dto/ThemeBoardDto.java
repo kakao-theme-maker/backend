@@ -3,18 +3,14 @@ package com.komentum.post.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.global.utils.DateUtils;
 import com.komentum.post.domain.Post;
-import com.komentum.post.domain.Tag;
-import com.komentum.post.dto.TagDto.TagCreateDto;
-import com.komentum.post.dto.TagDto.TagResponse;
-import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+// TODO: 태그 기능 필요 시 추후 태그 부분 주석 제거하기
 public class ThemeBoardDto {
 
   @Data
@@ -23,8 +19,8 @@ public class ThemeBoardDto {
   @AllArgsConstructor
   public static class ThemeBoardDetailDto {
 
-    @JsonProperty("board_id")
-    private Long boardId;
+    @JsonProperty("post_id")
+    private Long postId;
 
     private String title;
 
@@ -44,13 +40,13 @@ public class ThemeBoardDto {
 
     private Long prefers;
 
-    private List<TagResponse> tags;
+//    private List<TagResponse> tags;
 
     public static ThemeBoardDetailDto from(Post post, ThemeComponent themeComponent, User author,
-        List<Tag> tags,
+//        List<Tag> tags,
         Long prefers, String previewImageUrl) {
       return ThemeBoardDetailDto.builder()
-          .boardId(post.getPostId())
+          .postId(post.getPostId())
           .title(post.getTitle())
           .content(post.getContent())
           .themeComponentId(themeComponent.getThemeComponentId())
@@ -58,7 +54,7 @@ public class ThemeBoardDto {
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
           .previewImageUrl(previewImageUrl)
           .prefers(prefers)
-          .tags(tags.stream().map(TagResponse::from).toList())
+//          .tags(tags.stream().map(TagResponse::from).toList())
           .build();
     }
   }
@@ -69,8 +65,8 @@ public class ThemeBoardDto {
   @AllArgsConstructor
   public static class ThemeBoardPreviewDto {
 
-    @JsonProperty("board_id")
-    private Long boardId;
+    @JsonProperty("post_id")
+    private Long postId;
 
     @JsonProperty("theme_component_id")
     private Integer themeComponentId;
@@ -91,7 +87,7 @@ public class ThemeBoardDto {
     public static ThemeBoardPreviewDto from(Post post, ThemeComponent themeComponent, User author,
         Long prefers, String previewImageUrl) {
       return ThemeBoardPreviewDto.builder()
-          .boardId(post.getPostId())
+          .postId(post.getPostId())
           .title(post.getTitle())
           .userEmail(author.getUserEmail())
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
@@ -112,11 +108,8 @@ public class ThemeBoardDto {
 
     String content;
 
-    @JsonProperty("user_email")
-    String userEmail;
-
-    @JsonProperty("post_tags")
-    List<TagCreateDto> postTags;
+//    @JsonProperty("post_tags")
+//    List<TagCreateDto> postTags;
 
     int themeComponentId;
 
@@ -134,11 +127,8 @@ public class ThemeBoardDto {
 
     String content;
 
-    @JsonProperty("user_email")
-    String userEmail;
-
-    @JsonProperty("post_tags")
-    List<TagUpdateDto> postTags;
+//    @JsonProperty("post_tags")
+//    List<TagUpdateDto> postTags;
 
     @JsonProperty("public_flag")
     boolean publicFlag;
