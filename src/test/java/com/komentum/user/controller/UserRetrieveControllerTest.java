@@ -13,6 +13,7 @@ import com.komentum.post.repository.PostRepository;
 import com.komentum.test.UserDataGenerator;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
+import com.komentum.user.dto.UserRequestDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.UserRepository;
@@ -88,6 +89,9 @@ public class UserRetrieveControllerTest {
     int following = 0;
    // createdAt은 생성된 시간으로 나오기 때문에, Test 불가
 
+    UserRequestDto userRequestDto = new UserRequestDto(userEmail);
+    String body = objectMapper.writeValueAsString(userRequestDto);
+
     UserResponseDto userResponseDto =
         UserResponseDto.builder()
             .userEmail(userEmail)
@@ -101,8 +105,10 @@ public class UserRetrieveControllerTest {
     String token = jwtUtils.generateAccessToken(email);
 
     //when
-    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users/" + userEmail)
-        .header("Authorization","Bearer " + token);
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/users/info")
+        .header("Authorization","Bearer " + token)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body);
 
     //then
     String response = mockMvc.perform(request)
@@ -130,6 +136,7 @@ public class UserRetrieveControllerTest {
     Gender updatedGender = Gender.male;
     LocalDate updatedBirth = LocalDate.of(2000,1,1);
 
+
     UserUpdateDto updateDto = UserUpdateDto.builder()
         .name(updatedUserName)
         .profileImage(updatedUserProfileUrl)
@@ -140,7 +147,7 @@ public class UserRetrieveControllerTest {
 
     //when
     MockHttpServletRequestBuilder request =
-        MockMvcRequestBuilders.put("/api/users/" +email)
+        MockMvcRequestBuilders.put("/api/users/info")
             .content(objectMapper.writeValueAsString(updateDto))
             .contentType(MediaType.APPLICATION_JSON)
             .header("Authorization", "Bearer "+token);
