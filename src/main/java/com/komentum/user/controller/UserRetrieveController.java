@@ -2,6 +2,7 @@ package com.komentum.user.controller;
 
 import com.komentum.global.dto.CustomResponse;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
+import com.komentum.user.dto.UserRequestDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.service.UserAuthService;
@@ -29,10 +30,10 @@ public class UserRetrieveController {
   }
 
   // 유저 정보 조회
-  @GetMapping("/{email:.+}")
-  public ResponseEntity<CustomResponse<UserResponseDto>> getUserByEmail(@PathVariable("email") String email) {
+  @GetMapping("/info")
+  public ResponseEntity<CustomResponse<UserResponseDto>> getUserByEmail(@RequestBody UserRequestDto requestDto) {
     try {
-      UserResponseDto user = userRetrieveService.getUserByEmail(email);
+      UserResponseDto user = userRetrieveService.getUserByEmail(requestDto.getUserEmail());
       // 유저 조회 성공
       return ResponseEntity.ok(CustomResponse.ok(user));
     } catch (RuntimeException e){
@@ -43,10 +44,10 @@ public class UserRetrieveController {
   }
 
   // 유저 정보 수정
-  @PutMapping("/{email:.+}")
-  public ResponseEntity<CustomResponse<UserResponseDto>> updateUser(@PathVariable("email") String email,
-      @RequestBody UserUpdateDto updateDto){
-    UserResponseDto updatedUser = userRetrieveService.updateUser(email, updateDto);
+  @PutMapping("/info")
+  public ResponseEntity<CustomResponse<UserResponseDto>> updateUser(
+      @RequestBody UserUpdateDto updateDto, UserRequestDto requestDto){
+    UserResponseDto updatedUser = userRetrieveService.updateUser(requestDto.getUserEmail(), updateDto);
 
     return ResponseEntity.ok(
         CustomResponse.ok(updatedUser)
