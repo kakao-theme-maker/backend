@@ -88,6 +88,7 @@ public class UserRetrieveControllerTest {
     int following = 0;
    // createdAt은 생성된 시간으로 나오기 때문에, Test 불가
 
+
     UserResponseDto userResponseDto =
         UserResponseDto.builder()
             .userEmail(userEmail)
@@ -101,8 +102,10 @@ public class UserRetrieveControllerTest {
     String token = jwtUtils.generateAccessToken(email);
 
     //when
-    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users/" + userEmail)
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users")
+        .param("userEmail", userEmail)
         .header("Authorization","Bearer " + token);
+
 
     //then
     String response = mockMvc.perform(request)
@@ -130,6 +133,7 @@ public class UserRetrieveControllerTest {
     Gender updatedGender = Gender.male;
     LocalDate updatedBirth = LocalDate.of(2000,1,1);
 
+
     UserUpdateDto updateDto = UserUpdateDto.builder()
         .name(updatedUserName)
         .profileImage(updatedUserProfileUrl)
@@ -140,7 +144,7 @@ public class UserRetrieveControllerTest {
 
     //when
     MockHttpServletRequestBuilder request =
-        MockMvcRequestBuilders.put("/api/users/" +email)
+        MockMvcRequestBuilders.patch("/api/users/me")
             .content(objectMapper.writeValueAsString(updateDto))
             .contentType(MediaType.APPLICATION_JSON)
             .header("Authorization", "Bearer "+token);
