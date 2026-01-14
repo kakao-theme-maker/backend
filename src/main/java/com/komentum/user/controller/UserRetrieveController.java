@@ -3,7 +3,6 @@ package com.komentum.user.controller;
 import com.komentum.global.dto.CustomResponse;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
-import com.komentum.user.dto.UserRequestDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.service.UserAuthService;
