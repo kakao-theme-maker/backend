@@ -127,7 +127,7 @@ class UserAuthControllerTest {
         String token = jwtUtils.generateAccessToken(email);
 
         //when
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.patch("/api/users/info")
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.patch("/api/users/me/password")
             .content(objectMapper.writeValueAsString(requsetDto))
             .contentType(MediaType.APPLICATION_JSON)
             .header("Authorization", "Bearer "+token);
