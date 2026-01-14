@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -79,6 +80,7 @@ public class PostTestDataGenerator {
             .title(faker.lorem().sentence())
             .content(faker.lorem().paragraph())
             .user(user)
+            .previewImageName(UUID.randomUUID().toString())
             .build());
       }
     }

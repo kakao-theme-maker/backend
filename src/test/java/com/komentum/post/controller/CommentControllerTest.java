@@ -54,7 +54,7 @@ class CommentControllerTest {
     // given
     Post post = postTestDataGenerator.posts.get(0);
     User author = postTestDataGenerator.users.get(0);
-    String requestPath = String.format("/posts/%d/comments", post.getPostId());
+    String requestPath = String.format("/api/posts/%d/comments", post.getPostId());
     int pageNumber = 0;
     int pageSize = 5;
     MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
@@ -73,7 +73,7 @@ class CommentControllerTest {
   void getComment() throws Exception {
     // given
     Comment target = postTestDataGenerator.comments.get(0);
-    String requestPath = String.format("/posts/comments/%d", target.getCommentId());
+    String requestPath = String.format("/api/posts/comments/%d", target.getCommentId());
     User client = postTestDataGenerator.users.get(0);
     // when
     CommentResponse response = mockMvcUtils.requestGet(mockMvc, requestPath, null,
@@ -91,7 +91,7 @@ class CommentControllerTest {
     String content = UUID.randomUUID().toString();
     User author = postTestDataGenerator.users.get(0);
     Post post = postTestDataGenerator.posts.get(0);
-    String requestPath = String.format("/posts/%d/comments", post.getPostId());
+    String requestPath = String.format("/api/posts/%d/comments", post.getPostId());
     CommentCreateDto requestBody = CommentCreateDto.builder()
         .content(content)
         .userEmail(author.getUserEmail())
@@ -111,7 +111,7 @@ class CommentControllerTest {
     // given
     Comment target = postTestDataGenerator.comments.get(0);
     User author = target.getUser();
-    String requestPath = String.format("/posts/comments/%d", target.getCommentId());
+    String requestPath = String.format("/api/posts/comments/%d", target.getCommentId());
     CommentUpdateDto requestBody = CommentUpdateDto.builder()
         .content(UUID.randomUUID().toString())
         .build();
@@ -130,7 +130,7 @@ class CommentControllerTest {
     // given
     Comment target = postTestDataGenerator.comments.get(0);
     User author = target.getUser();
-    String requestPath = String.format("/posts/comments/%d", target.getCommentId());
+    String requestPath = String.format("/api/posts/comments/%d", target.getCommentId());
     // when
     mockMvcUtils.requestDelete(mockMvc, requestPath, null, author.getUserEmail(), null,
         new TypeReference<Void>() {
