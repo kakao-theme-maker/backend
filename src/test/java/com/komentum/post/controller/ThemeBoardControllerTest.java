@@ -2,26 +2,23 @@ package com.komentum.post.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.config.EnableTestProfile;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
-import com.komentum.post.dto.TagDto.TagCreateDto;
-import com.komentum.post.dto.TagDto.TagResponse;
-import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
+import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.BoardDetailDataGenerator;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -68,6 +65,29 @@ class ThemeBoardControllerTest {
     boardDetailDataGenerator.deleteThemeBoards();
   }
 
+  public void assertThemeBoardPreviewList(List<ThemeBoardPreviewDto> previewDtoList) {
+    for (ThemeBoardPreviewDto dto : previewDtoList) {
+      assertThat(dto.getPostId()).isNotNull();
+      assertThat(dto.getThemeComponentId()).isNotNull();
+      assertThat(dto.getPrefers()).isGreaterThanOrEqualTo(0);
+      assertThat(dto.getTitle()).isNotBlank();
+      assertThat(dto.getPreviewImageUrl()).isNotBlank();
+      assertThat(dto.getCreatedAt()).isNotBlank();
+    }
+  }
+
+  public void assertThemeBoardDetail(ThemeBoardDetailDto detailDto) {
+    Post savedPost = postRepository.findById(detailDto.getPostId()).orElse(null);
+    assertThat(savedPost).isNotNull();
+    assertThat(detailDto.getThemeComponentId()).isNotNull();
+    assertThat(detailDto.getPreviewImageUrl()).isNotBlank();
+    assertThat(detailDto.getContent()).isEqualTo(savedPost.getContent());
+    assertThat(detailDto.getTitle()).isEqualTo(savedPost.getTitle());
+    assertThat(detailDto.getCreatedAt()).isNotBlank();
+    assertThat(detailDto.getUserEmail()).isNotBlank();
+    assertThat(detailDto.getPrefers()).isGreaterThanOrEqualTo(0);
+  }
+
   @Test
   @DisplayName("when send request with page number and size, then return proper board data list")
   void getPosts_success() throws Exception {
@@ -79,12 +99,16 @@ class ThemeBoardControllerTest {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("pageNumber", String.valueOf(pageNumber));
     params.add("pageSize", String.valueOf(pageSize));
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
     // when
-    List<ThemeBoardDetailDto> responses = mockMvcUtils.requestGet(mockMvc, requestPath,
+    List<ThemeBoardPreviewDto> response = mockMvcUtils.requestGet(mockMvc, requestPath,
         params, client.getUserEmail(), new TypeReference<>() {
         });
     // then
-    assertThat(responses).hasSize(pageSize);
+    assertThat(response).hasSize(pageSize);
+    assertThemeBoardPreviewList(response);
   }
 
   @Test
@@ -95,17 +119,12 @@ class ThemeBoardControllerTest {
     User author = boardDetailDataGenerator.getUsers().get(0);
     ThemeComponent nonThemeBoardTheme = boardDetailDataGenerator.getNonThemeBoardThemeComponents()
         .get(0);
-    String[] tags = IntStream.range(0, 5)
-        .mapToObj(r -> UUID.randomUUID().toString())
-        .toArray(String[]::new);
     String testPreviewImageUrl = UUID.randomUUID().toString();
     ThemeBoardCreateDto createDto = ThemeBoardCreateDto.builder()
         .title(UUID.randomUUID().toString())
         .content(UUID.randomUUID().toString())
-        .userEmail(author.getUserEmail())
         .themeComponentId(nonThemeBoardTheme.getThemeComponentId())
         .publicFlag(true)
-        .postTags(Arrays.stream(tags).map(t -> TagCreateDto.builder().tagName(t).build()).toList())
         .build();
     MockMultipartFile testPreviewImage = mockMvcUtils.fileToTestFormData("preview_image",
         "preview_image.png",
@@ -123,17 +142,8 @@ class ThemeBoardControllerTest {
         HttpMethod.POST, null,
         author.getUserEmail(), formDataList, new TypeReference<>() {
         });
-    // then : DB 저장 여부
-    assertThat(postRepository.findById(response.getBoardId()))
-        .isPresent();
-    // then : 필드 검증
-    assertThat(response.getTags())
-        .extracting(TagResponse::getTagName)
-        .containsExactlyInAnyOrder(tags);
-    assertThat(response.getTitle())
-        .isEqualTo(createDto.getTitle());
-    assertThat(response.getPreviewImageUrl())
-        .isEqualTo(testPreviewImageUrl);
+    // then
+    assertThemeBoardDetail(response);
   }
 
   @Test
@@ -143,22 +153,18 @@ class ThemeBoardControllerTest {
     Post toUpdate = boardDetailDataGenerator.getPosts().get(0);
     String requestPath = String.format("/api/theme-boards/%d", toUpdate.getPostId());
     User author = toUpdate.getUser();
-    String[] tags = new String[]{UUID.randomUUID().toString(), UUID.randomUUID().toString()};
     ThemeBoardUpdateDto requestBody = ThemeBoardUpdateDto.builder()
         .title(UUID.randomUUID().toString())
-        .postTags(Arrays.stream(tags).map(t -> TagUpdateDto.builder().tagName(t).build()).toList())
-        .userEmail(author.getUserEmail())
         .build();
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
     // when
     ThemeBoardDetailDto response = mockMvcUtils.requestPut(mockMvc, requestPath, null,
         author.getUserEmail(), requestBody, new TypeReference<>() {
         });
     // then : 필드 검증
-    assertThat(response.getTitle())
-        .isEqualTo(requestBody.getTitle());
-    assertThat(response.getTags())
-        .extracting(TagResponse::getTagName)
-        .containsExactlyInAnyOrder(tags);
+    assertThemeBoardDetail(response);
   }
 
   @Test

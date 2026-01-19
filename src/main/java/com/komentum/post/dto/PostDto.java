@@ -1,5 +1,6 @@
 package com.komentum.post.dto;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,4 +29,17 @@ public class PostDto {
     String content;
     boolean publicFlag;
   }
+
+  // 사용자가 작성 / 업로드한 게시글 목록 조회
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class UserPostListResponseDto {
+    Long postId;
+    String previewImageUrl;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
+  }
+
 }

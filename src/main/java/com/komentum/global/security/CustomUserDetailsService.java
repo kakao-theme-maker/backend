@@ -1,5 +1,6 @@
 package com.komentum.global.security;
 
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,7 +24,8 @@ public class CustomUserDetailsService implements UserDetailsService {
   @Override
   public UserDetails loadUserByUsername(String userEmail) throws UsernameNotFoundException {
     return userRepository.findByUserEmail(userEmail)
-        .map(res -> CustomUserDetails.builder().userRole(res.getRole()).build())
+        .map(
+            res -> CustomUserDetails.builder().userRole(res.getRole()).userEmail(userEmail).build())
         .orElse(null);
   }
 }

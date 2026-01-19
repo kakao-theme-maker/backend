@@ -6,6 +6,7 @@ import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
 import com.komentum.post.facade.CommentManagementFacade;
 import com.komentum.post.service.CommentService;
+import com.komentum.user.service.UserRetrieveService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class CommentController {
 
@@ -62,4 +63,10 @@ public class CommentController {
     commentService.deleteComment(commentId);
     return ResponseEntity.noContent().build();
   }
+
+  // public ResponseEntity<UserInquiryResponseDto<UserResponseDto>>
+  // dto. from
+  // data + PostService.countPost  + UserRetrieveService.countsubs---
+
+
 }

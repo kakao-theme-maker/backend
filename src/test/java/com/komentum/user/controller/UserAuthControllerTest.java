@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.auth.JwtUtils;
 import com.komentum.config.EnableTestProfile;
 import com.komentum.test.UserDataGenerator;
+import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
+import com.komentum.user.dto.PasswordChangeRequsetDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
 import com.komentum.user.service.UserAuthService;
+import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -45,6 +49,8 @@ class UserAuthControllerTest {
 
     @Autowired
     private JwtUtils jwtUtils;
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp(){
@@ -103,6 +109,37 @@ class UserAuthControllerTest {
 
         //jwt token이 정상적인가
         assertThat(jwtUtils.validateToken(userAuthResponse.getAccessToken())).isTrue();
+
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경")
+    void changePassword() throws Exception{
+        //given
+        String userEmail = "admin1@gmail.com";
+        String newPassword = "123qwer!";
+
+        PasswordChangeRequsetDto requsetDto = PasswordChangeRequsetDto.builder().
+            currentPassword(password)
+            .newPassword(newPassword)
+            .build();
+
+        String token = jwtUtils.generateAccessToken(email);
+
+        //when
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.patch("/api/users/me/password")
+            .content(objectMapper.writeValueAsString(requsetDto))
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer "+token);
+
+        //then
+        mockMvc.perform(request)
+            .andExpect(status().is2xxSuccessful());
+
+        User updatedUSer = userRepository.findByUserEmail(userEmail).orElseThrow();
+
+        assertThat(passwordEncoder.matches(newPassword, updatedUSer.getEncryptedPassword())).isTrue();
+
 
     }
 }

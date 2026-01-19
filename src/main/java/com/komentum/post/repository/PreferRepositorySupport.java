@@ -18,18 +18,18 @@ public class PreferRepositorySupport {
   public Map<Long, Long> findPreferMapByPostIds(List<Long> postIds) {
     QPost post = QPost.post;
     QPrefer prefer = QPrefer.prefer;
-    return queryFactory.select(post.postId, prefer.countDistinct())
-        .from(prefer)
-        .where(prefer.post.postId.in(postIds))
-        .groupBy(prefer.post.postId)
+    return queryFactory.select(post.postId, prefer.preferId.countDistinct())
+        .from(post)
+        .leftJoin(prefer).on(prefer.post.eq(post))
+        .where(post.postId.in(postIds))
+        .groupBy(post.postId)
         .fetch()
         .stream()
         .collect(Collectors.toMap(
-            t -> t.get(prefer.post.postId),
+            t -> t.get(post.postId),
             t -> {
-              Long count = t.get(prefer.countDistinct());
+              Long count = t.get(prefer.preferId.countDistinct());
               return count == null ? 0 : count;
-            }
-        ));
+            }));
   }
 }
