@@ -1,5 +1,6 @@
 package com.komentum.post.controller;
 
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.dto.CategoryDto.CategoryCreateDto;
 import com.komentum.post.dto.CategoryDto.CategoryResponseDto;
 import com.komentum.post.dto.CategoryDto.CategoryUpdateDto;
@@ -7,6 +8,7 @@ import com.komentum.post.facade.CategoryManagementFacade;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,8 +40,10 @@ public class CategoryController {
    * */
   @PostMapping
   public ResponseEntity<CategoryResponseDto> saveCategory(
-      @RequestBody CategoryCreateDto createDto) {
-    return ResponseEntity.ok(categoryManagementFacade.saveCategory(createDto));
+      @RequestBody CategoryCreateDto createDto,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    return ResponseEntity.ok(
+        categoryManagementFacade.saveCategory(createDto, userDetails.getUsername()));
   }
 
   /**
@@ -47,8 +51,10 @@ public class CategoryController {
    * */
   @PatchMapping("/{category_id}")
   public ResponseEntity<CategoryResponseDto> updateCategory(
-      @PathVariable("category_id") Long categoryId, @RequestBody CategoryUpdateDto updateDto) {
-    return ResponseEntity.ok(categoryManagementFacade.updateCategory(categoryId, updateDto));
+      @PathVariable("category_id") Long categoryId, @RequestBody CategoryUpdateDto updateDto,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    return ResponseEntity.ok(
+        categoryManagementFacade.updateCategory(categoryId, updateDto, userDetails.getUsername()));
   }
 
   /**
@@ -56,8 +62,8 @@ public class CategoryController {
    * */
   @DeleteMapping("/{category_id}")
   public ResponseEntity<Void> deleteCategory(@PathVariable("category_id") Long categoryId,
-      @RequestParam("user_email") String userEmail) {
-    categoryManagementFacade.deleteCategory(categoryId, userEmail);
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    categoryManagementFacade.deleteCategory(categoryId, userDetails.getUsername());
     return ResponseEntity.noContent().build();
   }
 }

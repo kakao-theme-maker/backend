@@ -1,6 +1,5 @@
 package com.komentum.post.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.post.domain.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +31,6 @@ public class CategoryDto {
   public static class CategoryCreateDto {
 
     String name;
-
-    @JsonProperty("user_email")
-    String userEmail;
   }
 
   @Data
@@ -44,8 +40,5 @@ public class CategoryDto {
   public static class CategoryUpdateDto {
 
     String name;
-
-    @JsonProperty("user_email")
-    String userEmail;
   }
 }

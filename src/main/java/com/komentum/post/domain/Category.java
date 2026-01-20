@@ -31,7 +31,7 @@ public class Category {
   @ManyToOne
   @JoinColumn(name = "user_id")
   @OnDelete(action = OnDeleteAction.CASCADE)
-  User user; // owner
+  User owner; // owner
 
   @Column(nullable = false)
   String name; // category name
@@ -39,7 +39,7 @@ public class Category {
   public static Category createTransient(User owner, CategoryCreateDto createDto) {
     return Category.builder()
         .name(createDto.getName())
-        .user(owner)
+        .owner(owner)
         .build();
   }
 
@@ -48,6 +48,6 @@ public class Category {
   }
 
   public boolean isOwner(User user) {
-    return this.user.getUserEmail().equals(user.getUserEmail());
+    return this.owner.getUserEmail().equals(user.getUserEmail());
   }
 }

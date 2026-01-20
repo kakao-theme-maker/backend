@@ -19,7 +19,7 @@ public class CategoryService {
 
   @Transactional(readOnly = true)
   public List<Category> findAllByUser(String userEmail) {
-    return categoryRepository.findAllByUser_UserEmail(userEmail);
+    return categoryRepository.findAllByOwner_UserEmail(userEmail);
   }
 
   @Transactional(readOnly = true)

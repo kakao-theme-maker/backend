@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-  List<Category> findAllByUser_UserEmail(String userUserEmail);
+  List<Category> findAllByOwner_UserEmail(String userUserEmail);
 }
