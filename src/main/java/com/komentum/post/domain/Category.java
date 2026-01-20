@@ -29,7 +29,7 @@ public class Category {
   Long categoryId;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "owner_id")
   @OnDelete(action = OnDeleteAction.CASCADE)
   User owner; // owner
 

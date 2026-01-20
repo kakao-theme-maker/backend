@@ -76,7 +76,7 @@ public class CategoryPostControllerTest {
 
   @Test
   @DisplayName("when send request, then use saved category-post data")
-  public void registerPostOnCategory_successWhenDataExists() throws Exception {
+  public void registerPostOnCategory_whenExists_returnsExisting() throws Exception {
     // given
     String clientEmail = categoryPostDataGenerator.getUsers().get(0).getUserEmail();
     CategoryPost savedCategoryPost = categoryPostDataGenerator.getCategoryPosts().get(0);
@@ -94,7 +94,7 @@ public class CategoryPostControllerTest {
 
   @Test
   @DisplayName("when send request, then delete category-post data")
-  public void registerPostOnCategory_whenExists_returnsExisting() throws Exception {
+  public void deletePostFromCategory_success() throws Exception {
     // given
     String clientEmail = categoryPostDataGenerator.getUsers().get(0).getUserEmail();
     CategoryPost savedCategoryPost = categoryPostDataGenerator.getCategoryPosts().get(0);

@@ -19,7 +19,7 @@ public class CategoryPostDto {
 
     @JsonProperty("category_id")
     Long categoryId;
-    @JsonProperty("postId")
+    @JsonProperty("post_id")
     Long postId;
 
     public static CategoryPostResponse from(CategoryPost categoryPost) {
