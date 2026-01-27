@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
@@ -28,6 +30,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public class User {
 
   @Id
+  @GeneratedValue (strategy = GenerationType.IDENTITY)
+  @Column(unique = true, nullable = false, updatable = false)
+  Long userId;
+  @Column (unique = true, nullable = false, updatable = false)
+  String publicUserId;
   @Column(unique = true, nullable = false)
   String userEmail;
   @Column
