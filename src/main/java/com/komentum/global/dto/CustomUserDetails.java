@@ -4,19 +4,24 @@ import com.komentum.global.security.UserRole;
 import java.util.Collection;
 import java.util.List;
 import lombok.Builder;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public class CustomUserDetails implements UserDetails {
 
+  @Getter
   private final UserRole userRole;
-  private final String userEmail;
+  private final String userEmail; // 점진적 개선을 위해 남겨두기
+  @Getter
+  private final String publicUserId;
 
   @Builder
-  public CustomUserDetails(String userEmail, UserRole userRole) {
+  public CustomUserDetails(String userEmail, UserRole userRole, String publicUserId) {
     this.userRole = userRole;
     this.userEmail = userEmail;
+    this.publicUserId = publicUserId;
   }
 
   @Override
@@ -33,6 +38,7 @@ public class CustomUserDetails implements UserDetails {
 
   @Override
   public String getUsername() {
-    return userEmail;
+    return publicUserId;
   }
+
 }
