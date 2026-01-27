@@ -17,15 +17,15 @@ public class CustomUserDetailsService implements UserDetailsService {
   /**
    * 데이터베이스에서 사용자가 존재하는지 확인 후, CustomUserDetails 반환
    *
-   * @param userEmail 사용자 이메일
+   * @param publicUserId 사용자 이메일
    * @return 사용자가 없다면 null, 있다면 CustomUserDetails 반환
    * @throws UsernameNotFoundException
    */
   @Override
-  public UserDetails loadUserByUsername(String userEmail) throws UsernameNotFoundException {
-    return userRepository.findByUserEmail(userEmail)
+  public UserDetails loadUserByUsername(String publicUserId) throws UsernameNotFoundException {
+    return userRepository.findByPublicUserId(publicUserId)
         .map(
-            res -> CustomUserDetails.builder().userRole(res.getRole()).userEmail(userEmail).build())
+            res -> CustomUserDetails.builder().userRole(res.getRole()).userEmail(res.getUserEmail()).publicUserId(publicUserId).build())
         .orElse(null);
   }
 }

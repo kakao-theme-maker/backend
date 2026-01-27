@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class JwtUtils {
-
+  String identifier = "publicUserId";
   private final Key SECRET_KEY;
 
   public JwtUtils(@Value("${jwt.secret}") String secret_key) {
@@ -27,9 +27,9 @@ public class JwtUtils {
   /**
    * generate token
    */
-  private String generateToken(String email, Long expTime) {
-    Claims claims = Jwts.claims().setSubject(email);
-    claims.put("email", email);
+  private String generateToken(String publicUserId, Long expTime) {
+    Claims claims = Jwts.claims().setSubject(publicUserId);
+    claims.put(identifier, publicUserId);
     ZonedDateTime issuedDate = ZonedDateTime.now();
     ZonedDateTime expiresDate = issuedDate.plusSeconds(expTime);
     return Jwts.builder()
@@ -43,15 +43,15 @@ public class JwtUtils {
   /**
    * generate access token
    */
-  public String generateAccessToken(String email) {
-    return generateToken(email, AuthProperty.ACCESS_TOKEN_EXPIRES_IN);
+  public String generateAccessToken(String publicUserId) {
+    return generateToken(publicUserId, AuthProperty.ACCESS_TOKEN_EXPIRES_IN);
   }
 
   /**
    * generate refresh token
    */
-  public String generateRefreshToken(String email) {
-    return generateToken(email, AuthProperty.REFRESH_TOKEN_EXPIRES_IN);
+  public String generateRefreshToken(String publicUserId) {
+    return generateToken(publicUserId, AuthProperty.REFRESH_TOKEN_EXPIRES_IN);
   }
 
   /**
@@ -68,9 +68,9 @@ public class JwtUtils {
   }
 
   /**
-   * get email from token
+   * get userId from token
    */
-  public String getEmail(String token) {
+  public String getUserId(String token) {
     try {
       return Jwts
           .parserBuilder()
@@ -78,7 +78,7 @@ public class JwtUtils {
           .build()
           .parseClaimsJws(token)
           .getBody()
-          .get("email", String.class);
+          .get(identifier, String.class);
     } catch (Exception e) {
       log.error(e.getMessage());
       return null;
