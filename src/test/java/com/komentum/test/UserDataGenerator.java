@@ -7,6 +7,8 @@ import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,7 +27,9 @@ public class UserDataGenerator {
     }
 
     public void generateTestUser(String userEmail) {
+    String uuid = UUID.randomUUID().toString(); //publicUserId 생성
     userRepository.save(User.builder()
+        .publicUserId(uuid)
         .profileImg(faker.internet().image())
         .birth(LocalDate.now())
         .gender(Gender.male)
@@ -36,7 +40,9 @@ public class UserDataGenerator {
 
 
   public void generateTestLocalUser(String userEmail, String password) {
+    String uuid = UUID.randomUUID().toString();
     userRepository.save(User.builder()
+            .publicUserId(uuid)
             .profileImg(faker.internet().image())
             .birth(LocalDate.now())
             .gender(Gender.male)
@@ -47,7 +53,9 @@ public class UserDataGenerator {
   }
 
   public void generateRetrieveTestUser(String userEmail, String password) {
+    String uuid = UUID.randomUUID().toString();
     userRepository.save(User.builder()
+            .publicUserId(uuid)
         .profileImg("https://example")
         .birth(LocalDate.now())
         .gender(Gender.male)
