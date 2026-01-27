@@ -65,7 +65,7 @@ public class PostService {
   }
 
   // 업로드 수 count 반환 메서드
-  public int countPost(String email){
-    return postRepository.countByUser_UserEmail(email);
+  public int countPost(String publicUserId){
+    return postRepository.countByUser_PublicUserId(publicUserId);
   }
 }
