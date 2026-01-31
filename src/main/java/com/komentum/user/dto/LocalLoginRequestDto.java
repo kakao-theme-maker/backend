@@ -17,13 +17,4 @@ public class LocalLoginRequestDto {
     private String email;
     private String password;
 
-    public User toEntity(BCryptPasswordEncoder bCryptPasswordEncoder){
-        String uuid = UUID.randomUUID().toString();
-        return User.builder()
-                .publicUserId(uuid)
-                .userEmail(email)
-                .encryptedPassword(bCryptPasswordEncoder.encode(password))
-                .role(UserRole.USER)
-                .build();
-    }
 }
