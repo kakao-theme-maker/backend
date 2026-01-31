@@ -6,6 +6,7 @@ import com.komentum.user.client.KakaoAuthHttpClient;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
+import com.komentum.user.dto.SignUpRequestDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,8 +32,7 @@ public class UserAuthService {
           TokenService tokenService,
           KakaoAuthHttpClient kakaoAuthHttpClient,
           TransactionTemplate transactionTemplate,
-          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder
-  ) {
+          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.jwtUtils = jwtUtils;
@@ -69,7 +69,7 @@ public class UserAuthService {
 
 
   // 로컬 회원가입
-  public void processLocalSignUp(LocalLoginRequestDto dto){
+  public void processLocalSignUp(SignUpRequestDto dto){
     User user = userRepository.findByUserEmail(dto.getEmail()).orElse(null);
     if (user == null) {
       userRepository.save(dto.toEntity(bCryptPasswordEncoder));
@@ -83,7 +83,7 @@ public class UserAuthService {
       throw new RuntimeException("This is member information that does not exist.");
     }
     if  (user.getUserEmail().equals(dto.getEmail()) &&
-            bCryptPasswordEncoder.matches(dto.getPassword(), user.getEncryptedPassword())) {
+        user.matchPassword(dto.getPassword(),bCryptPasswordEncoder)) {
       return initializeToken(user.getPublicUserId());
     }
     throw new RuntimeException("incorrect information");
@@ -97,7 +97,7 @@ public class UserAuthService {
     if (user == null){
       throw new IllegalStateException("유저 정보 오류");
     }
-    if(!bCryptPasswordEncoder.matches(passwordChangeRequsetDto.getCurrentPassword(), user.getEncryptedPassword())){
+    if(!user.matchPassword(passwordChangeRequsetDto.getCurrentPassword(), bCryptPasswordEncoder)){
       throw new IllegalStateException("현재 비밀번호가 일치하지 않습니다.");
     }
     user.setEncryptedPassword(bCryptPasswordEncoder.encode(passwordChangeRequsetDto.getNewPassword()));
