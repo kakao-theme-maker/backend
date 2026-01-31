@@ -2,6 +2,8 @@ package com.komentum.user.service;
 
 import com.komentum.auth.AuthProperty;
 import com.komentum.auth.JwtUtils;
+import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.security.CustomUserDetailsService;
 import com.komentum.user.client.KakaoAuthHttpClient;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
@@ -26,19 +28,22 @@ public class UserAuthService {
   private final KakaoAuthHttpClient kakaoAuthHttpClient;
   private final TransactionTemplate transactionTemplate;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final CustomUserDetailsService customUserDetailsService;
 
   public UserAuthService(
           UserRepository userRepository,
           TokenService tokenService,
           KakaoAuthHttpClient kakaoAuthHttpClient,
           TransactionTemplate transactionTemplate,
-          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder) {
+          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder,
+      CustomUserDetailsService customUserDetailsService) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.jwtUtils = jwtUtils;
     this.kakaoAuthHttpClient = kakaoAuthHttpClient;
     this.transactionTemplate = transactionTemplate;
     this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    this.customUserDetailsService = customUserDetailsService;
   }
   public UserAuthResponse initializeToken(String publicUserId){
     String accessToken = jwtUtils.generateAccessToken(publicUserId);
@@ -84,7 +89,8 @@ public class UserAuthService {
     }
     if  (user.getUserEmail().equals(dto.getEmail()) &&
         user.matchPassword(dto.getPassword(),bCryptPasswordEncoder)) {
-      return initializeToken(user.getPublicUserId());
+      CustomUserDetails customUserDetails = customUserDetailsService.fromUser(user);
+      return initializeToken(customUserDetails.getUsername());
     }
     throw new RuntimeException("incorrect information");
   }
