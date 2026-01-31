@@ -141,8 +141,7 @@ class UserAuthControllerTest {
 
         User updatedUSer = userRepository.findByUserEmail(userEmail).orElseThrow();
 
-        assertThat(passwordEncoder.matches(newPassword, updatedUSer.getEncryptedPassword())).isTrue();
 
-
+        assertThat(updatedUSer.matchPassword(newPassword, passwordEncoder)).isTrue();
     }
 }
