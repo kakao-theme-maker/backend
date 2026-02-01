@@ -52,10 +52,13 @@ class UserAuthControllerTest {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    User user;
+
     @BeforeEach
     void setUp(){
         userDataGenerator.deleteAllUsers();
         userDataGenerator.generateTestLocalUser(email, password);
+        user = userRepository.findByUserEmail(email).orElseThrow();
     }
 
     @AfterEach
@@ -124,7 +127,7 @@ class UserAuthControllerTest {
             .newPassword(newPassword)
             .build();
 
-        String token = jwtUtils.generateAccessToken(email);
+        String token = jwtUtils.generateAccessToken(user.getPublicUserId());
 
         //when
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.patch("/api/users/me/password")
@@ -138,8 +141,7 @@ class UserAuthControllerTest {
 
         User updatedUSer = userRepository.findByUserEmail(userEmail).orElseThrow();
 
-        assertThat(passwordEncoder.matches(newPassword, updatedUSer.getEncryptedPassword())).isTrue();
 
-
+        assertThat(updatedUSer.matchPassword(newPassword, passwordEncoder)).isTrue();
     }
 }

@@ -16,7 +16,9 @@ import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.UserRepository;
+import com.komentum.user.service.UserRetrieveService;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,13 +52,19 @@ public class UserRetrieveControllerTest {
   private PostRepository postRepository;
   @Autowired
   private JwtUtils jwtUtils;
+  @Autowired
+  private UserRetrieveService userRetrieveService;
+
+  User user;
 
   @BeforeEach
   void setUp(){
     userDataGenerator.deleteAllUsers();
     userDataGenerator.generateRetrieveTestUser(email, password);
     addPostForUser(email);
+    user = userRepository.findByUserEmail(email).orElseThrow();
   }
+
 
   @AfterEach
   void tearDown(){
@@ -99,11 +107,11 @@ public class UserRetrieveControllerTest {
             .following(following)
             .build();
 
-    String token = jwtUtils.generateAccessToken(email);
+    String token = jwtUtils.generateAccessToken(user.getPublicUserId());
 
     //when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users")
-        .param("userEmail", userEmail)
+        .param("userPublicID", user.getPublicUserId())
         .header("Authorization","Bearer " + token);
 
 
@@ -140,7 +148,7 @@ public class UserRetrieveControllerTest {
         .gender(updatedGender)
         .birth(updatedBirth)
         .build();
-    String token = jwtUtils.generateAccessToken(email);
+    String token = jwtUtils.generateAccessToken(user.getPublicUserId());
 
     //when
     MockHttpServletRequestBuilder request =

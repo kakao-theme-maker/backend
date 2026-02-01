@@ -2,13 +2,15 @@ package com.komentum.user.service;
 
 import com.komentum.auth.AuthProperty;
 import com.komentum.auth.JwtUtils;
+import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.security.CustomUserDetailsService;
 import com.komentum.user.client.KakaoAuthHttpClient;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
+import com.komentum.user.dto.SignUpRequestDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,25 +28,27 @@ public class UserAuthService {
   private final KakaoAuthHttpClient kakaoAuthHttpClient;
   private final TransactionTemplate transactionTemplate;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final CustomUserDetailsService customUserDetailsService;
 
   public UserAuthService(
           UserRepository userRepository,
           TokenService tokenService,
           KakaoAuthHttpClient kakaoAuthHttpClient,
           TransactionTemplate transactionTemplate,
-          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder
-  ) {
+          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder,
+      CustomUserDetailsService customUserDetailsService) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.jwtUtils = jwtUtils;
     this.kakaoAuthHttpClient = kakaoAuthHttpClient;
     this.transactionTemplate = transactionTemplate;
     this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    this.customUserDetailsService = customUserDetailsService;
   }
-  public UserAuthResponse initializeToken(String email){
-    String accessToken = jwtUtils.generateAccessToken(email);
-    String refreshToken = jwtUtils.generateRefreshToken(email);
-    if (!tokenService.saveAccessAndRefreshToken(email, accessToken,
+  public UserAuthResponse initializeToken(String publicUserId){
+    String accessToken = jwtUtils.generateAccessToken(publicUserId);
+    String refreshToken = jwtUtils.generateRefreshToken(publicUserId);
+    if (!tokenService.saveAccessAndRefreshToken(publicUserId, accessToken,
             refreshToken)) {
       throw new RuntimeException("failed to save access and refresh token");
     }
@@ -62,7 +66,7 @@ public class UserAuthService {
                   if (user == null) {
                     user = userRepository.save(userInfo.toEntity());
                   }
-                  return initializeToken(user.getUserEmail());
+                  return initializeToken(user.getPublicUserId());
                 }
             )).subscribeOn(Schedulers.boundedElastic())
         );
@@ -70,8 +74,8 @@ public class UserAuthService {
 
 
   // 로컬 회원가입
-  public void processLocalSignUp(LocalLoginRequestDto dto){
-    User user = userRepository.findById(dto.getEmail()).orElse(null);
+  public void processLocalSignUp(SignUpRequestDto dto){
+    User user = userRepository.findByUserEmail(dto.getEmail()).orElse(null);
     if (user == null) {
       userRepository.save(dto.toEntity(bCryptPasswordEncoder));
     }
@@ -79,26 +83,27 @@ public class UserAuthService {
 
   // 로컬 로그인
   public UserAuthResponse processLocalSignIn(LocalLoginRequestDto dto){
-    User user = userRepository.findById(dto.getEmail()).orElse(null);
+    User user = userRepository.findByUserEmail(dto.getEmail()).orElse(null);
     if (user == null) {
       throw new RuntimeException("This is member information that does not exist.");
     }
     if  (user.getUserEmail().equals(dto.getEmail()) &&
-            bCryptPasswordEncoder.matches(dto.getPassword(), user.getEncryptedPassword())) {
-      return initializeToken(user.getUserEmail());
+        user.matchPassword(dto.getPassword(),bCryptPasswordEncoder)) {
+      CustomUserDetails customUserDetails = customUserDetailsService.fromUser(user);
+      return initializeToken(customUserDetails.getUsername());
     }
     throw new RuntimeException("incorrect information");
   }
 
   // 비밀번호 변경
   @Transactional
-  public void changePassword(String userEmail, PasswordChangeRequsetDto passwordChangeRequsetDto){
-    User user = userRepository.findById(userEmail).orElse(null);
+  public void changePassword(String publicUserId, PasswordChangeRequsetDto passwordChangeRequsetDto){
+    User user = userRepository.findByPublicUserId(publicUserId).orElse(null);
     // 기존 비밀번호 검증
     if (user == null){
       throw new IllegalStateException("유저 정보 오류");
     }
-    if(!bCryptPasswordEncoder.matches(passwordChangeRequsetDto.getCurrentPassword(), user.getEncryptedPassword())){
+    if(!user.matchPassword(passwordChangeRequsetDto.getCurrentPassword(), bCryptPasswordEncoder)){
       throw new IllegalStateException("현재 비밀번호가 일치하지 않습니다.");
     }
     user.setEncryptedPassword(bCryptPasswordEncoder.encode(passwordChangeRequsetDto.getNewPassword()));
@@ -112,7 +117,7 @@ public class UserAuthService {
     if (accessToken == null || !jwtUtils.validateToken(accessToken)) {
       throw new RuntimeException("Invalid access token");
     }
-    String userEmail = jwtUtils.getEmail(accessToken);
+    String userEmail = jwtUtils.getUserId(accessToken);
     boolean success1 = tokenService.deleteAccessToken(userEmail);
     boolean success2 = tokenService.deleteRefreshToken(userEmail);
     if (!success1 || !success2) {
@@ -125,7 +130,7 @@ public class UserAuthService {
    */
   public UserAuthResponse doRefreshTokenRotation(String refreshToken) {
     validateRefreshToken(refreshToken);
-    String userEmail = jwtUtils.getEmail(refreshToken);
+    String userEmail = jwtUtils.getUserId(refreshToken);
     String newAccessToken = jwtUtils.generateAccessToken(userEmail);
     String newRefreshToken = jwtUtils.generateRefreshToken(userEmail);
     if (!tokenService.saveAccessAndRefreshToken(userEmail, newAccessToken, newRefreshToken)) {
@@ -141,7 +146,7 @@ public class UserAuthService {
     if (refreshToken == null || !jwtUtils.validateToken(refreshToken)) {
       throw new RuntimeException("Invalid refresh token");
     }
-    String email = jwtUtils.getEmail(refreshToken);
+    String email = jwtUtils.getUserId(refreshToken);
     String stored = tokenService.getRefreshToken(email);
     if (stored == null || !stored.equals(refreshToken)) {
       if (stored != null) {

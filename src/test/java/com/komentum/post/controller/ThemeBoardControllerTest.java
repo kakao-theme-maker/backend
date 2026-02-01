@@ -104,7 +104,7 @@ class ThemeBoardControllerTest {
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardPreviewDto> response = mockMvcUtils.requestGet(mockMvc, requestPath,
-        params, client.getUserEmail(), new TypeReference<>() {
+        params, client.getPublicUserId(), new TypeReference<>() {
         });
     // then
     assertThat(response).hasSize(pageSize);
@@ -140,7 +140,7 @@ class ThemeBoardControllerTest {
     // when
     ThemeBoardDetailDto response = mockMvcUtils.performMultipartRequest(mockMvc, requestPath,
         HttpMethod.POST, null,
-        author.getUserEmail(), formDataList, new TypeReference<>() {
+        author.getPublicUserId(), formDataList, new TypeReference<>() {
         });
     // then
     assertThemeBoardDetail(response);
@@ -161,7 +161,7 @@ class ThemeBoardControllerTest {
         .thenReturn(UUID.randomUUID().toString());
     // when
     ThemeBoardDetailDto response = mockMvcUtils.requestPut(mockMvc, requestPath, null,
-        author.getUserEmail(), requestBody, new TypeReference<>() {
+        author.getPublicUserId(), requestBody, new TypeReference<>() {
         });
     // then : 필드 검증
     assertThemeBoardDetail(response);
@@ -175,7 +175,7 @@ class ThemeBoardControllerTest {
     User author = toDelete.getUser();
     String requestPath = String.format("/api/theme-boards/%d", toDelete.getPostId());
     // when
-    mockMvcUtils.requestDelete(mockMvc, requestPath, null, author.getUserEmail(), null,
+    mockMvcUtils.requestDelete(mockMvc, requestPath, null, author.getPublicUserId(), null,
         new TypeReference<Void>() {
         });
     // then
