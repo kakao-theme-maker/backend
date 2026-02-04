@@ -3,13 +3,8 @@ package com.komentum.post.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.global.utils.DateUtils;
 import com.komentum.post.domain.Post;
-import com.komentum.post.domain.Tag;
-import com.komentum.post.dto.TagDto.TagCreateDto;
-import com.komentum.post.dto.TagDto.TagResponse;
-import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,8 +18,8 @@ public class DesignBoardDto {
   @AllArgsConstructor
   public static class DesignBoardDetailDto {
 
-    @JsonProperty("board_id")
-    private Long boardId;
+    @JsonProperty("post_id")
+    private Long postId;
 
     private String title;
 
@@ -44,12 +39,10 @@ public class DesignBoardDto {
 
     private Long prefers;
 
-    private List<TagResponse> tags;
-
     public static DesignBoardDetailDto from(Post post, DesignComponent designComponent,
-        User author, List<Tag> tags, Long prefers, String previewImageUrl) {
+        User author, Long prefers, String previewImageUrl) {
       return DesignBoardDetailDto.builder()
-          .boardId(post.getPostId())
+          .postId(post.getPostId())
           .title(post.getTitle())
           .content(post.getContent())
           .designComponentId(designComponent.getDesignComponentId())
@@ -57,7 +50,6 @@ public class DesignBoardDto {
           .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
           .previewImageUrl(previewImageUrl)
           .prefers(prefers)
-          .tags(tags.stream().map(TagResponse::from).toList())
           .build();
     }
   }
@@ -68,8 +60,8 @@ public class DesignBoardDto {
   @AllArgsConstructor
   public static class DesignBoardPreviewDto {
 
-    @JsonProperty("board_id")
-    private Long boardId;
+    @JsonProperty("post_id")
+    private Long postId;
 
     @JsonProperty("design_component_id")
     private Integer designComponentId;
@@ -90,7 +82,7 @@ public class DesignBoardDto {
     public static DesignBoardPreviewDto from(Post post, DesignComponent designComponent,
         User author, Long prefers, String previewImageUrl) {
       return DesignBoardPreviewDto.builder()
-          .boardId(post.getPostId())
+          .postId(post.getPostId())
           .designComponentId(designComponent.getDesignComponentId())
           .title(post.getTitle())
           .previewImageUrl(previewImageUrl)
@@ -111,12 +103,6 @@ public class DesignBoardDto {
 
     String content;
 
-    @JsonProperty("user_email")
-    String userEmail;
-
-    @JsonProperty("post_tags")
-    List<TagCreateDto> postTags;
-
     int designComponentId;
 
     @JsonProperty("public_flag")
@@ -132,12 +118,6 @@ public class DesignBoardDto {
     String title;
 
     String content;
-
-    @JsonProperty("user_email")
-    String userEmail;
-
-    @JsonProperty("post_tags")
-    List<TagUpdateDto> postTags;
 
     @JsonProperty("public_flag")
     boolean publicFlag;
