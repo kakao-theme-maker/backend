@@ -71,7 +71,7 @@ class ThemeManageControllerTest {
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/themes")
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(createThemeRequest));
-    request = mockMvcUtils.generateAuthJsonRequest(request, themeDataGenerator.userEmail);
+    request = mockMvcUtils.addAuthentication(request, themeDataGenerator.userEmail);
     // then
     mockMvc.perform(request)
         .andExpect(status().isCreated());
@@ -95,7 +95,7 @@ class ThemeManageControllerTest {
             target.getThemeComponentId())
         .contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(createThemeRequest));
-    request = mockMvcUtils.generateAuthJsonRequest(request, themeDataGenerator.userEmail);
+    request = mockMvcUtils.addAuthentication(request, themeDataGenerator.userEmail);
     // then
     mockMvc.perform(request)
         .andExpect(status().isOk());
@@ -109,7 +109,7 @@ class ThemeManageControllerTest {
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put("/api/themes/{id}/done",
         target.getThemeComponentId());
-    request = mockMvcUtils.generateAuthJsonRequest(request, themeDataGenerator.userEmail);
+    request = mockMvcUtils.addAuthentication(request, themeDataGenerator.userEmail);
     // then
     mockMvc.perform(request)
         .andExpect(status().isOk());
@@ -123,7 +123,7 @@ class ThemeManageControllerTest {
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.delete("/api/themes/{id}",
         target.getThemeComponentId());
-    request = mockMvcUtils.generateAuthJsonRequest(request, themeDataGenerator.userEmail);
+    request = mockMvcUtils.addAuthentication(request, themeDataGenerator.userEmail);
     // then
     mockMvc.perform(request)
         .andExpect(status().isNoContent());

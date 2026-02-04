@@ -13,18 +13,17 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
-import com.komentum.post.dto.TagDto.TagCreateDto;
-import com.komentum.post.dto.TagDto.TagResponse;
-import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.BoardDetailDataGenerator;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.dto.MockMvcMultipartRequestDto;
+import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -84,7 +83,7 @@ public class DesignBoardControllerTest {
     assertThat(response.getContent())
         .isEqualTo(expectedContent);
     // DB assertion
-    DesignBoard savedData = designBoardRepository.findByPost_PostId(response.getBoardId())
+    DesignBoard savedData = designBoardRepository.findByPost_PostId(response.getPostId())
         .orElse(null);
     assertThat(savedData)
         .isNotNull();
@@ -93,15 +92,6 @@ public class DesignBoardControllerTest {
         .isEqualTo(expectedTitle);
     assertThat(post.getContent())
         .isEqualTo(expectedContent);
-  }
-
-  private void assertDesignBoard(DesignBoardDetailDto response, String expectedTitle,
-      String expectedContent, List<String> expectedTags) {
-    // field assertion
-    assertThat(response.getTags()).extracting(TagResponse::getTagName)
-        .containsExactlyElementsOf(expectedTags);
-    // field and DB assertion
-    assertDesignBoard(response, expectedTitle, expectedContent);
   }
 
   @Test
@@ -115,10 +105,17 @@ public class DesignBoardControllerTest {
     params.add("pageSize", Integer.toString(pageSize));
     params.add("pageNumber", Integer.toString(pageNumber));
     // when
-    List<DesignBoardPreviewDto> responses = mockMvcUtils.requestGet(mockMvc,
-        "/api/design-boards", params, client.getUserEmail(),
-        new TypeReference<>() {
-        });
+    List<DesignBoardPreviewDto> responses = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards")
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
     // then
     assertThat(responses).isNotNull().hasSize(pageSize);
   }
@@ -133,9 +130,16 @@ public class DesignBoardControllerTest {
         targetDesignBoard.getPost().getPostId());
     User client = boardDetailDataGenerator.getUsers().get(0);
     // when
-    DesignBoardDetailDto response = mockMvcUtils.requestGet(mockMvc, requestPath, null,
-        client.getUserEmail(), new TypeReference<>() {
-        });
+    DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, DesignBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path(requestPath)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
     // then
     assertDesignBoard(response, targetPost.getTitle(), targetPost.getContent());
   }
@@ -148,13 +152,10 @@ public class DesignBoardControllerTest {
     DesignComponent unsavedBoardDesignComponent = boardDetailDataGenerator.getNonDesignBoardDesignComponents()
         .get(0);
     User author = boardDetailDataGenerator.getUsers().get(0);
-    List<String> tags = IntStream.range(0, 5).mapToObj(i -> UUID.randomUUID().toString()).toList();
     DesignBoardCreateDto createDto = DesignBoardCreateDto.builder()
         .title("test title")
         .content("test content")
         .designComponentId(unsavedBoardDesignComponent.getDesignComponentId())
-        .postTags(tags.stream().map(t -> TagCreateDto.builder().tagName(t).build()).toList())
-        .userEmail(author.getUserEmail())
         .publicFlag(true)
         .build();
     MockMultipartFile boardInfo = mockMvcUtils.jsonToTestFormData("board_info", createDto);
@@ -169,11 +170,19 @@ public class DesignBoardControllerTest {
             fileManager.uploadFile(any(byte[].class), anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
-    DesignBoardDetailDto response = mockMvcUtils.performMultipartRequest(mockMvc, requestPath,
-        HttpMethod.POST, null, author.getUserEmail(), formDataList, new TypeReference<>() {
-        });
+    DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
+        MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.POST)
+            .formDataList(formDataList)
+            .clientDto(TestClientDto.fromEntity(author))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then : 필드 및 DB 검증
-    assertDesignBoard(response, createDto.getTitle(), createDto.getContent(), tags);
+    assertDesignBoard(response, createDto.getTitle(), createDto.getContent());
   }
 
   @Test
@@ -186,22 +195,25 @@ public class DesignBoardControllerTest {
     User author = targetDesignBoard.getPost().getUser();
     String expectedTitle = UUID.randomUUID().toString();
     String expectedContent = UUID.randomUUID().toString();
-    List<String> expectedTags = IntStream.range(0, 5).mapToObj(i -> UUID.randomUUID().toString())
-        .toList();
     DesignBoardUpdateDto updateDto = DesignBoardUpdateDto.builder()
         .title(expectedTitle)
         .content(expectedContent)
-        .postTags(
-            expectedTags.stream().map(t -> TagUpdateDto.builder().tagName(t).build()).toList())
-        .userEmail(author.getUserEmail())
         .publicFlag(false)
         .build();
     // when
-    DesignBoardDetailDto response = mockMvcUtils.requestPut(mockMvc, requestPath, null,
-        author.getUserEmail(), updateDto, new TypeReference<>() {
-        });
+    DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<DesignBoardUpdateDto, DesignBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.PATCH)
+            .body(updateDto)
+            .clientDto(TestClientDto.fromEntity(author))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then : 필드 및 DB 검증
-    assertDesignBoard(response, expectedTitle, expectedContent, expectedTags);
+    assertDesignBoard(response, expectedTitle, expectedContent);
   }
 
   @Test
@@ -213,9 +225,17 @@ public class DesignBoardControllerTest {
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
     // when
-    mockMvcUtils.requestDelete(mockMvc, requestPath, null, author.getUserEmail(), null,
-        new TypeReference<Void>() {
-        });
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.DELETE)
+            .clientDto(TestClientDto.fromEntity(author))
+            .statusCode(204)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assertThat(designBoardRepository.findById(targetDesignBoard.getDesignBoardId()))
         .isEmpty();

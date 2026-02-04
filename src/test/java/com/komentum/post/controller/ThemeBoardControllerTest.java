@@ -15,6 +15,9 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.BoardDetailDataGenerator;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.dto.MockMvcMultipartRequestDto;
+import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
@@ -103,9 +106,18 @@ class ThemeBoardControllerTest {
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
-    List<ThemeBoardPreviewDto> response = mockMvcUtils.requestGet(mockMvc, requestPath,
-        params, client.getUserEmail(), new TypeReference<>() {
-        });
+    List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .params(params)
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assertThat(response).hasSize(pageSize);
     assertThemeBoardPreviewList(response);
@@ -138,10 +150,18 @@ class ThemeBoardControllerTest {
     Mockito.when(fileManager.resolveFilePath(any()))
         .thenReturn(testPreviewImageUrl);
     // when
-    ThemeBoardDetailDto response = mockMvcUtils.performMultipartRequest(mockMvc, requestPath,
-        HttpMethod.POST, null,
-        author.getUserEmail(), formDataList, new TypeReference<>() {
-        });
+    ThemeBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
+        MockMvcMultipartRequestDto.<ThemeBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.POST)
+            .clientDto(TestClientDto.fromEntity(author))
+            .formDataList(formDataList)
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assertThemeBoardDetail(response);
   }
@@ -160,9 +180,18 @@ class ThemeBoardControllerTest {
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
-    ThemeBoardDetailDto response = mockMvcUtils.requestPut(mockMvc, requestPath, null,
-        author.getUserEmail(), requestBody, new TypeReference<>() {
-        });
+    ThemeBoardDetailDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<ThemeBoardUpdateDto, ThemeBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.PUT)
+            .clientDto(TestClientDto.fromEntity(author))
+            .body(requestBody)
+            .responseType(new TypeReference<>() {
+            })
+            .statusCode(200)
+            .build()
+    );
     // then : 필드 검증
     assertThemeBoardDetail(response);
   }
@@ -175,9 +204,17 @@ class ThemeBoardControllerTest {
     User author = toDelete.getUser();
     String requestPath = String.format("/api/theme-boards/%d", toDelete.getPostId());
     // when
-    mockMvcUtils.requestDelete(mockMvc, requestPath, null, author.getUserEmail(), null,
-        new TypeReference<Void>() {
-        });
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.DELETE)
+            .clientDto(TestClientDto.fromEntity(author))
+            .responseType(new TypeReference<>() {
+            })
+            .statusCode(204)
+            .build()
+    );
     // then
     assertThat(postRepository.findById(toDelete.getPostId()))
         .isEmpty();
