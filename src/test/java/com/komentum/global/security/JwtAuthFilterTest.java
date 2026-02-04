@@ -46,6 +46,7 @@ class JwtAuthFilterTest {
   void setUp() {
     Faker faker = new Faker();
     User newUser = User.builder()
+        .publicUserId(UUID.randomUUID().toString())
         .userEmail(faker.internet().emailAddress())
         .role(UserRole.USER)
         .birth(LocalDate.now().minusYears(10))
@@ -62,7 +63,7 @@ class JwtAuthFilterTest {
   }
 
   private String getUserAccessToken() {
-    return jwtUtils.generateAccessToken(user.getUserEmail());
+    return jwtUtils.generateAccessToken(user.getPublicUserId());
   }
 
   @Test

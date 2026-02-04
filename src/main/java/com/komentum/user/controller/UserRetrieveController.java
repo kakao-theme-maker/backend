@@ -11,9 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,9 +31,9 @@ public class UserRetrieveController {
 
   // 유저 정보 조회
   @GetMapping("")
-  public ResponseEntity<CustomResponse<UserResponseDto>> getUserByEmail(@RequestParam String userEmail) { // 대체키 추가 후에 수정
+  public ResponseEntity<CustomResponse<UserResponseDto>> getUserByPublicId(@RequestParam String userPublicID) {
     try {
-      UserResponseDto user = userRetrieveService.getUserByEmail(userEmail);
+      UserResponseDto user = userRetrieveService.getUserByPublicId(userPublicID);
       // 유저 조회 성공
       return ResponseEntity.ok(CustomResponse.ok(user));
     } catch (RuntimeException e){
@@ -51,7 +48,7 @@ public class UserRetrieveController {
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUser(
       @RequestBody UserUpdateDto updateDto,
       @AuthenticationPrincipal CustomUserDetails userDetails){
-    UserResponseDto updatedUser = userRetrieveService.updateUser(userDetails.getUsername(), updateDto);
+    UserResponseDto updatedUser = userRetrieveService.updateUser(userDetails.getPublicUserId(), updateDto);
 
     return ResponseEntity.ok(
         CustomResponse.ok(updatedUser)

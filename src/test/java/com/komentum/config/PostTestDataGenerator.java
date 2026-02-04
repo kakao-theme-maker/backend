@@ -55,6 +55,7 @@ public class PostTestDataGenerator {
     List<User> users = new ArrayList<>();
     for (int i = 0; i < userCount; i++) {
       User user = User.builder()
+          .publicUserId(UUID.randomUUID().toString())
           .userEmail(String.format("test%s@test.com", i))
           .role(UserRole.USER)
           .birth(LocalDate.now())

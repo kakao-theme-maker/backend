@@ -2,6 +2,7 @@ package com.komentum.user.controller;
 
 import com.komentum.auth.AuthProperty;
 import com.komentum.user.dto.LocalLoginRequestDto;
+import com.komentum.user.dto.SignUpRequestDto;
 import com.komentum.user.dto.UserAuthRequest;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.service.UserAuthService;
@@ -23,24 +24,12 @@ public class UserAuthController {
     this.userAuthService = userAuthService;
   }
 
-  /**
-   * 카카오 로그인 기능
-   *
-   * @param userAuthRequest 사용자 auth code
-   * @return 토큰들을 ResponseEntity 로 감싸서 반환
-   */
-  @PostMapping("/kakao/login")
-  public Mono<ResponseEntity<UserAuthResponse>> loginWithKakao(
-      @RequestBody UserAuthRequest userAuthRequest) {
-    return userAuthService.processKakaoAuth(userAuthRequest.getAuthCode())
-        .map(ResponseEntity::ok);
-  }
 
   // Local 회원가입 기능
   @PostMapping("/local/sign-up")
   public ResponseEntity<String> singUpLocal(
-          @RequestBody LocalLoginRequestDto localLoginRequestDto){
-    userAuthService.processLocalSignUp(localLoginRequestDto);
+          @RequestBody SignUpRequestDto signUpRequestDto){
+    userAuthService.processLocalSignUp(signUpRequestDto);
     return ResponseEntity.ok("signup success");
   }
 
