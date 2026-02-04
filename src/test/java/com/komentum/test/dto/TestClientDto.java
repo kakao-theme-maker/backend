@@ -11,10 +11,12 @@ import lombok.Getter;
 public class TestClientDto {
 
   private String userEmail;
+  private String publicUserId;
 
   public static TestClientDto fromEntity(User client) {
     return TestClientDto.builder()
         .userEmail(client.getUserEmail())
+        .publicUserId(client.getPublicUserId())
         .build();
   }
 }

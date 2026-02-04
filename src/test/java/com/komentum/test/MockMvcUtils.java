@@ -39,7 +39,7 @@ public class MockMvcUtils {
    * */
   public MockHttpServletRequestBuilder addAuthentication(
       MockHttpServletRequestBuilder requestBuilder, TestClientDto clientDto) {
-    return addAuthentication(requestBuilder, clientDto.getUserEmail());
+    return addAuthentication(requestBuilder, clientDto.getPublicUserId());
   }
 
   /**
@@ -47,8 +47,8 @@ public class MockMvcUtils {
    * 이메일을 기반으로 토큰을 생성하여 주입한 RequestBuilder 반환
    * */
   public MockHttpServletRequestBuilder addAuthentication(
-      MockHttpServletRequestBuilder requestBuilder, String userEmail) {
-    String jwtToken = jwtUtils.generateAccessToken(userEmail);
+      MockHttpServletRequestBuilder requestBuilder, String userIdentifier) {
+    String jwtToken = jwtUtils.generateAccessToken(userIdentifier);
     return requestBuilder.header(AuthProperty.ACCESS_TOKEN_HEADER,
         AuthProperty.ACCESS_TOKEN_PREFIX + " " + jwtToken);
   }
