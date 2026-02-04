@@ -17,7 +17,7 @@ public class OwnerAdminPolicyImpl implements OwnerAdminPolicy {
    * */
   public boolean validate(User resourceOwner) {
     return principalProvider.retrievePrincipal()
-        .map(userDetails -> userDetails.getUsername().equals(resourceOwner.getUserEmail()) ||
+        .map(userDetails -> userDetails.getUsername().equals(resourceOwner.getPublicUserId()) ||
             userDetails.getUserRole().equals(UserRole.ADMIN))
         .orElse(false);
   }
