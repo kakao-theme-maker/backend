@@ -1,11 +1,11 @@
 package com.komentum.post.controller;
 
-import com.komentum.post.dto.PreferDto.PreferCreateDto;
-import com.komentum.post.dto.PreferDto.PreferDeleteDto;
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.facade.PreferManagementFacade;
 import com.komentum.post.service.PreferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,15 +29,15 @@ public class PreferController {
 
   @PostMapping("/{postId}/prefer")
   public ResponseEntity<Void> savePrefer(@PathVariable Long postId,
-      @RequestBody PreferCreateDto createDto) {
-    preferManagementFacade.addPreferToPost(postId, createDto);
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    preferManagementFacade.addPreferToPost(postId, userDetails.getUsername());
     return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/{postId}/prefer")
   public ResponseEntity<Void> deletePrefer(@PathVariable Long postId,
-      @RequestBody PreferDeleteDto deleteDto) {
-    preferManagementFacade.deletePreferFromPost(postId, deleteDto);
+      @RequestBody CustomUserDetails userDetails) {
+    preferManagementFacade.deletePreferFromPost(postId, userDetails.getUsername());
     return ResponseEntity.noContent().build();
   }
 }
