@@ -1,8 +1,8 @@
 package com.komentum.post.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.auth.JwtUtils;
 import com.komentum.config.EnableTestProfile;
 import com.komentum.global.utils.FileManager;
-import com.komentum.global.utils.S3FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
 import com.komentum.post.repository.PostRepository;
@@ -25,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -34,6 +32,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @AutoConfigureMockMvc
 @SpringBootTest
 public class UserPostControllerTest {
+
   private final String userEmail = "admin@gmail.com";
 
   @Autowired
@@ -55,21 +54,21 @@ public class UserPostControllerTest {
   private ObjectMapper objectMapper;
 
   @BeforeEach
-  void setUp(){
+  void setUp() {
     userDataGenerator.deleteAllUsers();
     userDataGenerator.generateTestUser(userEmail);
     addPost(userEmail);
   }
 
   @AfterEach
-  void tearDown(){
+  void tearDown() {
     userDataGenerator.deleteAllUsers();
     postRepository.deleteAll();
   }
 
-  void addPost(String email){
+  void addPost(String email) {
     User user = userRepository.findByUserEmail(email).orElseThrow();
-    for (int i = 1; i <= 6; i++){
+    for (int i = 1; i <= 6; i++) {
       Post post = Post.builder()
           .previewImageName("image-" + i)
           .user(user)
@@ -80,7 +79,7 @@ public class UserPostControllerTest {
 
   @Test
   @DisplayName("유저가 작성한 게시글 목록 조회")
-  void getUserPostTest() throws Exception{
+  void getUserPostTest() throws Exception {
     //given
     // resolveFilePath가 일단 mocked 객체 리턴
     given(fileManager.resolveFilePath(any()))
@@ -100,13 +99,14 @@ public class UserPostControllerTest {
         .andReturn().getResponse().getContentAsString();
 
     List<UserPostListResponseDto> result = objectMapper.readValue(response,
-        new TypeReference<>() { });
+        new TypeReference<>() {
+        });
 
     // 유저 게시글 목록 전부 반환하는 지 확인
     assertThat(result).hasSize(6);
 
     // postId, 생성&수정 시간, previewImageUrl 반환하는 지 확인
-    for (int i = 0; i<6; i++) {
+    for (int i = 0; i < 6; i++) {
       UserPostListResponseDto post = result.get(i);
       assertThat(post.getPostId()).isEqualTo(givenPost.get(i).getPostId());
       assertThat(post.getCreatedAt()).isEqualTo(givenPost.get(i).getCreatedAt());
