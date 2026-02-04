@@ -52,7 +52,7 @@ public class CategoryService {
   public Category update(long categoryId, User editor, CategoryUpdateDto updateDto) {
     Category target = findById(categoryId);
     if (!categoryPolicy.canUpdate(target.getOwner())) {
-      throw new RuntimeException("failed to update category : invalid user or role");
+      throw new AccessDeniedException("failed to update category : invalid user or role");
     }
     target.update(updateDto);
     return categoryRepository.save(target);
