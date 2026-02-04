@@ -102,13 +102,11 @@ public class ThemeBoardManagementFacade {
    * 테마 게시글과 태그 정보 수정
    * @param postId 테마 게시글 ID
    * @param updateDto 게시글 수정 정보
-   * @param editorEmail 수정자 이메일
    * */
   @Transactional
   public ThemeBoardDetailDto updateThemeBoard(Long postId,
-      ThemeBoardUpdateDto updateDto, String editorEmail) {
-    User editor = userRetrieveService.findUserEntity(editorEmail);
-    postService.updatePost(postId, editor,
+      ThemeBoardUpdateDto updateDto) {
+    postService.updatePost(postId,
         postDtoMapper.toPostUpdateDto(updateDto));
     return findThemeBoardDetail(postId);
   }

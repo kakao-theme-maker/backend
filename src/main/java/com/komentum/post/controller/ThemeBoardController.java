@@ -76,11 +76,9 @@ public class ThemeBoardController {
    * */
   @PutMapping("/{post_id}")
   public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable("post_id") Long postId,
-      @RequestBody ThemeBoardUpdateDto updateDto,
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
+      @RequestBody ThemeBoardUpdateDto updateDto) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.updateThemeBoard(postId, updateDto,
-            userDetails.getUsername()));
+        themeBoardManagementFacade.updateThemeBoard(postId, updateDto));
   }
 
   /**
