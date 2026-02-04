@@ -10,6 +10,7 @@ import com.komentum.user.domain.User;
 import com.komentum.user.service.UserRetrieveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 // Exit Plan : 150 Lines
 @Service
@@ -20,9 +21,11 @@ public class CommentManagementFacade {
   private final UserRetrieveService userRetrieveService;
   private final PostService postService;
 
-  public CommentResponse createCommentOnPost(Long postId, CommentCreateDto createDto) {
+  @Transactional
+  public CommentResponse createCommentOnPost(Long postId, CommentCreateDto createDto,
+      String authorId) {
     Post post = postService.getPostByPostId(postId);
-    User author = userRetrieveService.findUserEntity(createDto.getUserEmail());
+    User author = userRetrieveService.findUserEntity(authorId);
     Comment savedComment = commentService.saveComment(post, author, createDto);
     return CommentResponse.from(savedComment);
   }

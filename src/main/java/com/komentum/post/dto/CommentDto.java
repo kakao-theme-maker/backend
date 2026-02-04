@@ -15,7 +15,7 @@ public class CommentDto {
   @AllArgsConstructor
   public static class CommentResponse {
 
-    long commentId;
+    Long commentId;
     String userEmail;
     String content;
     String createdAt;
@@ -38,7 +38,6 @@ public class CommentDto {
   public static class CommentCreateDto {
 
     String content;
-    String userEmail;
   }
 
   @Data
