@@ -2,12 +2,14 @@ package com.komentum.post.service;
 
 import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.Category;
+import com.komentum.post.domain.policy.CategoryPolicy;
 import com.komentum.post.dto.CategoryDto.CategoryCreateDto;
 import com.komentum.post.dto.CategoryDto.CategoryUpdateDto;
 import com.komentum.post.repository.CategoryRepository;
 import com.komentum.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CategoryService {
 
+  private final CategoryPolicy categoryPolicy;
   private final CategoryRepository categoryRepository;
 
   /**
@@ -48,8 +51,8 @@ public class CategoryService {
   @Transactional
   public Category update(long categoryId, User editor, CategoryUpdateDto updateDto) {
     Category target = findById(categoryId);
-    if (!target.isOwner(editor)) {
-      throw new RuntimeException("You are not the owner of this category");
+    if (!categoryPolicy.canUpdate(target.getOwner())) {
+      throw new RuntimeException("failed to update category : invalid user or role");
     }
     target.update(updateDto);
     return categoryRepository.save(target);
@@ -61,8 +64,8 @@ public class CategoryService {
   @Transactional
   public void delete(long categoryId, User editor) {
     Category target = findById(categoryId);
-    if (!target.isOwner(editor)) {
-      throw new RuntimeException("You are not the owner of this category");
+    if (!categoryPolicy.canDelete(target.getOwner())) {
+      throw new AccessDeniedException("failed to delete category : invalid user or role");
     }
     categoryRepository.delete(target);
   }
