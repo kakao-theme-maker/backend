@@ -1,16 +1,17 @@
 package com.komentum.post.controller;
 
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.dto.PageableRequestDto;
 import com.komentum.post.dto.CommentDto.CommentCreateDto;
 import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
 import com.komentum.post.facade.CommentManagementFacade;
 import com.komentum.post.service.CommentService;
-import com.komentum.user.service.UserRetrieveService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -47,8 +48,10 @@ public class CommentController {
   @PostMapping("/{postId}/comments")
   public ResponseEntity<CommentResponse> createComment(
       @PathVariable Long postId,
-      @RequestBody CommentCreateDto createDto) {
-    return ResponseEntity.ok(commentManagementFacade.createCommentOnPost(postId, createDto));
+      @RequestBody CommentCreateDto createDto,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    return ResponseEntity.ok(
+        commentManagementFacade.createCommentOnPost(postId, createDto, userDetails.getUsername()));
   }
 
   @PutMapping("/comments/{commentId}")

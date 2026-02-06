@@ -12,6 +12,9 @@ import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
 import com.komentum.post.repository.CommentRepository;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.TestParams;
+import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.UUID;
@@ -21,8 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 @SpringBootTest
@@ -48,6 +51,16 @@ class CommentControllerTest {
     postTestDataGenerator.generateData(1, 1, 10);
   }
 
+  public void assertCommentResponse(CommentResponse target) {
+    // DB assertion
+    Comment saved = commentRepository.findById(target.getCommentId()).orElse(null);
+    assertThat(saved).isNotNull();
+    // target assertion
+    assertThat(target.getContent()).isEqualTo(saved.getContent());
+    assertThat(target.getUserEmail()).isNotBlank();
+    assertThat(target.getCreatedAt()).isNotBlank();
+  }
+
   @Test
   @DisplayName("success test of get comments by page")
   void getComments_success() throws Exception {
@@ -55,17 +68,25 @@ class CommentControllerTest {
     Post post = postTestDataGenerator.posts.get(0);
     User author = postTestDataGenerator.users.get(0);
     String requestPath = String.format("/api/posts/%d/comments", post.getPostId());
-    int pageNumber = 0;
     int pageSize = 5;
-    MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
-    queryParams.add("pageNumber", String.valueOf(pageNumber));
-    queryParams.add("pageSize", String.valueOf(pageSize));
+    MultiValueMap<String, String> params = TestParams.withPaging(0, pageSize);
     // when
-    List<CommentResponse> responses = mockMvcUtils.requestGet(mockMvc, requestPath, queryParams,
-        author.getUserEmail(), new TypeReference<>() {
-        });
+    List<CommentResponse> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<CommentResponse>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path(requestPath)
+            .params(params)
+            .clientDto(TestClientDto.fromEntity(author))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
-    assertThat(responses).hasSize(pageSize);
+    assertThat(response).hasSize(pageSize);
+    for (CommentResponse target : response) {
+      assertCommentResponse(target);
+    }
   }
 
   @Test
@@ -76,12 +97,18 @@ class CommentControllerTest {
     String requestPath = String.format("/api/posts/comments/%d", target.getCommentId());
     User client = postTestDataGenerator.users.get(0);
     // when
-    CommentResponse response = mockMvcUtils.requestGet(mockMvc, requestPath, null,
-        client.getUserEmail(), new TypeReference<>() {
-        });
+    CommentResponse response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, CommentResponse>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path(requestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
-    assertThat(response).isNotNull();
-    assertThat(response.getCommentId()).isEqualTo(target.getCommentId());
+    assertCommentResponse(response);
   }
 
   @Test
@@ -94,15 +121,21 @@ class CommentControllerTest {
     String requestPath = String.format("/api/posts/%d/comments", post.getPostId());
     CommentCreateDto requestBody = CommentCreateDto.builder()
         .content(content)
-        .userEmail(author.getUserEmail())
         .build();
     // when
-    CommentResponse response = mockMvcUtils.requestPost(mockMvc, requestPath, null,
-        author.getUserEmail(), requestBody, new TypeReference<>() {
-        });
+    CommentResponse response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<CommentCreateDto, CommentResponse>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.POST)
+            .clientDto(TestClientDto.fromEntity(author))
+            .body(requestBody)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
-    assertThat(response).isNotNull();
-    assertThat(commentRepository.findById(response.getCommentId())).isPresent();
+    assertCommentResponse(response);
   }
 
   @Test
@@ -116,9 +149,17 @@ class CommentControllerTest {
         .content(UUID.randomUUID().toString())
         .build();
     // when
-    CommentResponse response = mockMvcUtils.requestPut(mockMvc, requestPath, null,
-        author.getUserEmail(), requestBody, new TypeReference<>() {
-        });
+    CommentResponse response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<CommentUpdateDto, CommentResponse>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.PUT)
+            .clientDto(TestClientDto.fromEntity(author))
+            .body(requestBody)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assertThat(target.getCommentId()).isEqualTo(response.getCommentId());
     assertThat(requestBody.getContent()).isEqualTo(response.getContent());
@@ -132,9 +173,17 @@ class CommentControllerTest {
     User author = target.getUser();
     String requestPath = String.format("/api/posts/comments/%d", target.getCommentId());
     // when
-    mockMvcUtils.requestDelete(mockMvc, requestPath, null, author.getUserEmail(), null,
-        new TypeReference<Void>() {
-        });
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.DELETE)
+            .clientDto(TestClientDto.fromEntity(author))
+            .statusCode(204)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assert commentRepository.findById(target.getCommentId()).isEmpty();
   }

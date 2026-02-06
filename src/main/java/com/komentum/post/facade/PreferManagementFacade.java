@@ -1,8 +1,6 @@
 package com.komentum.post.facade;
 
 import com.komentum.post.domain.Post;
-import com.komentum.post.dto.PreferDto.PreferCreateDto;
-import com.komentum.post.dto.PreferDto.PreferDeleteDto;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.PreferService;
 import com.komentum.user.domain.User;
@@ -19,14 +17,14 @@ public class PreferManagementFacade {
   private final UserRetrieveService userRetrieveService;
   private final PreferService preferService;
 
-  public void addPreferToPost(Long postId, PreferCreateDto createDto) {
-    User targetUser = userRetrieveService.findUserEntity(createDto.getUserEmail());
+  public void addPreferToPost(Long postId, String clientId) {
+    User targetUser = userRetrieveService.findUserEntity(clientId);
     Post targetPost = postService.getPostByPostId(postId);
     preferService.savePrefer(targetUser, targetPost);
   }
 
-  public void deletePreferFromPost(Long postId, PreferDeleteDto deleteDto) {
-    User targetUser = userRetrieveService.findUserEntity(deleteDto.getUserEmail());
+  public void deletePreferFromPost(Long postId, String clientId) {
+    User targetUser = userRetrieveService.findUserEntity(clientId);
     Post targetPost = postService.getPostByPostId(postId);
     preferService.deletePrefer(targetUser, targetPost);
   }

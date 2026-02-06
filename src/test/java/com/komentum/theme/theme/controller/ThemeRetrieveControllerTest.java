@@ -60,7 +60,7 @@ class ThemeRetrieveControllerTest {
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/themes")
         .param("pageNumber", String.valueOf(pageNumber))
         .param("pageSize", String.valueOf(pageSize));
-    requestBuilder = mockMvcUtils.generateAuthJsonRequest(requestBuilder,
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
         themeDataGenerator.userEmail);
     // then
     mockMvc.perform(requestBuilder)
@@ -76,7 +76,7 @@ class ThemeRetrieveControllerTest {
     // when
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/themes/{id}",
         toFind.getThemeComponentId());
-    requestBuilder = mockMvcUtils.generateAuthJsonRequest(requestBuilder,
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
         themeDataGenerator.userEmail);
     // then
     mockMvc.perform(requestBuilder)
@@ -94,7 +94,7 @@ class ThemeRetrieveControllerTest {
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/themes/public")
         .param("pageNumber", String.valueOf(pageNumber))
         .param("pageSize", String.valueOf(pageSize));
-    requestBuilder = mockMvcUtils.generateAuthJsonRequest(requestBuilder,
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
         themeDataGenerator.userEmail);
     // then
     mockMvc.perform(requestBuilder)
@@ -114,7 +114,7 @@ class ThemeRetrieveControllerTest {
             userEmail)
         .param("pageNumber", String.valueOf(pageNumber))
         .param("pageSize", String.valueOf(pageSize));
-    requestBuilder = mockMvcUtils.generateAuthJsonRequest(requestBuilder,
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
         themeDataGenerator.userEmail);
     // then
     mockMvc.perform(requestBuilder)
@@ -132,7 +132,7 @@ class ThemeRetrieveControllerTest {
             "/api/themes/completed")
         .param("pageNumber", String.valueOf(pageNumber))
         .param("pageSize", String.valueOf(pageSize));
-    requestBuilder = mockMvcUtils.generateAuthJsonRequest(requestBuilder,
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
         themeDataGenerator.userEmail);
     // then
     mockMvc.perform(requestBuilder)
@@ -151,7 +151,7 @@ class ThemeRetrieveControllerTest {
             "/api/themes/completed/user/{userEmail}", userEmail)
         .param("pageNumber", String.valueOf(pageNumber))
         .param("pageSize", String.valueOf(pageSize));
-    requestBuilder = mockMvcUtils.generateAuthJsonRequest(requestBuilder,
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
         themeDataGenerator.userEmail);
     // then
     mockMvc.perform(requestBuilder)

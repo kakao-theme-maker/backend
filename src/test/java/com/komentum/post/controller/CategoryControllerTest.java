@@ -11,6 +11,10 @@ import com.komentum.post.dto.CategoryDto.CategoryUpdateDto;
 import com.komentum.post.repository.CategoryRepository;
 import com.komentum.test.CategoryPostDataGenerator;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.TestParams;
+import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.TestClientDto;
+import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -20,8 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 @SpringBootTest
@@ -63,17 +67,25 @@ public class CategoryControllerTest {
   @DisplayName("when send request, then return categories that user has")
   public void findAllByUser_success() throws Exception {
     // given
-    String clientEmail = categoryPostDataGenerator.getUsers().get(0).getUserEmail();
-    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    params.add("user_email", clientEmail);
+    User client = categoryPostDataGenerator.getUsers().get(0);
+    MultiValueMap<String, String> params = TestParams.withEmpty();
+    params.add(TestParams.USER_EMAIL, client.getUserEmail());
     // when
-    List<CategoryResponseDto> response = mockMvcUtils.requestGet(mockMvc, "/api/categories", params,
-        clientEmail,
-        new TypeReference<>() {
-        });
+    List<CategoryResponseDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<CategoryResponseDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/categories")
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
-    assertThat(response).isNotNull()
-        .hasSize(categoryRepository.findAllByOwner_UserEmail(clientEmail).size());
+    assertThat(response)
+        .isNotNull()
+        .hasSize(categoryRepository.findAllByOwner_UserEmail(client.getUserEmail()).size());
     response.forEach(this::assertCategoryResponseDto);
   }
 
@@ -81,14 +93,22 @@ public class CategoryControllerTest {
   @DisplayName("when send request, then save category")
   public void saveCategory_success() throws Exception {
     // given
-    String clientEmail = categoryPostDataGenerator.getUsers().get(0).getUserEmail();
+    User client = categoryPostDataGenerator.getUsers().get(0);
     CategoryCreateDto createDto = CategoryCreateDto.builder()
         .name(UUID.randomUUID().toString())
         .build();
     // when
-    CategoryResponseDto response = mockMvcUtils.requestPost(mockMvc, "/api/categories", null,
-        clientEmail, createDto, new TypeReference<>() {
-        });
+    CategoryResponseDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<CategoryCreateDto, CategoryResponseDto>builder()
+            .mockMvc(mockMvc)
+            .path("/api/categories")
+            .httpMethod(HttpMethod.POST)
+            .clientDto(TestClientDto.fromEntity(client))
+            .body(createDto)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assertCategoryResponseDto(response);
   }
@@ -98,15 +118,23 @@ public class CategoryControllerTest {
   public void updateCategory_success() throws Exception {
     // given
     Category targetCategory = categoryPostDataGenerator.getCategories().get(0);
-    String clientEmail = targetCategory.getOwner().getUserEmail();
+    User client = targetCategory.getOwner();
     CategoryUpdateDto updateDto = CategoryUpdateDto.builder()
         .name(UUID.randomUUID().toString())
         .build();
     String requestPath = String.format("/api/categories/%d", targetCategory.getCategoryId());
     // when
-    CategoryResponseDto response = mockMvcUtils.requestPatch(mockMvc, requestPath, null,
-        clientEmail, updateDto, new TypeReference<>() {
-        });
+    CategoryResponseDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<CategoryUpdateDto, CategoryResponseDto>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.PATCH)
+            .clientDto(TestClientDto.fromEntity(client))
+            .body(updateDto)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assertCategoryResponseDto(response);
     assertThat(response.getName()).isEqualTo(updateDto.getName());
@@ -117,13 +145,21 @@ public class CategoryControllerTest {
   public void deleteCategory_success() throws Exception {
     // given
     Category targetCategory = categoryPostDataGenerator.getCategories().get(0);
-    String clientEmail = targetCategory.getOwner().getUserEmail();
+    User client = targetCategory.getOwner();
     String requestPath = String.format("/api/categories/%d", targetCategory.getCategoryId());
     // when
-    mockMvcUtils.requestDelete(mockMvc, requestPath, null, clientEmail, null,
-        new TypeReference<Void>() {
-        });
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .path(requestPath)
+            .httpMethod(HttpMethod.DELETE)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(204)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
-    assertThat(categoryRepository.findById(targetCategory.getCategoryId()).orElse(null)).isNull();
+    assertThat(categoryRepository.findById(targetCategory.getCategoryId())).isEmpty();
   }
 }
