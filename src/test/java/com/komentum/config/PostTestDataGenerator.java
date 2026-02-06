@@ -1,20 +1,17 @@
 package com.komentum.config;
 
 import com.github.javafaker.Faker;
-import com.komentum.global.security.UserRole;
 import com.komentum.post.domain.Comment;
 import com.komentum.post.domain.Post;
 import com.komentum.post.repository.CommentRepository;
 import com.komentum.post.repository.PostRepository;
-import com.komentum.user.domain.Gender;
+import com.komentum.test.UserDataGenerator;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +27,10 @@ public class PostTestDataGenerator {
   @Autowired
   private CommentRepository commentRepository;
 
+  @Autowired
+  private UserDataGenerator userDataGenerator;
+
+  @Getter
   public List<User> users;
 
   public List<Post> posts;
@@ -37,38 +38,19 @@ public class PostTestDataGenerator {
   public List<Comment> comments;
 
   public void generateData(int userCount, int postPerUser, int commentPerPost) {
-    Faker faker = new Faker();
-    this.users = generateUser(userCount);
+    this.users = generateUsers(userCount);
     this.posts = generatePost(users, postPerUser);
     this.comments = generateComments(posts, commentPerPost);
   }
 
   public void deleteData() {
-    userRepository.deleteAll();
-    postRepository.deleteAll();
     commentRepository.deleteAll();
+    postRepository.deleteAll();
+    userDataGenerator.deleteAllUsers();
   }
 
-  public List<User> generateUser(int userCount) {
-    Faker faker = new Faker();
-    Set<String> userEmails = new HashSet<>();
-    List<User> users = new ArrayList<>();
-    for (int i = 0; i < userCount; i++) {
-      User user = User.builder()
-          .publicUserId(UUID.randomUUID().toString())
-          .userEmail(String.format("test%s@test.com", i))
-          .role(UserRole.USER)
-          .birth(LocalDate.now())
-          .introduce(faker.lorem().sentence())
-          .gender(Gender.male)
-          .profileImg(faker.internet().image())
-          .build();
-      if (!userEmails.contains(user.getUserEmail())) {
-        userEmails.add(user.getUserEmail());
-        users.add(userRepository.save(user));
-      }
-    }
-    return users;
+  public List<User> generateUsers(int userCount) {
+    return userDataGenerator.generateTestUsers(userCount);
   }
 
   public List<Post> generatePost(List<User> users, int postPerUser) {
