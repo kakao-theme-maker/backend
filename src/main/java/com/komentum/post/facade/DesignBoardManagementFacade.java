@@ -85,7 +85,7 @@ public class DesignBoardManagementFacade {
    * @return 생성된 게시글 상세 정보
    * */
   @Transactional
-  public DesignBoardDetailDto createBoardWithTags(
+  public DesignBoardDetailDto createDesignBoard(
       DesignBoardCreateDto createDto, MultipartFile previewImage, String authorId) {
     User author = userRetrieveService.findUserEntity(authorId);
     Post savedPost = boardManagementHelper.createPostAndPreviewImage(
@@ -102,7 +102,7 @@ public class DesignBoardManagementFacade {
    * @param updateDto 게시글 수정 DTO
    * */
   @Transactional
-  public DesignBoardDetailDto updateBoardWithTags(Long postId,
+  public DesignBoardDetailDto updateDesignBoard(Long postId,
       DesignBoardUpdateDto updateDto) {
     postService.updatePost(postId,
         postDtoMapper.toPostUpdateDto(updateDto));

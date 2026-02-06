@@ -60,19 +60,19 @@ public class DesignBoardController {
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     return ResponseEntity.ok(
-        designBoardManagementFacade.createBoardWithTags(createDto, profileImage,
+        designBoardManagementFacade.createDesignBoard(createDto, profileImage,
             userDetails.getUsername()));
   }
 
   /**
-   * 특정 ID의 디자인 에셋 게시글을 생성하고, 없으면 예외 처리
+   * 특정 ID의 디자인 에셋 게시글 수정, 없으면 예외 처리
    * */
   @PatchMapping("/{post_id}")
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
       @PathVariable("post_id") Long postId,
       @RequestBody DesignBoardDto.DesignBoardUpdateDto updateDto
   ) {
-    return ResponseEntity.ok(designBoardManagementFacade.updateBoardWithTags(postId, updateDto));
+    return ResponseEntity.ok(designBoardManagementFacade.updateDesignBoard(postId, updateDto));
   }
 
   /**
