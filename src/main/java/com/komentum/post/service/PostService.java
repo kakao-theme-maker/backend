@@ -36,8 +36,8 @@ public class PostService {
             String.format("failed to find post with id : %d", postId)));
   }
 
-  public List<Post> getPostsByUserEmail(String userEmail) {
-    return postRepository.findByUser_UserEmail(userEmail);
+  public List<Post> getPostsByPublicUserId(String publicUserId) {
+    return postRepository.findByUser_PublicUserId(publicUserId);
   }
 
   /**
@@ -81,13 +81,15 @@ public class PostService {
     postRepository.deleteById(targetPost.getPostId());
   }
 
-  // 유저가 작성한 게시글 목록 조회 메서드
-  public List<UserPostListResponseDto> findUserPostList(String userEmail) {
+  /**
+   * 특정 사용자의 게시글 목록 반환
+   * */
+  public List<UserPostListResponseDto> findUserPostList(String publicUserId) {
 
     // 필요한 정보 추출
-    return getPostsByUserEmail(userEmail).stream() // userEmail 로 Post 리스트 가져옴
+    return getPostsByPublicUserId(publicUserId).stream()
         .map(post -> UserPostListResponseDto.builder().postId(post.getPostId())
-            .previewImageUrl(fileManager.resolveFilePath(post.getPreviewImageName())) // url 가져오기
+            .previewImageUrl(fileManager.resolveFilePath(post.getPreviewImageName()))
             .createdAt(post.getCreatedAt())
             .updatedAt(post.getUpdatedAt())
             .build())
@@ -95,7 +97,7 @@ public class PostService {
   }
 
   // 업로드 수 count 반환 메서드
-  public int countPost(String publicUserId){
+  public int countPost(String publicUserId) {
     return postRepository.countByUser_PublicUserId(publicUserId);
   }
 }

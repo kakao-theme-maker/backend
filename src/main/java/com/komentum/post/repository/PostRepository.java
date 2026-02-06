@@ -11,6 +11,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
   //업로드 수 count
   int countByUser_PublicUserId(String userPublicUserId);
 
-  List<Post> findByUser_UserEmail(String userEmail);
+  List<Post> findByUser_PublicUserId(String publicUserId);
 
 }
