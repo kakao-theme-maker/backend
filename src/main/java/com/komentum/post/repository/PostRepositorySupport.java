@@ -1,10 +1,14 @@
 package com.komentum.post.repository;
 
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.QCategory;
+import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QPost;
+import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QUser;
+import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +24,10 @@ public class PostRepositorySupport {
   private final PreferRepository preferRepository;
   private final PreferRepositorySupport preferRepositorySupport;
 
+  /**
+   * post Id를 기반으로 Post의 aggregate 객체 반환 ( PostSummary )
+   *
+   */
   public PostSummary findPostSummaryByPostId(Long postId) {
     QPost post = QPost.post;
     QUser author = QUser.user;
@@ -37,6 +45,10 @@ public class PostRepositorySupport {
         .build();
   }
 
+  /**
+   * post의 aggregate 객체 목록 반환 ( PostSummary )
+   *
+   */
   public List<PostSummary> findPostSummaries(Pageable pageable) {
     QPost post = QPost.post;
     QUser author = QUser.user;
@@ -45,6 +57,10 @@ public class PostRepositorySupport {
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
+    return findPostSummaries(targetPosts, pageable);
+  }
+
+  public List<PostSummary> findPostSummaries(List<Post> targetPosts, Pageable pageable) {
     List<Long> postIds = targetPosts.stream().map(Post::getPostId).toList();
     Map<Long, Long> postPreferMap = preferRepositorySupport
         .findPreferMapByPostIds(postIds);
@@ -67,4 +83,17 @@ public class PostRepositorySupport {
         .fetch();
   }
 
+  public List<PostSummary> findPostSummariesOrderByPrefer(boolean desc, Pageable pageable) {
+    QPost post = QPost.post;
+    QPrefer prefer = QPrefer.prefer;
+    List<Post> targetPosts = queryFactory.select(post)
+        .from(post)
+        .leftJoin(prefer).on(prefer.post.eq(post))
+        .groupBy(post.postId)
+        .orderBy(desc ? prefer.count().desc() : prefer.count().asc())
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetch();
+    return findPostSummaries(targetPosts, pageable);
+  }
 }

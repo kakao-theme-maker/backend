@@ -6,6 +6,9 @@ import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,8 +20,10 @@ public class ThemeBoardService {
   private final ThemeBoardRepository themeBoardRepository;
 
   @Transactional(readOnly = true)
-  public List<ThemeBoard> findAllByPostIds(List<Long> postIds) {
-    return themeBoardRepository.findAllByPostIds(postIds);
+  public Map<Long, ThemeBoard> findPostThemeBoardMap(List<Long> postIds) {
+    return themeBoardRepository.findAllByPostIds(postIds)
+        .stream()
+        .collect(Collectors.toMap(ThemeBoard::findPostId, Function.identity()));
   }
 
   @Transactional(readOnly = true)
