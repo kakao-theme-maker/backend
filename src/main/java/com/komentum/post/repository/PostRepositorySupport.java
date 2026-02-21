@@ -55,4 +55,16 @@ public class PostRepositorySupport {
         .prefers(postPreferMap.get(p.getPostId()))
         .build()).toList();
   }
+
+  public List<Post> findUserSavedPost(User user) {
+    QPost post = QPost.post;
+    QCategory category = QCategory.category;
+    QCategoryPost categoryPost = QCategoryPost.categoryPost;
+    return queryFactory.select(post)
+        .from(categoryPost)
+        .join(categoryPost.category, category)
+        .where(category.owner.eq(user))
+        .fetch();
+  }
+
 }

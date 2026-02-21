@@ -1,5 +1,7 @@
 package com.komentum.post.dto;
 
+import com.komentum.post.domain.Post;
+import com.komentum.post.facade.BoardManagementHelper;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,10 +38,21 @@ public class PostDto {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class UserPostListResponseDto {
+
     Long postId;
     String previewImageUrl;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+
+    public static UserPostListResponseDto from(Post post,
+        BoardManagementHelper boardManagementHelper) {
+      return UserPostListResponseDto.builder()
+          .postId(post.getPostId())
+          .previewImageUrl(boardManagementHelper.findPreviewImageUrl(post.getPostId()))
+          .createdAt(post.getCreatedAt())
+          .updatedAt(post.getUpdatedAt())
+          .build();
+    }
   }
 
 }
