@@ -60,6 +60,9 @@ public class PostRepositorySupport {
     return findPostSummaries(targetPosts, pageable);
   }
 
+  /**
+   * post의 aggregate 객체 목록 반환 ( PostSummary )
+   * */
   public List<PostSummary> findPostSummaries(List<Post> targetPosts, Pageable pageable) {
     List<Long> postIds = targetPosts.stream().map(Post::getPostId).toList();
     Map<Long, Long> postPreferMap = preferRepositorySupport
@@ -72,6 +75,11 @@ public class PostRepositorySupport {
         .build()).toList();
   }
 
+  /**
+   * DB에서 사용자가 카테고리에 저장한 게시글 목록 조회
+   * @param user 카테고리에 게시글을 저장한 User 엔티티
+   * @return 카테고리에 저장된 게시글 목록
+   * */
   public List<Post> findUserSavedPost(User user) {
     QPost post = QPost.post;
     QCategory category = QCategory.category;
@@ -83,6 +91,12 @@ public class PostRepositorySupport {
         .fetch();
   }
 
+  /**
+   * DB에서 게시글 aggregate를 좋아요 순으로 정렬하여 조회
+   * @param desc 내림차순 여부
+   * @param pageable 페이징 정보
+   * @return 좋아요 기준으로 정렬된 PostSummary 목록
+   * */
   public List<PostSummary> findPostSummariesOrderByPrefer(boolean desc, Pageable pageable) {
     QPost post = QPost.post;
     QPrefer prefer = QPrefer.prefer;
