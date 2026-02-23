@@ -83,19 +83,6 @@ public class ThemeBoardDto {
     private String createdAt;
 
     private Long prefers;
-
-    public static ThemeBoardPreviewDto from(Post post, ThemeComponent themeComponent, User author,
-        Long prefers, String previewImageUrl) {
-      return ThemeBoardPreviewDto.builder()
-          .postId(post.getPostId())
-          .title(post.getTitle())
-          .userEmail(author.getUserEmail())
-          .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
-          .previewImageUrl(previewImageUrl)
-          .themeComponentId(themeComponent.getThemeComponentId())
-          .prefers(prefers)
-          .build();
-    }
   }
 
   @Data

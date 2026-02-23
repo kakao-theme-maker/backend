@@ -7,6 +7,7 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
+import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.mapper.ThemeBoardMapperSupport;
 import com.komentum.post.repository.PostRepositorySupport;
@@ -16,9 +17,7 @@ import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,8 +37,6 @@ public class ThemeBoardManagementFacade {
   private final ThemeRetrieveService themeRetrieveService;
   private final BoardManagementHelper boardManagementHelper;
   private final ThemeBoardMapperSupport themeBoardMapperSupport;
-
-  // mapper
   private final PostDtoMapper postDtoMapper;
 
   /**
@@ -59,6 +56,7 @@ public class ThemeBoardManagementFacade {
 
   /**
    * 페이지 기반 테마 게시글 목록 조회
+   * 기본값으로 날짜순으로 정렬
    *
    * @param pageable 페이지 기반 조회를 위한 페이지 정보 객체
    * @return ThemeBoardPreviewDto 목록
@@ -66,10 +64,9 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
-    List<PostSummary> postSummaries = postRepositorySupport.findPostSummaries(pageable);
-    List<Long> postIds = postSummaries.stream().map(PostSummary::findPostId).toList();
-    Map<Long, ThemeBoard> postThemeMap = themeBoardService.findPostThemeBoardMap(postIds);
-    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(postSummaries, postThemeMap,
+    List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreview(
+        pageable);
+    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
         boardManagementHelper);
   }
 
@@ -81,17 +78,15 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findPopularThemeBoardPreviews(Pageable pageable) {
-    List<PostSummary> postSummaries = postRepositorySupport.findPostSummariesOrderByPrefer(true,
-        pageable);
-    List<Long> postIds = postSummaries.stream().map(PostSummary::findPostId).toList();
-    Map<Long, ThemeBoard> postThemeMap = themeBoardService.findPostThemeBoardMap(postIds);
-    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(postSummaries, postThemeMap,
+    List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreviewOrderByPrefers(
+        pageable, true);
+    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
         boardManagementHelper);
   }
 
   /**
    * 임시로 사용할 추천 테마 게시글 목록 반환 기능
-   * <p>현재 현재 추천 모델이 미개발된 상황이므로, 인기 테마 목록을 사용하되, 순서를 뒤집어 차이를 두었음</p>
+   * <p>현재 현재 추천 모델이 미개발된 상황이므로, 우선 테마 목록을 좋아요 순으로 오름차순 정렬한 데이터 사용</p>
    *
    * @param pageable 페이지 정보
    * @return ThemeBoardPreviewDto 목록
@@ -99,13 +94,14 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findRecommendedThemeBoardPreviews(Pageable pageable) {
-    List<ThemeBoardPreviewDto> res = findPopularThemeBoardPreviews(pageable);
-    Collections.reverse(res);
-    return res;
+    List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreviewOrderByPrefers(
+        pageable, false);
+    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
+        boardManagementHelper);
   }
 
   /**
-   * 테마 게시글과 태그 정보 생성
+   * 테마 게시글 생성
    *
    * @param createDto    게시글 생성 정보
    * @param previewImage 게시글 대표 이미지 정보
@@ -125,7 +121,7 @@ public class ThemeBoardManagementFacade {
   }
 
   /**
-   * 테마 게시글과 태그 정보 수정
+   * 테마 게시글 수정
    *
    * @param postId    테마 게시글 ID
    * @param updateDto 게시글 수정 정보
