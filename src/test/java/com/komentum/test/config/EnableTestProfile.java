@@ -1,4 +1,4 @@
-package com.komentum.config;
+package com.komentum.test.config;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;

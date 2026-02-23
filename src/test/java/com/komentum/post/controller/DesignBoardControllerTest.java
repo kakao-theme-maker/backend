@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.config.EnableTestProfile;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
@@ -15,8 +14,9 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.PostRepository;
-import com.komentum.test.BoardDetailDataGenerator;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.BoardDetailDataGenerator;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;

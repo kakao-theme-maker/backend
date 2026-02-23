@@ -5,8 +5,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.javafaker.Faker;
 import com.komentum.auth.JwtUtils;
-import com.komentum.config.EnableTestProfile;
 import com.komentum.controller.TestController;
+import com.komentum.test.config.EnableTestProfile;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;

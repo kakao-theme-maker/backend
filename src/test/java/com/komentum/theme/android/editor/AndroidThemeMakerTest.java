@@ -5,9 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.komentum.config.EnableTestProfile;
 import com.komentum.global.utils.FileManager;
-import com.komentum.test.ThemeDataGenerator;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.ThemeDataGenerator;
 import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.android.dto.AndroidComponentDto;
 import com.komentum.theme.component.domain.ColorStyle;

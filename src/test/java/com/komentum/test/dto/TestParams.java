@@ -1,4 +1,4 @@
-package com.komentum.test;
+package com.komentum.test.dto;
 
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
