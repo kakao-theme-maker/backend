@@ -3,14 +3,14 @@ package com.komentum.post.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.config.EnableTestProfile;
 import com.komentum.post.domain.Category;
 import com.komentum.post.domain.CategoryPost;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.CategoryPostDto.CategoryPostResponse;
 import com.komentum.post.repository.CategoryPostRepository;
-import com.komentum.test.CategoryPostDataGenerator;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.CategoryPostDataGenerator;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
@@ -44,7 +44,7 @@ public class CategoryPostControllerTest {
   @BeforeEach
   public void setUp() {
     categoryPostDataGenerator.deleteAllData();
-    categoryPostDataGenerator.generateAllData(5, 5, 5, 5);
+    categoryPostDataGenerator.generateCategoriesAndPosts(5, 5, 5, 5, 5);
   }
 
   @AfterEach
