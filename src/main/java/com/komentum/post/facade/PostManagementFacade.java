@@ -13,13 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PostManagementFacade {
 
-  UserEntityFinder userEntityFinder;
-  PostService postService;
-  BoardManagementHelper boardManagementHelper;
+  private final UserEntityFinder userEntityFinder;
+  private final PostService postService;
+  private final BoardManagementHelper boardManagementHelper;
 
   /**
    * 특정 사용자가 카테고리에 저장한 게시글 목록 반환
-   *
+   * @param clientId 카테고리에 게시글을 저장한 사용자 식별자
+   * @return UserPostListResponseDto 목록
    */
   @Transactional
   public List<UserPostListResponseDto> findUserSavedPostsByCategory(String clientId) {
