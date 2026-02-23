@@ -45,6 +45,7 @@ public class CategoryPostControllerTest {
   public void setUp() {
     categoryPostDataGenerator.deleteAllData();
     categoryPostDataGenerator.generateCategoriesAndPosts(5, 5, 5, 5, 5);
+    categoryPostDataGenerator.generateCategoryUnregisteredPosts(1);
   }
 
   @AfterEach

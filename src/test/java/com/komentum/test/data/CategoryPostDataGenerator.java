@@ -40,13 +40,16 @@ public class CategoryPostDataGenerator {
     this.categories = generateCategoryData(categoryPerUser, postTestDataGenerator.users);
     this.categoryPosts = generateCategoryPostData(postPerCategory, categories, getPosts());
     this.categoryRegisteredPosts = postTestDataGenerator.posts;
-    this.categoryUnregisteredPosts = postTestDataGenerator.generatePost(getUsers(), 3);
   }
 
   public void deleteAllData() {
     postTestDataGenerator.deleteData();
     categoryPostRepository.deleteAll();
     categoryRepository.deleteAll();
+  }
+
+  public void generateCategoryUnregisteredPosts(int postPerUser) {
+    this.categoryUnregisteredPosts = postTestDataGenerator.generatePost(getUsers(), postPerUser);
   }
 
   public List<Category> generateCategoryData(int categoryPerUser, List<User> owners) {
