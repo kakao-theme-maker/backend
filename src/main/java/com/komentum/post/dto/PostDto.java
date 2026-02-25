@@ -48,7 +48,7 @@ public class PostDto {
         BoardManagementHelper boardManagementHelper) {
       return UserPostListResponseDto.builder()
           .postId(post.getPostId())
-          .previewImageUrl(boardManagementHelper.findPreviewImageUrl(post.getPostId()))
+          .previewImageUrl(boardManagementHelper.findPreviewImageUrl(post.getPreviewImageName()))
           .createdAt(post.getCreatedAt())
           .updatedAt(post.getUpdatedAt())
           .build();

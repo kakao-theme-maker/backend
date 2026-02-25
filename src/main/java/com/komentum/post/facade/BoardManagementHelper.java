@@ -47,9 +47,4 @@ public class BoardManagementHelper {
   public String findPreviewImageUrl(String fileName) {
     return fileManager.resolveFilePath(fileName);
   }
-
-  public String findPreviewImageUrl(Long postId) {
-    Post targetPost = postService.getPostByPostId(postId);
-    return fileManager.resolveFilePath(targetPost.getPreviewImageName());
-  }
 }
