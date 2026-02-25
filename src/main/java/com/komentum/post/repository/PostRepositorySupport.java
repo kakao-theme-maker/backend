@@ -4,7 +4,6 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QCategory;
 import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QPost;
-import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QUser;
@@ -86,28 +85,9 @@ public class PostRepositorySupport {
     QCategoryPost categoryPost = QCategoryPost.categoryPost;
     return queryFactory.select(post)
         .from(categoryPost)
+        .join(categoryPost.post, post)
         .join(categoryPost.category, category)
         .where(category.owner.eq(user))
         .fetch();
-  }
-
-  /**
-   * DB에서 게시글 aggregate를 좋아요 순으로 정렬하여 조회
-   * @param desc 내림차순 여부
-   * @param pageable 페이징 정보
-   * @return 좋아요 기준으로 정렬된 PostSummary 목록
-   * */
-  public List<PostSummary> findPostSummariesOrderByPrefer(boolean desc, Pageable pageable) {
-    QPost post = QPost.post;
-    QPrefer prefer = QPrefer.prefer;
-    List<Post> targetPosts = queryFactory.select(post)
-        .from(post)
-        .leftJoin(prefer).on(prefer.post.eq(post))
-        .groupBy(post.postId)
-        .orderBy(desc ? prefer.count().desc() : prefer.count().asc())
-        .offset(pageable.getOffset())
-        .limit(pageable.getPageSize())
-        .fetch();
-    return findPostSummaries(targetPosts, pageable);
   }
 }
