@@ -96,7 +96,7 @@ public class PostTestDataGenerator {
       for (int j = 1; j <= maxPreferPerPost - i; j++) {
         prefers.add(Prefer.builder()
             .post(post)
-            .user(users.get(users.size() % j))
+            .user(users.get(j % users.size()))
             .build());
       }
     }
