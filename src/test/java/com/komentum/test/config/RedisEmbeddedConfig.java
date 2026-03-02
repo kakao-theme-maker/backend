@@ -1,4 +1,4 @@
-package com.komentum.config;
+package com.komentum.test.config;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

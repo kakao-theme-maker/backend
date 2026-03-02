@@ -1,6 +1,5 @@
-package com.komentum.test;
+package com.komentum.test.data;
 
-import com.komentum.config.PostTestDataGenerator;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
@@ -11,9 +10,11 @@ import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Getter
 @Component
 public class BoardDetailDataGenerator {
 
@@ -38,8 +39,10 @@ public class BoardDetailDataGenerator {
   private final List<ThemeComponent> nonThemeBoardThemeComponents = new ArrayList<>();
 
   // theme board generator
-  public void generateThemeBoards(int userCount, int postPerUsers, int commentPerPosts) {
-    postTestDataGenerator.generateData(userCount, postPerUsers, commentPerPosts);
+  public void generateThemeBoards(int userCount, int postPerUsers, int commentPerPosts,
+      int maxPreferPerPost) {
+    postTestDataGenerator.generateDataWithPrefer(userCount, postPerUsers, commentPerPosts,
+        maxPreferPerPost);
     themeDataGenerator.generateTestData(getPosts().size());
     List<Post> allPosts = getPosts();
     List<ThemeComponent> allThemeComponents = themeDataGenerator.initialThemes;
@@ -61,10 +64,6 @@ public class BoardDetailDataGenerator {
     postTestDataGenerator.deleteData();
     themeBoards.clear();
     nonThemeBoardThemeComponents.clear();
-  }
-
-  public List<ThemeComponent> getNonThemeBoardThemeComponents() {
-    return nonThemeBoardThemeComponents;
   }
 
   // design board generator
@@ -90,14 +89,6 @@ public class BoardDetailDataGenerator {
     postTestDataGenerator.deleteData();
     designBoards.clear();
     nonDesignBoardDesignComponents.clear();
-  }
-
-  public List<DesignBoard> getDesignBoards() {
-    return designBoards;
-  }
-
-  public List<DesignComponent> getNonDesignBoardDesignComponents() {
-    return nonDesignBoardDesignComponents;
   }
 
   // common

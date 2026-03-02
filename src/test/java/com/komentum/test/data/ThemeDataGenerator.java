@@ -1,4 +1,4 @@
-package com.komentum.test;
+package com.komentum.test.data;
 
 import com.github.javafaker.Faker;
 import com.komentum.theme.component.domain.ColorStyle;

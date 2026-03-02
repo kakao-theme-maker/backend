@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -66,6 +67,7 @@ public class TestDataGenerator {
     for (int i = 0; i < size; i++) {
       User user = User.builder()
           .userEmail(faker.internet().emailAddress())
+          .publicUserId(UUID.randomUUID().toString())
           .role(UserRole.USER)
           .birth(LocalDate.now().minusYears(i))
           .gender(i % 2 == 0 ? Gender.male : Gender.female)

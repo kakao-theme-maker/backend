@@ -4,13 +4,14 @@ package com.komentum.user.controller;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.auth.JwtUtils;
-import com.komentum.config.EnableTestProfile;
 import com.komentum.global.dto.CustomResponse;
 import com.komentum.post.domain.Post;
 import com.komentum.post.repository.PostRepository;
-import com.komentum.test.UserDataGenerator;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.UserDataGenerator;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserResponseDto;
@@ -18,7 +19,6 @@ import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.UserRepository;
 import com.komentum.user.service.UserRetrieveService;
 import java.time.LocalDate;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +30,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 @EnableTestProfile
 @AutoConfigureMockMvc
@@ -38,7 +37,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 public class UserRetrieveControllerTest {
 
   String email = "admin1@gmail.com";
-  String password ="qwer123!";
+  String password = "qwer123!";
 
   @Autowired
   private MockMvc mockMvc;
@@ -58,7 +57,7 @@ public class UserRetrieveControllerTest {
   User user;
 
   @BeforeEach
-  void setUp(){
+  void setUp() {
     userDataGenerator.deleteAllUsers();
     userDataGenerator.generateRetrieveTestUser(email, password);
     addPostForUser(email);
@@ -67,7 +66,7 @@ public class UserRetrieveControllerTest {
 
 
   @AfterEach
-  void tearDown(){
+  void tearDown() {
     userDataGenerator.deleteAllUsers();
   }
 
@@ -86,7 +85,7 @@ public class UserRetrieveControllerTest {
 
   @Test
   @DisplayName("유저 조회")
-  void inquiryUserTest() throws Exception{
+  void inquiryUserTest() throws Exception {
     //given
     String userEmail = "admin1@gmail.com";
     String userName = "admin";
@@ -94,8 +93,7 @@ public class UserRetrieveControllerTest {
     int uploads = 1;
     int followers = 0;
     int following = 0;
-   // createdAt은 생성된 시간으로 나오기 때문에, Test 불가
-
+    // createdAt은 생성된 시간으로 나오기 때문에, Test 불가
 
     UserResponseDto userResponseDto =
         UserResponseDto.builder()
@@ -112,8 +110,7 @@ public class UserRetrieveControllerTest {
     //when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users")
         .param("userPublicID", user.getPublicUserId())
-        .header("Authorization","Bearer " + token);
-
+        .header("Authorization", "Bearer " + token);
 
     //then
     String response = mockMvc.perform(request)
@@ -122,7 +119,8 @@ public class UserRetrieveControllerTest {
 
     //UserInquiryResponseDto는 래핑된 값
     CustomResponse<UserResponseDto> wrapper =
-        objectMapper.readValue(response, new TypeReference<>() {});
+        objectMapper.readValue(response, new TypeReference<>() {
+        });
 
     UserResponseDto result = wrapper.getData();
 
@@ -134,13 +132,12 @@ public class UserRetrieveControllerTest {
 
   @Test
   @DisplayName("유저 정보 수정")
-  void updateUserTest() throws Exception{
+  void updateUserTest() throws Exception {
     // given
     String updatedUserName = "updatedName";
     String updatedUserProfileUrl = "https://updatedUrl";
     Gender updatedGender = Gender.male;
-    LocalDate updatedBirth = LocalDate.of(2000,1,1);
-
+    LocalDate updatedBirth = LocalDate.of(2000, 1, 1);
 
     UserUpdateDto updateDto = UserUpdateDto.builder()
         .name(updatedUserName)
@@ -155,14 +152,15 @@ public class UserRetrieveControllerTest {
         MockMvcRequestBuilders.patch("/api/users/me")
             .content(objectMapper.writeValueAsString(updateDto))
             .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer "+token);
+            .header("Authorization", "Bearer " + token);
 
     String response = mockMvc.perform(request)
         .andExpect(status().is2xxSuccessful())
         .andReturn().getResponse().getContentAsString();
     //then
     CustomResponse<UserResponseDto> wrapper =
-        objectMapper.readValue(response, new TypeReference<>() {});
+        objectMapper.readValue(response, new TypeReference<>() {
+        });
 
     UserResponseDto result = wrapper.getData();
 

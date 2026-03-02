@@ -1,0 +1,87 @@
+package com.komentum.post.repository;
+
+import com.komentum.post.domain.QPost;
+import com.komentum.post.domain.QPrefer;
+import com.komentum.post.domain.QThemeBoard;
+import com.komentum.post.dto.query.QThemeBoardQuery_Preview;
+import com.komentum.post.dto.query.ThemeBoardQuery.Preview;
+import com.komentum.post.service.enums.PostSortType;
+import com.komentum.theme.theme.domain.QThemeComponent;
+import com.komentum.user.domain.QUser;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.List;
+import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
+
+@Repository
+@RequiredArgsConstructor
+public class ThemeBoardRepositorySupport {
+
+  private final JPAQueryFactory queryFactory;
+
+  /**
+   * <p>DTO Projection을 활용하여 ThemeBoardQuery.Preview 목록 조회</p>
+   * <b>주의 : DTO Projection이므로 영속성 컨텍스트에 Entity가 저장되지 않음</b>
+   * @param pageable 페이징 정보
+   * @param sortTypeList 정렬 기준 목록 ( 정렬 기준 여러개 사용 가능 )
+   * @return ThemeBoardQuery.preview 목록 반환
+   * */
+  public List<Preview> findThemeBoardQueryPreviewList(Pageable pageable,
+      List<PostSortType> sortTypeList) {
+    QPost post = QPost.post;
+    QThemeBoard themeBoard = QThemeBoard.themeBoard;
+    QPrefer prefer = QPrefer.prefer;
+    QUser user = QUser.user;
+    QThemeComponent themeComponent = QThemeComponent.themeComponent;
+    NumberExpression<Long> preferCount = prefer.countDistinct();
+    // sort type
+    List<? extends OrderSpecifier<?>> orderSpecifiers = getOrderSpecifiers(sortTypeList, post,
+        preferCount);
+    // generate JPQL
+    return queryFactory.select(
+            new QThemeBoardQuery_Preview(
+                post.postId,
+                themeComponent.themeComponentId,
+                post.title,
+                post.previewImageName,
+                user.userEmail,
+                post.createdAt,
+                preferCount
+            )
+        )
+        .from(themeBoard)
+        .join(themeBoard.themeComponent, themeComponent)
+        .join(themeBoard.post, post)
+        .join(post.user, user)
+        .leftJoin(prefer).on(prefer.post.eq(post))
+        .groupBy(
+            post.postId,
+            themeBoard.themeBoardId,
+            themeComponent.themeComponentId,
+            user.userId
+        )
+        .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetch();
+  }
+
+  /**
+   * 테마 게시글 정렬 기준 생성
+   * */
+  private List<? extends OrderSpecifier<?>> getOrderSpecifiers(
+      List<PostSortType> sortTypeList, QPost post,
+      NumberExpression<Long> preferCount) {
+    return sortTypeList.stream()
+        .flatMap(sortType -> switch (sortType) {
+          case DEFAULT -> Stream.of(post.createdAt.desc());
+          case PREFER_ASC -> Stream.of(preferCount.asc());
+          case PREFER_DESC -> Stream.of(preferCount.desc());
+        })
+        .toList();
+  }
+}

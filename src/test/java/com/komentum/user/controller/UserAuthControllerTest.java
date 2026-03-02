@@ -1,16 +1,17 @@
 package com.komentum.user.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.auth.JwtUtils;
-import com.komentum.config.EnableTestProfile;
-import com.komentum.test.UserDataGenerator;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.UserDataGenerator;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
-import com.komentum.user.service.UserAuthService;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,124 +25,120 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @EnableTestProfile
 @AutoConfigureMockMvc
 @SpringBootTest
 class UserAuthControllerTest {
-    String email = "admin1@gmail.com";
-    String password ="qwer123!";
 
-    @Autowired
-    private MockMvc mockMvc;
+  String email = "admin1@gmail.com";
+  String password = "qwer123!";
 
-    @Autowired
-    private ObjectMapper objectMapper;
+  @Autowired
+  private MockMvc mockMvc;
 
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired
+  private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserDataGenerator userDataGenerator;
+  @Autowired
+  private UserRepository userRepository;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+  @Autowired
+  private UserDataGenerator userDataGenerator;
 
-    User user;
+  @Autowired
+  private JwtUtils jwtUtils;
+  @Autowired
+  private BCryptPasswordEncoder passwordEncoder;
 
-    @BeforeEach
-    void setUp(){
-        userDataGenerator.deleteAllUsers();
-        userDataGenerator.generateTestLocalUser(email, password);
-        user = userRepository.findByUserEmail(email).orElseThrow();
-    }
+  User user;
 
-    @AfterEach
-    void tearDown(){
-        userDataGenerator.deleteAllUsers();
-    }
+  @BeforeEach
+  void setUp() {
+    userDataGenerator.deleteAllUsers();
+    userDataGenerator.generateTestLocalUser(email, password);
+    user = userRepository.findByUserEmail(email).orElseThrow();
+  }
 
-    @Autowired
-    private UserAuthController userAuthController;
+  @AfterEach
+  void tearDown() {
+    userDataGenerator.deleteAllUsers();
+  }
 
-    @Test
-    @DisplayName("회원가입")
-    void signUpWithLocalTest() throws Exception{
-        //given
-        String signUpEmail = "admin1@gmail.com";
-        String signUpPassword ="qwer123!";
-        LocalLoginRequestDto localLoginRequestDto
-                = LocalLoginRequestDto.builder()
-                .email(signUpEmail)
-                        .password(signUpPassword)
-                                .build();
-        //when
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/auth/local/sign-up")
-                .content(objectMapper.writeValueAsString(localLoginRequestDto))
-                .contentType(MediaType.APPLICATION_JSON); //웬만하면 하는 게 좋음
-        //then
-        mockMvc.perform(request)
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        assertThat(userRepository.findByUserEmail(email)).isPresent();
-    }
+  @Autowired
+  private UserAuthController userAuthController;
 
-    @Test
-    @DisplayName("로그인 jwt 토큰 검증")
-    void signInWithLocalTest() throws Exception {
-        //given
-        LocalLoginRequestDto localLoginRequestDto =
-                LocalLoginRequestDto.builder()
-                        .email(email)
-                        .password(password)
-                        .build();
-        //when
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/auth/local/sign-in")
-                .content(objectMapper.writeValueAsString(localLoginRequestDto))
-                .contentType(MediaType.APPLICATION_JSON);
+  @Test
+  @DisplayName("회원가입")
+  void signUpWithLocalTest() throws Exception {
+    //given
+    String signUpEmail = "admin1@gmail.com";
+    String signUpPassword = "qwer123!";
+    LocalLoginRequestDto localLoginRequestDto
+        = LocalLoginRequestDto.builder()
+        .email(signUpEmail)
+        .password(signUpPassword)
+        .build();
+    //when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/auth/local/sign-up")
+        .content(objectMapper.writeValueAsString(localLoginRequestDto))
+        .contentType(MediaType.APPLICATION_JSON); //웬만하면 하는 게 좋음
+    //then
+    mockMvc.perform(request)
+        .andExpect(status().is2xxSuccessful())
+        .andReturn().getResponse().getContentAsString();
+    assertThat(userRepository.findByUserEmail(email)).isPresent();
+  }
 
-        //then
-        UserAuthResponse userAuthResponse = objectMapper.readValue((mockMvc.perform(request)
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString()), UserAuthResponse.class );
-
-        //jwt token이 정상적인가
-        assertThat(jwtUtils.validateToken(userAuthResponse.getAccessToken())).isTrue();
-
-    }
-
-    @Test
-    @DisplayName("비밀번호 변경")
-    void changePassword() throws Exception{
-        //given
-        String userEmail = "admin1@gmail.com";
-        String newPassword = "123qwer!";
-
-        PasswordChangeRequsetDto requsetDto = PasswordChangeRequsetDto.builder().
-            currentPassword(password)
-            .newPassword(newPassword)
+  @Test
+  @DisplayName("로그인 jwt 토큰 검증")
+  void signInWithLocalTest() throws Exception {
+    //given
+    LocalLoginRequestDto localLoginRequestDto =
+        LocalLoginRequestDto.builder()
+            .email(email)
+            .password(password)
             .build();
+    //when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/auth/local/sign-in")
+        .content(objectMapper.writeValueAsString(localLoginRequestDto))
+        .contentType(MediaType.APPLICATION_JSON);
 
-        String token = jwtUtils.generateAccessToken(user.getPublicUserId());
+    //then
+    UserAuthResponse userAuthResponse = objectMapper.readValue((mockMvc.perform(request)
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString()), UserAuthResponse.class);
 
-        //when
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.patch("/api/users/me/password")
-            .content(objectMapper.writeValueAsString(requsetDto))
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer "+token);
+    //jwt token이 정상적인가
+    assertThat(jwtUtils.validateToken(userAuthResponse.getAccessToken())).isTrue();
 
-        //then
-        mockMvc.perform(request)
-            .andExpect(status().is2xxSuccessful());
+  }
 
-        User updatedUSer = userRepository.findByUserEmail(userEmail).orElseThrow();
+  @Test
+  @DisplayName("비밀번호 변경")
+  void changePassword() throws Exception {
+    //given
+    String userEmail = "admin1@gmail.com";
+    String newPassword = "123qwer!";
 
+    PasswordChangeRequsetDto requsetDto = PasswordChangeRequsetDto.builder().
+        currentPassword(password)
+        .newPassword(newPassword)
+        .build();
 
-        assertThat(updatedUSer.matchPassword(newPassword, passwordEncoder)).isTrue();
-    }
+    String token = jwtUtils.generateAccessToken(user.getPublicUserId());
+
+    //when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.patch("/api/users/me/password")
+        .content(objectMapper.writeValueAsString(requsetDto))
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + token);
+
+    //then
+    mockMvc.perform(request)
+        .andExpect(status().is2xxSuccessful());
+
+    User updatedUSer = userRepository.findByUserEmail(userEmail).orElseThrow();
+
+    assertThat(updatedUSer.matchPassword(newPassword, passwordEncoder)).isTrue();
+  }
 }

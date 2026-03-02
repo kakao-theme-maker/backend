@@ -1,4 +1,4 @@
-package com.komentum.config;
+package com.komentum.test.config;
 
 import com.komentum.global.utils.FileManager;
 import com.komentum.global.utils.S3FileManager;

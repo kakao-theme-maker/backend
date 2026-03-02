@@ -5,19 +5,21 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.config.EnableTestProfile;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.repository.PostRepository;
-import com.komentum.test.BoardDetailDataGenerator;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.BoardDetailDataGenerator;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.test.dto.TestParams;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
@@ -34,8 +36,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 @SpringBootTest
 @EnableTestProfile
@@ -57,10 +57,12 @@ class ThemeBoardControllerTest {
   @Autowired
   private FileManager fileManager;
 
+  private final int maxPreferPerPost = 5;
+
   @BeforeEach
   void setUp() {
     boardDetailDataGenerator.deleteThemeBoards();
-    boardDetailDataGenerator.generateThemeBoards(5, 2, 2);
+    boardDetailDataGenerator.generateThemeBoards(5, 2, 2, maxPreferPerPost);
   }
 
   @AfterEach
@@ -68,14 +70,18 @@ class ThemeBoardControllerTest {
     boardDetailDataGenerator.deleteThemeBoards();
   }
 
+  public void assertThemeBoardPreview(ThemeBoardPreviewDto dto) {
+    assertThat(dto.getPostId()).isNotNull();
+    assertThat(dto.getThemeComponentId()).isNotNull();
+    assertThat(dto.getPrefers()).isGreaterThanOrEqualTo(0);
+    assertThat(dto.getTitle()).isNotBlank();
+    assertThat(dto.getPreviewImageUrl()).isNotBlank();
+    assertThat(dto.getCreatedAt()).isNotBlank();
+  }
+
   public void assertThemeBoardPreviewList(List<ThemeBoardPreviewDto> previewDtoList) {
     for (ThemeBoardPreviewDto dto : previewDtoList) {
-      assertThat(dto.getPostId()).isNotNull();
-      assertThat(dto.getThemeComponentId()).isNotNull();
-      assertThat(dto.getPrefers()).isGreaterThanOrEqualTo(0);
-      assertThat(dto.getTitle()).isNotBlank();
-      assertThat(dto.getPreviewImageUrl()).isNotBlank();
-      assertThat(dto.getCreatedAt()).isNotBlank();
+      assertThemeBoardPreview(dto);
     }
   }
 
@@ -92,16 +98,13 @@ class ThemeBoardControllerTest {
   }
 
   @Test
-  @DisplayName("when send request with page number and size, then return proper board data list")
+  @DisplayName("페이지 기반 테마 게시글 목록 조회 성공 테스트")
   void getPosts_success() throws Exception {
     // given
     int pageNumber = 0;
     int pageSize = 5;
     String requestPath = "/api/theme-boards";
     User client = boardDetailDataGenerator.getUsers().get(0);
-    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    params.add("pageNumber", String.valueOf(pageNumber));
-    params.add("pageSize", String.valueOf(pageSize));
     // stub
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
@@ -110,7 +113,7 @@ class ThemeBoardControllerTest {
         MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
             .mockMvc(mockMvc)
             .path(requestPath)
-            .params(params)
+            .params(TestParams.withPaging(pageNumber, pageSize))
             .httpMethod(HttpMethod.GET)
             .clientDto(TestClientDto.fromEntity(client))
             .statusCode(200)
@@ -124,7 +127,94 @@ class ThemeBoardControllerTest {
   }
 
   @Test
-  @DisplayName("success test of create post")
+  @DisplayName("인기 테마 게시글 목록 페이징 기반 조회 성공 테스트")
+  void findPopularThemeBoards_success() throws Exception {
+    // given
+    int pageNumber = 0;
+    int pageSize = 5;
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/theme-boards/popular")
+            .params(TestParams.withPaging(pageNumber, pageSize))
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response).hasSize(pageSize);
+    long lastPrefer = response.get(0).getPrefers();
+    assertThat(lastPrefer).isEqualTo(maxPreferPerPost);
+    for (ThemeBoardPreviewDto res : response) {
+      assertThat(res.getPrefers()).isLessThanOrEqualTo(lastPrefer);
+      assertThemeBoardPreview(res);
+    }
+  }
+
+  @Test
+  @DisplayName("추천 테마 게시글 목록 페이징 기반 조회 성공 테스트 ( 임시 기능 )")
+  void findRecommendedThemeBoards_success() throws Exception {
+    // given
+    int pageNumber = 0;
+    int pageSize = 5;
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/theme-boards/recommended")
+            .params(TestParams.withPaging(pageNumber, pageSize))
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response).hasSize(pageSize);
+    assertThemeBoardPreviewList(response);
+  }
+
+  @Test
+  @DisplayName("테마 게시글 상세 조회 성공 테스트")
+  void findThemeBoardByPostId_success() throws Exception {
+    // given
+    ThemeBoard targetThemeBoard = boardDetailDataGenerator.getThemeBoards().get(0);
+    Long postId = targetThemeBoard.getPost().getPostId();
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    ThemeBoardDetailDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, ThemeBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .path(String.format("/api/theme-boards/%d", postId))
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThemeBoardDetail(response);
+  }
+
+  @Test
+  @DisplayName("테마 게시글 생성 성공 테스트")
   void createPost_success() throws Exception {
     // given
     String requestPath = "/api/theme-boards";
@@ -167,8 +257,8 @@ class ThemeBoardControllerTest {
   }
 
   @Test
-  @DisplayName("success test of update post")
-  void updatePost() throws Exception {
+  @DisplayName("테마 게시글 수정 성공 테스트")
+  void updatePost_success() throws Exception {
     // given
     Post toUpdate = boardDetailDataGenerator.getPosts().get(0);
     String requestPath = String.format("/api/theme-boards/%d", toUpdate.getPostId());
@@ -197,8 +287,8 @@ class ThemeBoardControllerTest {
   }
 
   @Test
-  @DisplayName("success test of delete post")
-  void deletePost() throws Exception {
+  @DisplayName("테마 게시글 삭제 성공 테스트")
+  void deletePost_success() throws Exception {
     // given
     Post toDelete = boardDetailDataGenerator.getPosts().get(0);
     User author = toDelete.getUser();

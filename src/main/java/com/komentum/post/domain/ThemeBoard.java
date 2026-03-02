@@ -23,7 +23,7 @@ public class ThemeBoard {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long ThemeBoardId;
+  private Long themeBoardId;
 
   @OneToOne
   @JoinColumn(name = "post_id", nullable = false, unique = true)

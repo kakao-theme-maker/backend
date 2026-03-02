@@ -5,13 +5,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.config.EnableTestProfile;
-import com.komentum.config.PostTestDataGenerator;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.CategoryPostDataGenerator;
+import com.komentum.test.data.PostTestDataGenerator;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
@@ -44,17 +45,25 @@ public class UserPostControllerTest {
   private PostTestDataGenerator postTestDataGenerator;
 
   @Autowired
+  private CategoryPostDataGenerator categoryPostDataGenerator;
+
+  @Autowired
   MockMvcUtils mockMvcUtils;
+
+  private final int postPerUser = 6;
+  private final int postPerCategory = 6;
+  private final int categoryPerUser = 1;
 
   @BeforeEach
   void setUp() {
-    postTestDataGenerator.deleteData();
-    postTestDataGenerator.generateData(1, 6, 0);
+    categoryPostDataGenerator.deleteAllData();
+    categoryPostDataGenerator.generateCategoriesAndPosts(1, postPerUser, 5, categoryPerUser,
+        postPerCategory);
   }
 
   @AfterEach
   void tearDown() {
-    postTestDataGenerator.deleteData();
+    categoryPostDataGenerator.deleteAllData();
   }
 
   public void assertUserPostListResponseDto(UserPostListResponseDto responseDto,
@@ -76,9 +85,9 @@ public class UserPostControllerTest {
     //given
     User targetUser = postTestDataGenerator.getUsers().get(0);
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
+    // stub
     given(fileManager.resolveFilePath(any()))
         .willReturn(expectedPreviewImageUrl);
-
     //when
     List<UserPostListResponseDto> result = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
@@ -91,13 +100,38 @@ public class UserPostControllerTest {
             })
             .build()
     );
-
     //then
-    // 유저 게시글 목록 전부 반환하는 지 확인
-    assertThat(result).hasSize(6);
-    // postId, 생성&수정 시간, previewImageUrl 반환하는 지 확인
+    assertThat(result).hasSize(postPerUser);
     for (UserPostListResponseDto res : result) {
       assertUserPostListResponseDto(res, expectedPreviewImageUrl);
     }
   }
+
+  @Test
+  @DisplayName("사용자가 카테고리에 저장한 게시글 목록 반환")
+  void findSavedPostList_success() throws Exception {
+    // given
+    User client = postTestDataGenerator.getUsers().get(0);
+    String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
+    // stub
+    given(fileManager.resolveFilePath(any()))
+        .willReturn(expectedPreviewImageUrl);
+    // when
+    List<UserPostListResponseDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me/saved-posts")
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response).hasSize(categoryPerUser * postPerCategory);
+    for (UserPostListResponseDto res : response) {
+      assertUserPostListResponseDto(res, expectedPreviewImageUrl);
+    }
+  }
+
 }

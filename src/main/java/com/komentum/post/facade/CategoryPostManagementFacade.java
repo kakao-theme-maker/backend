@@ -20,9 +20,11 @@ public class CategoryPostManagementFacade {
 
   /**
    * 카테고리에 게시글이 있으면 유지, 없으면 추가
+   *
    * @param categoryId 카테고리 ID
-   * @param postId 게시글 ID
-   * */
+   * @param postId     게시글 ID
+   *
+   */
   @Transactional
   public CategoryPostResponse registerPostOnCategory(Long categoryId, Long postId) {
     Category targetCategory = categoryService.findById(categoryId);
@@ -33,9 +35,11 @@ public class CategoryPostManagementFacade {
 
   /**
    * 카테고리에 있는 게시글 제거하고, 제거할 카테고리-게시글 정보가 없으면 예외 발생
+   *
    * @param categoryId 게시글을 제외할 카테고리 식별자
-   * @param postId 카테고리에서 제외할 게시글 식별자
-   * */
+   * @param postId     카테고리에서 제외할 게시글 식별자
+   *
+   */
   @Transactional
   public void deletePostFromCategory(Long categoryId, Long postId) {
     categoryPostService.deleteCategoryPost(categoryId, postId);

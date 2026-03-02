@@ -3,10 +3,10 @@ package com.komentum.theme.theme.controller;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.komentum.config.EnableTestProfile;
 import com.komentum.test.MockMvcUtils;
-import com.komentum.test.ThemeDataGenerator;
-import com.komentum.test.UserDataGenerator;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.ThemeDataGenerator;
+import com.komentum.test.data.UserDataGenerator;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
