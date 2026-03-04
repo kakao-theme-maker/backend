@@ -1,16 +1,12 @@
 x-common-variables: &common-variables
-  EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka/
   SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/${MYSQL_DATABASE}
   SPRING_DATASOURCE_USERNAME: root
   SPRING_DATA_REDIS_HOST: redis
   SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-  GATEWAY_SERVICE_URL: http://localhost:28080
 
 services:
   backend:
-    build:
-      dockerfile: Dockerfile
-      context: ..
+    image: louie8821/kakao-theme-maker:v1-dev
     container_name: backend
     restart: unless-stopped
     env_file:

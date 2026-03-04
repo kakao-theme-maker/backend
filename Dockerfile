@@ -1,28 +1,28 @@
 # build stage
-FROM openjdk:17-jdk-slim AS builder
+FROM eclipse-temurin:17-jdk AS builder
 LABEL authors="kym8821"
 ARG CONFIG_MODULE="backend_config"
 # copy settings
-COPY gradlew /app/
-COPY gradle /app/gradle
-COPY build.gradle /app/
-COPY docker/docker-settings.gradle /app/settings.gradle
-# copy code, secrets, common modules
-COPY src /app/src
-COPY ${CONFIG_MODULE} /app/${CONFIG_MODULE}
-# build and copy jar file
 WORKDIR /app
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
 RUN chmod +x gradlew
-RUN ./gradlew build --build-cache
-RUN ls -la build/libs
-RUN cp build/libs/*.jar /app.jar
+# 의존성 다운로드
+RUN ./gradlew build -x test --no-daemon
+# 실제 소스코드와 설정파일 복사
+COPY src src
+COPY ${CONFIG_MODULE} ${CONFIG_MODULE}
+# build and copy jar file
+RUN ./gradlew build --no-daemon
+RUN cp build/libs/kakao-theme-maker.jar /app.jar
 
 # runtime stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=builder ./app.jar app.jar
 # install docker
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL https://get.docker.com | sh
-ENTRYPOINT ["java", "-XX:-UseContainerSupport", "-jar", "app.jar"]
+RUN apk add --no-cache docker-cli
+# run backend container
+COPY --from=builder ./app.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
