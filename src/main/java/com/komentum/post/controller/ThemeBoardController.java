@@ -7,6 +7,7 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.facade.ThemeBoardManagementFacade;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class ThemeBoardController {
    *
    */
   @GetMapping
+  @Operation(summary = "인증된 사용자가 테마 게시글 목록을 조회한다")
   public ResponseEntity<List<ThemeBoardPreviewDto>> findThemeBoards(
       @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
     return ResponseEntity.ok(
@@ -50,6 +52,7 @@ public class ThemeBoardController {
    *
    */
   @GetMapping("/popular")
+  @Operation(summary = "인증된 사용자가 인기 테마 게시글 목록을 조회한다")
   public ResponseEntity<List<ThemeBoardPreviewDto>> findPopularThemeBoards(
       @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
     return ResponseEntity.ok(
@@ -62,6 +65,7 @@ public class ThemeBoardController {
    *
    */
   @GetMapping("/recommended")
+  @Operation(summary = "인증된 사용자가 추천 테마 게시글 목록을 조회한다 ( 현재 임시 데이터 제공중 )")
   public ResponseEntity<List<ThemeBoardPreviewDto>> findRecommendedThemeBoards(
       @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
     return ResponseEntity.ok(
@@ -77,6 +81,7 @@ public class ThemeBoardController {
    *
    */
   @GetMapping("/{post_id}")
+  @Operation(summary = "인증된 사용자가 ID=post_id인 게시글을 상세 조회한다")
   public ResponseEntity<ThemeBoardDetailDto> findThemeBoardByPostId(
       @PathVariable("post_id") Long postId) {
     return ResponseEntity.ok(themeBoardManagementFacade.findThemeBoardDetail(postId));
@@ -90,6 +95,7 @@ public class ThemeBoardController {
    *
    */
   @PostMapping
+  @Operation(summary = "인증된 사용자가 테마 게시글을 생성한다")
   public ResponseEntity<ThemeBoardDetailDto> createPost(
       @RequestPart("board_info") ThemeBoardCreateDto createDto,
       @RequestPart("preview_image") MultipartFile profileImage,
@@ -107,6 +113,7 @@ public class ThemeBoardController {
    *
    */
   @PutMapping("/{post_id}")
+  @Operation(summary = "인증된 사용자가 자신이 소유한 ID=post_id인 테마 게시글을 수정한다")
   public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable("post_id") Long postId,
       @RequestBody ThemeBoardUpdateDto updateDto) {
     return ResponseEntity.ok(
@@ -120,6 +127,7 @@ public class ThemeBoardController {
    *
    */
   @DeleteMapping("/{post_id}")
+  @Operation(summary = "인증된 사용자가 자신이 소유한 ID=post_id인 테마 게시글을 삭제한다")
   public ResponseEntity<Void> deletePost(@PathVariable("post_id") Long postId) {
     themeBoardManagementFacade.deleteThemeBoard(postId);
     return ResponseEntity.noContent().build();
