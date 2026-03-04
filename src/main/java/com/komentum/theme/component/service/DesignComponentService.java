@@ -47,10 +47,10 @@ public class DesignComponentService {
 
   // READ
   @Transactional(readOnly = true)
-  public DesignComponentDto getDesignComponentById(Integer id) {
-    DesignComponent component = designComponentRepository.findById(id)
+  public DesignComponentDto getDesignComponentById(Integer designComponentId) {
+    DesignComponent component = designComponentRepository.findById(designComponentId)
         .orElseThrow(
-            () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
+            () -> new ResourceNotFoundException("DesignComponent not found with id: " + designComponentId));
     return convertToDto(component);
   }
 
@@ -68,46 +68,17 @@ public class DesignComponentService {
         .map(this::convertToDto);
   }
 
-  @Transactional(readOnly = true)
-  public List<DesignComponentDto> getByUserEmail(String userEmail) {
-    return designComponentRepository.findByUserEmail(userEmail).stream()
-        .map(this::convertToDto)
-        .collect(Collectors.toList());
-  }
-
-  @Transactional(readOnly = true)
-  public List<DesignComponentDto> getPublicComponents() {
-    return designComponentRepository.findByIsPublic(true).stream()
-        .map(this::convertToDto)
-        .collect(Collectors.toList());
-  }
-
-  // UPDATE
-  public DesignComponentDto updateComponent(Integer id, DesignComponentDto request) {
-    DesignComponent existing = designComponentRepository.findById(id)
-        .orElseThrow(
-            () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
-
-    Optional.ofNullable(request.getUserEmail()).ifPresent(existing::setUserEmail);
-    Optional.ofNullable(request.getImageUrl()).ifPresent(existing::setImageUrl);
-    Optional.ofNullable(request.getIsPublic()).ifPresent(existing::setIsPublic);
-
-    return convertToDto(designComponentRepository.save(existing));
-  }
 
   // DELETE
-  public void deleteComponent(Integer id) {
-    if (!designComponentRepository.existsById(id)) {
-      throw new ResourceNotFoundException("DesignComponent not found with id: " + id);
+  public void deleteComponent(Integer designComponentId) {
+    if (!designComponentRepository.existsById(designComponentId)) {
+      throw new ResourceNotFoundException("DesignComponent not found with designComponentId: " + designComponentId);
     }
-    designComponentRepository.deleteById(id);
+    designComponentRepository.deleteById(designComponentId);
   }
 
-  // 하위 호환성을 위한 별칭 메소드들
-  public void deleteDesignComponent(Integer id) {
-    deleteComponent(id);
-  }
 
+  // UPDATE
   public DesignComponentDto updateDesignComponent(Integer id,
       UpdateDesignComponentRequest request) {
     DesignComponent existing = designComponentRepository.findById(id)

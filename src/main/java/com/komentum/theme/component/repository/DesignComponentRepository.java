@@ -11,11 +11,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DesignComponentRepository extends JpaRepository<DesignComponent, Integer> {
 
-  // 기본 조회 메서드들
-  Optional<DesignComponent> findByDesignComponentId(Integer id);
-
-  List<DesignComponent> findByUserEmail(String email);
-
-  List<DesignComponent> findByIsPublic(Boolean isPublic);
 }
 

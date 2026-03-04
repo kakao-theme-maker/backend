@@ -28,6 +28,12 @@ public class DesignComponentController {
 
   private final DesignComponentService designComponentService;
 
+  /**
+   * designComponent 생성
+   *
+   * @param request
+   * @return
+   */
   @PostMapping
   public ResponseEntity<DesignComponentDto> createDesignComponent(
       @Valid @RequestBody CreateDesignComponentRequest request
@@ -36,29 +42,34 @@ public class DesignComponentController {
     return ResponseEntity.ok(saved);
   }
 
+  /**
+   * designComponentId 로 designComponent 단건 조회
+   * @param designComponentId
+   * @return
+   */
   @GetMapping("/{id}")
-  public ResponseEntity<DesignComponentDto> getDesignComponentById(@PathVariable("id") Integer id) {
-    return ResponseEntity.ok(designComponentService.getDesignComponentById(id));
+  public ResponseEntity<DesignComponentDto> getDesignComponentById(@PathVariable("id") Integer designComponentId) {
+    return ResponseEntity.ok(designComponentService.getDesignComponentById(designComponentId));
   }
 
+  /**
+   * designComponent 전체 조회
+   * @param pageable
+   * @return
+   */
   @GetMapping
   public ResponseEntity<Page<DesignComponentDto>> getAllDesignComponents(
       @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
     return ResponseEntity.ok(designComponentService.getAllDesignComponents(pageable));
   }
 
-  @GetMapping("/user/{userEmail}")
-  public ResponseEntity<List<DesignComponentDto>> getDesignComponentsByUserEmail(
-      @PathVariable("userEmail") String userEmail
-  ) {
-    return ResponseEntity.ok(designComponentService.getByUserEmail(userEmail));
-  }
 
-  @GetMapping("/public")
-  public ResponseEntity<List<DesignComponentDto>> getPublicDesignComponents() {
-    return ResponseEntity.ok(designComponentService.getPublicComponents());
-  }
-
+  /**
+   * designComponent 수정
+   * @param id
+   * @param request
+   * @return
+   */
   @PutMapping("/{id}")
   public ResponseEntity<DesignComponentDto> updateDesignComponent(
       @PathVariable("id") Integer id,
@@ -68,6 +79,11 @@ public class DesignComponentController {
     return ResponseEntity.ok(updated);
   }
 
+  /**
+   * designComponent 삭제
+   * @param id
+   * @return
+   */
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteDesignComponent(@PathVariable("id") Integer id) {
     designComponentService.deleteComponent(id);
