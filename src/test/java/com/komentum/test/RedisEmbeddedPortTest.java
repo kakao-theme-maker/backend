@@ -2,13 +2,17 @@ package com.komentum.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.config.RedisEmbeddedConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 
 @SpringBootTest
+@EnableTestProfile
+@Import(RedisEmbeddedConfig.class)
 public class RedisEmbeddedPortTest {
 
   @Autowired

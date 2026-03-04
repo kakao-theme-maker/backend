@@ -7,6 +7,7 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.facade.DesignBoardManagementFacade;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ public class DesignBoardController {
    * 디자인 에셋 게시글 목록 조회
    * */
   @GetMapping
+  @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글 목록을 조회힌다")
   public ResponseEntity<List<DesignBoardPreviewDto>> findDesignBoards(
       @ModelAttribute PageableRequestDto pageableRequestDto) {
     return ResponseEntity.ok(
@@ -44,6 +46,7 @@ public class DesignBoardController {
    * 특정 디자인 에셋 게시글 상세 조회
    * */
   @GetMapping("/{post_id}")
+  @Operation(summary = "현재 인증된 사용자가 ID=post_id인 특정 디자인 에셋 게시글을 조회한다")
   public ResponseEntity<DesignBoardDetailDto> findDesignBoardDetail(
       @PathVariable("post_id") Long postId
   ) {
@@ -54,6 +57,7 @@ public class DesignBoardController {
    * 디자인 에셋 게시글 생성
    * */
   @PostMapping
+  @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글을 작성한다")
   public ResponseEntity<DesignBoardDetailDto> createDesignBoard(
       @RequestPart("board_info") DesignBoardCreateDto createDto,
       @RequestPart("preview_image") MultipartFile profileImage,
@@ -68,6 +72,7 @@ public class DesignBoardController {
    * 특정 ID의 디자인 에셋 게시글 수정, 없으면 예외 처리
    * */
   @PatchMapping("/{post_id}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=post_id인 디자인 에셋 게시글을 수정한다")
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
       @PathVariable("post_id") Long postId,
       @RequestBody DesignBoardDto.DesignBoardUpdateDto updateDto
@@ -79,6 +84,7 @@ public class DesignBoardController {
    * 특정 디자인 에셋 게시글 삭제
    * */
   @DeleteMapping("/{post_id}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=post_id인 디자인 에셋 게시글을 삭제한다")
   public ResponseEntity<DesignBoardDetailDto> deleteDesignBoard(
       @PathVariable("post_id") Long postId) {
     designBoardManagementFacade.deleteBoardDetailWithPost(postId);

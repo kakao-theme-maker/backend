@@ -53,6 +53,7 @@ gradle-app.setting
 # Docker
 .env
 key.jks
+docker/docker_redis/
 
 # QueryDsl
 **/src/main/generated
