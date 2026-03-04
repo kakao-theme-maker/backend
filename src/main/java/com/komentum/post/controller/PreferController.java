@@ -3,6 +3,7 @@ package com.komentum.post.controller;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.facade.PreferManagementFacade;
 import com.komentum.post.service.PreferService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,19 +23,22 @@ public class PreferController {
   private final PreferManagementFacade preferManagementFacade;
   private final PreferService preferService;
 
-  @GetMapping("/{postId}/prefer")
-  public ResponseEntity<Long> getPreferCount(@PathVariable Long postId) {
+  @GetMapping("/{post_id}/prefer")
+  @Operation(summary = "인증된 사용자가 ID=post_id인 게시글의 추천 수를 조회한다")
+  public ResponseEntity<Long> getPreferCount(@PathVariable("post_id") Long postId) {
     return ResponseEntity.ok(preferService.getPreferByPost(postId));
   }
 
-  @PostMapping("/{postId}/prefer")
-  public ResponseEntity<Void> savePrefer(@PathVariable Long postId,
+  @PostMapping("/{post_id}/prefer")
+  @Operation(summary = "인증된 사용자가 ID=post_id인 게시글을 추천한다")
+  public ResponseEntity<Void> savePrefer(@PathVariable("post_id") Long postId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     preferManagementFacade.addPreferToPost(postId, userDetails.getUsername());
     return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/{postId}/prefer")
+  @Operation(summary = "인증된 사용자가 ID=post_id인 게시글을 추천 해제한다")
   public ResponseEntity<Void> deletePrefer(@PathVariable Long postId,
       @RequestBody CustomUserDetails userDetails) {
     preferManagementFacade.deletePreferFromPost(postId, userDetails.getUsername());

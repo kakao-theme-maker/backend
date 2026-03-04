@@ -4,6 +4,7 @@ import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
 import com.komentum.post.facade.PostManagementFacade;
 import com.komentum.post.service.PostService;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class UserPostController {
 
   // user post dto 리스트 -> 커스텀 응답
   @GetMapping("/me/upload-posts")
+  @Operation(summary = "현재 인증된 사용자가 업로드/소유한 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findUserPostList(@AuthenticationPrincipal
   CustomUserDetails userDetails) {
     return ResponseEntity.ok(postService.findUserPostList(userDetails.getUsername()));
@@ -31,6 +33,7 @@ public class UserPostController {
    * 사용자가 카테고리에 저장한 테마 목록 반환
    */
   @GetMapping("/me/saved-posts")
+  @Operation(summary = "현재 인증된 사용자가 카테고리에 저장한 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findSavedPostList(
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
