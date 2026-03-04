@@ -9,8 +9,8 @@ COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
 RUN chmod +x gradlew
-# 의존성 다운로드
-RUN ./gradlew build -x test --no-daemon
+# 의존성 캐싱
+RUN ./gradlew dependencies --no-daemon
 # 실제 소스코드와 설정파일 복사
 COPY src src
 COPY ${CONFIG_MODULE} ${CONFIG_MODULE}
