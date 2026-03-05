@@ -2,6 +2,7 @@ package com.komentum.post.dto;
 
 import com.komentum.post.domain.Post;
 import com.komentum.post.facade.BoardManagementHelper;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,11 +38,16 @@ public class PostDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(description = "사용자의 게시글 목록 조회 응답 DTO")
   public static class UserPostListResponseDto {
 
+    @Schema(description = "게시글 ID")
     Long postId;
+    @Schema(description = "게시글 대표 이미지 URL", example = "https://sample.com")
     String previewImageUrl;
+    @Schema(description = "게시글 생성일")
     LocalDateTime createdAt;
+    @Schema(description = "게시글 갱신일")
     LocalDateTime updatedAt;
 
     public static UserPostListResponseDto from(Post post,

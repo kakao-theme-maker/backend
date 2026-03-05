@@ -18,6 +18,7 @@ public class RedisEmbeddedConfig {
     int port = getAvailablePort();
 
     redisServer = new RedisServer(port);
+    System.setProperty("spring.data.redis.port", String.valueOf(port));
     redisServer.start();
   }
 

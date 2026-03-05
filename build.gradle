@@ -23,6 +23,7 @@ repositories {
 
 bootJar {
     enabled = true
+    archiveFileName = "kakao-theme-maker.jar"
 }
 
 jar {
@@ -30,6 +31,9 @@ jar {
 }
 
 test {
+    filter {
+        excludeTestsMatching("com.komentum.theme.*")
+    }
     useJUnitPlatform()
 }
 

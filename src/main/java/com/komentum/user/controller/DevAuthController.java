@@ -8,6 +8,7 @@ import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
 import com.komentum.user.service.TokenService;
+import io.swagger.v3.oas.annotations.Operation;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -27,6 +28,7 @@ public class DevAuthController {
   private final JwtUtils jwtUtils;
 
   @PostMapping("/users/auth")
+  @Operation(summary = "DB의 무작위 사용자를 기반으로 access token과 refresh token 발급")
   public ResponseEntity<UserAuthResponse> getTestUserAuth() {
     User user = userRepository.findAll().get(0);
     if (user == null) {
@@ -40,8 +42,8 @@ public class DevAuthController {
           .introduce(faker.lorem().word())
           .build());
     }
-    String accessToken = jwtUtils.generateAccessToken(user.getUserEmail());
-    String refreshToken = jwtUtils.generateRefreshToken(user.getUserEmail());
+    String accessToken = jwtUtils.generateAccessToken(user.getPublicUserId());
+    String refreshToken = jwtUtils.generateRefreshToken(user.getPublicUserId());
     tokenService.saveAccessAndRefreshToken(user.getUserEmail(), accessToken, refreshToken);
     return ResponseEntity.ok(new UserAuthResponse(accessToken, refreshToken));
   }

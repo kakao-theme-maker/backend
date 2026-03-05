@@ -7,6 +7,7 @@ import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
 import com.komentum.post.facade.CommentManagementFacade;
 import com.komentum.post.service.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,9 @@ public class CommentController {
   private final CommentService commentService;
   private final CommentManagementFacade commentManagementFacade;
 
-  @GetMapping("/{postId}/comments")
-  public ResponseEntity<List<CommentResponse>> getComments(@PathVariable Long postId,
+  @GetMapping("/{post_id}/comments")
+  @Operation(summary = "현재 인증된 사용자가 ID=postId인 게시글의 모든 댓글을 조회한다")
+  public ResponseEntity<List<CommentResponse>> getComments(@PathVariable("post_id") Long postId,
       @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
     return ResponseEntity.ok(
         commentService.getComments(postId, pageableRequestDto.toPageable())
@@ -40,29 +42,33 @@ public class CommentController {
             .toList());
   }
 
-  @GetMapping("/comments/{commentId}")
-  public ResponseEntity<CommentResponse> getComment(@PathVariable Long commentId) {
+  @GetMapping("/comments/{comment_id}")
+  @Operation(summary = "현재 인증된 사용자가 ID=comment_id인 특정 댓글을 조회한다")
+  public ResponseEntity<CommentResponse> getComment(@PathVariable("comment_id") Long commentId) {
     return ResponseEntity.ok(CommentResponse.from(commentService.getCommentById(commentId)));
   }
 
-  @PostMapping("/{postId}/comments")
+  @PostMapping("/{post_id}/comments")
+  @Operation(summary = "현재 인증된 사용자가 ID=post_id인 게시글에 댓글을 생성한다")
   public ResponseEntity<CommentResponse> createComment(
-      @PathVariable Long postId,
+      @PathVariable("post_id") Long postId,
       @RequestBody CommentCreateDto createDto,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
         commentManagementFacade.createCommentOnPost(postId, createDto, userDetails.getUsername()));
   }
 
-  @PutMapping("/comments/{commentId}")
-  public ResponseEntity<CommentResponse> updateComment(@PathVariable Long commentId,
+  @PutMapping("/comments/{comment_id}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 작성한 ID=comment_id인 댓글을 수정한다")
+  public ResponseEntity<CommentResponse> updateComment(@PathVariable("comment_id") Long commentId,
       @RequestBody CommentUpdateDto updateDto) {
     return ResponseEntity.ok(
         CommentResponse.from(commentService.updateComment(commentId, updateDto)));
   }
 
-  @DeleteMapping("/comments/{commentId}")
-  public ResponseEntity<CommentResponse> deleteComment(@PathVariable Long commentId) {
+  @DeleteMapping("/comments/{comment_id}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 작성한 ID=comment_id인 댓글을 삭제한다")
+  public ResponseEntity<CommentResponse> deleteComment(@PathVariable("comment_id") Long commentId) {
     commentService.deleteComment(commentId);
     return ResponseEntity.noContent().build();
   }
