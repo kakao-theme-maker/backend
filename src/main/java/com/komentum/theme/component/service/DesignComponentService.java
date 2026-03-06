@@ -5,6 +5,7 @@ import com.komentum.theme.component.domain.policy.DesignComponentPolicy;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
+import com.komentum.theme.component.mapper.DesignComponentMapper;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
@@ -22,36 +23,20 @@ public class DesignComponentService {
 
   private final DesignComponentRepository designComponentRepository;
   private final DesignComponentPolicy designComponentPolicy;
-
-  // DTO 변환 메서드
-  private DesignComponentDto convertToDto(DesignComponent entity) {
-    return DesignComponentDto.builder()
-        .designComponentId(entity.getDesignComponentId())
-        .publicUserId(entity.getUser().getPublicUserId())
-        .imageUrl(entity.getImageUrl())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getUpdatedAt())
-        .isPublic(entity.getIsPublic())
-        .build();
-  }
+  private final DesignComponentMapper mapper;
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
       User user) {
-    DesignComponent newComponent = DesignComponent.builder()
-        .user(user)
-        .imageUrl(request.getImageUrl())
-        .isPublic(request.getIsPublic())
-        .build();
-
-    return convertToDto(designComponentRepository.save(newComponent));
+    DesignComponent newComponent = mapper.toEntity(request, user);
+    return mapper.toDto(designComponentRepository.save(newComponent));
   }
 
   // READ
   @Transactional(readOnly = true)
   public DesignComponentDto getDesignComponentById(Integer designComponentId) {
     DesignComponent component = getEntityById(designComponentId);
-    return convertToDto(component);
+    return mapper.toDto(component);
   }
 
   @Transactional(readOnly = true)
@@ -65,20 +50,8 @@ public class DesignComponentService {
   @Transactional(readOnly = true)
   public Page<DesignComponentDto> getAllDesignComponents(Pageable pageable) {
     return designComponentRepository.findAll(pageable)
-        .map(this::convertToDto);
+        .map(mapper::toDto);
   }
-
-
-  // DELETE
-  public void deleteComponent(Integer designComponentId, User owner) {
-    DesignComponent component = getEntityById(designComponentId);
-    // designComponentPolicy 검증 -> 파사드에서 유저 / 정책관리는 서비스
-    if (!designComponentPolicy.canDelete(owner)) {
-      throw new AccessDeniedException("failed to delete designComponent : invalid user or role");
-    }
-    designComponentRepository.delete(component);
-  }
-
 
   // UPDATE
   public DesignComponentDto updateDesignComponent(Integer designComponentId,
@@ -94,6 +67,18 @@ public class DesignComponentService {
         request.getImageUrl(),
         request.getIsPublic()
     );
-    return convertToDto(component);
+    return mapper.toDto(component);
   }
+
+  // DELETE
+  public void deleteComponent(Integer designComponentId, User owner) {
+    DesignComponent component = getEntityById(designComponentId);
+    // designComponentPolicy 검증 -> 파사드에서 유저 / 정책관리는 서비스
+    if (!designComponentPolicy.canDelete(owner)) {
+      throw new AccessDeniedException("failed to delete designComponent : invalid user or role");
+    }
+    designComponentRepository.delete(component);
+  }
+
+
 }
