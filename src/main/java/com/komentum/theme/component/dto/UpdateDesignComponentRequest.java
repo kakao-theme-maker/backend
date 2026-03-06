@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateDesignComponentRequest {
 
-  private String userEmail;
   private String imageUrl;
   private Boolean isPublic;
 }

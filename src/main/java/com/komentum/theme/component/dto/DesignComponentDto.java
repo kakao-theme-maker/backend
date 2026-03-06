@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class DesignComponentDto {
 
   private Integer designComponentId;
-  private String userEmail;
+  private String publicUserId;
   private String imageUrl;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;

@@ -1,17 +1,17 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.component.domain.policy.DesignComponentPolicy;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.komentum.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,12 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class DesignComponentService {
 
   private final DesignComponentRepository designComponentRepository;
+  private final DesignComponentPolicy designComponentPolicy;
 
   // DTO 변환 메서드
   private DesignComponentDto convertToDto(DesignComponent entity) {
     return DesignComponentDto.builder()
         .designComponentId(entity.getDesignComponentId())
-        .userEmail(entity.getUserEmail())
+        .publicUserId(entity.getUser().getPublicUserId())
         .imageUrl(entity.getImageUrl())
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getUpdatedAt())
@@ -35,9 +36,10 @@ public class DesignComponentService {
   }
 
   // CREATE
-  public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request) {
+  public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
+      User user) {
     DesignComponent newComponent = DesignComponent.builder()
-        .userEmail(request.getUserEmail())
+        .user(user)
         .imageUrl(request.getImageUrl())
         .isPublic(request.getIsPublic())
         .build();
@@ -48,13 +50,11 @@ public class DesignComponentService {
   // READ
   @Transactional(readOnly = true)
   public DesignComponentDto getDesignComponentById(Integer designComponentId) {
-    DesignComponent component = designComponentRepository.findById(designComponentId)
-        .orElseThrow(
-            () -> new ResourceNotFoundException("DesignComponent not found with id: " + designComponentId));
+    DesignComponent component = getEntityById(designComponentId);
     return convertToDto(component);
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public DesignComponent getEntityById(Integer id) {
     return designComponentRepository.findById(id)
         .orElseThrow(
@@ -70,25 +70,30 @@ public class DesignComponentService {
 
 
   // DELETE
-  public void deleteComponent(Integer designComponentId) {
-    if (!designComponentRepository.existsById(designComponentId)) {
-      throw new ResourceNotFoundException("DesignComponent not found with designComponentId: " + designComponentId);
+  public void deleteComponent(Integer designComponentId, User owner) {
+    DesignComponent component = getEntityById(designComponentId);
+    // designComponentPolicy 검증 -> 파사드에서 유저 / 정책관리는 서비스
+    if (!designComponentPolicy.canDelete(owner)) {
+      throw new AccessDeniedException("failed to delete designComponent : invalid user or role");
     }
-    designComponentRepository.deleteById(designComponentId);
+    designComponentRepository.delete(component);
   }
 
 
   // UPDATE
-  public DesignComponentDto updateDesignComponent(Integer id,
-      UpdateDesignComponentRequest request) {
-    DesignComponent existing = designComponentRepository.findById(id)
-        .orElseThrow(
-            () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
+  public DesignComponentDto updateDesignComponent(Integer designComponentId,
+      UpdateDesignComponentRequest request, User owner) {
+    DesignComponent component = getEntityById(designComponentId);
 
-    Optional.ofNullable(request.getUserEmail()).ifPresent(existing::setUserEmail);
-    Optional.ofNullable(request.getImageUrl()).ifPresent(existing::setImageUrl);
-    Optional.ofNullable(request.getIsPublic()).ifPresent(existing::setIsPublic);
+    // designComponentPolicy 검증
+    if (!designComponentPolicy.canUpdate(owner)) {
+      throw new AccessDeniedException("failed to update designComponent : invalid user or role");
+    }
 
-    return convertToDto(designComponentRepository.save(existing));
+    component.update(
+        request.getImageUrl(),
+        request.getIsPublic()
+    );
+    return convertToDto(component);
   }
 }
