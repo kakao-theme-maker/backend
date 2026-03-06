@@ -38,7 +38,7 @@ public class DesignBoardDto {
     @JsonProperty("user_email")
     private String userEmail;
 
-    @Schema(description = "게시글 생서일", example = "YYYY-mm-dd")
+    @Schema(description = "게시글 생성일", example = "YYYY-mm-dd")
     @JsonProperty("created_at")
     private String createdAt;
 
