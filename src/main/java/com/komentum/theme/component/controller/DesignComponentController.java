@@ -5,6 +5,7 @@ import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.facade.DesignComponentFacade;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,7 +35,9 @@ public class DesignComponentController {
    * @param request
    * @return
    */
+
   @PostMapping
+  @Operation(summary = "현재 인증된 사용자가 DesignComponent를 생성한다.")
   public ResponseEntity<DesignComponentDto> createDesignComponent(
       @Valid @RequestBody CreateDesignComponentRequest request,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -50,6 +53,7 @@ public class DesignComponentController {
    * @return
    */
   @GetMapping("/{id}")
+  @Operation(summary = "ID = id인 designComponent를 조회한다.")
   public ResponseEntity<DesignComponentDto> getDesignComponentById(
       @PathVariable("id") Integer designComponentId) {
     return ResponseEntity.ok(designComponentFacade.getDesignComponentById(designComponentId));
@@ -62,6 +66,7 @@ public class DesignComponentController {
    * @return
    */
   @GetMapping
+  @Operation(summary = "designComponent 목록을 전체 조회한다.")
   public ResponseEntity<Page<DesignComponentDto>> getAllDesignComponents(
       @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
     return ResponseEntity.ok(designComponentFacade.getAllDesignComponents(pageable));
@@ -76,6 +81,7 @@ public class DesignComponentController {
    * @return
    */
   @PutMapping("/{id}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID = id인 designComponent를 수정한다.")
   public ResponseEntity<DesignComponentDto> updateDesignComponent(
       @PathVariable("id") Integer id,
       @Valid @RequestBody UpdateDesignComponentRequest request,
@@ -93,6 +99,7 @@ public class DesignComponentController {
    * @return
    */
   @DeleteMapping("/{id}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID = id 인 designComponent를 삭제한다.")
   public ResponseEntity<Void> deleteDesignComponent(@PathVariable("id") Integer id,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     designComponentFacade.deleteComponent(id, userDetails.getPublicUserId());
