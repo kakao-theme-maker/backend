@@ -59,24 +59,6 @@ public class DesignComponentDataGenerator {
     return designComponentRepository.saveAll(components);
   }
 
-  /**
-   * 단일 사용자에 DesignComponent 생성
-   *
-   * @param user  소유자
-   * @param count 생성할 개수
-   * @return 생성된 DesignComponent 리스트
-   */
-  public List<DesignComponent> generateDesignComponentForUser(User user, int count) {
-    List<DesignComponent> components = new ArrayList<>();
-    for (int i = 0; i < count; i++) {
-      components.add(DesignComponent.builder()
-          .user(user)
-          .imageUrl(faker.internet().image())
-          .isPublic(i % 2 == 0)
-          .build());
-    }
-    return designComponentRepository.saveAll(components);
-  }
 
   /**
    * 단일 DesignComponent 생성
@@ -104,16 +86,9 @@ public class DesignComponentDataGenerator {
     return generateDesignComponent(user, faker.internet().image(), true);
   }
 
-  /**
-   * 테스트 데이터 삭제
-   */
-  public void deleteData() {
-    designComponentRepository.deleteAll();
-    userDataGenerator.deleteAllUsers();
-  }
 
   /**
-   * DesignComponent만 삭제. User는 유지
+   * DesignComponent만 삭제.
    */
   public void deleteDesignComponents() {
     designComponentRepository.deleteAll();

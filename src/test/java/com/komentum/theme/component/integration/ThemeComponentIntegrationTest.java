@@ -15,7 +15,6 @@ import com.komentum.global.utils.S3FileManager;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.data.DesignComponentDataGenerator;
 import com.komentum.test.data.UserDataGenerator;
-import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.component.domain.ColorStyle;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
@@ -87,15 +86,16 @@ class ThemeComponentIntegrationTest {
   private UserDataGenerator userDataGenerator;
 
   private User testUser;
-  private TestClientDto testClient;
+  //private TestClientDto testClient;
 
   @BeforeEach
   void setUp() {
     colorStyleRepository.deleteAll();
     componentTypeRepository.deleteAll();
-    designComponentDataGenerator.deleteData();
+    designComponentDataGenerator.deleteDesignComponents();
+    userDataGenerator.deleteAllUsers();
     testUser = userDataGenerator.generateTestUser("test@example.com");
-    testClient = TestClientDto.fromEntity(testUser);
+    //testClient = TestClientDto.fromEntity(testUser);
 
     CustomUserDetails userDetails = CustomUserDetails.builder()
         .userEmail(testUser.getUserEmail())
@@ -113,7 +113,8 @@ class ThemeComponentIntegrationTest {
     SecurityContextHolder.clearContext();
     colorStyleRepository.deleteAll();
     componentTypeRepository.deleteAll();
-    designComponentDataGenerator.deleteData();
+    designComponentDataGenerator.deleteDesignComponents();
+    userDataGenerator.deleteAllUsers();
   }
 
   @Nested
@@ -384,7 +385,7 @@ class ThemeComponentIntegrationTest {
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(request));
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testUser.getPublicUserId()))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.public_user_id").value(testUser.getPublicUserId()))
           .andExpect(jsonPath("$.image_url").value("https://example.com/image.png"))
@@ -404,7 +405,7 @@ class ThemeComponentIntegrationTest {
       MockHttpServletRequestBuilder requestBuilder = get("/api/design-components/{id}",
           savedComponent.getDesignComponentId());
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testUser.getPublicUserId()))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.design_component_id").value(savedComponent.getDesignComponentId()))
           .andExpect(jsonPath("$.public_user_id").value(testUser.getPublicUserId()));
@@ -414,14 +415,14 @@ class ThemeComponentIntegrationTest {
     @DisplayName("DesignComponent 전체 조회 테스트")
     void getAllDesignComponents() throws Exception {
       // Given
-      designComponentDataGenerator.generateData(2, 3);
+      designComponentDataGenerator.generateData(5, 4);
 
       // When & Then
       MockHttpServletRequestBuilder requestBuilder = get("/api/design-components");
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testUser.getPublicUserId()))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.content.length()").value(6));
+          .andExpect(jsonPath("$.content.length()").value(20));
     }
 
 
@@ -430,10 +431,10 @@ class ThemeComponentIntegrationTest {
     void updateDesignComponent() throws Exception {
       // Given
       DesignComponent savedComponent = designComponentDataGenerator.generateDesignComponent(
-          testUser, "http://example.com/image.jpg", false);
+          testUser, "http://example.com/image.png", false);
 
       UpdateDesignComponentRequest updateRequest = UpdateDesignComponentRequest.builder()
-          .imageUrl("https://updated.com/image.jpg")
+          .imageUrl("https://updated.com/image.png")
           .isPublic(true)
           .build();
 
@@ -443,11 +444,42 @@ class ThemeComponentIntegrationTest {
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(updateRequest));
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testUser.getPublicUserId()))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.image_url").value("https://updated.com/image.jpg"))
+          .andExpect(jsonPath("$.image_url").value("https://updated.com/image.png"))
           .andExpect(jsonPath("$.is_public").value(true));
     }
+
+    @Test
+    @DisplayName("다른 사용자의 DesignComponent 수정 실패 테스트")
+    void updateDesignComponentByOtherUser() throws Exception {
+      // Given - 다른 사용자가 만든 컴포넌트
+      User otherUser = userDataGenerator.generateTestUser("other@test.com");
+      DesignComponent savedComponent = designComponentDataGenerator.generateDesignComponent(
+          otherUser, "http://example.com/image.png", false);
+
+      UpdateDesignComponentRequest updateRequest = UpdateDesignComponentRequest.builder()
+          .imageUrl("https://updated.com/image.png")
+          .isPublic(true)
+          .build();
+
+      // When & Then - testUser로 수정 시도 (실패해야 함)
+      MockHttpServletRequestBuilder requestBuilder =
+          put("/api/design-components/{id}", savedComponent.getDesignComponentId()).contentType(
+                  MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(updateRequest));
+
+      // 수정 안됐는지 확인
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testUser.getPublicUserId()))
+          .andExpect(status().isForbidden());
+
+      DesignComponent afterComponent = designComponentRepository.findById(
+          savedComponent.getDesignComponentId()).get();
+      assertThat(afterComponent.getImageUrl()).isEqualTo("http://example.com/image.png");
+      assertThat(afterComponent.getIsPublic()).isFalse();
+
+    }
+
 
     @Test
     @DisplayName("DesignComponent 삭제 테스트")
@@ -460,32 +492,33 @@ class ThemeComponentIntegrationTest {
       MockHttpServletRequestBuilder requestBuilder =
           delete("/api/design-components/{id}", savedComponent.getDesignComponentId());
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testUser.getPublicUserId()))
           .andExpect(status().isNoContent());
 
       assertThat(designComponentRepository.existsById(savedComponent.getDesignComponentId()))
           .isFalse();
     }
-  }
 
-  @Test
-  @DisplayName("다른 사용자의 DesignComponent 삭제 실패 테스트")
-  void deleteDesignComponentByOtherUser() throws Exception {
-    // Given - 다른 사용자가 만든 컴포넌트
-    User otherUser = userDataGenerator.generateTestUser("other@test.com");
-    DesignComponent savedComponent = designComponentDataGenerator
-        .generateDesignComponent(otherUser, "https://other.com/image.jpg", false);
 
-    // When & Then - testUser로 삭제 시도 (실패해야 함)
-    MockHttpServletRequestBuilder requestBuilder =
-        delete("/api/design-components/{id}", savedComponent.getDesignComponentId());
+    @Test
+    @DisplayName("다른 사용자의 DesignComponent 삭제 실패 테스트")
+    void deleteDesignComponentByOtherUser() throws Exception {
+      // Given - 다른 사용자가 만든 컴포넌트
+      User otherUser = userDataGenerator.generateTestUser("other@test.com");
+      DesignComponent savedComponent = designComponentDataGenerator
+          .generateDesignComponent(otherUser, "https://other.com/image.png", false);
 
-    mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
-        .andExpect(status().isForbidden());
+      // When & Then - testUser로 삭제 시도 (실패해야 함)
+      MockHttpServletRequestBuilder requestBuilder =
+          delete("/api/design-components/{id}", savedComponent.getDesignComponentId());
 
-    // 삭제 안됐는지 확인
-    assertThat(designComponentRepository.existsById(savedComponent.getDesignComponentId()))
-        .isTrue();
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testUser.getPublicUserId()))
+          .andExpect(status().isForbidden());
+
+      // 삭제 안됐는지 확인
+      assertThat(designComponentRepository.existsById(savedComponent.getDesignComponentId()))
+          .isTrue();
+    }
   }
 
 
