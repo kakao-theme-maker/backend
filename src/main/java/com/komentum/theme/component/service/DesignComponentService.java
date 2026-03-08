@@ -55,11 +55,11 @@ public class DesignComponentService {
 
   // UPDATE
   public DesignComponentDto updateDesignComponent(Integer designComponentId,
-      UpdateDesignComponentRequest request, User owner) {
+      UpdateDesignComponentRequest request) {
     DesignComponent component = getEntityById(designComponentId);
 
     // designComponentPolicy 검증
-    if (!designComponentPolicy.canUpdate(owner)) {
+    if (!designComponentPolicy.canUpdate(component)) {
       throw new AccessDeniedException("failed to update designComponent : invalid user or role");
     }
 
@@ -71,10 +71,10 @@ public class DesignComponentService {
   }
 
   // DELETE
-  public void deleteComponent(Integer designComponentId, User owner) {
+  public void deleteComponent(Integer designComponentId) {
     DesignComponent component = getEntityById(designComponentId);
     // designComponentPolicy 검증 -> 파사드에서 유저 / 정책관리는 서비스
-    if (!designComponentPolicy.canDelete(owner)) {
+    if (!designComponentPolicy.canDelete(component)) {
       throw new AccessDeniedException("failed to delete designComponent : invalid user or role");
     }
     designComponentRepository.delete(component);

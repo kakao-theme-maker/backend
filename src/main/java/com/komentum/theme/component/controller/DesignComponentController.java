@@ -84,11 +84,8 @@ public class DesignComponentController {
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID = id인 designComponent를 수정한다.")
   public ResponseEntity<DesignComponentDto> updateDesignComponent(
       @PathVariable("id") Integer id,
-      @Valid @RequestBody UpdateDesignComponentRequest request,
-      @AuthenticationPrincipal CustomUserDetails userDetails
-  ) {
-    DesignComponentDto updated = designComponentFacade.updateDesignComponent(id, request,
-        userDetails.getPublicUserId());
+      @Valid @RequestBody UpdateDesignComponentRequest request) {
+    DesignComponentDto updated = designComponentFacade.updateDesignComponent(id, request);
     return ResponseEntity.ok(updated);
   }
 
@@ -100,9 +97,8 @@ public class DesignComponentController {
    */
   @DeleteMapping("/{id}")
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID = id 인 designComponent를 삭제한다.")
-  public ResponseEntity<Void> deleteDesignComponent(@PathVariable("id") Integer id,
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
-    designComponentFacade.deleteComponent(id, userDetails.getPublicUserId());
+  public ResponseEntity<Void> deleteDesignComponent(@PathVariable("id") Integer id) {
+    designComponentFacade.deleteComponent(id);
     return ResponseEntity.noContent().build();
   }
 }

@@ -36,17 +36,18 @@ public class DesignComponentFacade {
 
   // UPDATE
   public DesignComponentDto updateDesignComponent(Integer designComponentId,
-      UpdateDesignComponentRequest request, String publicUserId) {
-    User owner = userRetrieveService.findUserEntity(publicUserId);
+      UpdateDesignComponentRequest request) {
+    User owner = userRetrieveService.findUserEntityByPublicId(
+        designComponentService.getEntityById(designComponentId).getUser()
+            .getPublicUserId());//userRetrieveService.findUserEntity(publicUserId);
 
-    return designComponentService.updateDesignComponent(designComponentId, request, owner);
+    return designComponentService.updateDesignComponent(designComponentId, request);
 
   }
 
   // DELETE
-  public void deleteComponent(Integer designComponentId, String publicUserId) {
-    User owner = userRetrieveService.findUserEntity(publicUserId);
+  public void deleteComponent(Integer designComponentId) {
 
-    designComponentService.deleteComponent(designComponentId, owner);
+    designComponentService.deleteComponent(designComponentId);
   }
 }
