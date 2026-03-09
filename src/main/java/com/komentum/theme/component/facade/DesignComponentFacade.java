@@ -37,10 +37,6 @@ public class DesignComponentFacade {
   // UPDATE
   public DesignComponentDto updateDesignComponent(Integer designComponentId,
       UpdateDesignComponentRequest request) {
-    User owner = userRetrieveService.findUserEntityByPublicId(
-        designComponentService.getEntityById(designComponentId).getUser()
-            .getPublicUserId());//userRetrieveService.findUserEntity(publicUserId);
-
     return designComponentService.updateDesignComponent(designComponentId, request);
 
   }
