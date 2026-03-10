@@ -13,11 +13,11 @@ import com.komentum.global.utils.S3FileManager;
 import com.komentum.theme.component.domain.ColorStyle;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.dto.CreateColorStyleRequest;
-import com.komentum.theme.component.dto.CreateComponentTypeRequest;
+import com.komentum.theme.component.dto.ColorStyleCreateDto;
+import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
+import com.komentum.theme.component.dto.ComponentTypeCreateRequest;
+import com.komentum.theme.component.dto.ComponentTypeUpdateRequest;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
-import com.komentum.theme.component.dto.UpdateColorStyleRequest;
-import com.komentum.theme.component.dto.UpdateComponentTypeRequest;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.enums.Platform;
 import com.komentum.theme.component.repository.ColorStyleRepository;
@@ -82,7 +82,7 @@ class ThemeComponentIntegrationTest {
     @DisplayName("ColorStyle 생성 테스트")
     void createColorStyle() throws Exception {
       // Given
-      CreateColorStyleRequest request = CreateColorStyleRequest.builder()
+      ColorStyleCreateDto request = ColorStyleCreateDto.builder()
           .explain("기본 색상 스타일")
           .platform(Platform.ANDROID)
           .styleSheetPath("/styles/colors.css")
@@ -162,7 +162,7 @@ class ThemeComponentIntegrationTest {
           .stylePropsName("color")
           .build());
 
-      UpdateColorStyleRequest updateRequest = UpdateColorStyleRequest.builder()
+      ColorStyleUpdateRequest updateRequest = ColorStyleUpdateRequest.builder()
           .explain("수정된 색상")
           .platform(Platform.IOS)
           .styleSheetPath("/updated.css")
@@ -208,7 +208,7 @@ class ThemeComponentIntegrationTest {
     @DisplayName("ComponentType 생성 테스트")
     void createComponentType() throws Exception {
       // Given
-      CreateComponentTypeRequest request = CreateComponentTypeRequest.builder()
+      ComponentTypeCreateRequest request = ComponentTypeCreateRequest.builder()
           .explain("버튼 컴포넌트")
           .platform(Platform.ANDROID)
           .componentPath("/components/button")
@@ -287,7 +287,7 @@ class ThemeComponentIntegrationTest {
           .sizeY(50)
           .build());
 
-      UpdateComponentTypeRequest updateRequest = UpdateComponentTypeRequest.builder()
+      ComponentTypeUpdateRequest updateRequest = ComponentTypeUpdateRequest.builder()
           .explain("수정된 컴포넌트")
           .platform(Platform.IOS)
           .componentPath("/updated")
@@ -488,7 +488,7 @@ class ThemeComponentIntegrationTest {
     @DisplayName("전체 컴포넌트 생성 및 연동 테스트")
     void createAndLinkAllComponents() throws Exception {
       // ColorStyle 생성
-      CreateColorStyleRequest colorStyleRequest = CreateColorStyleRequest.builder()
+      ColorStyleCreateDto colorStyleRequest = ColorStyleCreateDto.builder()
           .explain("통합 테스트 색상")
           .platform(Platform.ANDROID)
           .styleSheetPath("/integration.css")
@@ -502,7 +502,7 @@ class ThemeComponentIntegrationTest {
           .andExpect(status().isOk());
 
       // ComponentType 생성
-      CreateComponentTypeRequest componentTypeRequest = CreateComponentTypeRequest.builder()
+      ComponentTypeCreateRequest componentTypeRequest = ComponentTypeCreateRequest.builder()
           .explain("통합 테스트 컴포넌트")
           .platform(Platform.ANDROID)
           .componentPath("/integration")

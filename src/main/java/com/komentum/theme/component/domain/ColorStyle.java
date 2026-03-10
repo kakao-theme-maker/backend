@@ -1,5 +1,6 @@
 package com.komentum.theme.component.domain;
 
+import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
 import com.komentum.theme.component.enums.Platform;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,11 +46,22 @@ public class ColorStyle {
   @Column(name = "style_props_name", nullable = false)
   private String stylePropsName;
 
-  public void update(ColorStyle colorStyle) {
-    this.explain = colorStyle.explain;
-    this.platform = colorStyle.platform;
-    this.styleSheetPath = colorStyle.styleSheetPath;
-    this.styleElementName = colorStyle.styleElementName;
-    this.stylePropsName = colorStyle.stylePropsName;
+  public void update(ColorStyleUpdateRequest colorStyle) {
+    if (colorStyle.getExplain() != null) {
+      this.explain = colorStyle.getExplain();
+    }
+    if (colorStyle.getPlatform() != null) {
+      this.platform = colorStyle.getPlatform();
+    }
+    if (colorStyle.getStyleSheetPath() != null) {
+      this.styleSheetPath = colorStyle.getStyleSheetPath();
+    }
+    if (colorStyle.getStyleElementName() != null) {
+      this.styleElementName = colorStyle.getStyleElementName();
+    }
+    if (colorStyle.getStylePropsName() != null) {
+      this.stylePropsName = colorStyle.getStylePropsName();
+    }
+  }
   }
 }
