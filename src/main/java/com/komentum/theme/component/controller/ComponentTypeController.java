@@ -6,6 +6,7 @@ import com.komentum.theme.component.dto.ComponentTypeDto;
 import com.komentum.theme.component.dto.ComponentTypeUpdateRequest;
 import com.komentum.theme.component.dto.SeedResult;
 import com.komentum.theme.component.mapper.ComponentTypeMapper;
+import com.komentum.theme.component.service.ComponentTypeSeeder;
 import com.komentum.theme.component.service.ComponentTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -64,5 +65,10 @@ public class ComponentTypeController {
     return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(updatedComponentType));
   }
 
+  @PutMapping("/seed")
+  @Operation(summary = "Admin 사용자가 시드 데이터를 기반으로 component type 정보를 수정/삽입한다")
+  public ResponseEntity<SeedResult> upsertComponentTypeWithSeed() {
+    SeedResult result = componentTypeSeeder.upsertComponentType();
+    return ResponseEntity.ok(result);
   }
 }
