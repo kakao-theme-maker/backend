@@ -6,6 +6,7 @@ import com.komentum.theme.component.dto.ColorStyleResponse;
 import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
 import com.komentum.theme.component.dto.SeedResult;
 import com.komentum.theme.component.mapper.ColorStyleMapper;
+import com.komentum.theme.component.service.ColorStyleSeeder;
 import com.komentum.theme.component.service.ColorStyleService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -65,5 +66,10 @@ public class ColorStyleController {
     return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(updatedColorStyle));
   }
 
+  @PutMapping("/seed")
+  @Operation(summary = "Admin 사용자가 시드 데이터를 기반으로 color style 정보를 수정/삽입한다")
+  public ResponseEntity<SeedResult> upsertColorStyleBySeed() {
+    SeedResult result = colorStyleSeeder.upsertColorStyleSeed();
+    return ResponseEntity.ok(result);
   }
 }

@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -63,5 +64,23 @@ public class ColorStyle {
       this.stylePropsName = colorStyle.getStylePropsName();
     }
   }
+
+  public void replace(ColorStyle source) {
+    this.explain = source.getExplain();
+    this.platform = source.getPlatform();
+    this.styleSheetPath = source.getStyleSheetPath();
+    this.styleElementName = source.getStyleElementName();
+    this.stylePropsName = source.stylePropsName;
+  }
+
+  public boolean isSame(ColorStyle other) {
+    if (other == null) {
+      return false;
+    }
+    return Objects.equals(this.explain, other.explain)
+        && this.platform == other.platform
+        && Objects.equals(this.styleSheetPath, other.styleSheetPath)
+        && Objects.equals(this.styleElementName, other.styleElementName)
+        && Objects.equals(this.stylePropsName, other.stylePropsName);
   }
 }
