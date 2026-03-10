@@ -1,15 +1,18 @@
 package com.komentum.theme.component.controller;
 
+import com.komentum.theme.component.domain.ComponentType;
+import com.komentum.theme.component.dto.ComponentTypeCreateRequest;
 import com.komentum.theme.component.dto.ComponentTypeDto;
-import com.komentum.theme.component.dto.CreateComponentTypeRequest;
-import com.komentum.theme.component.dto.UpdateComponentTypeRequest;
+import com.komentum.theme.component.dto.ComponentTypeUpdateRequest;
+import com.komentum.theme.component.dto.SeedResult;
+import com.komentum.theme.component.mapper.ComponentTypeMapper;
 import com.komentum.theme.component.service.ComponentTypeService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,47 +23,46 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/component-types")
+@RequiredArgsConstructor
 public class ComponentTypeController {
 
   private final ComponentTypeService componentTypeService;
-
-  @Autowired
-  public ComponentTypeController(ComponentTypeService componentTypeService) {
-    this.componentTypeService = componentTypeService;
-  }
+  private final ComponentTypeSeeder componentTypeSeeder;
+  private final ComponentTypeMapper componentTypeMapper;
 
   @PostMapping
+  @Operation(summary = "Admin 사용자가 새로운 component type 생성")
   public ResponseEntity<ComponentTypeDto> createComponentType(
-      @Valid @RequestBody CreateComponentTypeRequest request) {
-    var createdComponentType = componentTypeService.createComponentType(request);
-    return ResponseEntity.ok(ComponentTypeDto.from(createdComponentType));
+      @Valid @RequestBody ComponentTypeCreateRequest request) {
+    ComponentType createdComponentType = componentTypeService.createComponentType(request);
+    return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(createdComponentType));
   }
 
-  @GetMapping("/{id}")
-  public ResponseEntity<ComponentTypeDto> getComponentTypeById(@PathVariable("id") Integer id) {
-    var componentType = componentTypeService.getComponentTypeById(id);
-    return ResponseEntity.ok(ComponentTypeDto.from(componentType));
+  @GetMapping("/{component_type_id}")
+  @Operation(summary = "인증된 사용자가 ID=component_type_id인 component type 조회")
+  public ResponseEntity<ComponentTypeDto> getComponentTypeById(
+      @PathVariable("component_type_id") Integer id) {
+    ComponentType componentType = componentTypeService.getComponentTypeById(id);
+    return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(componentType));
   }
 
   @GetMapping
+  @Operation(summary = "인증된 사용자가 모든 component type 조회")
   public ResponseEntity<List<ComponentTypeDto>> getAllComponentTypes() {
-    var componentTypes = componentTypeService.getAllComponentTypes()
+    List<ComponentTypeDto> componentTypes = componentTypeService.getAllComponentTypes()
         .stream()
-        .map(ComponentTypeDto::from)
+        .map(componentTypeMapper::toComponentTypeDto)
         .collect(Collectors.toList());
     return ResponseEntity.ok(componentTypes);
   }
 
   @PutMapping("/{id}")
+  @Operation(summary = "Admin 사용자가 ID=component_type_id인 component type 수정")
   public ResponseEntity<ComponentTypeDto> updateComponentType(@PathVariable("id") Integer id,
-      @Valid @RequestBody UpdateComponentTypeRequest request) {
-    var updatedComponentType = componentTypeService.updateComponentType(id, request);
-    return ResponseEntity.ok(ComponentTypeDto.from(updatedComponentType));
+      @Valid @RequestBody ComponentTypeUpdateRequest request) {
+    ComponentType updatedComponentType = componentTypeService.updateComponentType(id, request);
+    return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(updatedComponentType));
   }
 
-  @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteComponentType(@PathVariable("id") Integer id) {
-    componentTypeService.deleteComponentType(id);
-    return ResponseEntity.ok().build();
   }
 }

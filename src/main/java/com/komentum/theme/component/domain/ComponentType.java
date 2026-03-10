@@ -1,5 +1,6 @@
 package com.komentum.theme.component.domain;
 
+import com.komentum.theme.component.dto.ComponentTypeUpdateRequest;
 import com.komentum.theme.component.enums.Platform;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -60,7 +62,47 @@ public class ComponentType {
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
+  public void update(ComponentTypeUpdateRequest componentType) {
+    if (componentType.getExplain() != null) {
+      this.explain = componentType.getExplain();
+    }
+    if (componentType.getPlatform() != null) {
+      this.platform = componentType.getPlatform();
+    }
+    if (componentType.getComponentName() != null) {
+      this.componentName = componentType.getComponentName();
+    }
+    if (componentType.getComponentPath() != null) {
+      this.componentPath = componentType.getComponentPath();
+    }
+    if (componentType.getSizeX() != null) {
+      this.sizeX = componentType.getSizeX();
+    }
+    if (componentType.getSizeY() != null) {
+      this.sizeY = componentType.getSizeY();
+    }
+  }
 
-  public static class ComponentTypeBuilder {
+  public void replace(ComponentType componentType) {
+    this.explain = componentType.getExplain();
+    this.platform = componentType.getPlatform();
+    this.componentName = componentType.getComponentName();
+    this.componentPath = componentType.getComponentPath();
+    this.sizeX = componentType.getSizeX();
+    this.sizeY = componentType.getSizeY();
+    this.createdAt = componentType.getCreatedAt();
+    this.updatedAt = componentType.getUpdatedAt();
+  }
+
+  public boolean isSame(ComponentType other) {
+    if (other == null) {
+      return false;
+    }
+    return Objects.equals(this.explain, other.explain)
+        && this.platform == other.platform
+        && Objects.equals(this.componentPath, other.componentPath)
+        && Objects.equals(this.componentName, other.componentName)
+        && Objects.equals(this.sizeX, other.sizeX)
+        && Objects.equals(this.sizeY, other.sizeY);
   }
 }

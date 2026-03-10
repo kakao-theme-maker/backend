@@ -1,12 +1,12 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.dto.CreateComponentTypeRequest;
-import com.komentum.theme.component.dto.UpdateComponentTypeRequest;
+import com.komentum.theme.component.dto.ComponentTypeCreateRequest;
+import com.komentum.theme.component.dto.ComponentTypeUpdateRequest;
+import com.komentum.theme.component.mapper.ComponentTypeMapper;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
-import com.komentum.theme.exception.ResourceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,48 +16,51 @@ import org.springframework.transaction.annotation.Transactional;
 public class ComponentTypeService {
 
   private final ComponentTypeRepository componentTypeRepository;
+  private final ComponentTypeMapper componentTypeMapper;
 
+  /**
+   * 파라미터를 기반으로 Component Type을 생성한다
+   * @param request Component Type 생성에 필요한 데이터 DTO
+   * @return 생성된 ComponentType 반환
+   * */
   @Transactional
-  public ComponentType createComponentType(CreateComponentTypeRequest request) {
-    ComponentType componentType = ComponentType.builder()
-        .explain(request.getExplain())
-        .platform(request.getPlatform())
-        .componentPath(request.getComponentPath())
-        .componentName(request.getComponentName())
-        .sizeX(request.getSizeX())
-        .sizeY(request.getSizeY())
-        .build();
+  public ComponentType createComponentType(ComponentTypeCreateRequest request) {
+    ComponentType componentType = componentTypeMapper.toComponentType(request);
     return componentTypeRepository.save(componentType);
   }
 
+  /**
+   * ID를 기반으로 Component Type 조회
+   * @param componentType component type의 ID
+   * @return 조회된 componentType 반환
+   * */
   @Transactional(readOnly = true)
-  public ComponentType getComponentTypeById(Integer id) {
-    return componentTypeRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("ComponentType not found with id: " + id));
+  public ComponentType getComponentTypeById(Integer componentType) {
+    return componentTypeRepository.findById(componentType)
+        .orElseThrow(
+            () -> new EntityNotFoundException("ComponentType not found with id: " + componentType));
   }
 
+  /**
+   * 모든 component type을 조회한다
+   * @return 모든 componentType 반환
+   * */
   @Transactional(readOnly = true)
   public List<ComponentType> getAllComponentTypes() {
     return componentTypeRepository.findAll();
   }
 
-  public ComponentType updateComponentType(Integer id, UpdateComponentTypeRequest request) {
-    ComponentType componentType = getComponentTypeById(id);
-
-    Optional.ofNullable(request.getExplain()).ifPresent(componentType::setExplain);
-    Optional.ofNullable(request.getPlatform()).ifPresent(componentType::setPlatform);
-    Optional.ofNullable(request.getComponentPath()).ifPresent(componentType::setComponentPath);
-    Optional.ofNullable(request.getComponentName()).ifPresent(componentType::setComponentName);
-    Optional.ofNullable(request.getSizeX()).ifPresent(componentType::setSizeX);
-    Optional.ofNullable(request.getSizeY()).ifPresent(componentType::setSizeY);
-
+  /**
+   * id=componentTypeId인 component type을 파라미터를 기반으로 갱신한다
+   * @param componentTypeId 수정할 component type의 ID
+   * @param request component type 수정을 위한 데이터 DTO
+   * @return 수정된 componentType 반환
+   * */
+  @Transactional
+  public ComponentType updateComponentType(Integer componentTypeId,
+      ComponentTypeUpdateRequest request) {
+    ComponentType componentType = getComponentTypeById(componentTypeId);
+    componentType.update(request);
     return componentTypeRepository.save(componentType);
-  }
-
-  public void deleteComponentType(Integer id) {
-    if (!componentTypeRepository.existsById(id)) {
-      throw new ResourceNotFoundException("ComponentType not found with id: " + id);
-    }
-    componentTypeRepository.deleteById(id);
   }
 }
