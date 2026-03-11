@@ -10,9 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class DesignComponentFacade {
 
   private final UserRetrieveService userRetrieveService;
@@ -26,10 +28,12 @@ public class DesignComponentFacade {
   }
 
   // READ
+  @Transactional(readOnly = true)
   public DesignComponentDto getDesignComponentById(Integer id) {
     return designComponentService.getDesignComponentById(id);
   }
 
+  @Transactional(readOnly = true)
   public Page<DesignComponentDto> getAllDesignComponents(Pageable pageable) {
     return designComponentService.getAllDesignComponents(pageable);
   }
