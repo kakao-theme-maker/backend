@@ -18,6 +18,7 @@ public interface DesignComponentMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "user", source = "user")
-  DesignComponent toEntity(CreateDesignComponentRequest request, User user);
+  @Mapping(target = "imageUrl", source = "imageUrl")
+  DesignComponent toEntity(CreateDesignComponentRequest request, String imageUrl, User user);
 
 }

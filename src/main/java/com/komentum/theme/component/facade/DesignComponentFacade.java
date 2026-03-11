@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -22,9 +23,10 @@ public class DesignComponentFacade {
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
+      MultipartFile image,
       String publicUserId) {
     User user = userRetrieveService.findUserEntity(publicUserId);
-    return designComponentService.createDesignComponent(request, user);
+    return designComponentService.createDesignComponent(request, image, user);
   }
 
   // READ
@@ -40,8 +42,8 @@ public class DesignComponentFacade {
 
   // UPDATE
   public DesignComponentDto updateDesignComponent(Integer designComponentId,
-      UpdateDesignComponentRequest request) {
-    return designComponentService.updateDesignComponent(designComponentId, request);
+      UpdateDesignComponentRequest request, MultipartFile image) {
+    return designComponentService.updateDesignComponent(designComponentId, request, image);
 
   }
 

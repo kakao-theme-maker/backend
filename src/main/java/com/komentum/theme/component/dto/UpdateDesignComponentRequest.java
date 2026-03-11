@@ -13,8 +13,6 @@ import lombok.NoArgsConstructor;
 @Schema(description = "designComponent 수정 요청 DTO")
 public class UpdateDesignComponentRequest {
 
-  @Schema(description = "이미지 URL", example = "https://example.com/image.png")
-  private String imageUrl;
 
   @Schema(description = "공개 여부", example = "true")
   private Boolean isPublic;

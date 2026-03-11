@@ -18,9 +18,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/design-components")
@@ -39,9 +40,10 @@ public class DesignComponentController {
   @PostMapping
   @Operation(summary = "현재 인증된 사용자가 DesignComponent를 생성한다.")
   public ResponseEntity<DesignComponentDto> createDesignComponent(
-      @Valid @RequestBody CreateDesignComponentRequest request,
+      @Valid @RequestPart CreateDesignComponentRequest request,
+      @RequestPart("image") MultipartFile image,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    DesignComponentDto saved = designComponentFacade.createDesignComponent(request,
+    DesignComponentDto saved = designComponentFacade.createDesignComponent(request, image,
         userDetails.getPublicUserId());
     return ResponseEntity.ok(saved);
   }
@@ -84,8 +86,9 @@ public class DesignComponentController {
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID = id인 designComponent를 수정한다.")
   public ResponseEntity<DesignComponentDto> updateDesignComponent(
       @PathVariable("id") Integer id,
-      @Valid @RequestBody UpdateDesignComponentRequest request) {
-    DesignComponentDto updated = designComponentFacade.updateDesignComponent(id, request);
+      @Valid @RequestPart UpdateDesignComponentRequest request,
+      @RequestPart(value = "image", required = false) MultipartFile image) {
+    DesignComponentDto updated = designComponentFacade.updateDesignComponent(id, request, image);
     return ResponseEntity.ok(updated);
   }
 

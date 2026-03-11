@@ -1,5 +1,6 @@
 package com.komentum.theme.component.service;
 
+import com.komentum.global.utils.FileManager;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.domain.policy.DesignComponentPolicy;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
@@ -9,12 +10,15 @@ import com.komentum.theme.component.mapper.DesignComponentMapper;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
+import java.io.IOException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -24,11 +28,14 @@ public class DesignComponentService {
   private final DesignComponentRepository designComponentRepository;
   private final DesignComponentPolicy designComponentPolicy;
   private final DesignComponentMapper mapper;
+  private final FileManager fileManager;
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
+      MultipartFile image,
       User user) {
-    DesignComponent newComponent = mapper.toEntity(request, user);
+    String imageUrl = uploadImage(image);
+    DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
     return mapper.toDto(designComponentRepository.save(newComponent));
   }
 
@@ -55,13 +62,15 @@ public class DesignComponentService {
 
   // UPDATE
   public DesignComponentDto updateDesignComponent(Integer designComponentId,
-      UpdateDesignComponentRequest request) {
+      UpdateDesignComponentRequest request, MultipartFile image) {
     DesignComponent component = getEntityById(designComponentId);
 
     // designComponentPolicy 검증
     if (!designComponentPolicy.canUpdate(component)) {
       throw new AccessDeniedException("failed to update designComponent : invalid user or role");
     }
+
+    String imageUrl = (image != null) ? uploadImage(image) : null;
 
     component.update(
         request.getImageUrl(),
@@ -78,6 +87,17 @@ public class DesignComponentService {
       throw new AccessDeniedException("failed to delete designComponent : invalid user or role");
     }
     designComponentRepository.delete(component);
+  }
+
+  private String uploadImage(MultipartFile image) {
+    try {
+      String fileName =
+          "design-components/" + UUID.randomUUID() + "_" + image.getOriginalFilename();
+      return fileManager.uploadFile(image.getBytes(), fileName);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to upload image", e);
+    }
+
   }
 
 
