@@ -45,6 +45,9 @@ public class BoardManagementHelper {
   }
 
   public String findPreviewImageUrl(String fileName) {
+    if (fileName == null) {
+      return null;
+    }
     return fileManager.resolveFilePath(fileName);
   }
 }
