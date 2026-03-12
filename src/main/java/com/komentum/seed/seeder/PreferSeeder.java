@@ -6,7 +6,9 @@ import com.komentum.post.domain.Prefer;
 import com.komentum.post.repository.PreferRepository;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -32,17 +34,28 @@ public class PreferSeeder {
     if (likerList.size() < size) {
       throw new IllegalArgumentException("authors must be >= size");
     }
+    List<Prefer> existingPrefers = preferRepository.fetchJoinByPostIn(posts);
+    Map<User, Set<Post>> userPostPreferMap = existingPrefers.stream()
+        .collect(Collectors.groupingBy(
+            Prefer::getUser,
+            Collectors.mapping(
+                Prefer::getPost,
+                Collectors.toSet()
+            )));
+    Map<Post, Set<Prefer>> existingPostPreferMap = existingPrefers.stream()
+        .collect(Collectors.groupingBy(
+            Prefer::getPost,
+            Collectors.toSet()));
     List<Prefer> prefers = new ArrayList<>();
     for (Post post : posts) {
-      List<Prefer> existing = preferRepository.findByPost(post);
-      Set<User> used = existing.stream()
-          .map(Prefer::getUser)
-          .collect(Collectors.toSet());
+      Set<Prefer> existing = existingPostPreferMap.getOrDefault(post, Collections.emptySet());
       int created = existing.size();
       for (User liker : likerList) {
+        Set<Post> alreadyPreferPosts = userPostPreferMap.getOrDefault(liker,
+            Collections.emptySet());
         if (created >= size) {
           break;
-        } else if (used.contains(liker)) {
+        } else if (alreadyPreferPosts.contains(post)) {
           continue;
         }
         created++;

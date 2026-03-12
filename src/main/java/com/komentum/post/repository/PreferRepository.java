@@ -6,6 +6,8 @@ import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -19,7 +21,10 @@ public interface PreferRepository extends JpaRepository<Prefer, Long> {
 
   Long countPreferByPost_PostId(Long postPostId);
 
-  List<Prefer> findByPostIn(List<Post> posts);
-
-  List<Prefer> findByPost(Post post);
+  @Query("select distinct p "
+      + "from Prefer p "
+      + "join fetch p.user "
+      + "join fetch p.post "
+      + "where p.post in :posts")
+  List<Prefer> fetchJoinByPostIn(@Param("posts") List<Post> posts);
 }
