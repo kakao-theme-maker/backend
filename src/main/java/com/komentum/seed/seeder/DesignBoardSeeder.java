@@ -1,6 +1,5 @@
 package com.komentum.seed.seeder;
 
-import com.github.javafaker.Faker;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.repository.DesignBoardRepository;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class DesignBoardSeeder {
 
   private final DesignBoardRepository designBoardRepository;
-  private final Faker faker;
 
   private DesignBoard generateOne(DesignComponent designComponent, Post post) {
     return DesignBoard.builder()

@@ -1,10 +1,6 @@
 package com.komentum.seed;
 
-import com.komentum.post.domain.Comment;
-import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
-import com.komentum.post.domain.Prefer;
-import com.komentum.post.domain.ThemeBoard;
 import com.komentum.seed.seeder.CommentSeeder;
 import com.komentum.seed.seeder.DesignBoardSeeder;
 import com.komentum.seed.seeder.DesignComponentSeeder;
@@ -42,13 +38,13 @@ public class TestDataGenerator {
   public void init() {
     List<User> users = userSeeder.seedData(10); // 10
     List<Post> posts = postSeeder.seedPerUser(3, users); // 30
-    List<Comment> comments = commentSeeder.seedPerPost(5, posts, users); // 150
-    List<Prefer> prefers = preferSeeder.seedPerPost(5, posts, users); // 150
+    commentSeeder.seedPerPost(5, posts, users); // 150
+    preferSeeder.seedPerPost(5, posts, users); // 150
     List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(4, users); // 40
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(4, users); // 40
-    List<ThemeBoard> themeBoards = themeBoardSeeder.seedData(themeComponents,
+    themeBoardSeeder.seedData(themeComponents,
         posts.subList(10, 20));
-    List<DesignBoard> designBoards = designBoardSeeder.seedData(designComponents,
+    designBoardSeeder.seedData(designComponents,
         posts.subList(20, 30));
   }
 }

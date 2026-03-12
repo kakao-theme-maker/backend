@@ -1,6 +1,5 @@
 package com.komentum.seed.seeder;
 
-import com.github.javafaker.Faker;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.repository.ThemeBoardRepository;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ThemeBoardSeeder {
 
   private final ThemeBoardRepository themeBoardRepository;
-  private final Faker faker;
 
   private ThemeBoard generateOne(ThemeComponent themeComponent, Post post) {
     return ThemeBoard.builder()
