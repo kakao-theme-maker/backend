@@ -26,11 +26,11 @@ public class ThemeBoard {
   private Long themeBoardId;
 
   @OneToOne
-  @JoinColumn(name = "post_id", nullable = false, unique = true)
+  @JoinColumn(name = "post_id", nullable = false)
   private Post post;
 
   @OneToOne
-  @JoinColumn(name = "theme_component_id", nullable = false, unique = true)
+  @JoinColumn(name = "theme_component_id", nullable = false)
   private ThemeComponent themeComponent;
 
   public Long findPostId() {

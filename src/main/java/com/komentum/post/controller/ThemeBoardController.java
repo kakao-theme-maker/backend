@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -94,11 +95,11 @@ public class ThemeBoardController {
    * @param profileImage 게시글 프로필 이미지 정보
    *
    */
-  @PostMapping
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "인증된 사용자가 테마 게시글을 생성한다")
   public ResponseEntity<ThemeBoardDetailDto> createPost(
-      @RequestPart("board_info") ThemeBoardCreateDto createDto,
-      @RequestPart("preview_image") MultipartFile profileImage,
+      @RequestPart(value = "board_info") ThemeBoardCreateDto createDto,
+      @RequestPart(value = "preview_image", required = false) MultipartFile profileImage,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
         themeBoardManagementFacade.createThemeBoard(createDto, profileImage,
