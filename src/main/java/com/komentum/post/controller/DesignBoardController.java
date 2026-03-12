@@ -10,6 +10,7 @@ import com.komentum.post.facade.DesignBoardManagementFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,11 +57,11 @@ public class DesignBoardController {
   /**
    * 디자인 에셋 게시글 생성
    * */
-  @PostMapping
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글을 작성한다")
   public ResponseEntity<DesignBoardDetailDto> createDesignBoard(
       @RequestPart("board_info") DesignBoardCreateDto createDto,
-      @RequestPart("preview_image") MultipartFile profileImage,
+      @RequestPart(value = "preview_image", required = false) MultipartFile profileImage,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     return ResponseEntity.ok(
