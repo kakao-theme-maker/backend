@@ -15,7 +15,7 @@ public class DateUtils {
   public static LocalDate toLocalDate(Date date) {
     return date
         .toInstant()
-        .atZone(ZoneId.systemDefault())
+        .atZone(ZoneId.of("UTC"))
         .toLocalDate();
   }
 }
