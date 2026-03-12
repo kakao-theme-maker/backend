@@ -34,7 +34,7 @@ public class ThemeComponentSeeder {
         .map(User::getUserEmail)
         .toList();
     List<ThemeComponent> existing = themeComponentRepository.findByUserEmailIn(userEmailList);
-    if (existing.size() > size * authors.size()) {
+    if (existing.size() >= size * authors.size()) {
       return existing;
     }
     List<ThemeComponent> themeComponents = new ArrayList<>();
