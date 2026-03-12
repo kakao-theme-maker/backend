@@ -35,7 +35,9 @@ public class DesignComponentSeeder {
     }
     List<DesignComponent> designComponents = new ArrayList<>();
     for (User owner : owners) {
-      designComponents.add(generateOne(owner));
+      for (int i = 0; i < size; i++) {
+        designComponents.add(generateOne(owner));
+      }
     }
     return designComponentRepository.saveAll(designComponents);
   }
