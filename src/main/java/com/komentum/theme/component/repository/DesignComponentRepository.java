@@ -4,8 +4,6 @@ import com.komentum.theme.component.domain.DesignComponent;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -17,5 +15,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
   List<DesignComponent> findByUserEmail(String email);
 
   List<DesignComponent> findByIsPublic(Boolean isPublic);
+
+  List<DesignComponent> findByUserEmailIn(List<String> userEmails);
 }
 

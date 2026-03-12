@@ -3,6 +3,7 @@ package com.komentum.post.repository;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
 import com.komentum.user.domain.User;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -17,4 +18,8 @@ public interface PreferRepository extends JpaRepository<Prefer, Long> {
   void deleteByUserAndPost(User user, Post post);
 
   Long countPreferByPost_PostId(Long postPostId);
+
+  List<Prefer> findByPostIn(List<Post> posts);
+
+  List<Prefer> findByPost(Post post);
 }

@@ -1,6 +1,8 @@
 package com.komentum.post.repository;
 
+import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
+import com.komentum.theme.theme.domain.ThemeComponent;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +23,6 @@ public interface ThemeBoardRepository extends JpaRepository<ThemeBoard, Long> {
       + "join fetch tb.themeComponent tc "
       + "where tb.post.postId in :postIds")
   List<ThemeBoard> findAllByPostIds(List<Long> postIds);
+
+  boolean existsByThemeComponentAndPost(ThemeComponent tc, Post post);
 }
