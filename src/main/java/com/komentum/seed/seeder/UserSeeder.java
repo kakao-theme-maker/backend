@@ -44,6 +44,7 @@ public class UserSeeder {
         .build();
   }
 
+  @Transactional
   public User createOrRetrieveRootUser() {
     Optional<User> rootUser = userRepository.findByUserEmail(testUserProperty.getUserEmail());
     return rootUser.orElseGet(() ->
