@@ -1,5 +1,6 @@
 package com.komentum.global.security;
 
+import com.komentum.global.properties.SecurityProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -53,7 +54,7 @@ public class SecurityConfig {
   }
 
   @Bean
-  public BCryptPasswordEncoder passwordEncoder(){
+  public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 }
