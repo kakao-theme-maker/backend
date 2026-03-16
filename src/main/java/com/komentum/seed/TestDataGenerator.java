@@ -37,6 +37,7 @@ public class TestDataGenerator {
   @Transactional
   public void init() {
     List<User> users = userSeeder.seedData(10); // 10
+    userSeeder.createOrRetrieveRootUser();
     List<Post> posts = postSeeder.seedPerUser(3, users); // 30
     commentSeeder.seedPerPost(5, posts, users); // 150
     preferSeeder.seedPerPost(5, posts, users); // 150
