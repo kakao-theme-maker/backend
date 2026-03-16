@@ -1,0 +1,67 @@
+package com.komentum.global.utils;
+
+import com.komentum.config.WebConfig;
+import jakarta.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConditionalOnProperty(name = "file.storage", havingValue = "local")
+public class LocalFileManager implements FileManager {
+
+  @Value("${file.base-url}")
+  private String baseUrl;
+
+  @PostConstruct
+  public void init() throws IOException {
+    Path uploadPath = Paths.get(WebConfig.UPLOAD_DIR);
+    Files.createDirectories(uploadPath);
+  }
+
+  @Override
+  public String resolveFilePath(String fileName) {
+    return baseUrl + WebConfig.UPLOAD_URL_PREFIX + "/" + fileName;
+  }
+
+  private String resolveFileLocation(String fileName) {
+    return WebConfig.UPLOAD_DIR + "/" + fileName;
+  }
+
+  @Override
+  public String uploadFile(byte[] fileBytes, String fileName) {
+    String fileLocation = resolveFileLocation(fileName);
+    try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
+      Files.copy(inputStream, Paths.get(fileLocation));
+    } catch (IOException e) {
+      throw new RuntimeException("failed to upload file : " + fileLocation, e);
+    }
+    return resolveFilePath(fileName);
+  }
+
+  @Override
+  public void deleteFile(String fileName) {
+    String fileLocation = resolveFileLocation(fileName);
+    try {
+      Files.deleteIfExists(Paths.get(fileLocation));
+    } catch (IOException e) {
+      throw new RuntimeException("failed to delete file : " + fileLocation, e);
+    }
+  }
+
+  @Override
+  public byte[] downloadFile(String fileName) {
+    String fileLocation = resolveFileLocation(fileName);
+    try {
+      return Files.readAllBytes(Paths.get(fileLocation));
+    } catch (IOException e) {
+      throw new RuntimeException("failed to read file : " + fileName, e);
+    }
+  }
+}
