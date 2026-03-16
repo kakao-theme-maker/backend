@@ -1,4 +1,4 @@
-package com.komentum.global.security;
+package com.komentum.global.properties;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
