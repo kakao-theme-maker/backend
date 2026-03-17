@@ -1,14 +1,14 @@
 package com.komentum.theme.theme.controller;
 
-import com.komentum.global.dto.PageableRequestDto;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,22 +22,22 @@ public class ThemeRetrieveController {
 
   @GetMapping
   public ResponseEntity<List<ThemeComponentDto>> getAllThemes(
-      @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
-    return ResponseEntity.ok(themeRetrieveService.getAllThemes(pageableRequestDto.toPageable()));
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
+    return ResponseEntity.ok(themeRetrieveService.getAllThemes(pageable));
   }
 
   @GetMapping("/public")
   public ResponseEntity<List<ThemeComponentDto>> getPublicThemes(
-      @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
-    return ResponseEntity.ok(themeRetrieveService.getPublicThemes(pageableRequestDto.toPageable()));
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
+    return ResponseEntity.ok(themeRetrieveService.getPublicThemes(pageable));
   }
 
   @GetMapping("/user/{userEmail}")
   public ResponseEntity<List<ThemeComponentDto>> getThemesByUserEmail(
       @PathVariable("userEmail") String userEmail,
-      @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
-        themeRetrieveService.getThemesByUserEmail(userEmail, pageableRequestDto.toPageable()));
+        themeRetrieveService.getThemesByUserEmail(userEmail, pageable));
   }
 
   @GetMapping("/{id}")
@@ -47,18 +47,18 @@ public class ThemeRetrieveController {
 
   @GetMapping("/completed")
   public ResponseEntity<List<ThemeComponentDto>> getCompletedThemes(
-      @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     List<ThemeComponentDto> completedThemes = themeRetrieveService.getCompletedThemes(
-        pageableRequestDto.toPageable());
+        pageable);
     return ResponseEntity.ok(completedThemes);
   }
 
   @GetMapping("/completed/user/{userEmail}")
   public ResponseEntity<List<ThemeComponentDto>> getCompletedThemesByUser(
       @PathVariable("userEmail") String userEmail,
-      @Valid @ModelAttribute PageableRequestDto pageableRequestDto) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     List<ThemeComponentDto> completedThemes = themeRetrieveService.getCompletedThemesByUser(
-        userEmail, pageableRequestDto.toPageable());
+        userEmail, pageable);
     return ResponseEntity.ok(completedThemes);
   }
 }

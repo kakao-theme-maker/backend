@@ -7,7 +7,9 @@ import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
 import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.user.domain.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,12 +38,15 @@ class ThemeRetrieveControllerTest {
   @Autowired
   private MockMvcUtils mockMvcUtils;
 
+  private TestClientDto testClient;
+
 
   @BeforeEach
   void setUp() {
     themeDataGenerator.deleteTestData();
     themeDataGenerator.generateTestData(10);
-    userDataGenerator.generateTestUser(themeDataGenerator.userEmail);
+    User testUser = userDataGenerator.generateTestUser(themeDataGenerator.userEmail);
+    testClient = TestClientDto.fromEntity(testUser);
   }
 
   @AfterEach
@@ -58,10 +63,10 @@ class ThemeRetrieveControllerTest {
     int pageSize = 3;
     // when
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/themes")
-        .param("pageNumber", String.valueOf(pageNumber))
-        .param("pageSize", String.valueOf(pageSize));
+        .param("page", String.valueOf(pageNumber))
+        .param("size", String.valueOf(pageSize));
     requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
-        themeDataGenerator.userEmail);
+        testClient);
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk())
@@ -77,7 +82,7 @@ class ThemeRetrieveControllerTest {
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/themes/{id}",
         toFind.getThemeComponentId());
     requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
-        themeDataGenerator.userEmail);
+        testClient);
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk())
@@ -92,10 +97,10 @@ class ThemeRetrieveControllerTest {
     int pageSize = 3;
     // when
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/themes/public")
-        .param("pageNumber", String.valueOf(pageNumber))
-        .param("pageSize", String.valueOf(pageSize));
+        .param("page", String.valueOf(pageNumber))
+        .param("size", String.valueOf(pageSize));
     requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
-        themeDataGenerator.userEmail);
+        testClient);
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk());
@@ -112,10 +117,10 @@ class ThemeRetrieveControllerTest {
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(
             "/api/themes/user/{userEmail}",
             userEmail)
-        .param("pageNumber", String.valueOf(pageNumber))
-        .param("pageSize", String.valueOf(pageSize));
+        .param("page", String.valueOf(pageNumber))
+        .param("size", String.valueOf(pageSize));
     requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
-        themeDataGenerator.userEmail);
+        testClient);
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk());
@@ -130,10 +135,10 @@ class ThemeRetrieveControllerTest {
     // when
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(
             "/api/themes/completed")
-        .param("pageNumber", String.valueOf(pageNumber))
-        .param("pageSize", String.valueOf(pageSize));
+        .param("page", String.valueOf(pageNumber))
+        .param("size", String.valueOf(pageSize));
     requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
-        themeDataGenerator.userEmail);
+        testClient);
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk());
@@ -144,18 +149,17 @@ class ThemeRetrieveControllerTest {
   void getCompletedThemesByUser_success() throws Exception {
     // given
     int pageNumber = 1;
-    int pageSize = 3;
+    int pageSize = 4;
     String userEmail = themeDataGenerator.userEmail;
     // when
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(
             "/api/themes/completed/user/{userEmail}", userEmail)
-        .param("pageNumber", String.valueOf(pageNumber))
-        .param("pageSize", String.valueOf(pageSize));
+        .param("page", String.valueOf(pageNumber))
+        .param("size", String.valueOf(pageSize));
     requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
-        themeDataGenerator.userEmail);
+        testClient);
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk());
-
   }
 }
