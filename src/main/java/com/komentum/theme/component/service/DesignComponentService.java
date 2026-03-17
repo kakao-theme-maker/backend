@@ -72,9 +72,7 @@ public class DesignComponentService {
 
     String imageUrl = (image != null) ? uploadImage(image) : null;
 
-    component.update(
-        request.getImageUrl(),
-        request.getIsPublic()
+    component.update(imageUrl, request.getIsPublic()
     );
     return mapper.toDto(component);
   }
