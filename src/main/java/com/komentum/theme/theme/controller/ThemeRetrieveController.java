@@ -4,6 +4,7 @@ import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -21,20 +22,20 @@ public class ThemeRetrieveController {
 
   @GetMapping
   public ResponseEntity<List<ThemeComponentDto>> getAllThemes(
-      @PageableDefault(size = 20) Pageable pageable) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(themeRetrieveService.getAllThemes(pageable));
   }
 
   @GetMapping("/public")
   public ResponseEntity<List<ThemeComponentDto>> getPublicThemes(
-      @PageableDefault(size = 20) Pageable pageable) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(themeRetrieveService.getPublicThemes(pageable));
   }
 
   @GetMapping("/user/{userEmail}")
   public ResponseEntity<List<ThemeComponentDto>> getThemesByUserEmail(
       @PathVariable("userEmail") String userEmail,
-      @PageableDefault(size = 20) Pageable pageable) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
         themeRetrieveService.getThemesByUserEmail(userEmail, pageable));
   }
@@ -46,7 +47,7 @@ public class ThemeRetrieveController {
 
   @GetMapping("/completed")
   public ResponseEntity<List<ThemeComponentDto>> getCompletedThemes(
-      @PageableDefault(size = 20) Pageable pageable) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     List<ThemeComponentDto> completedThemes = themeRetrieveService.getCompletedThemes(
         pageable);
     return ResponseEntity.ok(completedThemes);
@@ -55,7 +56,7 @@ public class ThemeRetrieveController {
   @GetMapping("/completed/user/{userEmail}")
   public ResponseEntity<List<ThemeComponentDto>> getCompletedThemesByUser(
       @PathVariable("userEmail") String userEmail,
-      @PageableDefault(size = 20) Pageable pageable) {
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     List<ThemeComponentDto> completedThemes = themeRetrieveService.getCompletedThemesByUser(
         userEmail, pageable);
     return ResponseEntity.ok(completedThemes);

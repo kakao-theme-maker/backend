@@ -9,6 +9,7 @@ import com.komentum.post.facade.ThemeBoardManagementFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
@@ -41,7 +42,7 @@ public class ThemeBoardController {
   @GetMapping
   @Operation(summary = "인증된 사용자가 테마 게시글 목록을 조회한다")
   public ResponseEntity<List<ThemeBoardPreviewDto>> findThemeBoards(
-      @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
         themeBoardManagementFacade.findThemeBoardPreviews(pageable));
   }
@@ -52,7 +53,7 @@ public class ThemeBoardController {
   @GetMapping("/popular")
   @Operation(summary = "인증된 사용자가 인기 테마 게시글 목록을 조회한다")
   public ResponseEntity<List<ThemeBoardPreviewDto>> findPopularThemeBoards(
-      @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
         themeBoardManagementFacade.findPopularThemeBoardPreviews(
             pageable));
@@ -64,7 +65,7 @@ public class ThemeBoardController {
   @GetMapping("/recommended")
   @Operation(summary = "인증된 사용자가 추천 테마 게시글 목록을 조회한다 ( 현재 임시 데이터 제공중 )")
   public ResponseEntity<List<ThemeBoardPreviewDto>> findRecommendedThemeBoards(
-      @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
         themeBoardManagementFacade.findRecommendedThemeBoardPreviews(
             pageable));

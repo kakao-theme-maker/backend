@@ -9,6 +9,7 @@ import com.komentum.post.facade.DesignBoardManagementFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
@@ -38,7 +39,7 @@ public class DesignBoardController {
   @GetMapping
   @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글 목록을 조회힌다")
   public ResponseEntity<List<DesignBoardPreviewDto>> findDesignBoards(
-      @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
         designBoardManagementFacade.findBoardPreviews(pageable));
   }
@@ -71,7 +72,7 @@ public class DesignBoardController {
 
   /**
    * 특정 ID의 디자인 에셋 게시글 수정, 없으면 예외 처리
-   * */
+   */
   @PatchMapping("/{post_id}")
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=post_id인 디자인 에셋 게시글을 수정한다")
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
@@ -83,7 +84,7 @@ public class DesignBoardController {
 
   /**
    * 특정 디자인 에셋 게시글 삭제
-   * */
+   */
   @DeleteMapping("/{post_id}")
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=post_id인 디자인 에셋 게시글을 삭제한다")
   public ResponseEntity<DesignBoardDetailDto> deleteDesignBoard(

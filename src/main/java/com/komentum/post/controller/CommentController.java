@@ -9,6 +9,7 @@ import com.komentum.post.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class CommentController {
   @GetMapping("/{post_id}/comments")
   @Operation(summary = "현재 인증된 사용자가 ID=postId인 게시글의 모든 댓글을 조회한다")
   public ResponseEntity<List<CommentResponse>> getComments(@PathVariable("post_id") Long postId,
-      @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
         commentService.getComments(postId, pageable)
             .stream()
