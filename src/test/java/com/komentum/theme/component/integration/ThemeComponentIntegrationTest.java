@@ -1,8 +1,12 @@
 package com.komentum.theme.component.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -22,6 +26,7 @@ import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.dto.CreateColorStyleRequest;
 import com.komentum.theme.component.dto.CreateComponentTypeRequest;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
+import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateColorStyleRequest;
 import com.komentum.theme.component.dto.UpdateComponentTypeRequest;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
@@ -41,13 +46,16 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -97,6 +105,9 @@ class ThemeComponentIntegrationTest {
     userDataGenerator.deleteAllUsers();
     testUser = userDataGenerator.generateTestUser("test@example.com");
     testClient = TestClientDto.fromEntity(testUser);
+
+    when(s3FileManager.uploadFile(any(byte[].class), anyString()))
+        .thenReturn("https://s3.example.com/uploaded-image.png");
 
     CustomUserDetails userDetails = CustomUserDetails.builder()
         .userEmail(testUser.getUserEmail())
@@ -377,20 +388,30 @@ class ThemeComponentIntegrationTest {
     void createDesignComponent() throws Exception {
       // Given
       CreateDesignComponentRequest request = CreateDesignComponentRequest.builder()
-          .imageUrl("https://example.com/image.png")
           .isPublic(true)
           .build();
 
-      // When & Then
-      MockHttpServletRequestBuilder requestBuilder = post("/api/design-components")
-          .contentType(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request));
+      MockMultipartFile image = new MockMultipartFile(
+          "image", "test.png", "image/png", "test-image-content".getBytes());
+      MockMultipartFile requestPart = new MockMultipartFile(
+          "request", "", "application/json", objectMapper.writeValueAsBytes(request));
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      // When & Then
+      MockMultipartHttpServletRequestBuilder requestBuilder = multipart("/api/design-components")
+          .file(image)
+          .file(requestPart);
+
+      MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.public_user_id").value(testUser.getPublicUserId()))
-          .andExpect(jsonPath("$.image_url").value("https://example.com/image.png"))
-          .andExpect(jsonPath("$.is_public").value(true));
+          .andReturn();
+      DesignComponentDto response = objectMapper.readValue(
+          result.getResponse().getContentAsString(), DesignComponentDto.class);
+
+      assertThat(response.getDesignComponentId()).isNotNull();
+      assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
+      assertThat(response.getIsPublic()).isTrue();
+      assertThat(response.getCreatedAt()).isNotNull();
+      assertThat(response.getUpdatedAt()).isNotNull();
 
       assertThat(designComponentRepository.count()).isEqualTo(1);
     }
@@ -406,10 +427,18 @@ class ThemeComponentIntegrationTest {
       MockHttpServletRequestBuilder requestBuilder = get("/api/design-components/{id}",
           savedComponent.getDesignComponentId());
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.design_component_id").value(savedComponent.getDesignComponentId()))
-          .andExpect(jsonPath("$.public_user_id").value(testUser.getPublicUserId()));
+          .andReturn();
+      DesignComponentDto response = objectMapper.readValue(
+          result.getResponse().getContentAsString(), DesignComponentDto.class);
+
+      assertThat(response.getDesignComponentId()).isEqualTo(savedComponent.getDesignComponentId());
+      assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
+      assertThat(response.getIsPublic()).isFalse();
+      assertThat(response.getImageUrl()).isEqualTo("http://example.com/image.png");
+      assertThat(response.getCreatedAt()).isNotNull();
+      assertThat(response.getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -435,20 +464,37 @@ class ThemeComponentIntegrationTest {
           testUser, "http://example.com/image.png", false);
 
       UpdateDesignComponentRequest updateRequest = UpdateDesignComponentRequest.builder()
-          .imageUrl("https://updated.com/image.png")
           .isPublic(true)
           .build();
+      MockMultipartFile image = new MockMultipartFile(
+          "image", "updated.png", "image/png", "updated-image-content".getBytes());
+      MockMultipartFile requestPart = new MockMultipartFile(
+          "request", "", "application/json", objectMapper.writeValueAsBytes(updateRequest));
 
       // When & Then
-      MockHttpServletRequestBuilder requestBuilder = put("/api/design-components/{id}",
-          savedComponent.getDesignComponentId())
-          .contentType(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(updateRequest));
+      MockMultipartHttpServletRequestBuilder requestBuilder = multipart(
+          "/api/design-components/{id}", savedComponent.getDesignComponentId())
+          .file(image)
+          .file(requestPart);
 
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+      requestBuilder.with(request -> {
+        request.setMethod("PUT");
+        return request;
+      });
+
+      MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.image_url").value("https://updated.com/image.png"))
-          .andExpect(jsonPath("$.is_public").value(true));
+          .andReturn();
+      DesignComponentDto response = objectMapper.readValue(
+          result.getResponse().getContentAsString(), DesignComponentDto.class);
+      assertThat(response.getDesignComponentId()).isEqualTo(savedComponent.getDesignComponentId());
+      assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
+      assertThat(response.getIsPublic()).isTrue();
+      assertThat(response.getImageUrl()).isNotBlank();
+      assertThat(response.getImageUrl()).isNotEqualTo("http://example.com/image.png");
+      assertThat(response.getImageUrl()).isEqualTo("https://s3.example.com/uploaded-image.png");
+      assertThat(response.getCreatedAt()).isNotNull();
+      assertThat(response.getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -460,15 +506,24 @@ class ThemeComponentIntegrationTest {
           otherUser, "http://example.com/image.png", false);
 
       UpdateDesignComponentRequest updateRequest = UpdateDesignComponentRequest.builder()
-          .imageUrl("https://updated.com/image.png")
           .isPublic(true)
           .build();
 
+      MockMultipartFile image = new MockMultipartFile(
+          "image", "updated.png", "image/png", "updated-image-content".getBytes());
+      MockMultipartFile requestPart = new MockMultipartFile(
+          "request", "", "application/json", objectMapper.writeValueAsBytes(updateRequest));
+
       // When & Then - testUser로 수정 시도 (실패해야 함)
-      MockHttpServletRequestBuilder requestBuilder =
-          put("/api/design-components/{id}", savedComponent.getDesignComponentId()).contentType(
-                  MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(updateRequest));
+      MockMultipartHttpServletRequestBuilder requestBuilder = multipart(
+          "/api/design-components/{id}", savedComponent.getDesignComponentId())
+          .file(image)
+          .file(requestPart);
+
+      requestBuilder.with(request -> {
+        request.setMethod("PUT");
+        return request;
+      });
 
       // 수정 안됐는지 확인
       mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
@@ -562,7 +617,6 @@ class ThemeComponentIntegrationTest {
       // DesignComponent 생성
       CreateDesignComponentRequest designComponentRequest = CreateDesignComponentRequest.builder()
           //.userEmail("integration@test.com")
-          .imageUrl("https://integration.com/image.png")
           .isPublic(true)
           .build();
 
