@@ -34,18 +34,17 @@ public class MockMvcUtils {
   private static final MediaType DEFAULT_CONTENT_TYPE = MediaType.APPLICATION_JSON;
 
   /**
-   * 책임 : requestBuilder에 토큰 정보 추가
-   * 인증 정보를 기반으로 토큰을 생성하고 주입한 RequestBuilder 반환
-   * */
+   * 책임 : requestBuilder에 토큰 정보 추가 인증 정보를 기반으로 토큰을 생성하고 주입한 RequestBuilder 반환
+   */
   public MockHttpServletRequestBuilder addAuthentication(
       MockHttpServletRequestBuilder requestBuilder, TestClientDto clientDto) {
     return addAuthentication(requestBuilder, clientDto.getPublicUserId());
   }
 
   /**
-   * 책임 : requestBuilder에 토큰 정보 추가
-   * 이메일을 기반으로 토큰을 생성하여 주입한 RequestBuilder 반환
-   * */
+   * 책임 : requestBuilder에 토큰 정보 추가 이메일을 기반으로 토큰을 생성하여 주입한 RequestBuilder 반환
+   */
+  @Deprecated
   public MockHttpServletRequestBuilder addAuthentication(
       MockHttpServletRequestBuilder requestBuilder, String userIdentifier) {
     String jwtToken = jwtUtils.generateAccessToken(userIdentifier);
@@ -54,9 +53,9 @@ public class MockMvcUtils {
   }
 
   /**
-   * 책임 : 요청에 필요한 데이터를 넣고, mockMvc.perform으로 요청 수행
-   * 일반 HTTP 요청용 request builder에 요청 수행 시 필요한 정보를 추가하고, HTTP 요청 결과 반환
-   * */
+   * 책임 : 요청에 필요한 데이터를 넣고, mockMvc.perform으로 요청 수행 일반 HTTP 요청용 request builder에 요청 수행 시 필요한 정보를
+   * 추가하고, HTTP 요청 결과 반환
+   */
   public <E> ResultActions performAuthRequest(
       MockHttpServletRequestBuilder requestBuilder,
       ExecutionContext<E> context) throws Exception {
@@ -69,9 +68,9 @@ public class MockMvcUtils {
   }
 
   /**
-   * 책임 : 요청에 필요한 데이터를 넣고, mockMvc.perform으로 요청 수행
-   * Multipart HTTP 요청용 request builder에 요청 수행 시 필요한 정보를 추가하고, HTTP 요청 결과 반환
-   * */
+   * 책임 : 요청에 필요한 데이터를 넣고, mockMvc.perform으로 요청 수행 Multipart HTTP 요청용 request builder에 요청 수행 시 필요한
+   * 정보를 추가하고, HTTP 요청 결과 반환
+   */
   public ResultActions performMultipartAuthRequest(
       MockMultipartHttpServletRequestBuilder requestBuilder,
       MultipartExecutionContext context) throws Exception {
@@ -81,9 +80,8 @@ public class MockMvcUtils {
   }
 
   /**
-   * 책임 : ResultActions의 응답값을 responseType으로 변환
-   * ResultActions의 응답값을 responseType으로 변환 후 반환
-   * */
+   * 책임 : ResultActions의 응답값을 responseType으로 변환 ResultActions의 응답값을 responseType으로 변환 후 반환
+   */
   public <R> R parseResponse(ResultActions result, TypeReference<R> responseType)
       throws UnsupportedEncodingException, JsonProcessingException {
     String response = result.andReturn().getResponse().getContentAsString();
@@ -95,7 +93,7 @@ public class MockMvcUtils {
 
   /**
    * 일반 HTTP 요청에 대해 DTO를 기반으로 요청을 수행하고 상태 코드 검증 후, 결과를 R 타입으로 변환
-   * */
+   */
   public <T, R> R doAuthRequest(MockMvcRequestDto<T, R> requestDto) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.request(
         requestDto.getHttpMethod(), requestDto.getPath());
@@ -109,7 +107,7 @@ public class MockMvcUtils {
 
   /**
    * Multipart 요청에 대해 DTO를 기반으로 요청을 수행하고, 상태 코드 검증 후, 결과를 R 타입으로 변환
-   * */
+   */
   public <R> R doAuthMultipartRequest(MockMvcMultipartRequestDto<R> requestDto) throws Exception {
     MockMultipartHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.multipart(
         requestDto.getPath());
@@ -128,7 +126,7 @@ public class MockMvcUtils {
 
   /**
    * 테스트용 파일에 대한 form 데이터 생성
-   * */
+   */
   public MockMultipartFile fileToTestFormData(String fileName, String originName,
       MediaType contentType, byte[] content) {
     return new MockMultipartFile(
@@ -141,7 +139,7 @@ public class MockMvcUtils {
 
   /**
    * 테스트용 json에 대한 form 데이터 생성
-   * */
+   */
   public <T> MockMultipartFile jsonToTestFormData(String fileName,
       T object)
       throws Exception {

@@ -1,23 +1,20 @@
 package com.komentum.theme.component.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "designComponent 생성 요청 DTO")
 public class CreateDesignComponentRequest {
 
-  @NotBlank(message = "사용자 이메일은 필수입니다")
-  private String userEmail;
-
-  private Integer componentTypeId; // Component Type ID
-
-  private String imageUrl;
-
+  @Schema(description = "공개 여부", example = "true")
   private Boolean isPublic;
 }
