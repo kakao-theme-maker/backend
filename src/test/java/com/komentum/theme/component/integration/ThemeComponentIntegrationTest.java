@@ -393,13 +393,11 @@ class ThemeComponentIntegrationTest {
 
       MockMultipartFile image = new MockMultipartFile(
           "image", "test.png", "image/png", "test-image-content".getBytes());
-      MockMultipartFile requestPart = new MockMultipartFile(
-          "request", "", "application/json", objectMapper.writeValueAsBytes(request));
 
       // When & Then
-      MockMultipartHttpServletRequestBuilder requestBuilder = multipart("/api/design-components")
+      MockHttpServletRequestBuilder requestBuilder = multipart("/api/design-components")
           .file(image)
-          .file(requestPart);
+          .param("isPublic", "true");
 
       MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
           .andExpect(status().isOk())
@@ -468,14 +466,12 @@ class ThemeComponentIntegrationTest {
           .build();
       MockMultipartFile image = new MockMultipartFile(
           "image", "updated.png", "image/png", "updated-image-content".getBytes());
-      MockMultipartFile requestPart = new MockMultipartFile(
-          "request", "", "application/json", objectMapper.writeValueAsBytes(updateRequest));
 
       // When & Then
-      MockMultipartHttpServletRequestBuilder requestBuilder = multipart(
+      MockHttpServletRequestBuilder requestBuilder = multipart(
           "/api/design-components/{id}", savedComponent.getDesignComponentId())
           .file(image)
-          .file(requestPart);
+          .param("isPublic", "true");
 
       requestBuilder.with(request -> {
         request.setMethod("PUT");
