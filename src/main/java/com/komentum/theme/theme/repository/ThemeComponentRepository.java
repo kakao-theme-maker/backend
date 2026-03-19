@@ -16,4 +16,6 @@ public interface ThemeComponentRepository extends JpaRepository<ThemeComponent, 
   List<ThemeComponent> findByIsDoneTrue(Pageable pageable);
 
   List<ThemeComponent> findByIsDoneTrueAndUserEmail(String userEmail, Pageable pageable);
+
+  List<ThemeComponent> findByUserEmailIn(List<String> userEmail);
 }

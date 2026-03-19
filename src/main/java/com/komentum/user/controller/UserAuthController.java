@@ -1,6 +1,6 @@
 package com.komentum.user.controller;
 
-import com.komentum.auth.AuthProperty;
+import com.komentum.global.properties.AuthProperty;
 import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.SignUpRequestDto;
 import com.komentum.user.dto.UserAuthResponse;

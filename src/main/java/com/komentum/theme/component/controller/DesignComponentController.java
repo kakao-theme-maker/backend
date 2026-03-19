@@ -8,6 +8,7 @@ import com.komentum.theme.component.facade.DesignComponentFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -72,8 +73,15 @@ public class DesignComponentController {
   @GetMapping
   @Operation(summary = "designComponent 목록을 전체 조회한다.")
   public ResponseEntity<Page<DesignComponentDto>> getAllDesignComponents(
-      @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
-    return ResponseEntity.ok(designComponentFacade.getAllDesignComponents(pageable));
+      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
+    return ResponseEntity.ok(designComponentService.getAllDesignComponents(pageable));
+  }
+
+  @GetMapping("/user/{userEmail}")
+  public ResponseEntity<List<DesignComponentDto>> getDesignComponentsByUserEmail(
+      @PathVariable("userEmail") String userEmail
+  ) {
+    return ResponseEntity.ok(designComponentService.getByUserEmail(userEmail));
   }
 
 

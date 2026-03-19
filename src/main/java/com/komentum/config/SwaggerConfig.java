@@ -1,6 +1,6 @@
 package com.komentum.config;
 
-import com.komentum.auth.AuthProperty;
+import com.komentum.global.properties.AuthProperty;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;

@@ -1,5 +1,6 @@
 package com.komentum.auth;
 
+import com.komentum.global.properties.AuthProperty;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class JwtUtils {
+
   String identifier = "publicUserId";
   private final Key SECRET_KEY;
 

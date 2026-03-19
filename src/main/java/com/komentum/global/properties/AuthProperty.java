@@ -1,4 +1,4 @@
-package com.komentum.auth;
+package com.komentum.global.properties;
 
 public class AuthProperty {
 
