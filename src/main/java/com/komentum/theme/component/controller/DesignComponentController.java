@@ -11,10 +11,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -37,10 +39,10 @@ public class DesignComponentController {
    * @return
    */
 
-  @PostMapping
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "현재 인증된 사용자가 DesignComponent를 생성한다.")
   public ResponseEntity<DesignComponentDto> createDesignComponent(
-      @Valid @RequestPart CreateDesignComponentRequest request,
+      @Valid @ModelAttribute CreateDesignComponentRequest request,
       @RequestPart("image") MultipartFile image,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     DesignComponentDto saved = designComponentFacade.createDesignComponent(request, image,
@@ -82,11 +84,11 @@ public class DesignComponentController {
    * @param request
    * @return
    */
-  @PutMapping("/{id}")
+  @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID = id인 designComponent를 수정한다.")
   public ResponseEntity<DesignComponentDto> updateDesignComponent(
       @PathVariable("id") Integer id,
-      @Valid @RequestPart UpdateDesignComponentRequest request,
+      @ModelAttribute @Valid UpdateDesignComponentRequest request,
       @RequestPart(value = "image", required = false) MultipartFile image) {
     DesignComponentDto updated = designComponentFacade.updateDesignComponent(id, request, image);
     return ResponseEntity.ok(updated);
