@@ -17,6 +17,8 @@ import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.BoardDetailDataGenerator;
+import com.komentum.test.data.MockMultipartFileUtils;
+import com.komentum.test.data.MockMultipartFileUtils.ImageExtension;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
@@ -33,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
@@ -148,7 +149,7 @@ public class DesignBoardControllerTest {
   @DisplayName("when send request, save and return design board info")
   public void whenSendRequest_saveAndReturnDesignBoard() throws Exception {
     // given
-    String requestPath = "/api/design-boards";
+    String expectedPreviewImageUrl = UUID.randomUUID().toString();
     DesignComponent unsavedBoardDesignComponent = boardDetailDataGenerator.getNonDesignBoardDesignComponents()
         .get(0);
     User author = boardDetailDataGenerator.getUsers().get(0);
@@ -158,12 +159,12 @@ public class DesignBoardControllerTest {
         .designComponentId(unsavedBoardDesignComponent.getDesignComponentId())
         .publicFlag(true)
         .build();
-    MockMultipartFile boardInfo = mockMvcUtils.jsonToTestFormData("board_info", createDto);
-    MockMultipartFile previewImage = mockMvcUtils.fileToTestFormData("preview_image",
-        "preview_image.png", MediaType.IMAGE_PNG, "test data".getBytes());
+    MockMultipartFile previewImage = MockMultipartFileUtils
+        .generateImageFormData("preview_image", ImageExtension.PNG);
+    MockMultipartFile boardInfo = MockMultipartFileUtils
+        .generateJsonFormData("board_info", createDto);
     List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
     // stub
-    String expectedPreviewImageUrl = UUID.randomUUID().toString();
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(expectedPreviewImageUrl);
     Mockito.when(
@@ -173,7 +174,7 @@ public class DesignBoardControllerTest {
     DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
         MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
             .mockMvc(mockMvc)
-            .path(requestPath)
+            .path("/api/design-boards")
             .httpMethod(HttpMethod.POST)
             .formDataList(formDataList)
             .clientDto(TestClientDto.fromEntity(author))
@@ -182,6 +183,8 @@ public class DesignBoardControllerTest {
             .build()
     );
     // then : 필드 및 DB 검증
+    assertThat(response.getPreviewImageUrl())
+        .isEqualTo(expectedPreviewImageUrl);
     assertDesignBoard(response, createDto.getTitle(), createDto.getContent());
   }
 
@@ -189,6 +192,7 @@ public class DesignBoardControllerTest {
   @DisplayName("when send request, update design board info")
   public void whenSendRequest_updateDesignBoard() throws Exception {
     // given
+    String expectedPreviewImageUrl = UUID.randomUUID().toString();
     DesignBoard targetDesignBoard = boardDetailDataGenerator.getDesignBoards().get(0);
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
@@ -200,13 +204,24 @@ public class DesignBoardControllerTest {
         .content(expectedContent)
         .publicFlag(false)
         .build();
+    MockMultipartFile previewImage = MockMultipartFileUtils
+        .generateImageFormData("preview_image", ImageExtension.PNG);
+    MockMultipartFile boardInfo = MockMultipartFileUtils
+        .generateJsonFormData("board_info", updateDto);
+    List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(expectedPreviewImageUrl);
+    Mockito.when(
+            fileManager.uploadFile(any(byte[].class), anyString()))
+        .thenReturn(UUID.randomUUID().toString());
     // when
-    DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<DesignBoardUpdateDto, DesignBoardDetailDto>builder()
+    DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
+        MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
             .mockMvc(mockMvc)
             .path(requestPath)
             .httpMethod(HttpMethod.PATCH)
-            .body(updateDto)
+            .formDataList(formDataList)
             .clientDto(TestClientDto.fromEntity(author))
             .responseType(new TypeReference<>() {
             })

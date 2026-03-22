@@ -16,6 +16,8 @@ import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.BoardDetailDataGenerator;
+import com.komentum.test.data.MockMultipartFileUtils;
+import com.komentum.test.data.MockMultipartFileUtils.ImageExtension;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
@@ -33,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -228,11 +229,10 @@ class ThemeBoardControllerTest {
         .themeComponentId(nonThemeBoardTheme.getThemeComponentId())
         .publicFlag(true)
         .build();
-    MockMultipartFile testPreviewImage = mockMvcUtils.fileToTestFormData("preview_image",
-        "preview_image.png",
-        MediaType.IMAGE_PNG, "test data".getBytes());
-    MockMultipartFile boardInfo = mockMvcUtils.jsonToTestFormData("board_info",
-        createDto);
+    MockMultipartFile testPreviewImage = MockMultipartFileUtils
+        .generateImageFormData("preview_image", ImageExtension.PNG);
+    MockMultipartFile boardInfo = MockMultipartFileUtils
+        .generateJsonFormData("board_info", createDto);
     List<MockMultipartFile> formDataList = List.of(testPreviewImage, boardInfo);
     // stub
     Mockito.when(fileManager.uploadFile(any(), any()))
@@ -261,28 +261,37 @@ class ThemeBoardControllerTest {
   void updatePost_success() throws Exception {
     // given
     Post toUpdate = boardDetailDataGenerator.getPosts().get(0);
+    String testPreviewImageUrl = UUID.randomUUID().toString();
     String requestPath = String.format("/api/theme-boards/%d", toUpdate.getPostId());
     User author = toUpdate.getUser();
-    ThemeBoardUpdateDto requestBody = ThemeBoardUpdateDto.builder()
-        .title(UUID.randomUUID().toString())
+    ThemeBoardUpdateDto updateDto = ThemeBoardUpdateDto.builder()
+        .title("updated-title-test")
         .build();
+    MockMultipartFile testPreviewImage = MockMultipartFileUtils
+        .generateImageFormData("preview_image", ImageExtension.PNG);
+    MockMultipartFile boardInfo = MockMultipartFileUtils
+        .generateJsonFormData("board_info", updateDto);
+    List<MockMultipartFile> formDataList = List.of(testPreviewImage, boardInfo);
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
-        .thenReturn(UUID.randomUUID().toString());
+    Mockito.when(fileManager.uploadFile(any(), any()))
+        .thenReturn(testPreviewImage.getOriginalFilename());
+    Mockito.when(fileManager.resolveFilePath(any()))
+        .thenReturn(testPreviewImageUrl);
     // when
-    ThemeBoardDetailDto response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<ThemeBoardUpdateDto, ThemeBoardDetailDto>builder()
+    ThemeBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
+        MockMvcMultipartRequestDto.<ThemeBoardDetailDto>builder()
             .mockMvc(mockMvc)
             .path(requestPath)
             .httpMethod(HttpMethod.PUT)
             .clientDto(TestClientDto.fromEntity(author))
-            .body(requestBody)
+            .formDataList(formDataList)
             .responseType(new TypeReference<>() {
             })
             .statusCode(200)
             .build()
     );
     // then : 필드 검증
+    assertThat(response.getPreviewImageUrl()).isEqualTo(testPreviewImageUrl);
     assertThemeBoardDetail(response);
   }
 
