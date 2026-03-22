@@ -25,13 +25,32 @@ public class LocalFileManager implements FileManager {
     Files.createDirectories(uploadPath);
   }
 
-  @Override
-  public String resolveFilePath(String fileName) {
-    return baseUrl + WebConfig.UPLOAD_URL_PREFIX + "/" + fileName;
-  }
-
   private String resolveFileLocation(String fileName) {
     return WebConfig.UPLOAD_DIR + "/" + fileName;
+  }
+
+  private String resolveFilePathPrefix() {
+    String normalizedBaseUrl = StringUtils.removeTrailingSlash(baseUrl);
+    String normalizedUploadUrlPrefix = StringUtils.trimSlash(WebConfig.UPLOAD_URL_PREFIX);
+    return normalizedBaseUrl + "/" + normalizedUploadUrlPrefix + "/";
+  }
+
+  @Override
+  public String resolveFilePath(String fileName) {
+    return resolveFilePathPrefix() + fileName;
+  }
+
+  @Override
+  public String convertUrlToFileName(String fileUrl) {
+    if (fileUrl == null) {
+      throw new IllegalArgumentException("failed to convert url to file name : file url is null");
+    }
+    String fileUrlPrefix = resolveFilePathPrefix();
+    if (fileUrl.startsWith(fileUrlPrefix)) {
+      return fileUrl.substring(fileUrlPrefix.length());
+    }
+    throw new IllegalArgumentException(
+        "failed to convert url to file name : " + fileUrl + " doesn't start with " + fileUrlPrefix);
   }
 
   @Override

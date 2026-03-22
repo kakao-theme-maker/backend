@@ -38,11 +38,29 @@ public class S3FileManager implements FileManager {
         .build();
   }
 
+  private String resolveFilePathPrefix() {
+    return String.format("https://%s/", cloudFront);
+  }
+
+  @Override
+  public String convertUrlToFileName(String fileUrl) {
+    if (fileUrl == null || fileUrl.isEmpty()) {
+      throw new IllegalArgumentException("failed to convert url to file name : file url is null");
+    }
+    String fileUrlPrefix = resolveFilePathPrefix();
+    if (fileUrl.startsWith(fileUrlPrefix)) {
+      return fileUrl.substring(fileUrlPrefix.length());
+    }
+    throw new IllegalArgumentException(
+        "failed to convert url to file name : " + fileUrl + " doesn't start with " + fileUrlPrefix);
+  }
+
+  @Override
   public String resolveFilePath(String fileName) {
     if (fileName == null || fileName.trim().isEmpty()) {
       throw new IllegalArgumentException("[S3 File Manager] fileName is null or empty");
     }
-    return String.format("https://%s/%s", cloudFront, fileName);
+    return resolveFilePathPrefix() + fileName;
   }
 
   /**
@@ -51,6 +69,7 @@ public class S3FileManager implements FileManager {
    * @param fileBytes file bytes array
    * @param fileName  name of the file
    */
+  @Override
   public String uploadFile(byte[] fileBytes, String fileName) {
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
         .bucket(bucketName)
@@ -66,6 +85,7 @@ public class S3FileManager implements FileManager {
    *
    * @param fileName name of the file
    */
+  @Override
   public void deleteFile(String fileName) {
     DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
         .bucket(bucketName)
@@ -79,6 +99,7 @@ public class S3FileManager implements FileManager {
    *
    * @param fileName name of the file
    */
+  @Override
   public byte[] downloadFile(String fileName) {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
         .bucket(bucketName)
