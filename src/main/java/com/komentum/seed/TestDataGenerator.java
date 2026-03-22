@@ -1,11 +1,9 @@
 package com.komentum.seed;
 
-import com.komentum.global.utils.FileManager;
 import com.komentum.seed.seeder.CommentSeeder;
 import com.komentum.seed.seeder.ComponentTypeSeeder;
 import com.komentum.seed.seeder.DesignBoardSeeder;
 import com.komentum.seed.seeder.DesignComponentSeeder;
-import com.komentum.seed.seeder.PostSeeder;
 import com.komentum.seed.seeder.PreferSeeder;
 import com.komentum.seed.seeder.ThemeBoardSeeder;
 import com.komentum.seed.seeder.ThemeComponentSeeder;
@@ -26,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class TestDataGenerator {
 
   private final UserSeeder userSeeder;
-  private final PostSeeder postSeeder;
   private final CommentSeeder commentSeeder;
   private final PreferSeeder preferSeeder;
   private final ThemeComponentSeeder themeComponentSeeder;
@@ -34,12 +31,12 @@ public class TestDataGenerator {
   private final ThemeBoardSeeder themeBoardSeeder;
   private final DesignBoardSeeder designBoardSeeder;
   private final ComponentTypeSeeder componentTypeSeeder;
-  private final FileManager fileManager;
 
   @PostConstruct
   @Transactional
   public void init() {
     List<User> users = userSeeder.seedData(10); // 10
+    userSeeder.createOrRetrieveRootUser();
     componentTypeSeeder.seedData();
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
         users); // 100
@@ -48,5 +45,6 @@ public class TestDataGenerator {
     designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
     commentSeeder.seedPerPost(5, users); // 150
     preferSeeder.seedPerPost(5, users); // 150
+    userSeeder.createOrRetrieveRootUser();
   }
 }

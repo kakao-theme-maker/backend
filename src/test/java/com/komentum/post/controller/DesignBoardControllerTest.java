@@ -103,8 +103,8 @@ public class DesignBoardControllerTest {
     int pageNumber = 0;
     User client = boardDetailDataGenerator.getUsers().get(0);
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    params.add("pageSize", Integer.toString(pageSize));
-    params.add("pageNumber", Integer.toString(pageNumber));
+    params.add("size", Integer.toString(pageSize));
+    params.add("page", Integer.toString(pageNumber));
     // when
     List<DesignBoardPreviewDto> responses = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()

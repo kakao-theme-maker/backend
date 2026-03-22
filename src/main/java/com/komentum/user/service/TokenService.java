@@ -1,6 +1,6 @@
 package com.komentum.user.service;
 
-import com.komentum.auth.AuthProperty;
+import com.komentum.global.properties.AuthProperty;
 import com.komentum.user.redis.RedisSingleDataService;
 import org.springframework.stereotype.Service;
 

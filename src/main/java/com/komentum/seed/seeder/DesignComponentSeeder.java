@@ -35,7 +35,7 @@ public class DesignComponentSeeder {
       }
       String fileUrl = fileManager.resolveFilePath(fileName);
       return DesignComponent.builder()
-          .userEmail(owner.getUserEmail())
+          .user(owner)
           .imageUrl(fileUrl)
           .isPublic(true)
           .build();
@@ -48,8 +48,7 @@ public class DesignComponentSeeder {
   @Transactional
   public List<DesignComponent> seedPeruser(int size, List<User> owners) {
     List<String> userEmails = owners.stream().map(User::getUserEmail).toList();
-    List<DesignComponent> existing = designComponentRepository.findByUserEmailIn(
-        userEmails);
+    List<DesignComponent> existing = designComponentRepository.findByUser_UserEmailIn(userEmails);
     if (existing.size() >= size * owners.size()) {
       return existing;
     }

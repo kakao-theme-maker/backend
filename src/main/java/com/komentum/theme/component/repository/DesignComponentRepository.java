@@ -2,20 +2,14 @@ package com.komentum.theme.component.repository;
 
 import com.komentum.theme.component.domain.DesignComponent;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DesignComponentRepository extends JpaRepository<DesignComponent, Integer> {
 
-  // 기본 조회 메서드들
-  Optional<DesignComponent> findByDesignComponentId(Integer id);
+  List<DesignComponent> findByUser_UserEmail(String userUserEmail);
 
-  List<DesignComponent> findByUserEmail(String email);
-
-  List<DesignComponent> findByIsPublic(Boolean isPublic);
-
-  List<DesignComponent> findByUserEmailIn(List<String> userEmails);
+  List<DesignComponent> findByUser_UserEmailIn(List<String> userEmails);
 }
 
