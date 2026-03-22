@@ -1,12 +1,15 @@
 package com.komentum.post.facade;
 
+import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
-import com.komentum.post.dto.PostSummary;
+import com.komentum.post.dto.PostDto.PostUpdateDto;
+import com.komentum.post.dto.query.DesignBoardQuery;
+import com.komentum.post.mapper.DesignBoardMapperSupport;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.post.service.DesignBoardService;
@@ -14,17 +17,16 @@ import com.komentum.post.service.PostService;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
-import com.komentum.user.service.UserRetrieveService;
+import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DesignBoardManagementFacade {
@@ -33,11 +35,26 @@ public class DesignBoardManagementFacade {
   private final PostService postService;
   private final PostRepositorySupport postRepositorySupport;
   private final DesignBoardService designBoardService;
-  private final UserRetrieveService userRetrieveService;
+  private final UserEntityFinder userEntityFinder;
   private final BoardManagementHelper boardManagementHelper;
+  private final FileManager fileManager;
+  private final DesignBoardMapperSupport designBoardMapperSupport;
 
   // mapper
   private final PostDtoMapper postDtoMapper;
+
+  private String uploadOrReusePreviewImage(
+      MultipartFile previewImage,
+      DesignComponent designComponent
+  ) {
+    if (previewImage == null || previewImage.isEmpty()) {
+      String fileName = fileManager.convertUrlToFileName(designComponent.getImageUrl());
+      byte[] previewImageBytes = fileManager.downloadFile(fileName);
+      return boardManagementHelper.savePreviewImageIfPresent(Post.class, fileName,
+          previewImageBytes);
+    }
+    return boardManagementHelper.savePreviewImageIfPresent(Post.class, previewImage);
+  }
 
   /**
    * 게시글 ID 기반으로 디자인 에셋 게시글 상세 조회
@@ -46,13 +63,8 @@ public class DesignBoardManagementFacade {
    * */
   @Transactional(readOnly = true)
   public DesignBoardDetailDto findBoardDetail(Long postId) {
-    PostSummary postSummary = postRepositorySupport.findPostSummaryByPostId(postId);
-    DesignBoard designBoard = designBoardService.findByPostId(postId);
-    String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
-        postSummary.findPreviewImageName());
-    return DesignBoardDetailDto.from(postSummary.getPost(),
-        designBoard.getDesignComponent(), postSummary.getAuthor(),
-        postSummary.getPrefers(), previewImageUrl);
+    DesignBoardQuery.Detail detail = designBoardService.findDetailById(postId);
+    return designBoardMapperSupport.toDesignBoardDetailDto(detail, boardManagementHelper);
   }
 
   /**
@@ -62,19 +74,11 @@ public class DesignBoardManagementFacade {
    * */
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable) {
-    List<PostSummary> postSummaries = postRepositorySupport.findPostSummaries(pageable);
-    List<Long> postIds = postSummaries.stream().map(PostSummary::findPostId).toList();
-    Map<Long, DesignBoard> postBoardDetailMap = designBoardService.findAllByPostIds(postIds)
-        .stream()
-        .collect(Collectors.toMap(DesignBoard::findPostId, Function.identity()));
-    return postSummaries.stream().map(postSummary -> {
-      DesignBoard designBoard = postBoardDetailMap.get(postSummary.findPostId());
-      String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
-          postSummary.findPreviewImageName());
-      return DesignBoardPreviewDto.from(postSummary.getPost(),
-          designBoard.getDesignComponent(), postSummary.getAuthor(),
-          postSummary.getPrefers(), previewImageUrl);
-    }).toList();
+    List<DesignBoardQuery.Preview> preview = designBoardService.findPreviewList(pageable);
+    return preview.stream()
+        .map(p ->
+            designBoardMapperSupport.toDesignBoardPreviewDto(p, boardManagementHelper))
+        .toList();
   }
 
   /**
@@ -84,16 +88,29 @@ public class DesignBoardManagementFacade {
    * @param authorId 게시글 작성자 ID
    * @return 생성된 게시글 상세 정보
    * */
-  @Transactional
-  public DesignBoardDetailDto createDesignBoard(
-      DesignBoardCreateDto createDto, MultipartFile previewImage, String authorId) {
-    User author = userRetrieveService.findUserEntity(authorId);
-    Post savedPost = boardManagementHelper.createPostAndPreviewImage(
-        postDtoMapper.toPostCreateDto(createDto), author, previewImage);
-    DesignComponent designComponent = designComponentService.getEntityById(
-        createDto.getDesignComponentId());
-    designBoardService.save(savedPost, designComponent);
-    return findBoardDetail(savedPost.getPostId());
+  public DesignBoardDetailDto createDesignBoard(DesignBoardCreateDto createDto,
+      MultipartFile previewImage, String authorId) {
+    // 이미지 저장
+    DesignComponent designComponent =
+        designComponentService.getEntityById(createDto.getDesignComponentId());
+    String previewImageName = uploadOrReusePreviewImage(previewImage, designComponent);
+    // DB 작업 수행
+    User author = userEntityFinder.findUserEntity(authorId);
+    try {
+      DesignBoard savedDesignBoard = designBoardService.createDesignBoard(
+          createDto,
+          designComponent,
+          author,
+          previewImageName
+      );
+      return designBoardMapperSupport.toDesignBoardDetailDto(
+          designBoardService.findDetailById(savedDesignBoard.getPost().getPostId()),
+          boardManagementHelper
+      );
+    } catch (Exception e) {
+      boardManagementHelper.deleteFileSilently(previewImageName, "디자인 게시글 생성 실패로 인한 저장된 파일 롤백");
+      throw new RuntimeException("디자인 에셋 게시글 생성 실패", e);
+    }
   }
 
   /**
@@ -101,12 +118,29 @@ public class DesignBoardManagementFacade {
    * @param postId 게시글 ID
    * @param updateDto 게시글 수정 DTO
    * */
-  @Transactional
-  public DesignBoardDetailDto updateDesignBoard(Long postId,
-      DesignBoardUpdateDto updateDto) {
-    postService.updatePost(postId,
-        postDtoMapper.toPostUpdateDto(updateDto));
-    return findBoardDetail(postId);
+  public DesignBoardDetailDto updateDesignBoard(
+      Long postId,
+      DesignBoardUpdateDto updateDto,
+      MultipartFile previewImage) {
+    // DB 쓰기 작업보다 파일 작업을 먼저 처리해야하므로 파일 작업 우선 처리
+    String newImageName = boardManagementHelper.savePreviewImageIfPresent(DesignComponent.class,
+        previewImage);
+    // DB 작업 커밋 + 기존 이미지 삭제
+    PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, newImageName);
+    try {
+      String oldImageName = postService.updatePostAndGetPreviousImage(postId, postUpdateDto);
+      if (newImageName != null && oldImageName != null) {
+        boardManagementHelper.deleteFileSilently(oldImageName, "Design Board의 이전 파일 삭제 실패");
+      }
+    } catch (Exception e) {
+      boardManagementHelper.deleteFileSilently(newImageName, "Design Board 갱신 실패로 인한 파일 롤백 실패");
+      throw e;
+    }
+    // 응답값 반환
+    return designBoardMapperSupport.toDesignBoardDetailDto(
+        designBoardService.findDetailById(postId),
+        boardManagementHelper
+    );
   }
 
   /**
@@ -115,7 +149,11 @@ public class DesignBoardManagementFacade {
    * */
   @Transactional
   public void deleteBoardDetailWithPost(Long postId) {
+    Post targetPost = postService.getPostByPostId(postId);
     designBoardService.deleteByPostId(postId);
     postService.deletePost(postId);
+    // 기존 이미지 삭제 작업 시도 ( 실패 허용 )
+    boardManagementHelper.deleteFileSilently(targetPost.getPreviewImageName(),
+        "게시글 삭제 시 대표 이미지 삭제 실패");
   }
 }

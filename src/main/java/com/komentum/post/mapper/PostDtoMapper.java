@@ -19,5 +19,5 @@ public interface PostDtoMapper {
   // DesignBoard
   PostCreateDto toPostCreateDto(DesignBoardCreateDto dto);
 
-  PostUpdateDto toPostUpdateDto(DesignBoardUpdateDto dto);
+  PostUpdateDto toPostUpdateDto(DesignBoardUpdateDto dto, String previewImageName);
 }
