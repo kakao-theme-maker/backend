@@ -3,6 +3,7 @@ package com.komentum.seed.seeder;
 import com.github.javafaker.Faker;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
+import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PreferRepository;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PreferSeeder {
 
   private final PreferRepository preferRepository;
+  private final PostRepository postRepository;
   private final Faker faker;
 
   private Prefer generateOne(Post post, User liker) {
@@ -30,10 +32,11 @@ public class PreferSeeder {
   }
 
   @Transactional
-  public List<Prefer> seedPerPost(int size, List<Post> posts, List<User> likerList) {
+  public List<Prefer> seedPerPost(int size, List<User> likerList) {
     if (likerList.size() < size) {
       throw new IllegalArgumentException("authors must be >= size");
     }
+    List<Post> posts = postRepository.findAll();
     List<Prefer> existingPrefers = preferRepository.fetchJoinByPostIn(posts);
     Map<User, Set<Post>> userPostPreferMap = existingPrefers.stream()
         .collect(Collectors.groupingBy(
