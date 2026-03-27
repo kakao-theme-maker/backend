@@ -3,6 +3,7 @@ package com.komentum.theme.theme.service;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.repository.ThemeImageRepository;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,10 @@ public class ThemeImageService {
     List<ThemeImage> themeImages = themeImageRepository.findByThemeComponentAndComponentType_ComponentName(
         themeComponent,
         componentTypeName);
+    if (themeImages.isEmpty()) {
+      throw new EntityNotFoundException(
+          "ThemeImage not found for componentTypeName : " + componentTypeName);
+    }
     return themeImages.get(0);
   }
 }
