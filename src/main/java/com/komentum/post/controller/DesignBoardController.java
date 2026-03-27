@@ -71,16 +71,17 @@ public class DesignBoardController {
 
   /**
    * 특정 ID의 디자인 에셋 게시글 수정, 없으면 예외 처리
-   * */
+   *
+   */
   @PatchMapping(value = "/{post_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=post_id인 디자인 에셋 게시글을 수정한다")
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
       @PathVariable("post_id") Long postId,
       @RequestPart(value = "board_info") DesignBoardUpdateDto updateDto,
-      @RequestPart(value = "preview_image", required = false) MultipartFile profileImage
+      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage
   ) {
     return ResponseEntity.ok(
-        designBoardManagementFacade.updateDesignBoard(postId, updateDto, profileImage));
+        designBoardManagementFacade.updateDesignBoard(postId, updateDto, previewImage));
   }
 
   /**
