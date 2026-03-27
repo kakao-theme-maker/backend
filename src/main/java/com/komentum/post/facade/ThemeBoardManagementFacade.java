@@ -1,6 +1,7 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
@@ -48,14 +49,12 @@ public class ThemeBoardManagementFacade {
   private final FileManager fileManager;
   private final ThemeBoardQueryService themeBoardQueryService;
 
-  public static String DEFAULT_COMPONENT_TYPE_NAME = "theme_profile_01_image.png";
-
   private String uploadOrReusePreviewImage(MultipartFile previewImage,
       ThemeComponent themeComponent) {
     // previewImage가 유효하지 않으면, ThemeComponent의 이미지 사용
     if (previewImage == null || previewImage.isEmpty()) {
       ThemeImage themeImage = themeImageService.findByThemeComponentAndComponentTypeName(
-          themeComponent, DEFAULT_COMPONENT_TYPE_NAME);
+          themeComponent, ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME);
       DesignComponent designComponent = themeImage.getDesignComponent();
       String fileName = fileManager.convertUrlToFileName(designComponent.getImageUrl());
       byte[] previewImageBytes = fileManager.downloadFile(fileName);
@@ -82,8 +81,7 @@ public class ThemeBoardManagementFacade {
   }
 
   /**
-   * 페이지 기반 테마 게시글 목록 조회
-   * 기본값으로 날짜순으로 정렬
+   * 페이지 기반 테마 게시글 목록 조회 기본값으로 날짜순으로 정렬
    *
    * @param pageable 페이지 기반 조회를 위한 페이지 정보 객체
    * @return ThemeBoardPreviewDto 목록
@@ -132,7 +130,7 @@ public class ThemeBoardManagementFacade {
    *
    * @param createDto    게시글 생성 정보
    * @param previewImage 게시글 대표 이미지 정보
-   * @param authorId  작성자 식별자
+   * @param authorId     작성자 식별자
    *
    */
   public ThemeBoardDetailDto createThemeBoard(
@@ -178,7 +176,7 @@ public class ThemeBoardManagementFacade {
         boardManagementHelper.deleteFileSilently(oldImageName, "ThemeBoard의 이전 파일 삭제 실패");
       }
     } catch (Exception e) {
-      boardManagementHelper.deleteFileSilently(newImageName, "DesignBoard 갱신 실패로 인한 파일 롤백 실패");
+      boardManagementHelper.deleteFileSilently(newImageName, "ThemeBoard 갱신 실패로 인한 파일 롤백 실패");
       throw e;
     }
     return themeBoardQueryService.findThemeBoardDetail(postId);

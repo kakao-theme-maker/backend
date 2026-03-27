@@ -47,7 +47,7 @@ public class ThemeBoardSeeder {
       ThemeImage iconThemeImage = component.getThemeImages().stream()
           .filter(image -> {
             String componentName = image.getComponentType().getComponentName();
-            if (componentName.equals(ThemeBoardManagementFacade.DEFAULT_COMPONENT_TYPE_NAME)) {
+            if (componentName.equals(ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME)) {
               return true;
             }
             return false;

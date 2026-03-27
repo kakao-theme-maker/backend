@@ -1,7 +1,7 @@
 package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
-import com.komentum.post.facade.ThemeBoardManagementFacade;
+import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.enums.Platform;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
@@ -12,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 추후 별도 PR에 구현해둔 seeder와 교체할 예정
- * */
+ *
+ */
 @Component
 @RequiredArgsConstructor
 public class ComponentTypeSeeder {
@@ -24,7 +25,7 @@ public class ComponentTypeSeeder {
     return ComponentType.builder()
         .platform(Platform.ANDROID)
         .explain(faker.lorem().sentence())
-        .componentName(ThemeBoardManagementFacade.DEFAULT_COMPONENT_TYPE_NAME)
+        .componentName(ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME)
         .componentPath("res/drawable-xxhdpi/theme_profile_01_image.png")
         .build();
   }
