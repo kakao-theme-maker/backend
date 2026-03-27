@@ -45,6 +45,5 @@ public class TestDataGenerator {
     designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
     commentSeeder.seedPerPost(5, users); // 150
     preferSeeder.seedPerPost(5, users); // 150
-    userSeeder.createOrRetrieveRootUser();
   }
 }

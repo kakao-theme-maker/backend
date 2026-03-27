@@ -2,9 +2,9 @@ package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
 import com.komentum.global.utils.FileManager;
+import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
-import com.komentum.post.facade.ThemeBoardManagementFacade;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
@@ -52,7 +52,10 @@ public class ThemeBoardSeeder {
             }
             return false;
           })
-          .toList().get(0);
+          .findFirst()
+          .orElseThrow(() -> new IllegalStateException(
+              "Default theme image not found for theme component : "
+                  + component.getThemeComponentId()));
       Post post = postSeeder.createOne(
           author,
           fileManager.convertUrlToFileName(iconThemeImage.getDesignComponent().getImageUrl())
