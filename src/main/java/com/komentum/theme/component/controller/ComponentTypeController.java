@@ -42,8 +42,8 @@ public class ComponentTypeController {
   @GetMapping("/{component_type_id}")
   @Operation(summary = "인증된 사용자가 ID=component_type_id인 component type 조회")
   public ResponseEntity<ComponentTypeDto> getComponentTypeById(
-      @PathVariable("component_type_id") Integer id) {
-    ComponentType componentType = componentTypeService.getComponentTypeById(id);
+      @PathVariable("component_type_id") Integer componentTypeId) {
+    ComponentType componentType = componentTypeService.getComponentTypeById(componentTypeId);
     return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(componentType));
   }
 
@@ -57,11 +57,13 @@ public class ComponentTypeController {
     return ResponseEntity.ok(componentTypes);
   }
 
-  @PutMapping("/{id}")
+  @PutMapping("/{component_type_id}")
   @Operation(summary = "Admin 사용자가 ID=component_type_id인 component type 수정")
-  public ResponseEntity<ComponentTypeDto> updateComponentType(@PathVariable("id") Integer id,
+  public ResponseEntity<ComponentTypeDto> updateComponentType(
+      @PathVariable("component_type_id") Integer componentTypeId,
       @Valid @RequestBody ComponentTypeUpdateRequest request) {
-    ComponentType updatedComponentType = componentTypeService.updateComponentType(id, request);
+    ComponentType updatedComponentType = componentTypeService.updateComponentType(componentTypeId,
+        request);
     return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(updatedComponentType));
   }
 
