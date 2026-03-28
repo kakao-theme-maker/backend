@@ -1,8 +1,8 @@
 package com.komentum.user.service;
 
-import com.komentum.auth.AuthProperty;
 import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.properties.AuthProperty;
 import com.komentum.global.security.CustomUserDetailsService;
 import com.komentum.user.client.KakaoAuthHttpClient;
 import com.komentum.user.domain.User;
@@ -31,11 +31,11 @@ public class UserAuthService {
   private final CustomUserDetailsService customUserDetailsService;
 
   public UserAuthService(
-          UserRepository userRepository,
-          TokenService tokenService,
-          KakaoAuthHttpClient kakaoAuthHttpClient,
-          TransactionTemplate transactionTemplate,
-          JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder,
+      UserRepository userRepository,
+      TokenService tokenService,
+      KakaoAuthHttpClient kakaoAuthHttpClient,
+      TransactionTemplate transactionTemplate,
+      JwtUtils jwtUtils, BCryptPasswordEncoder bCryptPasswordEncoder,
       CustomUserDetailsService customUserDetailsService) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
@@ -45,15 +45,17 @@ public class UserAuthService {
     this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     this.customUserDetailsService = customUserDetailsService;
   }
-  public UserAuthResponse initializeToken(String publicUserId){
+
+  public UserAuthResponse initializeToken(String publicUserId) {
     String accessToken = jwtUtils.generateAccessToken(publicUserId);
     String refreshToken = jwtUtils.generateRefreshToken(publicUserId);
     if (!tokenService.saveAccessAndRefreshToken(publicUserId, accessToken,
-            refreshToken)) {
+        refreshToken)) {
       throw new RuntimeException("failed to save access and refresh token");
     }
     return new UserAuthResponse(accessToken, refreshToken);
   }
+
   /**
    * 카카오 로그인 및 회원가입
    */
@@ -74,7 +76,7 @@ public class UserAuthService {
 
 
   // 로컬 회원가입
-  public void processLocalSignUp(SignUpRequestDto dto){
+  public void processLocalSignUp(SignUpRequestDto dto) {
     User user = userRepository.findByUserEmail(dto.getEmail()).orElse(null);
     if (user == null) {
       userRepository.save(dto.toEntity(bCryptPasswordEncoder));
@@ -82,13 +84,13 @@ public class UserAuthService {
   }
 
   // 로컬 로그인
-  public UserAuthResponse processLocalSignIn(LocalLoginRequestDto dto){
+  public UserAuthResponse processLocalSignIn(LocalLoginRequestDto dto) {
     User user = userRepository.findByUserEmail(dto.getEmail()).orElse(null);
     if (user == null) {
       throw new RuntimeException("This is member information that does not exist.");
     }
-    if  (user.getUserEmail().equals(dto.getEmail()) &&
-        user.matchPassword(dto.getPassword(),bCryptPasswordEncoder)) {
+    if (user.getUserEmail().equals(dto.getEmail()) &&
+        user.matchPassword(dto.getPassword(), bCryptPasswordEncoder)) {
       CustomUserDetails customUserDetails = customUserDetailsService.fromUser(user);
       return initializeToken(customUserDetails.getUsername());
     }
@@ -97,16 +99,18 @@ public class UserAuthService {
 
   // 비밀번호 변경
   @Transactional
-  public void changePassword(String publicUserId, PasswordChangeRequsetDto passwordChangeRequsetDto){
+  public void changePassword(String publicUserId,
+      PasswordChangeRequsetDto passwordChangeRequsetDto) {
     User user = userRepository.findByPublicUserId(publicUserId).orElse(null);
     // 기존 비밀번호 검증
-    if (user == null){
+    if (user == null) {
       throw new IllegalStateException("유저 정보 오류");
     }
-    if(!user.matchPassword(passwordChangeRequsetDto.getCurrentPassword(), bCryptPasswordEncoder)){
+    if (!user.matchPassword(passwordChangeRequsetDto.getCurrentPassword(), bCryptPasswordEncoder)) {
       throw new IllegalStateException("현재 비밀번호가 일치하지 않습니다.");
     }
-    user.setEncryptedPassword(bCryptPasswordEncoder.encode(passwordChangeRequsetDto.getNewPassword()));
+    user.setEncryptedPassword(
+        bCryptPasswordEncoder.encode(passwordChangeRequsetDto.getNewPassword()));
   }
 
   /**

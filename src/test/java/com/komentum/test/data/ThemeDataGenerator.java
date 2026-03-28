@@ -46,6 +46,9 @@ public class ThemeDataGenerator {
   @Autowired
   private DesignComponentRepository designComponentRepository;
 
+  @Autowired
+  private UserDataGenerator userDataGenerator;
+
   private final Faker faker = new Faker();
   public String userEmail = "test@test.com";
   public List<ThemeComponent> initialThemes = new ArrayList<>();
@@ -110,7 +113,7 @@ public class ThemeDataGenerator {
     for (int i = 0; i < size; i++) {
       designComponents.add(DesignComponent.builder()
           .imageUrl(faker.internet().image())
-          .userEmail(faker.internet().emailAddress())
+          .user(userDataGenerator.generateTestUser(faker.internet().emailAddress()))
           .isPublic(faker.bool().bool())
           .build());
     }

@@ -1,6 +1,6 @@
 package com.komentum.theme.android.editor;
 
-import com.komentum.global.utils.S3FileManager;
+import com.komentum.global.utils.FileManager;
 import com.komentum.theme.utils.DockerProcessRunner;
 import com.komentum.theme.utils.ThemePathManager;
 import java.nio.file.Files;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class AndroidThemeSaver {
 
   private final DockerProcessRunner dockerProcessRunner;
-  private final S3FileManager s3FileManager;
+  private final FileManager fileManager;
 
   private String resolveThemeName(String themeId) {
     return String.format("theme-%s.apk", themeId);
@@ -64,6 +64,6 @@ public class AndroidThemeSaver {
     Path depackedThemePath = ThemePathManager.getThemeDepackedDir(themeId).toAbsolutePath();
     Path repackedThemePath = ThemePathManager.getThemeRepackedDir(themeId).toAbsolutePath();
     byte[] outputApk = repackAndSignTheme(depackedThemePath, repackedThemePath);
-    return s3FileManager.uploadFile(outputApk, resolveThemeName(themeId));
+    return fileManager.uploadFile(outputApk, resolveThemeName(themeId));
   }
 }

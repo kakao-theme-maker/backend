@@ -30,6 +30,7 @@ public class PostDto {
 
     String title;
     String content;
+    String previewImageName;
     boolean publicFlag;
   }
 

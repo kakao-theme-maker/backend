@@ -38,7 +38,7 @@ public class DesignBoardDto {
     @JsonProperty("user_email")
     private String userEmail;
 
-    @Schema(description = "게시글 생서일", example = "YYYY-mm-dd")
+    @Schema(description = "게시글 생성일", example = "YYYY-mm-dd")
     @JsonProperty("created_at")
     private String createdAt;
 
@@ -115,7 +115,16 @@ public class DesignBoardDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "디자인 에셋 게시글 생성 요청 DTO")
+  @Schema(
+      description = """
+          디자인 에셋 게시글 생성 요청 DTO
+          
+          - title*(String): 디자인 에셋 게시글 제목
+          - content*(String): 디자인 에셋 게시글 내용
+          - designComponentId*(Integer): 게시글을 생성할 designComponent의 ID
+          - publicFlag(Boolean): 공개여부
+          """
+  )
   public static class DesignBoardCreateDto {
 
     @Schema(description = "디자인 에셋 게시글 제목")
@@ -136,16 +145,24 @@ public class DesignBoardDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "디자인 에셋 게시글 수정 요청 DTO")
+  @Schema(
+      description = """
+          디자인 에셋 게시글 수정 요청 DTO
+          
+          - title*(String) : 새로운 게시글 제목 ( null 허용 )
+          - content*(String) : 새로운 게시글 내용 ( null 허용 )
+          - publicFlag*(String) : 게시글 공개 여부 ( null 허용 )
+          """
+  )
   public static class DesignBoardUpdateDto {
 
-    @Schema(description = "수정할 디자인 에셋 게시글 제목(null 가능)")
+    @Schema(description = "수정할 디자인 에셋 게시글 제목(null 가능)", example = "수정할 디자인 에셋 게시글 제목(null 가능)")
     String title;
 
-    @Schema(description = "수정할 디자인 에셋 게시글 내용(null 가능)")
+    @Schema(description = "수정할 디자인 에셋 게시글 내용(null 가능)", example = "수정할 디자인 에셋 게시글 내용(null 가능)")
     String content;
 
-    @Schema(description = "공개여부(null 허용)")
+    @Schema(description = "공개여부(null 허용)", example = "공개여부(null 허용) : true|false")
     @JsonProperty("public_flag")
     boolean publicFlag;
   }

@@ -107,7 +107,16 @@ public class ThemeBoardDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "테마 게시글 작성 요청 DTO")
+  @Schema(
+      description = """
+          테마 게시글 작성 요청 DTO
+          
+          - title*(String): 게시글 제목
+          - content*(String): 게시글 내용
+          - themeComponentId*(Integer): 게시글을 작성할 테마 ID
+          - publicFlag(Boolean): 게시글 공개 여부
+          """
+  )
   public static class ThemeBoardCreateDto {
 
     @Schema(description = "게시글 ID")
@@ -131,7 +140,15 @@ public class ThemeBoardDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "테마 게시글 수정 요청 DTO")
+  @Schema(
+      description = """
+          테마 게시글 수정 요청 DTO
+          
+          - title(String): 게시글 제목 ( null 허용 )
+          - content(String): 게시글 내용 ( null 허용 )
+          - publicFlag(Boolean): 게시글 공개 여부 ( null 허용 )
+          """
+  )
   public static class ThemeBoardUpdateDto {
 
     @Schema(description = "게시글 제목")

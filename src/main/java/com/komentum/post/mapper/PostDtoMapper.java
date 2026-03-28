@@ -14,10 +14,10 @@ public interface PostDtoMapper {
   // ThemeBoard
   PostCreateDto toPostCreateDto(ThemeBoardCreateDto dto);
 
-  PostUpdateDto toPostUpdateDto(ThemeBoardUpdateDto dto);
+  PostUpdateDto toPostUpdateDto(ThemeBoardUpdateDto dto, String previewImageName);
 
   // DesignBoard
   PostCreateDto toPostCreateDto(DesignBoardCreateDto dto);
 
-  PostUpdateDto toPostUpdateDto(DesignBoardUpdateDto dto);
+  PostUpdateDto toPostUpdateDto(DesignBoardUpdateDto dto, String previewImageName);
 }
