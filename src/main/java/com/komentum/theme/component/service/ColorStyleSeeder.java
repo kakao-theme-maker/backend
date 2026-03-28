@@ -41,7 +41,7 @@ public class ColorStyleSeeder {
 
     @JsonProperty("sheet_element_name")
     String sheetElementName;
-    
+
     @JsonProperty("sheet_props_name")
     String sheetPropsName;
 

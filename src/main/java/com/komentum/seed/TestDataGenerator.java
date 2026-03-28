@@ -1,7 +1,6 @@
 package com.komentum.seed;
 
 import com.komentum.seed.seeder.CommentSeeder;
-import com.komentum.seed.seeder.ComponentTypeSeeder;
 import com.komentum.seed.seeder.DesignBoardSeeder;
 import com.komentum.seed.seeder.DesignComponentSeeder;
 import com.komentum.seed.seeder.PreferSeeder;
@@ -9,6 +8,8 @@ import com.komentum.seed.seeder.ThemeBoardSeeder;
 import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.seed.seeder.UserSeeder;
 import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.component.service.ColorStyleSeeder;
+import com.komentum.theme.component.service.ComponentTypeSeeder;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import jakarta.annotation.PostConstruct;
@@ -31,13 +32,15 @@ public class TestDataGenerator {
   private final ThemeBoardSeeder themeBoardSeeder;
   private final DesignBoardSeeder designBoardSeeder;
   private final ComponentTypeSeeder componentTypeSeeder;
+  private final ColorStyleSeeder colorStyleSeeder;
 
   @PostConstruct
   @Transactional
   public void init() {
     List<User> users = userSeeder.seedData(10); // 10
     userSeeder.createOrRetrieveRootUser();
-    componentTypeSeeder.seedData();
+    componentTypeSeeder.upsertComponentType();
+    colorStyleSeeder.upsertColorStyleSeed();
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
         users); // 100
     List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users); // 100

@@ -90,8 +90,6 @@ public class ComponentType {
     this.componentPath = componentType.getComponentPath();
     this.sizeX = componentType.getSizeX();
     this.sizeY = componentType.getSizeY();
-    this.createdAt = componentType.getCreatedAt();
-    this.updatedAt = componentType.getUpdatedAt();
   }
 
   public boolean isSame(ComponentType other) {
