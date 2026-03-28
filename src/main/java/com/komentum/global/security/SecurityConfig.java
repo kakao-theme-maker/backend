@@ -42,6 +42,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers(securityProperties.getWhiteList()).permitAll();
           auth.requestMatchers(HttpMethod.GET, securityProperties.getWhiteListGet()).permitAll();
+          auth.requestMatchers(new String[]{"/api/color-styles/**", "/api/component-types/**"})
+              .hasRole(UserRole.ADMIN.name());
           // 로컬 스토리지를 사용하는 경우 업로드된 파일을 정적 리소스로 직접 서빙하므로 업로드 경로에 대한 GET 요청을 허용
           if (fileStorageProperty.getStorage() == Storage.LOCAL) {
             auth.requestMatchers(HttpMethod.GET, WebConfig.UPLOAD_URL_PREFIX + "/**").permitAll();
