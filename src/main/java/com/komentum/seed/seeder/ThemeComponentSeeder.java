@@ -1,12 +1,20 @@
 package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
+import com.komentum.theme.component.domain.ComponentType;
+import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.repository.ComponentTypeRepository;
+import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.repository.ThemeComponentRepository;
+import com.komentum.theme.theme.repository.ThemeImageRepository;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class ThemeComponentSeeder {
 
   private final ThemeComponentRepository themeComponentRepository;
+  private final ThemeImageRepository themeImageRepository;
+  private final DesignComponentRepository designComponentRepository;
+  private final ComponentTypeRepository componentTypeRepository;
   private final Faker faker;
 
   private ThemeComponent generateOne(User author) {
@@ -26,6 +37,22 @@ public class ThemeComponentSeeder {
         .isPublic(true)
         .userEmail(author.getUserEmail())
         .build();
+  }
+
+  private List<ThemeImage> seedThemeImages(ThemeComponent themeComponent) {
+    List<ComponentType> componentTypes = componentTypeRepository.findByPlatform(Platform.ANDROID);
+    List<DesignComponent> designComponents = designComponentRepository
+        .findAll(Pageable.ofSize(5))
+        .getContent();
+    List<ThemeImage> themeImages = new ArrayList<>();
+    for (int i = 0; i < componentTypes.size(); i++) {
+      themeImages.add(ThemeImage.builder()
+          .themeComponent(themeComponent)
+          .componentType(componentTypes.get(i))
+          .designComponent(designComponents.get(i % designComponents.size()))
+          .build());
+    }
+    return themeImageRepository.saveAll(themeImages);
   }
 
   @Transactional
@@ -43,6 +70,13 @@ public class ThemeComponentSeeder {
         themeComponents.add(generateOne(author));
       }
     }
-    return themeComponentRepository.saveAll(themeComponents);
+    themeComponents = themeComponentRepository.saveAll(themeComponents);
+    for (ThemeComponent themeComponent : themeComponents) {
+      List<ThemeImage> themeImages = seedThemeImages(themeComponent);
+      for (ThemeImage themeImage : themeImages) {
+        themeComponent.addThemeImage(themeImage);
+      }
+    }
+    return themeComponents;
   }
 }

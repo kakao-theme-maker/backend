@@ -1,10 +1,10 @@
 package com.komentum.post.controller;
 
 import com.komentum.global.dto.CustomUserDetails;
-import com.komentum.post.dto.DesignBoardDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
+import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
 import com.komentum.post.facade.DesignBoardManagementFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,24 +61,27 @@ public class DesignBoardController {
   @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글을 작성한다")
   public ResponseEntity<DesignBoardDetailDto> createDesignBoard(
       @RequestPart("board_info") DesignBoardCreateDto createDto,
-      @RequestPart(value = "preview_image", required = false) MultipartFile profileImage,
+      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     return ResponseEntity.ok(
-        designBoardManagementFacade.createDesignBoard(createDto, profileImage,
+        designBoardManagementFacade.createDesignBoard(createDto, previewImage,
             userDetails.getUsername()));
   }
 
   /**
    * 특정 ID의 디자인 에셋 게시글 수정, 없으면 예외 처리
+   *
    */
-  @PatchMapping("/{post_id}")
+  @PatchMapping(value = "/{post_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=post_id인 디자인 에셋 게시글을 수정한다")
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
       @PathVariable("post_id") Long postId,
-      @RequestBody DesignBoardDto.DesignBoardUpdateDto updateDto
+      @RequestPart(value = "board_info") DesignBoardUpdateDto updateDto,
+      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage
   ) {
-    return ResponseEntity.ok(designBoardManagementFacade.updateDesignBoard(postId, updateDto));
+    return ResponseEntity.ok(
+        designBoardManagementFacade.updateDesignBoard(postId, updateDto, previewImage));
   }
 
   /**

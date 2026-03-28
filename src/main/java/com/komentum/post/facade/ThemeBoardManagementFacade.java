@@ -1,7 +1,10 @@
 package com.komentum.post.facade;
 
+import com.komentum.global.utils.FileManager;
+import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
+import com.komentum.post.dto.PostDto.PostUpdateDto;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
@@ -12,8 +15,12 @@ import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.mapper.ThemeBoardMapperSupport;
 import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.post.service.PostService;
+import com.komentum.post.service.ThemeBoardQueryService;
 import com.komentum.post.service.ThemeBoardService;
+import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.theme.domain.ThemeImage;
+import com.komentum.theme.theme.service.ThemeImageService;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
@@ -38,6 +45,25 @@ public class ThemeBoardManagementFacade {
   private final BoardManagementHelper boardManagementHelper;
   private final ThemeBoardMapperSupport themeBoardMapperSupport;
   private final PostDtoMapper postDtoMapper;
+  private final ThemeImageService themeImageService;
+  private final FileManager fileManager;
+  private final ThemeBoardQueryService themeBoardQueryService;
+
+  private String uploadOrReusePreviewImage(MultipartFile previewImage,
+      ThemeComponent themeComponent) {
+    // previewImage가 유효하지 않으면, ThemeComponent의 이미지 사용
+    if (previewImage == null || previewImage.isEmpty()) {
+      ThemeImage themeImage = themeImageService.findByThemeComponentAndComponentTypeName(
+          themeComponent, ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME);
+      DesignComponent designComponent = themeImage.getDesignComponent();
+      String fileName = fileManager.convertUrlToFileName(designComponent.getImageUrl());
+      byte[] previewImageBytes = fileManager.downloadFile(fileName);
+      return boardManagementHelper
+          .savePreviewImageIfPresent(Post.class, fileName, previewImageBytes);
+    }
+    // previewImage가 유효하면 previewImage 사용
+    return boardManagementHelper.savePreviewImageIfPresent(Post.class, previewImage);
+  }
 
   /**
    * 게시글 ID를 기반으로 테마 게시글 상세 정보 반환
@@ -55,8 +81,7 @@ public class ThemeBoardManagementFacade {
   }
 
   /**
-   * 페이지 기반 테마 게시글 목록 조회
-   * 기본값으로 날짜순으로 정렬
+   * 페이지 기반 테마 게시글 목록 조회 기본값으로 날짜순으로 정렬
    *
    * @param pageable 페이지 기반 조회를 위한 페이지 정보 객체
    * @return ThemeBoardPreviewDto 목록
@@ -105,19 +130,30 @@ public class ThemeBoardManagementFacade {
    *
    * @param createDto    게시글 생성 정보
    * @param previewImage 게시글 대표 이미지 정보
-   * @param authorEmail  작성자 이메일
+   * @param authorId     작성자 식별자
    *
    */
-  @Transactional
   public ThemeBoardDetailDto createThemeBoard(
-      ThemeBoardCreateDto createDto, MultipartFile previewImage, String authorEmail) {
-    User author = userEntityFinder.findUserEntity(authorEmail);
-    Post savedPost = boardManagementHelper.createPostAndPreviewImage(
-        postDtoMapper.toPostCreateDto(createDto), author, previewImage);
+      ThemeBoardCreateDto createDto, MultipartFile previewImage, String authorId) {
+    // 이미지 저장
     ThemeComponent themeComponent = themeRetrieveService.getThemeEntityById(
         createDto.getThemeComponentId());
-    themeBoardService.save(savedPost, themeComponent);
-    return findThemeBoardDetail(savedPost.getPostId());
+    String previewImageName = uploadOrReusePreviewImage(previewImage, themeComponent);
+    // DB 처리 + 커밋
+    User author = userEntityFinder.findUserEntity(authorId);
+    try {
+      ThemeBoard savedThemeBoard = themeBoardService.createThemeBoard(
+          createDto,
+          themeComponent,
+          author,
+          previewImageName
+      );
+      Post savedPost = savedThemeBoard.getPost();
+      return themeBoardQueryService.findThemeBoardDetail(savedPost.getPostId());
+    } catch (Exception e) {
+      boardManagementHelper.deleteFileSilently(previewImageName, "테마 게시글 생성 실패로 인한 저장된 파일 롤백");
+      throw new RuntimeException("테마 게시글 생성 실패", e);
+    }
   }
 
   /**
@@ -129,10 +165,21 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional
   public ThemeBoardDetailDto updateThemeBoard(Long postId,
-      ThemeBoardUpdateDto updateDto) {
-    postService.updatePost(postId,
-        postDtoMapper.toPostUpdateDto(updateDto));
-    return findThemeBoardDetail(postId);
+      ThemeBoardUpdateDto updateDto, MultipartFile previewImage) {
+    // 파일 작업 처리
+    String newImageName = boardManagementHelper.savePreviewImageIfPresent(Post.class, previewImage);
+    // DB 작업 처리 + 실패시 파일 롤백
+    PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, newImageName);
+    try {
+      String oldImageName = postService.updatePostAndGetPreviousImage(postId, postUpdateDto);
+      if (newImageName != null && oldImageName != null) {
+        boardManagementHelper.deleteFileSilently(oldImageName, "ThemeBoard의 이전 파일 삭제 실패");
+      }
+    } catch (Exception e) {
+      boardManagementHelper.deleteFileSilently(newImageName, "ThemeBoard 갱신 실패로 인한 파일 롤백 실패");
+      throw e;
+    }
+    return themeBoardQueryService.findThemeBoardDetail(postId);
   }
 
   /**
@@ -143,7 +190,11 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional
   public void deleteThemeBoard(Long postId) {
+    Post targetPost = postService.getPostByPostId(postId);
     themeBoardService.deleteByPostId(postId);
     postService.deletePost(postId);
+    // 기존 이미지 삭제 작업 시도 ( 실패 허용 )
+    boardManagementHelper.deleteFileSilently(targetPost.getPreviewImageName(),
+        "게시글 삭제 시 대표 이미지 삭제 실패");
   }
 }

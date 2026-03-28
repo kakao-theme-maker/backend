@@ -11,6 +11,7 @@ import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -51,6 +52,12 @@ public class DesignComponentService {
     return designComponentRepository.findById(id)
         .orElseThrow(
             () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignComponentDto> getByUserEmail(String userEmail) {
+    return designComponentRepository.findByUser_UserEmail(userEmail).stream()
+        .map(mapper::toDto).toList();
   }
 
   // 페이지네이션 지원 메서드 (새로 추가)

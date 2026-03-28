@@ -5,8 +5,10 @@ import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.facade.DesignComponentFacade;
+import com.komentum.theme.component.service.DesignComponentService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class DesignComponentController {
 
   private final DesignComponentFacade designComponentFacade;
+  private final DesignComponentService designComponentService;
 
   /**
    * designComponent 생성

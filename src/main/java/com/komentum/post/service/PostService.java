@@ -75,6 +75,17 @@ public class PostService {
     return targetPost;
   }
 
+  @Transactional
+  public String updatePostAndGetPreviousImage(Long postId, PostUpdateDto updateDto) {
+    Post targetPost = getPostByPostId(postId);
+    if (!postPolicy.canUpdate(targetPost.getUser())) {
+      throw new AccessDeniedException("failed to update post : invalid user or role");
+    }
+    String oldFileName = targetPost.getPreviewImageName();
+    targetPost.update(updateDto);
+    return oldFileName;
+  }
+
   /**
    * 게시글 삭제
    *

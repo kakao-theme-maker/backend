@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import com.komentum.post.domain.Comment;
 import com.komentum.post.domain.Post;
 import com.komentum.post.repository.CommentRepository;
+import com.komentum.post.repository.PostRepository;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentSeeder {
 
   private final CommentRepository commentRepository;
+  private final PostRepository postRepository;
   private final Faker faker;
 
   private Comment generateOne(Post post, User author) {
@@ -27,10 +29,11 @@ public class CommentSeeder {
   }
 
   @Transactional
-  public List<Comment> seedPerPost(int size, List<Post> posts, List<User> authors) {
+  public List<Comment> seedPerPost(int size, List<User> authors) {
     if (authors.isEmpty()) {
       throw new IllegalArgumentException("CommentSeeder : author size = 0");
     }
+    List<Post> posts = postRepository.findAll();
     List<Comment> existing = commentRepository.findByPostIn(posts);
     if (existing.size() >= size * posts.size()) {
       return existing;

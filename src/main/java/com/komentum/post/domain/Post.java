@@ -69,5 +69,8 @@ public class Post {
     if (updateDto.getContent() != null) {
       this.content = updateDto.getContent();
     }
+    if (updateDto.getPreviewImageName() != null) {
+      this.previewImageName = updateDto.getPreviewImageName();
+    }
   }
 }

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -107,12 +106,13 @@ public class ThemeBoardController {
    * @param postId    수정할 게시글 ID
    * @param updateDto 게시글 수정 정보
    */
-  @PutMapping("/{post_id}")
+  @PutMapping(value = "/{post_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "인증된 사용자가 자신이 소유한 ID=post_id인 테마 게시글을 수정한다")
   public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable("post_id") Long postId,
-      @RequestBody ThemeBoardUpdateDto updateDto) {
+      @RequestPart(value = "board_info") ThemeBoardUpdateDto updateDto,
+      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.updateThemeBoard(postId, updateDto));
+        themeBoardManagementFacade.updateThemeBoard(postId, updateDto, previewImage));
   }
 
   /**
