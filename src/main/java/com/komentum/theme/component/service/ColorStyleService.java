@@ -1,63 +1,65 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.theme.component.domain.ColorStyle;
-import com.komentum.theme.component.dto.CreateColorStyleRequest;
-import com.komentum.theme.component.dto.UpdateColorStyleRequest;
+import com.komentum.theme.component.dto.ColorStyleCreateDto;
+import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
+import com.komentum.theme.component.mapper.ColorStyleMapper;
 import com.komentum.theme.component.repository.ColorStyleRepository;
-import com.komentum.theme.exception.ResourceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ColorStyleService {
 
   private final ColorStyleRepository colorStyleRepository;
+  private final ColorStyleMapper colorStyleMapper;
 
 
-  public ColorStyle createColorStyle(CreateColorStyleRequest request) {
-    ColorStyle colorStyle = ColorStyle.builder()
-        .explain(request.getExplain())
-        .platform(request.getPlatform())
-        .styleSheetPath(request.getStyleSheetPath())
-        .styleElementName(request.getStyleElementName())
-        .stylePropsName(request.getStylePropsName())
-        .build();
+  /**
+   * color style 생성
+   * @param request ColorStyle 생성을 위한 요청 DTO
+   * @return 생성된 ColorStyle 반환
+   * */
+  @Transactional
+  public ColorStyle createColorStyle(ColorStyleCreateDto request) {
+    ColorStyle colorStyle = colorStyleMapper.toColorStyle(request);
     return colorStyleRepository.save(colorStyle);
   }
 
+  /**
+   * color style 단건 조회
+   * @param colorStyleId ColorStyle ID
+   * @return 조회된 ColorStyle 반환
+   * */
   @Transactional(readOnly = true)
-  public ColorStyle getColorStyleById(Integer id) {
-    return colorStyleRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("ColorStyle not found with id: " + id));
+  public ColorStyle getColorStyleById(Integer colorStyleId) {
+    return colorStyleRepository.findById(colorStyleId)
+        .orElseThrow(
+            () -> new EntityNotFoundException("ColorStyle not found with id: " + colorStyleId));
   }
 
+  /**
+   * color style 목록 조회
+   * @return ColorStyle 목록 반환
+   * */
   @Transactional(readOnly = true)
   public List<ColorStyle> getAllColorStyles() {
     return colorStyleRepository.findAll();
   }
-
-
-  public ColorStyle updateColorStyle(Integer id, UpdateColorStyleRequest request) {
-    ColorStyle colorStyle = getColorStyleById(id);
-
-    Optional.ofNullable(request.getExplain()).ifPresent(colorStyle::setExplain);
-    Optional.ofNullable(request.getPlatform()).ifPresent(colorStyle::setPlatform);
-    Optional.ofNullable(request.getStyleSheetPath()).ifPresent(colorStyle::setStyleSheetPath);
-    Optional.ofNullable(request.getStyleElementName()).ifPresent(colorStyle::setStyleElementName);
-    Optional.ofNullable(request.getStylePropsName()).ifPresent(colorStyle::setStylePropsName);
-
+  
+  /**
+   * colorStyle 갱신
+   * @param colorStyleId 갱신할 colorStyle ID
+   * @return 수정된 colorStyle 반환
+   * */
+  @Transactional
+  public ColorStyle updateColorStyle(Integer colorStyleId, ColorStyleUpdateRequest request) {
+    ColorStyle colorStyle = getColorStyleById(colorStyleId);
+    colorStyle.update(request);
     return colorStyleRepository.save(colorStyle);
-  }
-
-  public void deleteColorStyle(Integer id) {
-    if (!colorStyleRepository.existsById(id)) {
-      throw new ResourceNotFoundException("ColorStyle not found with id: " + id);
-    }
-    colorStyleRepository.deleteById(id);
   }
 }
