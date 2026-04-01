@@ -1,6 +1,7 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.post.facade.BoardManagementHelper;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.domain.policy.DesignComponentPolicy;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
@@ -30,14 +31,21 @@ public class DesignComponentService {
   private final DesignComponentPolicy designComponentPolicy;
   private final DesignComponentMapper mapper;
   private final FileManager fileManager;
+  private final BoardManagementHelper boardManagementHelper; // 추후 global로 분리
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
       MultipartFile image,
       User user) {
     String imageUrl = uploadImage(image);
-    DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
-    return mapper.toDto(designComponentRepository.save(newComponent));
+    try {
+      DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
+      return mapper.toDto(designComponentRepository.save(newComponent));
+    } catch (Exception e) {
+      boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(imageUrl),
+          String.valueOf(e));
+      throw new RuntimeException("Failed to create design component", e);
+    }
   }
 
   // READ
@@ -77,11 +85,25 @@ public class DesignComponentService {
       throw new AccessDeniedException("failed to update designComponent : invalid user or role");
     }
 
-    String imageUrl = (image != null) ? uploadImage(image) : null;
+    // 새 이미지 업로드 성공 시 이전 이미지 삭제
+    String beforeImageUrl = component.getImageUrl();
+    String afterImageUrl = (image != null) ? uploadImage(image) : null;
+    try {
+      component.update(afterImageUrl, request.getIsPublic());
+      DesignComponentDto result = mapper.toDto(component);
+      if (afterImageUrl != null && beforeImageUrl != null) {
+        boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(beforeImageUrl),
+            null);
+      }
+      return result;
+    } catch (Exception e) {
+      if (afterImageUrl != null) {
+        boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(afterImageUrl),
+            String.valueOf(e));
+      }
+      throw e;
+    }
 
-    component.update(imageUrl, request.getIsPublic()
-    );
-    return mapper.toDto(component);
   }
 
   // DELETE
@@ -91,7 +113,12 @@ public class DesignComponentService {
     if (!designComponentPolicy.canDelete(component)) {
       throw new AccessDeniedException("failed to delete designComponent : invalid user or role");
     }
+    String imageUrl = component.getImageUrl();
     designComponentRepository.delete(component);
+
+    if (imageUrl != null) {
+      boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(imageUrl), null);
+    }
   }
 
   private String uploadImage(MultipartFile image) {
