@@ -1,14 +1,19 @@
 package com.komentum.theme.component.controller;
 
+import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.theme.component.dto.ColorStyleCreateDto;
 import com.komentum.theme.component.dto.ColorStyleResponse;
-import com.komentum.theme.component.dto.CreateColorStyleRequest;
-import com.komentum.theme.component.dto.UpdateColorStyleRequest;
+import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
+import com.komentum.theme.component.dto.SeedResult;
+import com.komentum.theme.component.mapper.ColorStyleMapper;
+import com.komentum.theme.component.service.ColorStyleSeeder;
 import com.komentum.theme.component.service.ColorStyleService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,46 +24,52 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/color-styles")
+@RequiredArgsConstructor
 public class ColorStyleController {
 
   private final ColorStyleService colorStyleService;
-
-  public ColorStyleController(ColorStyleService colorStyleService) {
-    this.colorStyleService = colorStyleService;
-  }
+  private final ColorStyleSeeder colorStyleSeeder;
+  private final ColorStyleMapper colorStyleMapper;
 
   @PostMapping
-  public ResponseEntity<ColorStyleResponse> createColorStyle(@Valid @RequestBody CreateColorStyleRequest request) {
-    var createdColorStyle = colorStyleService.createColorStyle(request);
-    return ResponseEntity.ok(ColorStyleResponse.from(createdColorStyle));
+  @Operation(summary = "Admin 사용자가 새로운 color style을 생성한다")
+  public ResponseEntity<ColorStyleResponse> createColorStyle(
+      @Valid @RequestBody ColorStyleCreateDto request) {
+    ColorStyle createdColorStyle = colorStyleService.createColorStyle(request);
+    return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(createdColorStyle));
   }
 
   @GetMapping
+  @Operation(summary = "인증된 사용자가 모든 color style을 조회한다")
   public ResponseEntity<List<ColorStyleResponse>> getAllColorStyles() {
-    var colorStyles = colorStyleService.getAllColorStyles()
+    List<ColorStyleResponse> colorStyles = colorStyleService.getAllColorStyles()
         .stream()
-        .map(ColorStyleResponse::from)
+        .map(colorStyleMapper::toColorStyleResponse)
         .collect(Collectors.toList());
     return ResponseEntity.ok(colorStyles);
   }
 
-  @GetMapping("/{colorStyleId}")
+  @GetMapping("/{color_style_id}")
+  @Operation(summary = "인증된 ID=color_style_id인 colorStyle을 조회한다")
   public ResponseEntity<ColorStyleResponse> getColorStyleById(
-      @PathVariable("colorStyleId") Integer colorStyleId) {
-    var colorStyle = colorStyleService.getColorStyleById(colorStyleId);
-    return ResponseEntity.ok(ColorStyleResponse.from(colorStyle));
+      @PathVariable("color_style_id") Integer colorStyleId) {
+    ColorStyle colorStyle = colorStyleService.getColorStyleById(colorStyleId);
+    return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(colorStyle));
   }
 
-  @DeleteMapping("/{colorStyleId}")
-  public ResponseEntity<Void> deleteColorStyle(@PathVariable("colorStyleId") Integer colorStyleId) {
-    colorStyleService.deleteColorStyle(colorStyleId);
-    return ResponseEntity.noContent().build();
-  }
-
-  @PutMapping("/{colorStyleId}")
+  @PutMapping("/{color_style_id}")
+  @Operation(summary = "Admin 사용자가 ID=color_style_id인 color style을 수정한다")
   public ResponseEntity<ColorStyleResponse> updateColorStyle(
-      @PathVariable("colorStyleId") Integer colorStyleId, @Valid @RequestBody UpdateColorStyleRequest request) {
-    var updatedColorStyle = colorStyleService.updateColorStyle(colorStyleId, request);
-    return ResponseEntity.ok(ColorStyleResponse.from(updatedColorStyle));
+      @PathVariable("color_style_id") Integer colorStyleId,
+      @Valid @RequestBody ColorStyleUpdateRequest request) {
+    ColorStyle updatedColorStyle = colorStyleService.updateColorStyle(colorStyleId, request);
+    return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(updatedColorStyle));
+  }
+
+  @PutMapping("/seed")
+  @Operation(summary = "Admin 사용자가 시드 데이터를 기반으로 color style 정보를 수정/삽입한다")
+  public ResponseEntity<SeedResult> upsertColorStyleBySeed() {
+    SeedResult result = colorStyleSeeder.upsertColorStyleSeed();
+    return ResponseEntity.ok(result);
   }
 }

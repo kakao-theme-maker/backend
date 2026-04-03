@@ -1,5 +1,6 @@
 package com.komentum.theme.component.domain;
 
+import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
 import com.komentum.theme.component.enums.Platform;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -45,11 +47,40 @@ public class ColorStyle {
   @Column(name = "style_props_name", nullable = false)
   private String stylePropsName;
 
-  public void update(ColorStyle colorStyle) {
-    this.explain = colorStyle.explain;
-    this.platform = colorStyle.platform;
-    this.styleSheetPath = colorStyle.styleSheetPath;
-    this.styleElementName = colorStyle.styleElementName;
-    this.stylePropsName = colorStyle.stylePropsName;
+  public void update(ColorStyleUpdateRequest colorStyle) {
+    if (colorStyle.getExplain() != null) {
+      this.explain = colorStyle.getExplain();
+    }
+    if (colorStyle.getPlatform() != null) {
+      this.platform = colorStyle.getPlatform();
+    }
+    if (colorStyle.getStyleSheetPath() != null) {
+      this.styleSheetPath = colorStyle.getStyleSheetPath();
+    }
+    if (colorStyle.getStyleElementName() != null) {
+      this.styleElementName = colorStyle.getStyleElementName();
+    }
+    if (colorStyle.getStylePropsName() != null) {
+      this.stylePropsName = colorStyle.getStylePropsName();
+    }
+  }
+
+  public void replace(ColorStyle source) {
+    this.explain = source.getExplain();
+    this.platform = source.getPlatform();
+    this.styleSheetPath = source.getStyleSheetPath();
+    this.styleElementName = source.getStyleElementName();
+    this.stylePropsName = source.stylePropsName;
+  }
+
+  public boolean isSame(ColorStyle other) {
+    if (other == null) {
+      return false;
+    }
+    return Objects.equals(this.explain, other.explain)
+        && this.platform == other.platform
+        && Objects.equals(this.styleSheetPath, other.styleSheetPath)
+        && Objects.equals(this.styleElementName, other.styleElementName)
+        && Objects.equals(this.stylePropsName, other.stylePropsName);
   }
 }
