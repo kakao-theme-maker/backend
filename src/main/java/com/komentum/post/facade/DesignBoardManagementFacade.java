@@ -94,16 +94,13 @@ public class DesignBoardManagementFacade {
     // DB 작업 수행
     User author = userEntityFinder.findUserEntity(authorId);
     try {
-      DesignBoard savedDesignBoard = designBoardService.createDesignBoard(
+      Post savedPost = designBoardTransactionService.saveDesignBoardAndGetPost(
           createDto,
           designComponent,
           author,
           previewImageName
       );
-      return designBoardMapperSupport.toDesignBoardDetailDto(
-          designBoardService.findDetailById(savedDesignBoard.getPost().getPostId()),
-          boardManagementHelper
-      );
+      return designBoardTransactionService.findDesignBoardDetail(savedPost.getPostId(), authorId);
     } catch (Exception e) {
       boardManagementHelper.deleteFileSilently(previewImageName, "디자인 게시글 생성 실패로 인한 저장된 파일 롤백");
       throw new RuntimeException("디자인 에셋 게시글 생성 실패", e);
@@ -118,14 +115,18 @@ public class DesignBoardManagementFacade {
   public DesignBoardDetailDto updateDesignBoard(
       Long postId,
       DesignBoardUpdateDto updateDto,
-      MultipartFile previewImage) {
+      MultipartFile previewImage,
+      String userIdentifier) {
     // DB 쓰기 작업보다 파일 작업을 먼저 처리해야하므로 파일 작업 우선 처리
     String newImageName = boardManagementHelper.savePreviewImageIfPresent(DesignComponent.class,
         previewImage);
     // DB 작업 커밋 + 기존 이미지 삭제
-    PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, newImageName);
     try {
-      String oldImageName = postService.updatePostAndGetPreviousImage(postId, postUpdateDto);
+      String oldImageName = designBoardTransactionService.updateDesignBoardAndGetOldFileName(
+          postId,
+          updateDto,
+          newImageName
+      );
       if (newImageName != null && oldImageName != null) {
         boardManagementHelper.deleteFileSilently(oldImageName, "Design Board의 이전 파일 삭제 실패");
       }
@@ -134,10 +135,7 @@ public class DesignBoardManagementFacade {
       throw e;
     }
     // 응답값 반환
-    return designBoardMapperSupport.toDesignBoardDetailDto(
-        designBoardService.findDetailById(postId),
-        boardManagementHelper
-    );
+    return designBoardTransactionService.findDesignBoardDetail(postId, userIdentifier);
   }
 
   /**
