@@ -1,11 +1,11 @@
 package com.komentum.post.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.komentum.global.utils.DateUtils;
-import com.komentum.post.domain.Post;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.user.domain.User;
+import com.komentum.post.dto.TagDto.TagCreateDto;
+import com.komentum.post.dto.TagDto.TagResponse;
+import com.komentum.post.dto.TagDto.TagUpdateDto;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -49,19 +49,17 @@ public class DesignBoardDto {
     @Schema(description = "게시글 좋아요 수")
     private Long prefers;
 
-    public static DesignBoardDetailDto from(Post post, DesignComponent designComponent,
-        User author, Long prefers, String previewImageUrl) {
-      return DesignBoardDetailDto.builder()
-          .postId(post.getPostId())
-          .title(post.getTitle())
-          .content(post.getContent())
-          .designComponentId(designComponent.getDesignComponentId())
-          .userEmail(author.getUserEmail())
-          .createdAt(DateUtils.convertToDateString(post.getCreatedAt()))
-          .previewImageUrl(previewImageUrl)
-          .prefers(prefers)
-          .build();
-    }
+    @Schema(description = "댓글 수")
+    private Long comments;
+
+    @Schema(description = "태그 목록")
+    private List<TagResponse> tags;
+
+    @Schema(description = "현재 사용자 좋아요 여부")
+    private boolean liked;
+
+    @Schema(description = "현재 사용자의 북마크 저장 여부")
+    private boolean bookmarked;
   }
 
   @Data

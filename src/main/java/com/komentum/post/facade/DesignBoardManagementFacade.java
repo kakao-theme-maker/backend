@@ -1,19 +1,17 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
-import com.komentum.post.dto.PostDto.PostUpdateDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.mapper.DesignBoardMapperSupport;
 import com.komentum.post.mapper.PostDtoMapper;
-import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
+import com.komentum.post.service.transaction.DesignBoardTransactionService;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
@@ -33,12 +31,12 @@ public class DesignBoardManagementFacade {
 
   private final DesignComponentService designComponentService;
   private final PostService postService;
-  private final PostRepositorySupport postRepositorySupport;
   private final DesignBoardService designBoardService;
   private final UserEntityFinder userEntityFinder;
   private final BoardManagementHelper boardManagementHelper;
   private final FileManager fileManager;
   private final DesignBoardMapperSupport designBoardMapperSupport;
+  private final DesignBoardTransactionService designBoardTransactionService;
 
   // mapper
   private final PostDtoMapper postDtoMapper;
@@ -62,9 +60,8 @@ public class DesignBoardManagementFacade {
    * @return 특정 post id를 갖는 디자인 에셋 게시글 상세 정보
    * */
   @Transactional(readOnly = true)
-  public DesignBoardDetailDto findBoardDetail(Long postId) {
-    DesignBoardQuery.Detail detail = designBoardService.findDetailById(postId);
-    return designBoardMapperSupport.toDesignBoardDetailDto(detail, boardManagementHelper);
+  public DesignBoardDetailDto findBoardDetail(Long postId, String userIdentifier) {
+    return designBoardTransactionService.findDesignBoardDetail(postId, userIdentifier);
   }
 
   /**
