@@ -112,9 +112,11 @@ public class ThemeBoardController {
   @Operation(summary = "인증된 사용자가 자신이 소유한 ID=post_id인 테마 게시글을 수정한다")
   public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable("post_id") Long postId,
       @RequestPart(value = "board_info") ThemeBoardUpdateDto updateDto,
-      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage) {
+      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.updateThemeBoard(postId, updateDto, previewImage));
+        themeBoardManagementFacade
+            .updateThemeBoard(postId, updateDto, previewImage, userDetails.getUsername()));
   }
 
   /**

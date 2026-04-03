@@ -134,14 +134,12 @@ public class ThemeBoardManagementFacade {
     // DB 처리 + 커밋
     User author = userEntityFinder.findUserEntity(authorId);
     try {
-      ThemeBoard savedThemeBoard = themeBoardService.createThemeBoard(
+      Post savedPost = themeBoardTransactionService.saveThemeBoardAndReturnPost(
           createDto,
           themeComponent,
           author,
-          previewImageName
-      );
-      Post savedPost = savedThemeBoard.getPost();
-      return themeBoardQueryService.findThemeBoardDetail(savedPost.getPostId());
+          previewImageName);
+      return themeBoardTransactionService.findThemeBoardDetail(savedPost.getPostId(), authorId);
     } catch (Exception e) {
       boardManagementHelper.deleteFileSilently(previewImageName, "테마 게시글 생성 실패로 인한 저장된 파일 롤백");
       throw new RuntimeException("테마 게시글 생성 실패", e);
@@ -155,15 +153,17 @@ public class ThemeBoardManagementFacade {
    * @param updateDto 게시글 수정 정보
    *
    */
-  @Transactional
   public ThemeBoardDetailDto updateThemeBoard(Long postId,
-      ThemeBoardUpdateDto updateDto, MultipartFile previewImage) {
+      ThemeBoardUpdateDto updateDto, MultipartFile previewImage, String userIdentifier) {
     // 파일 작업 처리
     String newImageName = boardManagementHelper.savePreviewImageIfPresent(Post.class, previewImage);
     // DB 작업 처리 + 실패시 파일 롤백
-    PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, newImageName);
     try {
-      String oldImageName = postService.updatePostAndGetPreviousImage(postId, postUpdateDto);
+      String oldImageName = themeBoardTransactionService.updateThemeBoardAndGetOldFileName(
+          postId,
+          updateDto,
+          newImageName
+      );
       if (newImageName != null && oldImageName != null) {
         boardManagementHelper.deleteFileSilently(oldImageName, "ThemeBoard의 이전 파일 삭제 실패");
       }
@@ -171,7 +171,7 @@ public class ThemeBoardManagementFacade {
       boardManagementHelper.deleteFileSilently(newImageName, "ThemeBoard 갱신 실패로 인한 파일 롤백 실패");
       throw e;
     }
-    return themeBoardQueryService.findThemeBoardDetail(postId);
+    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
   }
 
   /**
