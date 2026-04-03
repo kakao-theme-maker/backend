@@ -7,10 +7,12 @@ import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.repository.TagRepository;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -32,31 +34,43 @@ public class TagService {
         .collect(Collectors.groupingBy(t -> t.getPost().getPostId()));
   }
 
-  public List<Tag> synchronizeTags(Post post, List<TagUpdateDto> updateDtoList) {
-    // delete tags that updateDtoList doesn't contain
+  @Transactional
+  public void synchronizeTags(Post post, List<TagUpdateDto> updateDtoList) {
     List<Tag> prevTags = findAllByPostId(post.getPostId());
-    Map<String, TagUpdateDto> tagNameMap = updateDtoList.stream()
-        .collect(Collectors.toMap(TagUpdateDto::getTagName, Function.identity()));
+    // 덮어쓸 태그 목록
+    Set<String> newTagNames = updateDtoList.stream()
+        .map(TagUpdateDto::getTagName)
+        .filter(StringUtils::hasText)
+        .collect(Collectors.toSet());
+    // 기존 태그 목록
+    Set<String> prevTagNames = prevTags.stream()
+        .map(Tag::getTagName)
+        .filter(StringUtils::hasText)
+        .collect(Collectors.toSet());
+    // 삭제 대상
     List<Tag> tagsToDelete = prevTags.stream()
-        .filter(t -> !tagNameMap.containsKey(t.getTagName()))
+        .filter(tag -> !newTagNames.contains(tag.getTagName()))
         .toList();
     tagRepository.deleteAll(tagsToDelete);
-    // create tags that prev tag list doesn't contain
-    Map<String, Tag> prevTagMap = prevTags.stream()
-        .collect(Collectors.toMap(Tag::getTagName, Function.identity()));
-    List<Tag> tagsToAdd = updateDtoList.stream()
-        .filter(t -> !prevTagMap.containsKey(t.getTagName()))
-        .map(t -> Tag.createTransient(t, post))
+    // 추가할 태그 목록
+    List<Tag> tagsToAdd = newTagNames.stream()
+        .filter(tagName -> !prevTagNames.contains(tagName))
+        .map(tagName -> Tag.builder()
+            .tagName(tagName)
+            .post(post)
+            .build())
         .toList();
-    return tagRepository.saveAll(tagsToAdd);
+    tagRepository.saveAll(tagsToAdd);
   }
 
+  @Transactional
   public List<Tag> createTags(Post targetPost, List<TagCreateDto> tagCreateDtoList) {
     List<Tag> tags = tagCreateDtoList.stream()
         .map(tag -> Tag.createTransient(tag, targetPost)).toList();
     return tagRepository.saveAll(tags);
   }
 
+  @Transactional
   public Tag updateTag(Long tagId, TagUpdateDto updateDto) {
     Tag targetTag = tagRepository.findById(tagId)
         .orElseThrow(() -> new RuntimeException("Tag not found"));
@@ -64,6 +78,7 @@ public class TagService {
     return tagRepository.save(targetTag);
   }
 
+  @Transactional
   public void deleteTag(Long tagId) {
     if (!tagRepository.existsById(tagId)) {
       throw new RuntimeException("Tag not found");
