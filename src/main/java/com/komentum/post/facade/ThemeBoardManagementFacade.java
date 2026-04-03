@@ -3,9 +3,6 @@ package com.komentum.post.facade;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
-import com.komentum.post.domain.ThemeBoard;
-import com.komentum.post.dto.PostDto.PostUpdateDto;
-import com.komentum.post.dto.PostSummary;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
@@ -13,10 +10,9 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.mapper.ThemeBoardMapperSupport;
-import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.post.service.PostService;
-import com.komentum.post.service.ThemeBoardQueryService;
 import com.komentum.post.service.ThemeBoardService;
+import com.komentum.post.service.transaction.ThemeBoardTransactionService;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
@@ -38,7 +34,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class ThemeBoardManagementFacade {
 
   private final PostService postService;
-  private final PostRepositorySupport postRepositorySupport;
   private final UserEntityFinder userEntityFinder;
   private final ThemeBoardService themeBoardService;
   private final ThemeRetrieveService themeRetrieveService;
@@ -47,7 +42,7 @@ public class ThemeBoardManagementFacade {
   private final PostDtoMapper postDtoMapper;
   private final ThemeImageService themeImageService;
   private final FileManager fileManager;
-  private final ThemeBoardQueryService themeBoardQueryService;
+  private final ThemeBoardTransactionService themeBoardTransactionService;
 
   private String uploadOrReusePreviewImage(MultipartFile previewImage,
       ThemeComponent themeComponent) {
@@ -72,12 +67,9 @@ public class ThemeBoardManagementFacade {
    * @return ThemeBoardDetailDto 테마 게시글 상세 정보
    *
    */
-  @Transactional(readOnly = true)
-  public ThemeBoardDetailDto findThemeBoardDetail(Long postId) {
-    PostSummary postSummary = postRepositorySupport.findPostSummaryByPostId(postId);
-    ThemeBoard themeBoard = themeBoardService.findByPostId(postId);
-    return themeBoardMapperSupport.toThemeBoardDetailDto(postSummary, themeBoard,
-        boardManagementHelper);
+  @Transactional
+  public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier) {
+    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
   }
 
   /**

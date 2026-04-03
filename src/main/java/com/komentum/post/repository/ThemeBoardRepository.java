@@ -25,4 +25,6 @@ public interface ThemeBoardRepository extends JpaRepository<ThemeBoard, Long> {
   List<ThemeBoard> findAllByPostIds(List<Long> postIds);
 
   boolean existsByThemeComponentAndPost(ThemeComponent tc, Post post);
+
+  boolean existsByPost_PostId(Long postPostId);
 }

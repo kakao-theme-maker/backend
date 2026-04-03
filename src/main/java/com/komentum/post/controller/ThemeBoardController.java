@@ -79,8 +79,10 @@ public class ThemeBoardController {
   @GetMapping("/{post_id}")
   @Operation(summary = "인증된 사용자가 ID=post_id인 게시글을 상세 조회한다")
   public ResponseEntity<ThemeBoardDetailDto> findThemeBoardByPostId(
-      @PathVariable("post_id") Long postId) {
-    return ResponseEntity.ok(themeBoardManagementFacade.findThemeBoardDetail(postId));
+      @PathVariable("post_id") Long postId,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    return ResponseEntity.ok(
+        themeBoardManagementFacade.findThemeBoardDetail(postId, userDetails.getUsername()));
   }
 
   /**
