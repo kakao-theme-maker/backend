@@ -31,6 +31,7 @@ public class UserSeeder {
   private User generateOne() {
     return User.builder()
         .userEmail(UUID.randomUUID() + "@test.com")
+        .name(faker.name().name())
         .publicUserId(UUID.randomUUID().toString())
         .encryptedPassword(passwordEncoder.encode("1234"))
         .role(UserRole.USER)
@@ -50,6 +51,7 @@ public class UserSeeder {
     return rootUser.orElseGet(() ->
         userRepository.save(User.builder()
             .userEmail(testUserProperty.getUserEmail())
+            .name("root1234")
             .publicUserId(testUserProperty.getPublicUserId())
             .encryptedPassword(passwordEncoder.encode(testUserProperty.getPassword()))
             .role(UserRole.USER)
