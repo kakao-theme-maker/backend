@@ -3,15 +3,12 @@ package com.komentum.post.service;
 import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
-import com.komentum.post.dto.PostDto.PostCreateDto;
-import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.post.repository.ThemeBoardRepositorySupport;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -75,14 +72,6 @@ public class ThemeBoardService {
         .post(post)
         .themeComponent(themeComponent)
         .build());
-  }
-
-  @Transactional
-  public ThemeBoard createThemeBoard(ThemeBoardCreateDto createDto, ThemeComponent themeComponent,
-      User author, String previewImageName) {
-    PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
-    Post savedPost = postService.createPost(postCreateDto, author, previewImageName);
-    return save(savedPost, themeComponent);
   }
 
   /**

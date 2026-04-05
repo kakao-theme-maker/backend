@@ -36,6 +36,7 @@ public class UserDataGenerator {
         .gender(Gender.male)
         .role(UserRole.USER)
         .userEmail(userEmail)
+        .name(faker.name().name())
         .build());
   }
 

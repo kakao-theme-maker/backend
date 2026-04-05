@@ -21,6 +21,7 @@ public class SignUpRequestDto {
     return User.builder()
         .publicUserId(uuid)
         .userEmail(email)
+        .name("user" + UUID.randomUUID())
         .encryptedPassword(bCryptPasswordEncoder.encode(password))
         .role(UserRole.USER)
         .build();

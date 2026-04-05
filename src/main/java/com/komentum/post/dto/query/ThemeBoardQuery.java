@@ -40,4 +40,51 @@ public class ThemeBoardQuery {
       this.prefers = prefers;
     }
   }
+
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  public static class Detail {
+
+    private Long postId;
+    private String title;
+    private String content;
+    private Integer themeComponentId;
+    private String userEmail;
+    private String userName;
+    private LocalDateTime createdAt;
+    private String previewImageName;
+    private Long prefers;
+    private Long comments;
+    private boolean liked;
+    private boolean bookmarked;
+
+    @QueryProjection
+    public Detail(
+        Long postId,
+        String title,
+        String content,
+        Integer themeComponentId,
+        String userEmail,
+        String userName,
+        LocalDateTime createdAt,
+        String previewImageName,
+        Long prefers,
+        Long comments,
+        boolean liked,
+        boolean bookmarked) {
+      this.postId = postId;
+      this.title = title;
+      this.content = content;
+      this.themeComponentId = themeComponentId;
+      this.userEmail = userEmail;
+      this.userName = userName;
+      this.createdAt = createdAt;
+      this.previewImageName = previewImageName;
+      this.prefers = prefers;
+      this.comments = comments;
+      this.liked = liked;
+      this.bookmarked = bookmarked;
+    }
+  }
 }
