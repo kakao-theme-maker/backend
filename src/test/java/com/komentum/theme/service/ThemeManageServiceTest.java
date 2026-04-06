@@ -1,4 +1,4 @@
-package com.komentum.theme.theme.service;
+package com.komentum.theme.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +10,7 @@ import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.dto.ThemeImageRequest;
 import com.komentum.theme.theme.dto.ThemeStyleRequest;
 import com.komentum.theme.theme.repository.ThemeComponentRepository;
+import com.komentum.theme.theme.service.ThemeManageService;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
