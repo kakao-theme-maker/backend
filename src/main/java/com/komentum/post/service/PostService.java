@@ -123,7 +123,12 @@ public class PostService {
     return postRepository.countByUser_PublicUserId(publicUserId);
   }
 
+  // 사용자가 카테고리에 저장한 게시글 목록 조회
   public List<Post> findUserSavedPosts(User user) {
     return postRepositorySupport.findUserSavedPost(user);
+  }
+
+  public List<Post> findUserPreferedPosts(User user) {
+    return postRepositorySupport.findUserPreferedPost(user);
   }
 }

@@ -33,11 +33,20 @@ public class UserPostController {
    * 사용자가 카테고리에 저장한 테마 목록 반환
    */
   @GetMapping("/me/saved-posts")
-  @Operation(summary = "현재 인증된 사용자가 카테고리에 저장한 게시글 목록을 조회한다")
+  @Operation(summary = "현재 인증된 사용자가 북마크에 추가한 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findSavedPostList(
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     return ResponseEntity.ok(
         postManagementFacade.findUserSavedPostsByCategory(userDetails.getUsername()));
+  }
+
+  @GetMapping("/me/prefered-posts")
+  @Operation(summary = "현재 인증된 사용자가 좋아요를 누른 게시글 목록을 조회한다")
+  public ResponseEntity<List<UserPostListResponseDto>> findPreferedPostList(
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    return ResponseEntity.ok(
+        postManagementFacade.findUserPreferedPosts(userDetails.getUsername()));
   }
 }

@@ -4,6 +4,7 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QCategory;
 import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QPost;
+import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QUser;
@@ -88,6 +89,20 @@ public class PostRepositorySupport {
         .join(categoryPost.post, post)
         .join(categoryPost.category, category)
         .where(category.owner.eq(user))
+        .fetch();
+  }
+
+  /**
+   * 사용자가 좋아요를 누른 게시글 목록 조회
+   * */
+  public List<Post> findUserPreferedPost(User client) {
+    QPost post = QPost.post;
+    QPrefer prefer = QPrefer.prefer;
+    QUser user = QUser.user;
+    return queryFactory.select(post)
+        .from(prefer)
+        .join(prefer.post, post)
+        .where(prefer.user.eq(client))
         .fetch();
   }
 }
