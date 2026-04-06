@@ -40,9 +40,6 @@ public class DevDataGenerator {
   public void init() {
     List<User> users = new ArrayList<>(userSeeder.seedData(10));
     users.add(userSeeder.createOrRetrieveRootUser()); // 11
-    componentTypeSeeder.seedData();
-    List<User> users = userSeeder.seedData(10); // 10
-    userSeeder.createOrRetrieveRootUser();
     componentTypeSeeder.upsertComponentType();
     colorStyleSeeder.upsertColorStyleSeed();
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
