@@ -46,6 +46,14 @@ public class UserRetrieveController {
     }
   }
 
+  // 현재 인증된 사용자 정보 조회
+  @GetMapping("/me")
+  @Operation(summary = "현재 인증된 사용자 정보를 조회한다")
+  public ResponseEntity<UserResponseDto> retrieveCurrentUser(
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    return ResponseEntity.ok(userRetrieveService.getUserByPublicId(userDetails.getPublicUserId()));
+  }
+
   // 유저 정보 수정
   @PatchMapping("/me")
   @Operation(summary = "현재 사용자의 정보를 수정한다")

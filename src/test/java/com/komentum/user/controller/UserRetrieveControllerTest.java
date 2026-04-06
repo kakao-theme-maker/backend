@@ -10,15 +10,18 @@ import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomResponse;
 import com.komentum.post.domain.Post;
 import com.komentum.post.repository.PostRepository;
+import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.dto.UserUpdateDto;
 import com.komentum.user.repository.UserRepository;
-import com.komentum.user.service.UserRetrieveService;
 import java.time.LocalDate;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -51,10 +55,10 @@ public class UserRetrieveControllerTest {
   private PostRepository postRepository;
   @Autowired
   private JwtUtils jwtUtils;
-  @Autowired
-  private UserRetrieveService userRetrieveService;
 
   User user;
+  @Autowired
+  private MockMvcUtils mockMvcUtils;
 
   @BeforeEach
   void setUp() {
@@ -87,22 +91,15 @@ public class UserRetrieveControllerTest {
   @DisplayName("유저 조회")
   void inquiryUserTest() throws Exception {
     //given
-    String userEmail = "admin1@gmail.com";
-    String userName = "admin";
-    String userProfileUrl = "https://example";
-    int uploads = 1;
-    int followers = 0;
-    int following = 0;
-    // createdAt은 생성된 시간으로 나오기 때문에, Test 불가
-
     UserResponseDto userResponseDto =
         UserResponseDto.builder()
-            .userEmail(userEmail)
-            .name(userName)
-            .profileImage(userProfileUrl)
-            .uploads(uploads)
-            .followers(followers)
-            .following(following)
+            .userEmail(user.getUserEmail())
+            .name(user.getName())
+            .profileImage(user.getProfileImg())
+            .publicUserId(user.getPublicUserId())
+            .uploads(1)
+            .followers(0)
+            .following(0)
             .build();
 
     String token = jwtUtils.generateAccessToken(user.getPublicUserId());
@@ -128,6 +125,29 @@ public class UserRetrieveControllerTest {
         .usingRecursiveComparison()
         .ignoringFields("createdAt")
         .isEqualTo(userResponseDto);
+  }
+
+  @Test
+  @DisplayName("현재 인증된 사용자 정보 조회")
+  void retrieveCurrentUser_success() throws Exception {
+    // given
+    User targetUser = userDataGenerator.generateTestUser(UUID.randomUUID() + "@test.com");
+    // when
+    UserResponseDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, UserResponseDto>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me")
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(targetUser))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response.getUserEmail()).isEqualTo(targetUser.getUserEmail());
+    assertThat(response.getName()).isEqualTo(targetUser.getName());
+    assertThat(response.getPublicUserId()).isEqualTo(targetUser.getPublicUserId());
   }
 
   @Test

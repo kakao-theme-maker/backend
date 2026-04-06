@@ -15,4 +15,6 @@ public interface DesignBoardRepository extends JpaRepository<DesignBoard, Long> 
   Optional<DesignBoard> findByPost_PostId(Long postPostId);
 
   boolean existsByDesignComponentAndPost(DesignComponent designComponent, Post post);
+
+  boolean existsByPost_PostId(Long postPostId);
 }

@@ -3,9 +3,6 @@ package com.komentum.post.facade;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
-import com.komentum.post.domain.ThemeBoard;
-import com.komentum.post.dto.PostDto.PostUpdateDto;
-import com.komentum.post.dto.PostSummary;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
@@ -13,10 +10,9 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.mapper.ThemeBoardMapperSupport;
-import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.post.service.PostService;
-import com.komentum.post.service.ThemeBoardQueryService;
 import com.komentum.post.service.ThemeBoardService;
+import com.komentum.post.service.transaction.ThemeBoardTransactionService;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
@@ -38,7 +34,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class ThemeBoardManagementFacade {
 
   private final PostService postService;
-  private final PostRepositorySupport postRepositorySupport;
   private final UserEntityFinder userEntityFinder;
   private final ThemeBoardService themeBoardService;
   private final ThemeRetrieveService themeRetrieveService;
@@ -47,7 +42,7 @@ public class ThemeBoardManagementFacade {
   private final PostDtoMapper postDtoMapper;
   private final ThemeImageService themeImageService;
   private final FileManager fileManager;
-  private final ThemeBoardQueryService themeBoardQueryService;
+  private final ThemeBoardTransactionService themeBoardTransactionService;
 
   private String uploadOrReusePreviewImage(MultipartFile previewImage,
       ThemeComponent themeComponent) {
@@ -72,12 +67,9 @@ public class ThemeBoardManagementFacade {
    * @return ThemeBoardDetailDto 테마 게시글 상세 정보
    *
    */
-  @Transactional(readOnly = true)
-  public ThemeBoardDetailDto findThemeBoardDetail(Long postId) {
-    PostSummary postSummary = postRepositorySupport.findPostSummaryByPostId(postId);
-    ThemeBoard themeBoard = themeBoardService.findByPostId(postId);
-    return themeBoardMapperSupport.toThemeBoardDetailDto(postSummary, themeBoard,
-        boardManagementHelper);
+  @Transactional
+  public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier) {
+    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
   }
 
   /**
@@ -142,14 +134,12 @@ public class ThemeBoardManagementFacade {
     // DB 처리 + 커밋
     User author = userEntityFinder.findUserEntity(authorId);
     try {
-      ThemeBoard savedThemeBoard = themeBoardService.createThemeBoard(
+      Post savedPost = themeBoardTransactionService.saveThemeBoardAndReturnPost(
           createDto,
           themeComponent,
           author,
-          previewImageName
-      );
-      Post savedPost = savedThemeBoard.getPost();
-      return themeBoardQueryService.findThemeBoardDetail(savedPost.getPostId());
+          previewImageName);
+      return themeBoardTransactionService.findThemeBoardDetail(savedPost.getPostId(), authorId);
     } catch (Exception e) {
       boardManagementHelper.deleteFileSilently(previewImageName, "테마 게시글 생성 실패로 인한 저장된 파일 롤백");
       throw new RuntimeException("테마 게시글 생성 실패", e);
@@ -163,15 +153,17 @@ public class ThemeBoardManagementFacade {
    * @param updateDto 게시글 수정 정보
    *
    */
-  @Transactional
   public ThemeBoardDetailDto updateThemeBoard(Long postId,
-      ThemeBoardUpdateDto updateDto, MultipartFile previewImage) {
+      ThemeBoardUpdateDto updateDto, MultipartFile previewImage, String userIdentifier) {
     // 파일 작업 처리
     String newImageName = boardManagementHelper.savePreviewImageIfPresent(Post.class, previewImage);
     // DB 작업 처리 + 실패시 파일 롤백
-    PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, newImageName);
     try {
-      String oldImageName = postService.updatePostAndGetPreviousImage(postId, postUpdateDto);
+      String oldImageName = themeBoardTransactionService.updateThemeBoardAndGetOldFileName(
+          postId,
+          updateDto,
+          newImageName
+      );
       if (newImageName != null && oldImageName != null) {
         boardManagementHelper.deleteFileSilently(oldImageName, "ThemeBoard의 이전 파일 삭제 실패");
       }
@@ -179,7 +171,7 @@ public class ThemeBoardManagementFacade {
       boardManagementHelper.deleteFileSilently(newImageName, "ThemeBoard 갱신 실패로 인한 파일 롤백 실패");
       throw e;
     }
-    return themeBoardQueryService.findThemeBoardDetail(postId);
+    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
   }
 
   /**

@@ -12,6 +12,9 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
+import com.komentum.post.dto.TagDto.TagCreateDto;
+import com.komentum.post.dto.TagDto.TagResponse;
+import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
@@ -153,11 +156,16 @@ public class DesignBoardControllerTest {
     DesignComponent unsavedBoardDesignComponent = boardDetailDataGenerator.getNonDesignBoardDesignComponents()
         .get(0);
     User author = boardDetailDataGenerator.getUsers().get(0);
+    List<String> tagNames = List.of("a", "b");
+    List<TagCreateDto> tagCreateDtoList = tagNames.stream()
+        .map(tagName -> TagCreateDto.builder().tagName(tagName).build())
+        .toList();
     DesignBoardCreateDto createDto = DesignBoardCreateDto.builder()
         .title("test title")
         .content("test content")
         .designComponentId(unsavedBoardDesignComponent.getDesignComponentId())
         .publicFlag(true)
+        .postTags(tagCreateDtoList)
         .build();
     MockMultipartFile previewImage = MockMultipartFileUtils
         .generateImageFormData("preview_image", ImageExtension.PNG);
@@ -183,6 +191,8 @@ public class DesignBoardControllerTest {
             .build()
     );
     // then : 필드 및 DB 검증
+    assertThat(response.getTags().stream().map(TagResponse::getTagName))
+        .containsExactlyInAnyOrderElementsOf(tagNames);
     assertThat(response.getPreviewImageUrl())
         .isEqualTo(expectedPreviewImageUrl);
     assertDesignBoard(response, createDto.getTitle(), createDto.getContent());
@@ -196,6 +206,10 @@ public class DesignBoardControllerTest {
     DesignBoard targetDesignBoard = boardDetailDataGenerator.getDesignBoards().get(0);
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
+    List<String> tagNames = List.of("a", "b");
+    List<TagUpdateDto> tagUpdateDtoList = tagNames.stream()
+        .map(tagName -> TagUpdateDto.builder().tagName(tagName).build())
+        .toList();
     User author = targetDesignBoard.getPost().getUser();
     String expectedTitle = UUID.randomUUID().toString();
     String expectedContent = UUID.randomUUID().toString();
@@ -203,6 +217,7 @@ public class DesignBoardControllerTest {
         .title(expectedTitle)
         .content(expectedContent)
         .publicFlag(false)
+        .postTags(tagUpdateDtoList)
         .build();
     MockMultipartFile previewImage = MockMultipartFileUtils
         .generateImageFormData("preview_image", ImageExtension.PNG);
@@ -228,6 +243,8 @@ public class DesignBoardControllerTest {
             .build()
     );
     // then : 필드 및 DB 검증
+    assertThat(response.getTags().stream().map(TagResponse::getTagName))
+        .containsExactlyInAnyOrderElementsOf(tagNames);
     assertDesignBoard(response, expectedTitle, expectedContent);
   }
 

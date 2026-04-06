@@ -31,9 +31,9 @@ jar {
 }
 
 test {
-    filter {
-        excludeTestsMatching("com.komentum.theme.*")
-    }
+//    filter {
+//        excludeTestsMatching("com.komentum.theme.*")
+//    }
     useJUnitPlatform()
 }
 

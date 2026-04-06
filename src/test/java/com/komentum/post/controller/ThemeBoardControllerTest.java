@@ -8,6 +8,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
+import com.komentum.post.dto.TagDto.TagCreateDto;
+import com.komentum.post.dto.TagDto.TagResponse;
+import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
@@ -96,6 +99,8 @@ class ThemeBoardControllerTest {
     assertThat(detailDto.getCreatedAt()).isNotBlank();
     assertThat(detailDto.getUserEmail()).isNotBlank();
     assertThat(detailDto.getPrefers()).isGreaterThanOrEqualTo(0);
+    assertThat(detailDto.getComments()).isGreaterThanOrEqualTo(0);
+    assertThat(detailDto.getUserName()).isNotNull();
   }
 
   @Test
@@ -220,6 +225,13 @@ class ThemeBoardControllerTest {
     // given
     String requestPath = "/api/theme-boards";
     User author = boardDetailDataGenerator.getUsers().get(0);
+    List<String> tagNames = List.of("a", "b");
+    List<TagCreateDto> postTags = tagNames.stream()
+        .map(tagName -> TagCreateDto
+            .builder()
+            .tagName(tagName)
+            .build())
+        .toList();
     ThemeComponent nonThemeBoardTheme = boardDetailDataGenerator.getNonThemeBoardThemeComponents()
         .get(0);
     String testPreviewImageUrl = UUID.randomUUID().toString();
@@ -228,6 +240,7 @@ class ThemeBoardControllerTest {
         .content(UUID.randomUUID().toString())
         .themeComponentId(nonThemeBoardTheme.getThemeComponentId())
         .publicFlag(true)
+        .postTags(postTags)
         .build();
     MockMultipartFile testPreviewImage = MockMultipartFileUtils
         .generateImageFormData("preview_image", ImageExtension.PNG);
@@ -253,6 +266,8 @@ class ThemeBoardControllerTest {
             .build()
     );
     // then
+    assertThat(response.getTags().stream().map(TagResponse::getTagName))
+        .containsExactlyInAnyOrderElementsOf(tagNames);
     assertThemeBoardDetail(response);
   }
 
@@ -263,9 +278,17 @@ class ThemeBoardControllerTest {
     Post toUpdate = boardDetailDataGenerator.getPosts().get(0);
     String testPreviewImageUrl = UUID.randomUUID().toString();
     String requestPath = String.format("/api/theme-boards/%d", toUpdate.getPostId());
+    List<String> tagNames = List.of("a", "b");
+    List<TagUpdateDto> postTags = tagNames.stream()
+        .map(tagName -> TagUpdateDto
+            .builder()
+            .tagName(tagName)
+            .build())
+        .toList();
     User author = toUpdate.getUser();
     ThemeBoardUpdateDto updateDto = ThemeBoardUpdateDto.builder()
         .title("updated-title-test")
+        .postTags(postTags)
         .build();
     MockMultipartFile testPreviewImage = MockMultipartFileUtils
         .generateImageFormData("preview_image", ImageExtension.PNG);
@@ -291,6 +314,8 @@ class ThemeBoardControllerTest {
             .build()
     );
     // then : 필드 검증
+    assertThat(response.getTags().stream().map(TagResponse::getTagName))
+        .containsExactlyInAnyOrderElementsOf(tagNames);
     assertThat(response.getPreviewImageUrl()).isEqualTo(testPreviewImageUrl);
     assertThemeBoardDetail(response);
   }

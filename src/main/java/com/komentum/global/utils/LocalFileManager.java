@@ -2,12 +2,15 @@ package com.komentum.global.utils;
 
 import com.komentum.config.WebConfig;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -23,6 +26,11 @@ public class LocalFileManager implements FileManager {
   public void init() throws IOException {
     Path uploadPath = Paths.get(WebConfig.UPLOAD_DIR);
     Files.createDirectories(uploadPath);
+  }
+
+  @PreDestroy
+  public void tearDown() throws IOException {
+    FileUtils.cleanDirectory(new File(WebConfig.UPLOAD_DIR));
   }
 
   private String resolveFileLocation(String fileName) {

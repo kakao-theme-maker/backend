@@ -1,13 +1,17 @@
 package com.komentum.post.repository;
 
+import com.komentum.post.domain.QComment;
 import com.komentum.post.domain.QPost;
 import com.komentum.post.domain.QPrefer;
 import com.komentum.post.domain.QThemeBoard;
+import com.komentum.post.dto.query.QThemeBoardQuery_Detail;
 import com.komentum.post.dto.query.QThemeBoardQuery_Preview;
+import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.dto.query.ThemeBoardQuery.Preview;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.theme.domain.QThemeComponent;
 import com.komentum.user.domain.QUser;
+import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Repository;
 public class ThemeBoardRepositorySupport {
 
   private final JPAQueryFactory queryFactory;
+  private final PostRepositorySupport postRepositorySupport;
 
   /**
    * <p>DTO Projection을 활용하여 ThemeBoardQuery.Preview 목록 조회</p>
@@ -68,6 +73,40 @@ public class ThemeBoardRepositorySupport {
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
+  }
+
+  public ThemeBoardQuery.Detail findThemeBoardQueryDetail(Long postId, User client) {
+    QPost post = QPost.post;
+    QPrefer prefer = QPrefer.prefer;
+    QComment comment = QComment.comment;
+    QUser user = QUser.user;
+    QThemeBoard themeBoard = QThemeBoard.themeBoard;
+    QThemeComponent themeComponent = QThemeComponent.themeComponent;
+    NumberExpression<Long> preferCount = prefer.countDistinct();
+    NumberExpression<Long> commentCount = comment.countDistinct();
+    return queryFactory
+        .select(new QThemeBoardQuery_Detail(
+            post.postId,
+            post.title,
+            post.content,
+            themeComponent.themeComponentId,
+            user.userEmail,
+            user.name, //username
+            post.createdAt,
+            post.previewImageName,
+            preferCount,
+            commentCount,
+            postRepositorySupport.isLiked(post, client),
+            postRepositorySupport.isBookmarked(post, client)
+        ))
+        .from(themeBoard)
+        .join(themeBoard.themeComponent, themeComponent)
+        .join(themeBoard.post, post)
+        .join(post.user, user)
+        .leftJoin(prefer).on(prefer.post.eq(post))
+        .leftJoin(comment).on(comment.post.eq(post))
+        .where(post.postId.eq(postId))
+        .fetchOne();
   }
 
   /**
