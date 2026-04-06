@@ -3,6 +3,7 @@ x-common-variables: &common-variables
   SPRING_DATASOURCE_USERNAME: root
   SPRING_DATA_REDIS_HOST: redis
   SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  SECURITY_ALLOWED_ORIGIN_LIST: http://localhost:8080,http://localhost:28080,http://localhost:3000,"react 도메인 추가"
 
 services:
   backend:

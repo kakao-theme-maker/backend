@@ -11,5 +11,6 @@ public class SecurityProperties {
 
   private final String[] whiteList;
   private final String[] whiteListGet;
+  private final String[] allowedOriginList;
 }
 
