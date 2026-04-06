@@ -80,7 +80,12 @@ public class DesignComponentController {
     return ResponseEntity.ok(designComponentService.getAllDesignComponents(pageable));
   }
 
+  /**
+   * @param userEmail
+   * @return
+   */
   @GetMapping("/user/{userEmail}")
+  @Operation(summary = "특정 사용자의 이메일로 designComponent 목록을 조회한다.")
   public ResponseEntity<List<DesignComponentDto>> getDesignComponentsByUserEmail(
       @PathVariable("userEmail") String userEmail
   ) {
