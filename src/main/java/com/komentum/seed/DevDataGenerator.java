@@ -13,6 +13,7 @@ import com.komentum.theme.component.service.ComponentTypeSeeder;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import jakarta.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile({"dev"})
 @RequiredArgsConstructor
-public class TestDataGenerator {
+public class DevDataGenerator {
 
   private final UserSeeder userSeeder;
   private final CommentSeeder commentSeeder;
@@ -37,16 +38,16 @@ public class TestDataGenerator {
   @PostConstruct
   @Transactional
   public void init() {
-    List<User> users = userSeeder.seedData(10); // 10
-    userSeeder.createOrRetrieveRootUser();
+    List<User> users = new ArrayList<>(userSeeder.seedData(10));
+    users.add(userSeeder.createOrRetrieveRootUser()); // 11
     componentTypeSeeder.upsertComponentType();
     colorStyleSeeder.upsertColorStyleSeed();
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
-        users); // 100
-    List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users); // 100
-    themeBoardSeeder.seedData(themeComponents.subList(0, 90)); // 100
+        users); // 110
+    List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users); // 110
+    themeBoardSeeder.seedData(themeComponents.subList(0, 90)); //
     designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
-    commentSeeder.seedPerPost(5, users); // 150
-    preferSeeder.seedPerPost(5, users); // 150
+    commentSeeder.seedPerPost(5, users); // 550
+    preferSeeder.seedPerPost(5, users); // 550
   }
 }

@@ -49,9 +49,11 @@ public class DesignBoardController {
   @GetMapping("/{post_id}")
   @Operation(summary = "현재 인증된 사용자가 ID=post_id인 특정 디자인 에셋 게시글을 조회한다")
   public ResponseEntity<DesignBoardDetailDto> findDesignBoardDetail(
-      @PathVariable("post_id") Long postId
+      @PathVariable("post_id") Long postId,
+      @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
-    return ResponseEntity.ok(designBoardManagementFacade.findBoardDetail(postId));
+    return ResponseEntity.ok(
+        designBoardManagementFacade.findBoardDetail(postId, userDetails.getPublicUserId()));
   }
 
   /**
@@ -78,10 +80,15 @@ public class DesignBoardController {
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
       @PathVariable("post_id") Long postId,
       @RequestPart(value = "board_info") DesignBoardUpdateDto updateDto,
-      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage
+      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage,
+      @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
-    return ResponseEntity.ok(
-        designBoardManagementFacade.updateDesignBoard(postId, updateDto, previewImage));
+    return ResponseEntity.ok(designBoardManagementFacade.updateDesignBoard(
+        postId,
+        updateDto,
+        previewImage,
+        userDetails.getUsername())
+    );
   }
 
   /**

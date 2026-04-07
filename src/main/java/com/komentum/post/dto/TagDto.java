@@ -35,6 +35,7 @@ public class TagDto {
   @AllArgsConstructor
   public static class TagUpdateDto {
 
+    @JsonProperty("tag_name")
     String tagName;
   }
 

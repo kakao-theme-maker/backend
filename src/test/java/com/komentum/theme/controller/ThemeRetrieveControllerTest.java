@@ -1,4 +1,4 @@
-package com.komentum.theme.theme.controller;
+package com.komentum.theme.controller;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
