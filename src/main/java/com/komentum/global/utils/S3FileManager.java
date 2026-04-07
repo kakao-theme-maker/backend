@@ -1,5 +1,7 @@
 package com.komentum.global.utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,7 +16,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 @Component
 @Profile("!test")
@@ -107,5 +112,31 @@ public class S3FileManager implements FileManager {
         .build();
     ResponseBytes<GetObjectResponse> responseBytes = s3Client.getObjectAsBytes(getObjectRequest);
     return responseBytes.asByteArray();
+  }
+
+  @Override
+  public List<String> listAllFileNames() {
+    List<String> fileNames = new ArrayList<>();
+    String continuationToken = null;
+
+    do {
+      ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
+          .bucket(bucketName)
+          .maxKeys(1000);
+
+      if (continuationToken != null) {
+        requestBuilder.continuationToken(continuationToken);
+      }
+
+      ListObjectsV2Response response = s3Client.listObjectsV2(requestBuilder.build());
+
+      for (S3Object s3Object : response.contents()) {
+        fileNames.add(s3Object.key());
+      }
+
+      continuationToken = response.isTruncated() ? response.nextContinuationToken() : null;
+    } while (continuationToken != null);
+
+    return fileNames;
   }
 }

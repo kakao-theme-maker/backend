@@ -1,5 +1,7 @@
 package com.komentum.global.utils;
 
+import java.util.List;
+
 public interface FileManager {
 
   String resolveFilePath(String fileName);
@@ -11,4 +13,6 @@ public interface FileManager {
   void deleteFile(String fileName);
 
   byte[] downloadFile(String fileName);
+
+  List<String> listAllFileNames();
 }
