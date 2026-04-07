@@ -38,8 +38,8 @@ public class DesignBoardService {
   }
 
   @Transactional(readOnly = true)
-  public DesignBoardQuery.Detail findDetailById(Long postId) {
-    return designBoardRepositorySupport.findDetailByPostId(postId);
+  public DesignBoardQuery.Detail findDetailById(Long postId, User client) {
+    return designBoardRepositorySupport.findDetailByPostId(postId, client);
   }
 
   @Transactional(readOnly = true)

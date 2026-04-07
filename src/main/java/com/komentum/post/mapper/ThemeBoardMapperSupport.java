@@ -1,8 +1,8 @@
 package com.komentum.post.mapper;
 
 import com.komentum.global.utils.DateUtils;
-import com.komentum.post.domain.ThemeBoard;
-import com.komentum.post.dto.PostSummary;
+import com.komentum.post.domain.Tag;
+import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.query.ThemeBoardQuery;
@@ -38,15 +38,23 @@ public class ThemeBoardMapperSupport {
 
   /**
    * 파라미터 기반으로 ThemeBoardDetailDto 매핑
-   * @param postSummary post aggregate DTO
-   * @param themeBoard 게시글-테마 매핑 Entity
-   * @param boardManagementHelper 대표 이미지 정보 -> 대표 이미지 URL 변환을 위한 객체
    * */
-  public ThemeBoardDetailDto toThemeBoardDetailDto(PostSummary postSummary, ThemeBoard themeBoard,
-      BoardManagementHelper boardManagementHelper) {
-    String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
-        postSummary.findPreviewImageName());
-    return ThemeBoardDetailDto.from(postSummary.getPost(), themeBoard.getThemeComponent(),
-        postSummary.getAuthor(), postSummary.getPrefers(), previewImageUrl);
+  public ThemeBoardDetailDto toThemeBoardDetailDto(ThemeBoardQuery.Detail detail, List<Tag> tags,
+      BoardManagementHelper helper) {
+    return ThemeBoardDetailDto.builder()
+        .postId(detail.getPostId())
+        .title(detail.getTitle())
+        .content(detail.getContent())
+        .themeComponentId(detail.getThemeComponentId())
+        .userEmail(detail.getUserEmail())
+        .userName(detail.getUserName())
+        .createdAt(DateUtils.convertToDateString(detail.getCreatedAt()))
+        .previewImageUrl(helper.findPreviewImageUrl(detail.getPreviewImageName()))
+        .prefers(detail.getPrefers())
+        .comments(detail.getComments())
+        .tags(tags.stream().map(TagResponse::from).toList())
+        .liked(detail.isLiked())
+        .bookmarked(detail.isBookmarked())
+        .build();
   }
 }

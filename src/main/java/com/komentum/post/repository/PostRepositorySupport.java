@@ -9,6 +9,8 @@ import com.komentum.post.dto.PostSummary;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +92,31 @@ public class PostRepositorySupport {
         .join(categoryPost.category, category)
         .where(category.owner.eq(user))
         .fetch();
+  }
+
+  public BooleanExpression isLiked(QPost post, User user) {
+    QPrefer prefer = QPrefer.prefer;
+    return JPAExpressions
+        .selectOne()
+        .from(prefer)
+        .where(
+            prefer.post.eq(post),
+            prefer.user.eq(user)
+        )
+        .exists();
+  }
+
+  public BooleanExpression isBookmarked(QPost post, User user) {
+    QCategoryPost categoryPost = QCategoryPost.categoryPost;
+
+    return JPAExpressions
+        .selectOne()
+        .from(categoryPost)
+        .where(
+            categoryPost.post.eq(post),
+            categoryPost.category.owner.eq(user)
+        )
+        .exists();
   }
 
   /**

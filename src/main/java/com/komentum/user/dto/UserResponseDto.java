@@ -28,6 +28,10 @@ public class UserResponseDto {
   @Schema(description = "사용자 이름", example = "홍길동")
   private String name;
 
+  @Schema(description = "사용자 공개 ID", example = "UUID")
+  @JsonProperty("public_user_id")
+  private String publicUserId;
+
   @JsonProperty("created_at")
   @Schema(description = "사용자 가입일", example = "YYYY-mm-ddThh:mm:ss")
   private LocalDateTime createdAt;
@@ -44,6 +48,7 @@ public class UserResponseDto {
     return UserResponseDto.builder()
         .userEmail(user.getUserEmail())
         .name(user.getName())
+        .publicUserId(user.getPublicUserId())
         .profileImage(user.getProfileImg())
         .uploads(uploads)
         .followers(followers)
