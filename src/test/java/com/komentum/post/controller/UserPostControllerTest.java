@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.domain.CategoryPost;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
 import com.komentum.post.repository.CategoryPostRepository;
@@ -19,9 +18,7 @@ import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -131,11 +128,6 @@ public class UserPostControllerTest {
     // given
     User client = result.getFirstUser();
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
-    Map<String, List<CategoryPost>> tmp =
-        categoryPostRepository.findAll().stream()
-            .collect(Collectors.groupingBy(
-                c -> c.getCategory().getOwner().getName()
-            ));
     // stub
     given(fileManager.resolveFilePath(any()))
         .willReturn(expectedPreviewImageUrl);
