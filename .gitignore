@@ -57,3 +57,6 @@ docker/docker_redis/
 
 # QueryDsl
 **/src/main/generated
+
+# Upload
+uploads/
