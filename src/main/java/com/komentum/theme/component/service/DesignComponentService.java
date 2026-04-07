@@ -1,7 +1,7 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.facade.BoardManagementHelper;
+import com.komentum.global.utils.FileUtils;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.domain.policy.DesignComponentPolicy;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
@@ -13,7 +13,6 @@ import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +30,7 @@ public class DesignComponentService {
   private final DesignComponentPolicy designComponentPolicy;
   private final DesignComponentMapper mapper;
   private final FileManager fileManager;
-  private final BoardManagementHelper boardManagementHelper; // 추후 global로 분리
+  private final FileUtils fileUtils;
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
@@ -42,7 +41,7 @@ public class DesignComponentService {
       DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
       return mapper.toDto(designComponentRepository.save(newComponent));
     } catch (Exception e) {
-      boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(imageUrl),
+      fileUtils.deleteFileSilently(fileManager.convertUrlToFileName(imageUrl),
           String.valueOf(e));
       throw new RuntimeException("Failed to create design component", e);
     }
@@ -92,13 +91,13 @@ public class DesignComponentService {
       component.update(afterImageUrl, request.getIsPublic());
       DesignComponentDto result = mapper.toDto(component);
       if (afterImageUrl != null && beforeImageUrl != null) {
-        boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(beforeImageUrl),
+        fileUtils.deleteFileSilently(fileManager.convertUrlToFileName(beforeImageUrl),
             null);
       }
       return result;
     } catch (Exception e) {
       if (afterImageUrl != null) {
-        boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(afterImageUrl),
+        fileUtils.deleteFileSilently(fileManager.convertUrlToFileName(afterImageUrl),
             String.valueOf(e));
       }
       throw e;
@@ -117,19 +116,18 @@ public class DesignComponentService {
     designComponentRepository.delete(component);
 
     if (imageUrl != null) {
-      boardManagementHelper.deleteFileSilently(fileManager.convertUrlToFileName(imageUrl), null);
+      fileUtils.deleteFileSilently(fileManager.convertUrlToFileName(imageUrl), null);
     }
   }
 
   private String uploadImage(MultipartFile image) {
     try {
-      String fileName =
-          "design-components/" + UUID.randomUUID() + "_" + image.getOriginalFilename();
+      String extension = fileUtils.extractExtension(image.getOriginalFilename());
+      String fileName = fileUtils.generateUniqueFileName(DesignComponent.class, extension);
       return fileManager.uploadFile(image.getBytes(), fileName);
     } catch (IOException e) {
       throw new RuntimeException("Failed to upload image", e);
     }
-
   }
 
 
