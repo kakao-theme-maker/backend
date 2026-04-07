@@ -38,7 +38,7 @@ public class TestDataRemover {
   private final CategoryRepository categoryRepository;
 
   /**
-   * 반드시 테스트용 DB를 H2 MySQL 버전으로 사용할 때만 호출해야함
+   * 모든 테스트 코드에서 사용할 수 있는 데이터베이스 clean용 클래스
    * */
   @Transactional
   public void deleteAll() {
