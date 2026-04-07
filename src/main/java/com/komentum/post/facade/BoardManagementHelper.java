@@ -16,21 +16,6 @@ public class BoardManagementHelper {
   private final FileManager fileManager;
   private final FileUtils fileUtils;
 
-//  private <T> String generateUniqueFileName(Class<T> entity, String extension) {
-//    return entity.getName()
-//        + "_" + UUID.randomUUID()
-//        + "_" + System.currentTimeMillis()
-//        + "." + extension;
-//  }
-//
-//  private String extractExtension(String originFileName) {
-//    String extension = StringUtils.getFilenameExtension(originFileName);
-//    if (extension == null || extension.isEmpty()) {
-//      extension = "bin";
-//    }
-//    return extension;
-//  }
-
   public <T> String savePreviewImageIfPresent(Class<T> entity, MultipartFile previewImage) {
     if (previewImage == null || previewImage.isEmpty()) {
       return null;
@@ -69,13 +54,4 @@ public class BoardManagementHelper {
     return fileManager.resolveFilePath(fileName);
   }
 
-//  public void deleteFileSilently(String fileName, String errorMessage) {
-//    try {
-//      if (fileName != null) {
-//        fileManager.deleteFile(fileName);
-//      }
-//    } catch (Exception e) {
-//      log.warn(errorMessage);
-//    }
-//  }
 }
