@@ -1,8 +1,10 @@
 package com.komentum.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,14 +44,21 @@ public class UserResponseDto {
   private int following;
   @Schema(description = "사용자가 업로드한 게시물 수", example = "0")
   private int uploads;
+  @Schema(description = "사용자의 성별", example = "male")
+  private Gender gender;
+  @Schema(description = "사용자의 생년월일", example = "2000-01-01")
+  private LocalDate birth;
 
 
-  public static UserResponseDto from(User user, int followers, int following, int uploads) {
+  public static UserResponseDto from(User user, int followers, int following, int uploads,
+      String profileImageUrl) {
     return UserResponseDto.builder()
         .userEmail(user.getUserEmail())
         .name(user.getName())
+        .gender(user.getGender())
+        .birth(user.getBirth())
         .publicUserId(user.getPublicUserId())
-        .profileImage(user.getProfileImg())
+        .profileImage(profileImageUrl)
         .uploads(uploads)
         .followers(followers)
         .following(following)
