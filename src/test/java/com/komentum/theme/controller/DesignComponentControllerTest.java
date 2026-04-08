@@ -178,6 +178,50 @@ public class DesignComponentControllerTest {
           .andExpect(jsonPath("$.content.length()").value(20));
     }
 
+    @Test
+    @DisplayName("특정 사용자의 DesignComponent 목록 조회 테스트")
+    void getDesignComponentsByPublicUserId() throws Exception {
+      // Given
+      User otherUser = userDataGenerator.generateTestUser("other@test.com");
+
+      // testUser의 design components
+      designComponentDataGenerator.generateDesignComponent(testUser,
+          "http://example.com/image1.png", true);
+      designComponentDataGenerator.generateDesignComponent(testUser,
+          "http://example.com/image2.png", true);
+      designComponentDataGenerator.generateDesignComponent(testUser,
+          "http://example.com/image3.png", true);
+
+      // otherUser의 design component
+      designComponentDataGenerator.generateDesignComponent(otherUser,
+          "http://example.com/other1.png", true);
+      designComponentDataGenerator.generateDesignComponent(otherUser,
+          "http://example.com/other2.png", true);
+
+      // When & Then - testUser의 desgin components만 조회
+      MockHttpServletRequestBuilder requestBuilder = get(
+          "/api/design-components/user/{publicUserId}",
+          testUser.getPublicUserId());
+
+      MvcResult result = mockMvc.perform(requestBuilder)
+          .andExpect(status().isOk())
+          .andReturn();
+
+      String responseContent = result.getResponse().getContentAsString();
+      DesignComponentDto[] components = objectMapper.readValue(responseContent,
+          DesignComponentDto[].class);
+
+      assertThat(components).hasSize(3);
+      assertThat(components)
+          .extracting(DesignComponentDto::getImageUrl)
+          .containsExactlyInAnyOrder(
+              "http://example.com/image1.png",
+              "http://example.com/image2.png",
+              "http://example.com/image3.png"
+          );
+      assertThat(components).allMatch(
+          dto -> dto.getPublicUserId().equals(testUser.getPublicUserId()));
+    }
 
     @Test
     @DisplayName("DesignComponent 수정 테스트")
