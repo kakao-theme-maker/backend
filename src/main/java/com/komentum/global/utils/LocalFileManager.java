@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Stream;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -89,6 +91,20 @@ public class LocalFileManager implements FileManager {
       return Files.readAllBytes(Paths.get(fileLocation));
     } catch (IOException e) {
       throw new RuntimeException("failed to read file : " + fileName, e);
+    }
+  }
+
+  @Override
+  public List<String> listAllFileNames() {
+    Path uploadPath = Paths.get(WebConfig.UPLOAD_DIR);
+
+    try (Stream<Path> paths = Files.list(uploadPath)) {
+      return paths
+          .filter(Files::isRegularFile)
+          .map(path -> path.getFileName().toString())
+          .toList();
+    } catch (IOException e) {
+      throw new RuntimeException("failed to list files in upload directory", e);
     }
   }
 }

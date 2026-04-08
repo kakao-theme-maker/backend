@@ -1,6 +1,7 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.utils.FileUtils;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
@@ -35,6 +36,7 @@ public class DesignBoardManagementFacade {
   private final UserEntityFinder userEntityFinder;
   private final BoardManagementHelper boardManagementHelper;
   private final FileManager fileManager;
+  private final FileUtils fileUtils;
   private final DesignBoardMapperSupport designBoardMapperSupport;
   private final DesignBoardTransactionService designBoardTransactionService;
 
@@ -56,9 +58,10 @@ public class DesignBoardManagementFacade {
 
   /**
    * 게시글 ID 기반으로 디자인 에셋 게시글 상세 조회
+   *
    * @param postId 게시글 ID
    * @return 특정 post id를 갖는 디자인 에셋 게시글 상세 정보
-   * */
+   */
   @Transactional(readOnly = true)
   public DesignBoardDetailDto findBoardDetail(Long postId, String userIdentifier) {
     return designBoardTransactionService.findDesignBoardDetail(postId, userIdentifier);
@@ -66,9 +69,10 @@ public class DesignBoardManagementFacade {
 
   /**
    * 디자인 에셋 게시글을 페이지 기반 조회
+   *
    * @param pageable 게시글 페이지 번호와 크기 정보
    * @return 디자인 에셋 게시글 정보 목록 반환
-   * */
+   */
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable) {
     List<DesignBoardQuery.Preview> preview = designBoardService.findPreviewList(pageable);
@@ -80,11 +84,12 @@ public class DesignBoardManagementFacade {
 
   /**
    * 디자인 에셋 게시글 생성
-   * @param createDto 게시글 생성에 필요한 정보
+   *
+   * @param createDto    게시글 생성에 필요한 정보
    * @param previewImage 게시글 대표 이미지, null=true
-   * @param authorId 게시글 작성자 ID
+   * @param authorId     게시글 작성자 ID
    * @return 생성된 게시글 상세 정보
-   * */
+   */
   public DesignBoardDetailDto createDesignBoard(DesignBoardCreateDto createDto,
       MultipartFile previewImage, String authorId) {
     // 이미지 저장
@@ -102,16 +107,17 @@ public class DesignBoardManagementFacade {
       );
       return designBoardTransactionService.findDesignBoardDetail(savedPost.getPostId(), authorId);
     } catch (Exception e) {
-      boardManagementHelper.deleteFileSilently(previewImageName, "디자인 게시글 생성 실패로 인한 저장된 파일 롤백");
+      fileUtils.deleteFileSilently(previewImageName, "디자인 게시글 생성 실패로 인한 저장된 파일 롤백");
       throw new RuntimeException("디자인 에셋 게시글 생성 실패", e);
     }
   }
 
   /**
    * 디자인 에셋 게시글 수정
-   * @param postId 게시글 ID
+   *
+   * @param postId    게시글 ID
    * @param updateDto 게시글 수정 DTO
-   * */
+   */
   public DesignBoardDetailDto updateDesignBoard(
       Long postId,
       DesignBoardUpdateDto updateDto,
@@ -128,10 +134,10 @@ public class DesignBoardManagementFacade {
           newImageName
       );
       if (newImageName != null && oldImageName != null) {
-        boardManagementHelper.deleteFileSilently(oldImageName, "Design Board의 이전 파일 삭제 실패");
+        fileUtils.deleteFileSilently(oldImageName, "Design Board의 이전 파일 삭제 실패");
       }
     } catch (Exception e) {
-      boardManagementHelper.deleteFileSilently(newImageName, "Design Board 갱신 실패로 인한 파일 롤백 실패");
+      fileUtils.deleteFileSilently(newImageName, "Design Board 갱신 실패로 인한 파일 롤백 실패");
       throw e;
     }
     // 응답값 반환
@@ -140,15 +146,16 @@ public class DesignBoardManagementFacade {
 
   /**
    * 디자인 에셋 게시글 삭제
+   *
    * @param postId 게시글 ID
-   * */
+   */
   @Transactional
   public void deleteBoardDetailWithPost(Long postId) {
     Post targetPost = postService.getPostByPostId(postId);
     designBoardService.deleteByPostId(postId);
     postService.deletePost(postId);
     // 기존 이미지 삭제 작업 시도 ( 실패 허용 )
-    boardManagementHelper.deleteFileSilently(targetPost.getPreviewImageName(),
+    fileUtils.deleteFileSilently(targetPost.getPreviewImageName(),
         "게시글 삭제 시 대표 이미지 삭제 실패");
   }
 }

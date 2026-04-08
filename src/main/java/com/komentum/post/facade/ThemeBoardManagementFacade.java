@@ -1,6 +1,7 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.utils.FileUtils;
 import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
@@ -42,6 +43,7 @@ public class ThemeBoardManagementFacade {
   private final PostDtoMapper postDtoMapper;
   private final ThemeImageService themeImageService;
   private final FileManager fileManager;
+  private final FileUtils fileUtils;
   private final ThemeBoardTransactionService themeBoardTransactionService;
 
   private String uploadOrReusePreviewImage(MultipartFile previewImage,
@@ -65,7 +67,6 @@ public class ThemeBoardManagementFacade {
    *
    * @param postId 게시글 ID
    * @return ThemeBoardDetailDto 테마 게시글 상세 정보
-   *
    */
   @Transactional
   public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier) {
@@ -77,7 +78,6 @@ public class ThemeBoardManagementFacade {
    *
    * @param pageable 페이지 기반 조회를 위한 페이지 정보 객체
    * @return ThemeBoardPreviewDto 목록
-   *
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
@@ -107,7 +107,6 @@ public class ThemeBoardManagementFacade {
    *
    * @param pageable 페이지 정보
    * @return ThemeBoardPreviewDto 목록
-   *
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findRecommendedThemeBoardPreviews(Pageable pageable) {
@@ -123,7 +122,6 @@ public class ThemeBoardManagementFacade {
    * @param createDto    게시글 생성 정보
    * @param previewImage 게시글 대표 이미지 정보
    * @param authorId     작성자 식별자
-   *
    */
   public ThemeBoardDetailDto createThemeBoard(
       ThemeBoardCreateDto createDto, MultipartFile previewImage, String authorId) {
@@ -141,7 +139,7 @@ public class ThemeBoardManagementFacade {
           previewImageName);
       return themeBoardTransactionService.findThemeBoardDetail(savedPost.getPostId(), authorId);
     } catch (Exception e) {
-      boardManagementHelper.deleteFileSilently(previewImageName, "테마 게시글 생성 실패로 인한 저장된 파일 롤백");
+      fileUtils.deleteFileSilently(previewImageName, "테마 게시글 생성 실패로 인한 저장된 파일 롤백");
       throw new RuntimeException("테마 게시글 생성 실패", e);
     }
   }
@@ -151,7 +149,6 @@ public class ThemeBoardManagementFacade {
    *
    * @param postId    테마 게시글 ID
    * @param updateDto 게시글 수정 정보
-   *
    */
   public ThemeBoardDetailDto updateThemeBoard(Long postId,
       ThemeBoardUpdateDto updateDto, MultipartFile previewImage, String userIdentifier) {
@@ -165,10 +162,10 @@ public class ThemeBoardManagementFacade {
           newImageName
       );
       if (newImageName != null && oldImageName != null) {
-        boardManagementHelper.deleteFileSilently(oldImageName, "ThemeBoard의 이전 파일 삭제 실패");
+        fileUtils.deleteFileSilently(oldImageName, "ThemeBoard의 이전 파일 삭제 실패");
       }
     } catch (Exception e) {
-      boardManagementHelper.deleteFileSilently(newImageName, "ThemeBoard 갱신 실패로 인한 파일 롤백 실패");
+      fileUtils.deleteFileSilently(newImageName, "ThemeBoard 갱신 실패로 인한 파일 롤백 실패");
       throw e;
     }
     return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
@@ -178,7 +175,6 @@ public class ThemeBoardManagementFacade {
    * 테마 게시글 삭제
    *
    * @param postId 테마 게시글 ID
-   *
    */
   @Transactional
   public void deleteThemeBoard(Long postId) {
@@ -186,7 +182,7 @@ public class ThemeBoardManagementFacade {
     themeBoardService.deleteByPostId(postId);
     postService.deletePost(postId);
     // 기존 이미지 삭제 작업 시도 ( 실패 허용 )
-    boardManagementHelper.deleteFileSilently(targetPost.getPreviewImageName(),
+    fileUtils.deleteFileSilently(targetPost.getPreviewImageName(),
         "게시글 삭제 시 대표 이미지 삭제 실패");
   }
 }

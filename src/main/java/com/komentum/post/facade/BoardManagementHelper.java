@@ -1,13 +1,11 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.service.PostService;
+import com.komentum.global.utils.FileUtils;
 import java.io.IOException;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -16,22 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BoardManagementHelper {
 
   private final FileManager fileManager;
-  private final PostService postService;
-
-  private <T> String generateUniqueFileName(Class<T> entity, String extension) {
-    return entity.getName()
-        + "_" + UUID.randomUUID()
-        + "_" + System.currentTimeMillis()
-        + "." + extension;
-  }
-
-  private String extractExtension(String originFileName) {
-    String extension = StringUtils.getFilenameExtension(originFileName);
-    if (extension == null || extension.isEmpty()) {
-      extension = "bin";
-    }
-    return extension;
-  }
+  private final FileUtils fileUtils;
 
   public <T> String savePreviewImageIfPresent(Class<T> entity, MultipartFile previewImage) {
     if (previewImage == null || previewImage.isEmpty()) {
@@ -50,8 +33,8 @@ public class BoardManagementHelper {
     if (previewImage == null || originFileName == null || originFileName.isEmpty()) {
       return null;
     }
-    String extension = extractExtension(originFileName);
-    String previewImageFileName = generateUniqueFileName(entity, extension);
+    String extension = fileUtils.extractExtension(originFileName);
+    String previewImageFileName = fileUtils.generateUniqueFileName(entity, extension);
     try {
       String imageUrl = fileManager.uploadFile(previewImage, previewImageFileName);
       if (imageUrl == null) {
@@ -71,13 +54,4 @@ public class BoardManagementHelper {
     return fileManager.resolveFilePath(fileName);
   }
 
-  public void deleteFileSilently(String fileName, String errorMessage) {
-    try {
-      if (fileName != null) {
-        fileManager.deleteFile(fileName);
-      }
-    } catch (Exception e) {
-      log.warn(errorMessage);
-    }
-  }
 }
