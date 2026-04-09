@@ -2,6 +2,9 @@ package com.komentum.theme.theme.controller;
 
 import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -16,24 +19,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/themes")
 @RequiredArgsConstructor
+@Tag(name = "Theme Retrieve", description = "테마 조회 API")
 public class ThemeRetrieveController {
 
   private final ThemeRetrieveService themeRetrieveService;
 
   @GetMapping
+  @Operation(summary = "인증된 사용자가 모든 테마를 조회한다")
   public ResponseEntity<List<ThemeComponentDto>> getAllThemes(
       @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(themeRetrieveService.getAllThemes(pageable));
   }
 
   @GetMapping("/public")
+  @Operation(summary = "인증된 사용자가 공개된 모든 테마를 조회한다")
   public ResponseEntity<List<ThemeComponentDto>> getPublicThemes(
       @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(themeRetrieveService.getPublicThemes(pageable));
   }
 
   @GetMapping("/user/{userEmail}")
+  @Operation(summary = "인증된 사용자가 특정 사용자의 모든 테마를 조회한다")
   public ResponseEntity<List<ThemeComponentDto>> getThemesByUserEmail(
+      @Parameter(description = "조회할 사용자의 이메일", example = "user@example.com")
       @PathVariable("userEmail") String userEmail,
       @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
@@ -41,11 +49,15 @@ public class ThemeRetrieveController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ThemeComponentDto> getThemeById(@PathVariable("id") Integer id) {
+  @Operation(summary = "인증된 사용자가 ID로 특정 테마를 조회한다")
+  public ResponseEntity<ThemeComponentDto> getThemeById(
+      @Parameter(description = "조회할 테마의 ID", example = "1")
+      @PathVariable("id") Integer id) {
     return ResponseEntity.ok(themeRetrieveService.getThemeById(id));
   }
 
   @GetMapping("/completed")
+  @Operation(summary = "인증된 사용자가 완성된 모든 테마를 조회한다")
   public ResponseEntity<List<ThemeComponentDto>> getCompletedThemes(
       @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     List<ThemeComponentDto> completedThemes = themeRetrieveService.getCompletedThemes(
@@ -54,7 +66,9 @@ public class ThemeRetrieveController {
   }
 
   @GetMapping("/completed/user/{userEmail}")
+  @Operation(summary = "인증된 사용자가 특정 사용자의 완성된 테마를 조회한다")
   public ResponseEntity<List<ThemeComponentDto>> getCompletedThemesByUser(
+      @Parameter(description = "조회할 사용자의 이메일", example = "user@example.com")
       @PathVariable("userEmail") String userEmail,
       @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     List<ThemeComponentDto> completedThemes = themeRetrieveService.getCompletedThemesByUser(
