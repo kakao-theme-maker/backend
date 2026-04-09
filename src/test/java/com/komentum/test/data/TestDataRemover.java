@@ -3,6 +3,7 @@ package com.komentum.test.data;
 import com.komentum.post.repository.CategoryPostRepository;
 import com.komentum.post.repository.CategoryRepository;
 import com.komentum.post.repository.CommentRepository;
+import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PreferRepository;
 import com.komentum.post.repository.TagRepository;
@@ -36,6 +37,7 @@ public class TestDataRemover {
   private final PostRepository postRepository;
   private final CategoryPostRepository categoryPostRepository;
   private final CategoryRepository categoryRepository;
+  private final DesignBoardRepository designBoardRepository;
 
   /**
    * 모든 테스트 코드에서 사용할 수 있는 데이터베이스 clean용 클래스
@@ -51,7 +53,7 @@ public class TestDataRemover {
     categoryRepository.deleteAll();
     // delete theme and design boards
     themeBoardRepository.deleteAll();
-    designComponentRepository.deleteAll();
+    designBoardRepository.deleteAll();
     postRepository.deleteAll();
     // delete theme components
     themeImageRepository.deleteAll();
