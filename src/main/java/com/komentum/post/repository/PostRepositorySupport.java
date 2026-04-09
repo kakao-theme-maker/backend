@@ -122,7 +122,7 @@ public class PostRepositorySupport {
   /**
    * 사용자가 좋아요를 누른 게시글 목록 조회
    * */
-  public List<Post> findUserPreferedPost(User client) {
+  public List<Post> findUserPreferredPosts(User client) {
     QPost post = QPost.post;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;

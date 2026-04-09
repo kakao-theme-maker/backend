@@ -41,9 +41,9 @@ public class UserPostController {
         postManagementFacade.findUserSavedPostsByCategory(userDetails.getUsername()));
   }
 
-  @GetMapping("/me/prefered-posts")
+  @GetMapping("/me/preferred-posts")
   @Operation(summary = "현재 인증된 사용자가 좋아요를 누른 게시글 목록을 조회한다")
-  public ResponseEntity<List<UserPostListResponseDto>> findPreferedPostList(
+  public ResponseEntity<List<UserPostListResponseDto>> findPreferredPostList(
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     return ResponseEntity.ok(

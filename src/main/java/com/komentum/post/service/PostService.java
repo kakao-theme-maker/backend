@@ -129,6 +129,6 @@ public class PostService {
   }
 
   public List<Post> findUserPreferedPosts(User user) {
-    return postRepositorySupport.findUserPreferedPost(user);
+    return postRepositorySupport.findUserPreferredPosts(user);
   }
 }
