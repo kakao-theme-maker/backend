@@ -118,4 +118,18 @@ public class PostRepositorySupport {
         )
         .exists();
   }
+
+  /**
+   * 사용자가 좋아요를 누른 게시글 목록 조회
+   * */
+  public List<Post> findUserPreferredPosts(User client) {
+    QPost post = QPost.post;
+    QPrefer prefer = QPrefer.prefer;
+    QUser user = QUser.user;
+    return queryFactory.select(post)
+        .from(prefer)
+        .join(prefer.post, post)
+        .where(prefer.user.eq(client))
+        .fetch();
+  }
 }
