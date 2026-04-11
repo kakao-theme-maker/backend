@@ -32,6 +32,12 @@ public class SecurityConfig {
 
   private final FileStorageProperty fileStorageProperty;
 
+  private final CustomOauth2UserService customOauth2UserService;
+
+  private final OAuth2LogInSuccessHandler oAuth2LogInSuccessHandler;
+
+  private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
@@ -39,6 +45,7 @@ public class SecurityConfig {
         .cors(Customizer.withDefaults())
         .formLogin(AbstractHttpConfigurer::disable)
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+        // 요청 인증 / 인가 설정
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers(securityProperties.getWhiteList()).permitAll();
           auth.requestMatchers(HttpMethod.GET, securityProperties.getWhiteListGet()).permitAll();
@@ -49,6 +56,13 @@ public class SecurityConfig {
             auth.requestMatchers(HttpMethod.GET, WebConfig.UPLOAD_URL_PREFIX + "/**").permitAll();
           }
           auth.anyRequest().authenticated();
+        })
+        // oauth2 설정
+        .oauth2Login(oauth -> {
+          oauth.userInfoEndpoint(c -> c
+                  .userService(customOauth2UserService))
+              .successHandler(oAuth2LogInSuccessHandler)
+              .failureHandler(oAuth2LoginFailureHandler);
         });
     return http.build();
   }
