@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,10 +34,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class User {
 
   @Id
-  @GeneratedValue (strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(unique = true, nullable = false, updatable = false)
   Long userId;
-  @Column (unique = true, nullable = false, updatable = false)
+  @Column(unique = true, nullable = false, updatable = false)
   String publicUserId;
   @Column(unique = true, nullable = false)
   String userEmail;
@@ -58,12 +57,16 @@ public class User {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, columnDefinition = "varchar(20) default 'USER'")
   UserRole role;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, columnDefinition = "varchar(20) default 'LOCAL'")
+  @Builder.Default
+  AuthProvider authProvider = AuthProvider.LOCAL;
   @CreatedDate
   LocalDateTime createdAt;
   @LastModifiedDate
   LocalDateTime updatedAt;
 
-  public boolean matchPassword(String rawPassword,  PasswordEncoder passwordEncoder){
+  public boolean matchPassword(String rawPassword, PasswordEncoder passwordEncoder) {
     return passwordEncoder.matches(rawPassword, this.encryptedPassword);
   }
 }
