@@ -1,15 +1,11 @@
 package com.komentum.user.controller;
 
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomResponse;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
@@ -29,6 +25,7 @@ import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,17 +36,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.LinkedMultiValueMap;
 
 @EnableTestProfile
 @AutoConfigureMockMvc
 @SpringBootTest
-public class UserRetrieveControllerTest {
+public class UserControllerTest {
 
   String email = "admin1@gmail.com";
   String password = "qwer123!";
@@ -59,13 +54,9 @@ public class UserRetrieveControllerTest {
   @Autowired
   private UserDataGenerator userDataGenerator;
   @Autowired
-  private ObjectMapper objectMapper;
-  @Autowired
   private UserRepository userRepository;
   @Autowired
   private PostRepository postRepository;
-  @Autowired
-  private JwtUtils jwtUtils;
   @MockitoBean
   private FileManager fileManager;
 
@@ -80,7 +71,6 @@ public class UserRetrieveControllerTest {
     addPostForUser(email);
     user = userRepository.findByUserEmail(email).orElseThrow();
   }
-
 
   @AfterEach
   void tearDown() {
@@ -100,6 +90,13 @@ public class UserRetrieveControllerTest {
     postRepository.save(post);
   }
 
+  // Map 형태의 파라미터를 MultiValueMap으로 변환
+  private LinkedMultiValueMap<String, String> params(Map<String, String> map) {
+    LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    params.setAll(map);
+    return params;
+  }
+
   @Test
   @DisplayName("유저 조회")
   void inquiryUserTest() throws Exception {
@@ -117,24 +114,21 @@ public class UserRetrieveControllerTest {
             .following(0)
             .build();
 
-    String token = jwtUtils.generateAccessToken(user.getPublicUserId());
-
     //when
-    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/api/users")
-        .param("userPublicID", user.getPublicUserId())
-        .header("Authorization", "Bearer " + token);
+    UserResponseDto result = mockMvcUtils.doAuthUnwrappedRequest(
+        MockMvcRequestDto.<Void, CustomResponse<UserResponseDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users")
+            .httpMethod(HttpMethod.GET)
+            .params(params(Map.of("userPublicID", user.getPublicUserId())))
+            .clientDto(TestClientDto.fromEntity(user))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
 
     //then
-    String response = mockMvc.perform(request)
-        .andExpect(status().is2xxSuccessful())
-        .andReturn().getResponse().getContentAsString();
-
-    //UserInquiryResponseDto는 래핑된 값
-    CustomResponse<UserResponseDto> wrapper =
-        objectMapper.readValue(response, new TypeReference<>() {
-        });
-
-    UserResponseDto result = wrapper.getData();
 
     assertThat(result)
         .usingRecursiveComparison()
@@ -173,26 +167,22 @@ public class UserRetrieveControllerTest {
     UserNameUpdateDto updateDto = UserNameUpdateDto.builder()
         .name(updatedUserName)
         .build();
-    String token = jwtUtils.generateAccessToken(user.getPublicUserId());
 
     // when
-    MockHttpServletRequestBuilder request =
-        MockMvcRequestBuilders.patch("/api/users/me/name")
-            .content(objectMapper.writeValueAsString(updateDto))
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer " + token);
-
-    String response = mockMvc.perform(request)
-        .andExpect(status().is2xxSuccessful())
-        .andReturn().getResponse().getContentAsString();
+    UserResponseDto result = mockMvcUtils.doAuthUnwrappedRequest(
+        MockMvcRequestDto.<UserNameUpdateDto, CustomResponse<UserResponseDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me/name")
+            .httpMethod(HttpMethod.PATCH)
+            .body(updateDto)
+            .clientDto(TestClientDto.fromEntity(user))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
 
     // then
-    CustomResponse<UserResponseDto> wrapper =
-        objectMapper.readValue(response, new TypeReference<>() {
-        });
-
-    UserResponseDto result = wrapper.getData();
-
     // 응답 검증
     assertThat(result.getName()).isEqualTo(updatedUserName);
 
@@ -262,26 +252,22 @@ public class UserRetrieveControllerTest {
     UserGenderUpdateDto updateDto = UserGenderUpdateDto.builder()
         .gender(updatedGender)
         .build();
-    String token = jwtUtils.generateAccessToken(user.getPublicUserId());
 
     // when
-    MockHttpServletRequestBuilder request =
-        MockMvcRequestBuilders.patch("/api/users/me/gender")
-            .content(objectMapper.writeValueAsString(updateDto))
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer " + token);
-
-    String response = mockMvc.perform(request)
-        .andExpect(status().is2xxSuccessful())
-        .andReturn().getResponse().getContentAsString();
+    UserResponseDto result = mockMvcUtils.doAuthUnwrappedRequest(
+        MockMvcRequestDto.<UserGenderUpdateDto, CustomResponse<UserResponseDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me/gender")
+            .httpMethod(HttpMethod.PATCH)
+            .body(updateDto)
+            .clientDto(TestClientDto.fromEntity(user))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
 
     // then
-    CustomResponse<UserResponseDto> wrapper =
-        objectMapper.readValue(response, new TypeReference<>() {
-        });
-
-    UserResponseDto result = wrapper.getData();
-
     // 응답 검증
     assertThat(result.getGender()).isEqualTo(updatedGender);
 
@@ -298,26 +284,22 @@ public class UserRetrieveControllerTest {
     UserBirthUpdateDto updateDto = UserBirthUpdateDto.builder()
         .birth(updatedBirth)
         .build();
-    String token = jwtUtils.generateAccessToken(user.getPublicUserId());
 
     // when
-    MockHttpServletRequestBuilder request =
-        MockMvcRequestBuilders.patch("/api/users/me/birth")
-            .content(objectMapper.writeValueAsString(updateDto))
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer " + token);
-
-    String response = mockMvc.perform(request)
-        .andExpect(status().is2xxSuccessful())
-        .andReturn().getResponse().getContentAsString();
+    UserResponseDto result = mockMvcUtils.doAuthUnwrappedRequest(
+        MockMvcRequestDto.<UserBirthUpdateDto, CustomResponse<UserResponseDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me/birth")
+            .httpMethod(HttpMethod.PATCH)
+            .body(updateDto)
+            .clientDto(TestClientDto.fromEntity(user))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
 
     // then
-    CustomResponse<UserResponseDto> wrapper =
-        objectMapper.readValue(response, new TypeReference<>() {
-        });
-
-    UserResponseDto result = wrapper.getData();
-
     // 응답 검증
     assertThat(result.getBirth()).isEqualTo(updatedBirth);
 
