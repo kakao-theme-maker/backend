@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
-public class UserRetrieveService implements UserEntityFinder {
+public class UserService implements UserEntityFinder {
 
   private final UserRepository userRepository;
   private final SubscriptionRepository subscriptionRepository;
@@ -25,7 +25,7 @@ public class UserRetrieveService implements UserEntityFinder {
   private final BoardManagementHelper boardManagementHelper;
   private final FileManager fileManager;
 
-  public UserRetrieveService(UserRepository userRepository,
+  public UserService(UserRepository userRepository,
       SubscriptionRepository subscriptionRepository,
       PostService postService,
       BoardManagementHelper boardManagementHelper,

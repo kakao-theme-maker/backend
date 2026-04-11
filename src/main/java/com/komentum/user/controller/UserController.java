@@ -8,7 +8,7 @@ import com.komentum.user.dto.UserGenderUpdateDto;
 import com.komentum.user.dto.UserNameUpdateDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.service.UserAuthService;
-import com.komentum.user.service.UserRetrieveService;
+import com.komentum.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -25,14 +25,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserRetrieveController {
+public class UserController {
 
-  private final UserRetrieveService userRetrieveService;
+  private final UserService userService;
   private final UserAuthService userAuthService;
 
-  public UserRetrieveController(UserRetrieveService userRetrieveService,
+  public UserController(UserService userService,
       UserAuthService userAuthService) {
-    this.userRetrieveService = userRetrieveService;
+    this.userService = userService;
     this.userAuthService = userAuthService;
   }
 
@@ -42,7 +42,7 @@ public class UserRetrieveController {
   public ResponseEntity<CustomResponse<UserResponseDto>> getUserByPublicId(
       @RequestParam String userPublicID) {
     try {
-      UserResponseDto user = userRetrieveService.getUserByPublicId(userPublicID);
+      UserResponseDto user = userService.getUserByPublicId(userPublicID);
       // 유저 조회 성공
       return ResponseEntity.ok(CustomResponse.ok(user));
     } catch (RuntimeException e) {
@@ -57,7 +57,7 @@ public class UserRetrieveController {
   @Operation(summary = "현재 인증된 사용자 정보를 조회한다")
   public ResponseEntity<UserResponseDto> retrieveCurrentUser(
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    return ResponseEntity.ok(userRetrieveService.getUserByPublicId(userDetails.getPublicUserId()));
+    return ResponseEntity.ok(userService.getUserByPublicId(userDetails.getPublicUserId()));
   }
 
   // Local 비밀번호 변경 기능
@@ -77,7 +77,7 @@ public class UserRetrieveController {
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUserName(
       @Valid @RequestBody UserNameUpdateDto updateDto,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    UserResponseDto updatedUser = userRetrieveService.updateUserName(
+    UserResponseDto updatedUser = userService.updateUserName(
         userDetails.getPublicUserId(), updateDto);
     return ResponseEntity.ok(CustomResponse.ok(updatedUser));
   }
@@ -88,7 +88,7 @@ public class UserRetrieveController {
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUserProfileImage(
       @RequestPart("profile_image") MultipartFile profileImage,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    UserResponseDto updatedUser = userRetrieveService.updateUserProfileImage(
+    UserResponseDto updatedUser = userService.updateUserProfileImage(
         userDetails.getPublicUserId(), profileImage);
     return ResponseEntity.ok(CustomResponse.ok(updatedUser));
   }
@@ -99,7 +99,7 @@ public class UserRetrieveController {
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUserGender(
       @Valid @RequestBody UserGenderUpdateDto updateDto,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    UserResponseDto updatedUser = userRetrieveService.updateUserGender(
+    UserResponseDto updatedUser = userService.updateUserGender(
         userDetails.getPublicUserId(), updateDto);
     return ResponseEntity.ok(CustomResponse.ok(updatedUser));
   }
@@ -110,7 +110,7 @@ public class UserRetrieveController {
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUserBirth(
       @Valid @RequestBody UserBirthUpdateDto updateDto,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    UserResponseDto updatedUser = userRetrieveService.updateUserBirth(
+    UserResponseDto updatedUser = userService.updateUserBirth(
         userDetails.getPublicUserId(), updateDto);
     return ResponseEntity.ok(CustomResponse.ok(updatedUser));
   }
