@@ -48,8 +48,8 @@ public class MockMvcUtils {
   public MockHttpServletRequestBuilder addAuthentication(
       MockHttpServletRequestBuilder requestBuilder, String userIdentifier) {
     String jwtToken = jwtUtils.generateAccessToken(userIdentifier);
-    return requestBuilder.header(AuthProperty.ACCESS_TOKEN_HEADER,
-        AuthProperty.ACCESS_TOKEN_PREFIX + " " + jwtToken);
+    return requestBuilder.header(AuthProperty.accessTokenHeader,
+        AuthProperty.accessTokenPrefix + " " + jwtToken);
   }
 
   /**

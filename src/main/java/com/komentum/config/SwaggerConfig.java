@@ -8,13 +8,17 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("dev")
+@RequiredArgsConstructor
 public class SwaggerConfig {
+
+  private final AuthProperty authProperty;
 
   @Bean
   public OpenAPI openAPI() {
@@ -41,8 +45,8 @@ public class SwaggerConfig {
             new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .in(SecurityScheme.In.HEADER)
-                .scheme(AuthProperty.ACCESS_TOKEN_PREFIX)
-                .name(AuthProperty.ACCESS_TOKEN_HEADER)
+                .scheme(AuthProperty.accessTokenPrefix)
+                .name(AuthProperty.accessTokenHeader)
                 .bearerFormat("JWT"));
   }
 

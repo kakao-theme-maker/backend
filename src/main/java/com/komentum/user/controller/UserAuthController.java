@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserAuthController {
 
   private final UserAuthService userAuthService;
+  private final AuthProperty authProperty;
 
-  public UserAuthController(UserAuthService userAuthService) {
+  public UserAuthController(UserAuthService userAuthService, AuthProperty authProperty) {
     this.userAuthService = userAuthService;
+    this.authProperty = authProperty;
   }
 
 
@@ -46,8 +48,8 @@ public class UserAuthController {
    */
   @PostMapping("/kakao/logout")
   public ResponseEntity<String> logoutWithKakao(
-      @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String accessToken) {
-    accessToken = accessToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
+      @RequestHeader(AuthProperty.accessTokenHeader) String accessToken) {
+    accessToken = accessToken.replace(AuthProperty.accessTokenPrefix, "");
     userAuthService.handleLogout(accessToken);
     return ResponseEntity.ok("logout success");
   }
@@ -56,8 +58,8 @@ public class UserAuthController {
   @PostMapping("/local/sign-out")
   @Operation(summary = "인증된 사용자가 로컬 로그아웃을 진행한다")
   public ResponseEntity<String> signOutLocal(
-      @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String accessToken) {
-    accessToken = accessToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
+      @RequestHeader(AuthProperty.accessTokenHeader) String accessToken) {
+    accessToken = accessToken.replace(AuthProperty.accessTokenPrefix, "");
     userAuthService.handleLogout(accessToken);
     return ResponseEntity.ok("logout success");
   }
@@ -69,8 +71,8 @@ public class UserAuthController {
   @PostMapping("/token")
   @Operation(summary = "인증된 사용자의 refresh token으로 토큰을 재발급한다")
   public ResponseEntity<UserAuthResponse> generateToken(
-      @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String refreshToken) {
-    refreshToken = refreshToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
+      @RequestHeader(AuthProperty.accessTokenHeader) String refreshToken) {
+    refreshToken = refreshToken.replace(AuthProperty.accessTokenPrefix, "");
     return ResponseEntity.ok(userAuthService.doRefreshTokenRotation(refreshToken));
   }
 }

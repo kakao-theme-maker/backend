@@ -1,9 +1,20 @@
 package com.komentum.global.properties;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@Getter
+@RequiredArgsConstructor
+@ConfigurationProperties(prefix = "auth")
 public class AuthProperty {
 
-  public static final String ACCESS_TOKEN_PREFIX = "Bearer";
-  public static final String ACCESS_TOKEN_HEADER = "Authorization";
-  public static final Long ACCESS_TOKEN_EXPIRES_IN = 360000L;
-  public static final Long REFRESH_TOKEN_EXPIRES_IN = 360000L;
+  public static final String accessTokenPrefix = "Bearer";
+  public static final String accessTokenHeader = "Authorization";
+  public static final String accessTokenCookieName = "access_token";
+  public static final String refreshTokenCookieName = "refresh_token";
+  private final Long accessTokenExpiresIn;
+  private final Long refreshTokenExpiresIn;
+  private final String oauth2RedirectUrl;
+  private final Boolean withHttps;
 }
