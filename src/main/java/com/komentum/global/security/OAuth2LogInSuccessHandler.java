@@ -3,12 +3,12 @@ package com.komentum.global.security;
 import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomOAuth2User;
 import com.komentum.global.properties.AuthProperty;
+import com.komentum.global.security.cookie.TokenCookieManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -19,6 +19,7 @@ public class OAuth2LogInSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
   private final JwtUtils jwtUtils;
   private final AuthProperty authProperty;
+  private final TokenCookieManager tokenCookieManager;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -27,24 +28,7 @@ public class OAuth2LogInSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
     String accessToken = jwtUtils.generateAccessToken(oAuth2User.getUserIdentifier());
     String refreshToken = jwtUtils.generateRefreshToken(oAuth2User.getUserIdentifier());
-    ResponseCookie accessTokenCookie = ResponseCookie
-        .from(AuthProperty.accessTokenCookieName, accessToken)
-        .httpOnly(true)
-        .secure(authProperty.getWithHttps())
-        .path("/")
-        .maxAge(authProperty.getAccessTokenExpiresIn())
-        .sameSite("Strict")
-        .build();
-    ResponseCookie refreshTokenCookie = ResponseCookie
-        .from(AuthProperty.refreshTokenCookieName, refreshToken)
-        .httpOnly(true)
-        .secure(authProperty.getWithHttps())
-        .path("/")
-        .maxAge(authProperty.getRefreshTokenExpiresIn())
-        .sameSite("Strict")
-        .build();
-    response.addHeader("Set-Cookie", accessTokenCookie.toString());
-    response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+    tokenCookieManager.addTokenOnCookie(response, accessToken, refreshToken);
 
     String redirectUrl = authProperty.getOauth2RedirectUrl();
     response.sendRedirect(redirectUrl);
