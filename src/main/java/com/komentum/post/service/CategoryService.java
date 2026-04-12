@@ -29,12 +29,22 @@ public class CategoryService {
     return categoryRepository.findAllByOwner_UserEmail(userEmail);
   }
 
+  /**
+   * 카테고리 타입과 사용자를 기반으로 카테고리 조회
+   * @param client 카테고리 소유자
+   * @param categoryType 조회할 카테고리 타입
+   * */
   @Transactional
   public Category findByCategoryTypeAndUser(User client, CategoryType categoryType) {
     return categoryRepository.findByCategoryTypeAndOwner(categoryType, client)
         .orElse(null);
   }
 
+  /**
+   * 카테고리 타입과 사용자를 기반으로 카테고리를 조회하고, 없으면 새로 생성
+   * @param client 카테고리 소유자
+   * @param categoryType 조회 및 생성할 카테고리 타입
+   * */
   @Transactional
   public Category findOrCreateByCategoryTypeAndUser(User client, CategoryType categoryType) {
     Category targetCategory = findByCategoryTypeAndUser(client, categoryType);
