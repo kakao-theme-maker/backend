@@ -1,0 +1,1 @@
+docker build -t louie8821/kakao-theme-maker:v1-dev -f ./Dockerfile .

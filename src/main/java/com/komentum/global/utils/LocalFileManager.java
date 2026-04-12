@@ -1,6 +1,7 @@
 package com.komentum.global.utils;
 
 import com.komentum.config.WebConfig;
+import com.komentum.global.properties.FileStorageProperty;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.io.ByteArrayInputStream;
@@ -10,17 +11,19 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(name = "file.storage", havingValue = "local")
+@EnableConfigurationProperties(FileStorageProperty.class)
+@RequiredArgsConstructor
 public class LocalFileManager implements FileManager {
 
-  @Value("${file.base-url}")
-  private String baseUrl;
+  private final FileStorageProperty fileStorageProperty;
 
   @PostConstruct
   public void init() throws IOException {
@@ -38,7 +41,7 @@ public class LocalFileManager implements FileManager {
   }
 
   private String resolveFilePathPrefix() {
-    String normalizedBaseUrl = StringUtils.removeTrailingSlash(baseUrl);
+    String normalizedBaseUrl = StringUtils.removeTrailingSlash(fileStorageProperty.getBaseUrl());
     String normalizedUploadUrlPrefix = StringUtils.trimSlash(WebConfig.UPLOAD_URL_PREFIX);
     return normalizedBaseUrl + "/" + normalizedUploadUrlPrefix + "/";
   }
