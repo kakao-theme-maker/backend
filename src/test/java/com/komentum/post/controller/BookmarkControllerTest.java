@@ -19,6 +19,7 @@ import com.komentum.user.domain.User;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -65,6 +66,7 @@ class BookmarkControllerTest {
   }
 
   @Test
+  @DisplayName("when send request, add post on bookmark category")
   void addPostOnBookmark_success() throws Exception {
     // given
     User client = postScenarioResult.getFirstUser();
@@ -93,6 +95,7 @@ class BookmarkControllerTest {
   }
 
   @Test
+  @DisplayName("when send request, delete post from bookmark category")
   void deletePostFromBookmark_success() throws Exception {
     // given
     User client = postScenarioResult.getFirstUser();
