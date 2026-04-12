@@ -70,7 +70,10 @@ public class SecurityConfig {
                   .userService(customOauth2UserService))
               .successHandler(oAuth2LogInSuccessHandler)
               .failureHandler(oAuth2LoginFailureHandler);
-        });
+        })
+        .exceptionHandling(exception -> exception.authenticationEntryPoint(
+            new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
+        ));
     return http.build();
   }
 
