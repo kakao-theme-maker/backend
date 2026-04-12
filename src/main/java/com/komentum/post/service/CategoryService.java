@@ -34,7 +34,7 @@ public class CategoryService {
    * @param client 카테고리 소유자
    * @param categoryType 조회할 카테고리 타입
    * */
-  @Transactional
+  @Transactional(readOnly = true)
   public Category findByCategoryTypeAndUser(User client, CategoryType categoryType) {
     return categoryRepository.findByCategoryTypeAndOwner(categoryType, client)
         .orElse(null);

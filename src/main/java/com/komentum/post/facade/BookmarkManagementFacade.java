@@ -47,9 +47,8 @@ public class BookmarkManagementFacade {
   public void deletePostFromBookmark(Long postId, String userIdentifier) {
     User client = userEntityFinder.findUserEntity(userIdentifier);
     Category bookmark = categoryService.findByCategoryTypeAndUser(client, CategoryType.BOOKMARK);
-    Post targetPost = postService.getPostByPostId(postId);
     if (bookmark != null) {
-      categoryPostService.deleteCategoryPost(bookmark.getCategoryId(), targetPost.getPostId());
+      categoryPostService.deleteCategoryPost(bookmark.getCategoryId(), postId);
     }
   }
 }
