@@ -26,12 +26,12 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
     Map<String, Object> attributes = super.loadUser(userRequest).getAttributes();
     String registrationId = userRequest.getClientRegistration().getRegistrationId();
     OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfo.of(registrationId, attributes);
-    User serviceUser = createOrRetriveUser(oAuth2UserInfo);
+    User serviceUser = createOrRetrieveUser(oAuth2UserInfo);
     return new CustomOAuth2User(serviceUser, attributes);
   }
 
   @Transactional
-  public User createOrRetriveUser(OAuth2UserInfo oAuth2UserInfo) {
+  public User createOrRetrieveUser(OAuth2UserInfo oAuth2UserInfo) {
     User serviceUser = userRepository.findByUserEmail(oAuth2UserInfo.getUserEmail()).orElse(null);
     if (serviceUser == null) {
       try {
