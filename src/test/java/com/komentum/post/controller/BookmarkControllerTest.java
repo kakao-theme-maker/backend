@@ -95,6 +95,71 @@ class BookmarkControllerTest {
   }
 
   @Test
+  @DisplayName("If posts are stored in bookmarks in duplicate, maintain the existing state")
+  void addPostOnBookmark_whenExists_returnsExisting() throws Exception {
+    // given
+    User client = postScenarioResult.getFirstUser();
+    Post postToAdd = postScenarioResult.posts().get(0);
+    // when: 북마크에 게시글을 추가한다
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .path(String.format("/api/bookmarks/posts/%d", postToAdd.getPostId()))
+            .httpMethod(HttpMethod.PUT)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .statusCode(200)
+            .build()
+    );
+    // when: 동일한 게시글을 북마크에 다시 추가한다
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .path(String.format("/api/bookmarks/posts/%d", postToAdd.getPostId()))
+            .httpMethod(HttpMethod.PUT)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .statusCode(200)
+            .build()
+    );
+    // then: bookmark 카테고리 유무 검증
+    Optional<Category> bookmarkCategory = categoryRepository
+        .findByCategoryTypeAndOwner(CategoryType.BOOKMARK, client);
+    assertThat(bookmarkCategory).isNotEmpty();
+    // then: bookmark에 post가 들어있는지 검증
+    assertThat(categoryPostRepository.findByCategory_CategoryIdAndPost_PostId(
+        bookmarkCategory.get().getCategoryId(),
+        postToAdd.getPostId()
+    )).isNotEmpty();
+  }
+
+  @Test
+  @DisplayName("If remove non-existent posts from bookmarks, maintain the existing state")
+  void deletePostFromBookmark_whenNotExists_returnsNoContent() throws Exception {
+    // given
+    User client = postScenarioResult.getFirstUser();
+    Post targetPost = postScenarioResult.posts().get(0);
+    // when: bookmark에서 post 제거
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .path(String.format("/api/bookmarks/posts/%d", targetPost.getPostId()))
+            .httpMethod(HttpMethod.DELETE)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .statusCode(204)
+            .build()
+    );
+    // then: bookmark 카테고리가 없음을 확인
+    Optional<Category> bookmarkCategory = categoryRepository
+        .findByCategoryTypeAndOwner(CategoryType.BOOKMARK, client);
+    assertThat(bookmarkCategory).isEmpty();
+  }
+
+  @Test
   @DisplayName("when send request, delete post from bookmark category")
   void deletePostFromBookmark_success() throws Exception {
     // given
