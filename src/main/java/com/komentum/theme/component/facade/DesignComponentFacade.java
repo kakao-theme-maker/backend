@@ -5,7 +5,7 @@ import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
-import com.komentum.user.service.UserRetrieveService;
+import com.komentum.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,14 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Transactional
 public class DesignComponentFacade {
 
-  private final UserRetrieveService userRetrieveService;
+  private final UserService userService;
   private final DesignComponentService designComponentService;
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
       MultipartFile image,
       String publicUserId) {
-    User user = userRetrieveService.findUserEntity(publicUserId);
+    User user = userService.findUserEntity(publicUserId);
     return designComponentService.createDesignComponent(request, image, user);
   }
 

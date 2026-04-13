@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.auth.JwtUtils;
+import com.komentum.global.dto.CustomResponse;
 import com.komentum.global.properties.AuthProperty;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcMultipartRequestDto.MultipartExecutionContext;
@@ -103,6 +104,15 @@ public class MockMvcUtils {
         .andExpect(status().is(requestDto.getStatusCode()));
     // 결과를 ResponseType으로 변환하여 반환
     return parseResponse(resultActions, requestDto.getResponseType());
+  }
+
+  /**
+   * CustomResponse로 감싸진 응답에서 data만 추출하여 반환
+   */
+  public <T> T doAuthUnwrappedRequest(MockMvcRequestDto<?, CustomResponse<T>> dto)
+      throws Exception {
+    CustomResponse<T> wrapper = this.doAuthRequest(dto);
+    return wrapper.getData();
   }
 
   /**
