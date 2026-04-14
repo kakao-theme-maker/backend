@@ -58,7 +58,7 @@ public class CommentController {
   }
 
   @GetMapping("/comments/{comment_id}")
-  @Operation(summary = "현재 인증된 사용자가 ID=comment_id인 특정 댓글을 조회한다")
+  @Operation(summary = "현재 인증된 사용자가 ID=comment_id인 특정 댓글을 조회한다 (현재 사용자 기준 좋아요 여부 포함)")
   public ResponseEntity<CommentResponse> getComment(
       @PathVariable("comment_id") Long commentId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -69,7 +69,7 @@ public class CommentController {
   }
 
   @PostMapping("/{post_id}/comments")
-  @Operation(summary = "현재 인증된 사용자가 ID=post_id인 게시글에 댓글을 생성한다 (현재 사용자 기준 좋아요 여부 포함)")
+  @Operation(summary = "현재 인증된 사용자가 ID=post_id인 게시글에 댓글을 생성한다")
   public ResponseEntity<CommentResponse> createComment(
       @PathVariable("post_id") Long postId,
       @RequestBody CommentCreateDto createDto,
