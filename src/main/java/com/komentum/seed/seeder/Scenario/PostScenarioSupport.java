@@ -3,6 +3,8 @@ package com.komentum.seed.seeder.Scenario;
 import com.komentum.post.domain.Category;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
+import com.komentum.post.domain.enums.PostType;
+import com.komentum.seed.seeder.BookmarkSeeder;
 import com.komentum.seed.seeder.CategorySeeder;
 import com.komentum.seed.seeder.PostSeeder;
 import com.komentum.seed.seeder.PreferSeeder;
@@ -25,6 +27,7 @@ public class PostScenarioSupport {
   private final PostSeeder postSeeder;
   private final PreferSeeder preferSeeder;
   private final CategorySeeder categorySeeder;
+  private final BookmarkSeeder bookmarkSeeder;
 
   public PostScenarioBuilder builder() {
     return new PostScenarioBuilder();
@@ -54,6 +57,7 @@ public class PostScenarioSupport {
     private List<Post> posts;
     private List<Prefer> prefers;
     private List<Category> categories;
+    private List<Category> bookmarks;
 
     /**
      * userCount 수의 user Entity 생성
@@ -111,6 +115,19 @@ public class PostScenarioSupport {
         throw new RuntimeException("total post size must bigger than post per category count");
       }
       categorySeeder.seedPostMappingsPerCategory(postMappingPerCategory, categories, posts);
+      return this;
+    }
+
+    /**
+     * 사용자마다 전체 게시글 중 bookmarkRatio만큼 북마크에 게시글을 추가한다
+     * @param bookmarkRatio 전체 게시글 중 북마크에 추가할 비율 ( 0 ~ 1 )
+     * */
+    @Transactional
+    public PostScenarioBuilder withBookmarkRatio(double bookmarkRatio) {
+      if (bookmarkRatio < 0 || bookmarkRatio > 1) {
+        throw new IllegalArgumentException("bookmarkRatio must be between 0 and 1");
+      }
+      this.bookmarks = bookmarkSeeder.bookmarkByRatio(users, posts, bookmarkRatio);
       return this;
     }
 
