@@ -1,4 +1,4 @@
-package com.komentum.seed.seeder.Scenario;
+package com.komentum.test.data.scenario;
 
 import com.komentum.post.domain.Category;
 import com.komentum.post.domain.Post;
@@ -40,7 +40,8 @@ public class PostScenarioSupport {
       List<User> users,
       List<Post> posts,
       List<Prefer> prefers,
-      List<Category> categories
+      List<Category> categories,
+      List<Category> bookmarks
   ) {
 
     public User getFirstUser() {
@@ -132,7 +133,7 @@ public class PostScenarioSupport {
     }
 
     public Result build() {
-      return new Result(users, posts, prefers, categories);
+      return new Result(users, posts, prefers, categories, bookmarks);
     }
   }
 }
