@@ -8,7 +8,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
-import com.komentum.post.repository.CategoryPostRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.seed.seeder.Scenario.PostScenarioSupport;
 import com.komentum.test.MockMvcUtils;
@@ -52,16 +51,12 @@ public class UserPostControllerTest {
   PostScenarioSupport postScenarioSupport;
 
   int postPerUser = 5;
-  int categoryPostMappingsPerUser;
+  int bookmarkedPostsPerUser;
   int prefersPerUser;
   PostScenarioSupport.Result result;
-  @Autowired
-  private CategoryPostRepository categoryPostRepository;
 
   @BeforeEach
   void setUp() {
-    int categoryPerUser = 1;
-    int categoryPostMappingsPerCategory = 2;
     int userCount = 3;
     int prefersPerPost = 3;
     // generate data
@@ -69,11 +64,10 @@ public class UserPostControllerTest {
         .withUsers(userCount)
         .withThemeBoardPerUser(postPerUser)
         .withPrefersPerPost(prefersPerPost)
-        .withCategoriesPerUser(categoryPerUser)
-        .withPostMappingsPerCategory(categoryPostMappingsPerCategory)
+        .withBookmarkRatio(1)
         .build();
     // set values
-    categoryPostMappingsPerUser = categoryPerUser * categoryPostMappingsPerCategory;
+    bookmarkedPostsPerUser = postPerUser * userCount;
     prefersPerUser = postPerUser * prefersPerPost;
   }
 
@@ -93,6 +87,9 @@ public class UserPostControllerTest {
     assertThat(responseDto.getCreatedAt()).isNotNull();
     assertThat(responseDto.getUpdatedAt()).isNotNull();
     assertThat(responseDto.getPreviewImageUrl()).isEqualTo(previewImageUrl);
+    assertThat(responseDto.getAuthorName()).isEqualTo(post.getUser().getName());
+    assertThat(responseDto.getAuthorProfileImageUrl()).isEqualTo(post.getUser().getProfileImg());
+    assertThat(responseDto.getPostType()).isEqualTo(post.getPostType());
   }
 
   @Test
@@ -124,7 +121,7 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("사용자가 카테고리에 저장한 게시글 목록 반환")
+  @DisplayName("사용자가 북마크에 저장한 게시글 목록 반환")
   void findSavedPostList_success() throws Exception {
     // given
     User client = result.getFirstUser();
@@ -144,7 +141,7 @@ public class UserPostControllerTest {
             .build()
     );
     // then
-    assertThat(response).hasSize(categoryPostMappingsPerUser);
+    assertThat(response).hasSize(bookmarkedPostsPerUser);
     for (UserPostListResponseDto res : response) {
       assertUserPostListResponseDto(res, expectedPreviewImageUrl);
     }
