@@ -133,7 +133,7 @@ public class UserPostControllerTest {
     List<UserPostListResponseDto> response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
             .mockMvc(mockMvc)
-            .path("/api/users/me/saved-posts")
+            .path("/api/users/me/bookmarked-posts")
             .httpMethod(HttpMethod.GET)
             .clientDto(TestClientDto.fromEntity(client))
             .responseType(new TypeReference<>() {

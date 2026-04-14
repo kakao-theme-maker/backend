@@ -32,7 +32,7 @@ public class UserPostController {
   /**
    * 사용자가 카테고리에 저장한 테마 목록 반환
    */
-  @GetMapping("/me/saved-posts")
+  @GetMapping("/me/bookmarked-posts")
   @Operation(summary = "현재 인증된 사용자가 북마크에 추가한 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findSavedPostList(
       @AuthenticationPrincipal CustomUserDetails userDetails
