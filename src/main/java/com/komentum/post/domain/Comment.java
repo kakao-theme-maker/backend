@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,6 +48,10 @@ public class Comment {
   @Column
   private String content;
 
+  @Builder.Default
+  @Column(nullable = false)
+  private Long likeCount = 0L;
+
   @CreatedDate
   private LocalDateTime createdAt;
 
@@ -58,12 +63,20 @@ public class Comment {
         .post(post)
         .user(user)
         .content(dto.getContent())
+        .likeCount(0L)
         .build();
   }
 
   public void update(CommentUpdateDto dto) {
     if (dto.getContent() != null) {
       this.content = dto.getContent();
+    }
+  }
+
+  @PrePersist
+  public void prePersist() {
+    if (this.likeCount == null) {
+      this.likeCount = 0L;
     }
   }
 }
