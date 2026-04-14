@@ -26,7 +26,7 @@ public class UserPostController {
   @Operation(summary = "현재 인증된 사용자가 업로드/소유한 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findUserPostList(@AuthenticationPrincipal
   CustomUserDetails userDetails) {
-    return ResponseEntity.ok(postService.findUserPostList(userDetails.getUsername()));
+    return ResponseEntity.ok(postManagementFacade.findMyPostsByUser(userDetails.getUsername()));
   }
 
   /**
@@ -47,6 +47,6 @@ public class UserPostController {
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     return ResponseEntity.ok(
-        postManagementFacade.findUserPreferedPosts(userDetails.getUsername()));
+        postManagementFacade.findUserPreferredPosts(userDetails.getUsername()));
   }
 }

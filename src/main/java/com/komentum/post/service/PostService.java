@@ -2,10 +2,10 @@ package com.komentum.post.service;
 
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.domain.policy.PostPolicy;
 import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
-import com.komentum.post.dto.PostDto.UserPostListResponseDto;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.user.domain.User;
@@ -108,29 +108,25 @@ public class PostService {
    * 특정 사용자의 게시글 목록 반환
    *
    */
-  public List<UserPostListResponseDto> findUserPostList(String publicUserId) {
-
-    // 필요한 정보 추출
-    return getPostsByPublicUserId(publicUserId).stream()
-        .map(post -> UserPostListResponseDto.builder().postId(post.getPostId())
-            .previewImageUrl(fileManager.resolveFilePath(post.getPreviewImageName()))
-            .createdAt(post.getCreatedAt())
-            .updatedAt(post.getUpdatedAt())
-            .build())
-        .toList(); // 리스트 변환
+  @Transactional(readOnly = true)
+  public List<Post> findUserPostList(User user) {
+    return postRepositorySupport.findMyPostsByUser(user);
   }
 
   // 업로드 수 count 반환 메서드
+  @Transactional(readOnly = true)
   public int countPost(String publicUserId) {
     return postRepository.countByUser_PublicUserId(publicUserId);
   }
 
   // 사용자가 카테고리에 저장한 게시글 목록 조회
+  @Transactional(readOnly = true)
   public List<Post> findUserSavedPosts(User user) {
-    return postRepositorySupport.findUserSavedPost(user);
+    return postRepositorySupport.findBookmarkedPostsByUser(user);
   }
 
-  public List<Post> findUserPreferedPosts(User user) {
+  @Transactional(readOnly = true)
+  public List<Post> findUserPreferredPosts(User user) {
     return postRepositorySupport.findUserPreferredPosts(user);
   }
 }
