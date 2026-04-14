@@ -22,6 +22,10 @@ public class CommentDto {
     Long commentId;
     @Schema(description = "댓글 작성자 이메일")
     String userEmail;
+    @Schema(description = "댓글 작성자 이름")
+    String userName;
+    @Schema(description = "댓글 작성자 프로필 이미지 URL")
+    String profileImageUrl;
     @Schema(description = "댓글 내용")
     String content;
     @Schema(description = "댓글 좋아요 수")
@@ -41,6 +45,8 @@ public class CommentDto {
       return CommentResponse.builder()
           .commentId(comment.getCommentId())
           .userEmail(comment.getUser().getUserEmail())
+          .userName(comment.getUser().getName())
+          .profileImageUrl(comment.getUser().getProfileImg())
           .content(comment.getContent())
           .likeCount(comment.getLikeCount())
           .isLiked(liked)
