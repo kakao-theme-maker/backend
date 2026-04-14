@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import com.komentum.post.domain.Comment;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
+import com.komentum.post.repository.CommentLikeRepository;
 import com.komentum.post.repository.CommentRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PreferRepository;
@@ -26,6 +27,9 @@ public class PostTestDataGenerator {
 
   @Autowired
   private PreferRepository preferRepository;
+
+  @Autowired
+  private CommentLikeRepository commentLikeRepository;
 
   @Autowired
   private UserDataGenerator userDataGenerator;
@@ -52,6 +56,7 @@ public class PostTestDataGenerator {
   }
 
   public void deleteData() {
+    commentLikeRepository.deleteAll();
     preferRepository.deleteAll();
     commentRepository.deleteAll();
     postRepository.deleteAll();

@@ -8,6 +8,7 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.dto.CommentDto.CommentCreateDto;
 import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
+import com.komentum.post.repository.CommentLikeRepository;
 import com.komentum.post.repository.CommentRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
@@ -37,6 +38,9 @@ class CommentControllerTest {
   private CommentRepository commentRepository;
 
   @Autowired
+  private CommentLikeRepository commentLikeRepository;
+
+  @Autowired
   private MockMvc mockMvc;
 
   @Autowired
@@ -58,6 +62,7 @@ class CommentControllerTest {
     // target assertion
     assertThat(target.getContent()).isEqualTo(saved.getContent());
     assertThat(target.getUserEmail()).isNotBlank();
+    assertThat(target.getLikeCount()).isEqualTo(saved.getLikeCount());
     assertThat(target.getCreatedAt()).isNotBlank();
   }
 
@@ -109,6 +114,149 @@ class CommentControllerTest {
     );
     // then
     assertCommentResponse(response);
+  }
+
+  @Test
+  @DisplayName("success test of like comment")
+  void likeComment_success() throws Exception {
+    // given
+    Comment target = postTestDataGenerator.comments.get(0);
+    User client = postTestDataGenerator.users.get(0);
+    String requestPath = String.format("/api/comments/%d/like", target.getCommentId());
+    // when
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.POST)
+            .path(requestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+
+    //중복 요청
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.POST)
+            .path(requestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    Comment saved = commentRepository.findById(target.getCommentId()).orElseThrow();
+    assertThat(saved.getLikeCount()).isEqualTo(1L);
+    assertThat(commentLikeRepository.existsByUserIdAndCommentId(
+        client.getUserId(),
+        target.getCommentId())).isTrue();
+  }
+
+  @Test
+  @DisplayName("success test of unlike comment")
+  void unlikeComment_success() throws Exception {
+    // given
+    Comment target = postTestDataGenerator.comments.get(0);
+    User client = postTestDataGenerator.users.get(0);
+    String requestPath = String.format("/api/comments/%d/like", target.getCommentId());
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.POST)
+            .path(requestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // when
+
+    // unlike
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.DELETE)
+            .path(requestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(204)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    Comment saved = commentRepository.findById(target.getCommentId()).orElseThrow();
+    assertThat(saved.getLikeCount()).isZero();
+    assertThat(commentLikeRepository.existsByUserIdAndCommentId(
+        client.getUserId(),
+        target.getCommentId())).isFalse();
+  }
+
+  @Test
+  @DisplayName("success test of get comment like count")
+  void getCommentLikeCount_success() throws Exception {
+    // given
+    Comment target = postTestDataGenerator.comments.get(0);
+    User client = postTestDataGenerator.users.get(0);
+    String requestPath = String.format("/api/comments/%d/like", target.getCommentId());
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.POST)
+            .path(requestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // when
+    Long response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Long>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path(requestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response).isEqualTo(1L);
+  }
+
+  @Test
+  @DisplayName("success test of get liked comment")
+  void getLikedComment_success() throws Exception {
+    // given
+    Comment target = postTestDataGenerator.comments.get(0);
+    User client = postTestDataGenerator.users.get(0);
+    String likeRequestPath = String.format("/api/comments/%d/like", target.getCommentId());
+    String getRequestPath = String.format("/api/posts/comments/%d", target.getCommentId());
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.POST)
+            .path(likeRequestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // when
+    CommentResponse response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, CommentResponse>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path(getRequestPath)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response.getLikeCount()).isEqualTo(1L);
+    assertThat(response.getIsLiked()).isTrue();
   }
 
   @Test
