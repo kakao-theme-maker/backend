@@ -62,11 +62,12 @@ public class UserPostControllerTest {
   void setUp() {
     int categoryPerUser = 1;
     int categoryPostMappingsPerCategory = 2;
+    int userCount = 3;
     int prefersPerPost = 3;
     // generate data
     result = postScenarioSupport.builder()
-        .withUsers(3)
-        .withPostPerUser(postPerUser)
+        .withUsers(userCount)
+        .withThemeBoardPerUser(postPerUser)
         .withPrefersPerPost(prefersPerPost)
         .withCategoriesPerUser(categoryPerUser)
         .withPostMappingsPerCategory(categoryPostMappingsPerCategory)

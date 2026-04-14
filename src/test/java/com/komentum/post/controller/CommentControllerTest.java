@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.post.domain.Comment;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.CommentDto.CommentCreateDto;
 import com.komentum.post.dto.CommentDto.CommentResponse;
 import com.komentum.post.dto.CommentDto.CommentUpdateDto;
@@ -48,7 +49,7 @@ class CommentControllerTest {
   @BeforeEach
   void setUp() {
     postTestDataGenerator.deleteData();
-    postTestDataGenerator.generateData(1, 1, 10);
+    postTestDataGenerator.generateData(1, 1, 10, PostType.THEME_BOARD);
   }
 
   public void assertCommentResponse(CommentResponse target) {

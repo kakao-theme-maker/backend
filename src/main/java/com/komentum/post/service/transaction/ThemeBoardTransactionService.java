@@ -2,6 +2,7 @@ package com.komentum.post.service.transaction;
 
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
@@ -57,7 +58,8 @@ public class ThemeBoardTransactionService {
       User author,
       String previewImageName) {
     PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
-    Post savedPost = postService.createPost(postCreateDto, author, previewImageName);
+    Post savedPost = postService
+        .createPost(postCreateDto, author, previewImageName, PostType.THEME_BOARD);
     if (createDto.getPostTags() != null) {
       tagService.createTags(savedPost, createDto.getPostTags());
     }

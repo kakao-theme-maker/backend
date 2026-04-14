@@ -53,8 +53,10 @@ public class PostService {
    *
    */
   @Transactional
-  public Post createPost(PostCreateDto postCreateDto, User author, String profileImageName) {
-    return postRepository.save(Post.createTransient(postCreateDto, author, profileImageName));
+  public Post createPost(PostCreateDto postCreateDto, User author, String profileImageName,
+      PostType postType) {
+    return postRepository.save(
+        Post.createTransient(postCreateDto, author, profileImageName, postType));
   }
 
   /**

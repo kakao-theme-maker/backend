@@ -56,7 +56,7 @@ class BookmarkControllerTest {
   public void setUp() {
     postScenarioResult = postScenarioSupport.builder()
         .withUsers(3)
-        .withPostPerUser(5)
+        .withThemeBoardPerUser(5)
         .build();
   }
 

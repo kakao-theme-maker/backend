@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import com.komentum.post.domain.Comment;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.CommentRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PreferRepository;
@@ -39,15 +40,15 @@ public class PostTestDataGenerator {
 
   public List<Prefer> prefers;
 
-  public void generateData(int userCount, int postPerUser, int commentPerPost) {
+  public void generateData(int userCount, int postPerUser, int commentPerPost, PostType postType) {
     this.users = userDataGenerator.generateTestUsers(userCount);
-    this.posts = generatePost(users, postPerUser);
+    this.posts = generatePost(users, postPerUser, postType);
     this.comments = generateComments(posts, commentPerPost);
   }
 
   public void generateDataWithPrefer(int userCount, int postPerUser, int commentPerPost,
-      int maxPreferPerPost) {
-    generateData(userCount, postPerUser, commentPerPost);
+      int maxPreferPerPost, PostType postType) {
+    generateData(userCount, postPerUser, commentPerPost, postType);
     this.prefers = generatePrefers(maxPreferPerPost);
   }
 
@@ -58,7 +59,7 @@ public class PostTestDataGenerator {
     userDataGenerator.deleteAllUsers();
   }
 
-  public List<Post> generatePost(List<User> users, int postPerUser) {
+  public List<Post> generatePost(List<User> users, int postPerUser, PostType postType) {
     Faker faker = new Faker();
     List<Post> posts = new ArrayList<>();
     for (User user : users) {
@@ -67,6 +68,7 @@ public class PostTestDataGenerator {
             .title(faker.lorem().sentence())
             .content(faker.lorem().paragraph())
             .user(user)
+            .postType(postType)
             .previewImageName(UUID.randomUUID().toString())
             .build());
       }

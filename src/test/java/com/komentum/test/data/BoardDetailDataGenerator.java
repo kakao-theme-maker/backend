@@ -3,6 +3,7 @@ package com.komentum.test.data;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.component.domain.DesignComponent;
@@ -42,7 +43,7 @@ public class BoardDetailDataGenerator {
   public void generateThemeBoards(int userCount, int postPerUsers, int commentPerPosts,
       int maxPreferPerPost) {
     postTestDataGenerator.generateDataWithPrefer(userCount, postPerUsers, commentPerPosts,
-        maxPreferPerPost);
+        maxPreferPerPost, PostType.THEME_BOARD);
     themeDataGenerator.generateTestData(getPosts().size());
     List<Post> allPosts = getPosts();
     List<ThemeComponent> allThemeComponents = themeDataGenerator.initialThemes;
@@ -68,7 +69,8 @@ public class BoardDetailDataGenerator {
 
   // design board generator
   public void generateDesignBoards(int userCount, int postPerUsers, int commentPerPosts) {
-    postTestDataGenerator.generateData(userCount, postPerUsers, commentPerPosts);
+    postTestDataGenerator.generateData(userCount, postPerUsers, commentPerPosts,
+        PostType.DESIGN_BOARD);
     themeDataGenerator.generateTestData(getPosts().size());
     List<Post> allPosts = getPosts();
     List<DesignComponent> allDesignComponents = themeDataGenerator.initialDesignComponents;

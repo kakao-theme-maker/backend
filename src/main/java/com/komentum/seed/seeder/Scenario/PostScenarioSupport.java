@@ -65,14 +65,16 @@ public class PostScenarioSupport {
     }
 
     /**
-     * user마다 postPerUser만큼의 post 생성
+     * user마다 postPerUser만큼의 "ThemeBoard 성격의 Post" 생성
+     * todo : 추후 ThemeBoard 생성 로직으로 대체해야함 ( 우선순위 높음 )
      * */
     @Transactional
-    public PostScenarioBuilder withPostPerUser(int postPerUser) {
+    public PostScenarioBuilder withThemeBoardPerUser(int postPerUser) {
       if (users.isEmpty()) {
         throw new RuntimeException("user must not be empty");
       }
-      posts = postSeeder.seedPerUser(users, postPerUser, "https://test-data.com");
+      posts = postSeeder
+          .seedPerUser(users, postPerUser, "https://test-data.com", PostType.THEME_BOARD);
       return this;
     }
 

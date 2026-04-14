@@ -2,6 +2,7 @@ package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
@@ -16,20 +17,22 @@ public class PostSeeder {
   private final PostRepository postRepository;
   private final Faker faker;
 
-  public Post createOne(User author, String previewImageName) {
+  public Post createOne(User author, String previewImageName, PostType postType) {
     return postRepository.save(Post.builder()
         .title(faker.lorem().word())
         .content(faker.lorem().paragraph())
         .previewImageName(previewImageName)
+        .postType(postType)
         .user(author)
         .build());
   }
 
-  public List<Post> seedPerUser(List<User> authors, int count, String previewImageName) {
+  public List<Post> seedPerUser(List<User> authors, int count, String previewImageName,
+      PostType postType) {
     List<Post> posts = new ArrayList<>();
     for (User author : authors) {
       for (int i = 0; i < count; i++) {
-        posts.add(createOne(author, previewImageName));
+        posts.add(createOne(author, previewImageName, postType));
       }
     }
     return postRepository.saveAll(posts);
