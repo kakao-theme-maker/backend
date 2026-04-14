@@ -52,7 +52,7 @@ public class PostDto {
     LocalDateTime createdAt;
     @Schema(description = "게시글 갱신일")
     LocalDateTime updatedAt;
-    @Schema(description = "게시글 종류")
+    @Schema(description = "게시글 종류 ( THEME_BOARD | DESIGN_BOARD )", example = "THEME_BOARD | DESIGN_BOARD")
     PostType postType;
     @Schema(description = "게시글 작성자 이름")
     String authorName;
