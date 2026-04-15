@@ -26,9 +26,9 @@ public class KakaoAuthHttpClient {
   private final String redirectUri;
 
   public KakaoAuthHttpClient(
-      @Value("${auth.kakao.client-id}") String clientId,
-      @Value("${auth.kakao.client-secret}") String clientSecret,
-      @Value("${auth.kakao.redirect-uri}") String redirectUri
+      @Value("${spring.security.oauth2.client.registration.kakao.client-id}") String clientId,
+      @Value("${spring.security.oauth2.client.registration.kakao.client-secret}") String clientSecret,
+      @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}") String redirectUri
   ) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;

@@ -1,8 +1,10 @@
-package com.komentum.seed.seeder.Scenario;
+package com.komentum.test.data.scenario;
 
 import com.komentum.post.domain.Category;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
+import com.komentum.post.domain.enums.PostType;
+import com.komentum.seed.seeder.BookmarkSeeder;
 import com.komentum.seed.seeder.CategorySeeder;
 import com.komentum.seed.seeder.PostSeeder;
 import com.komentum.seed.seeder.PreferSeeder;
@@ -25,6 +27,7 @@ public class PostScenarioSupport {
   private final PostSeeder postSeeder;
   private final PreferSeeder preferSeeder;
   private final CategorySeeder categorySeeder;
+  private final BookmarkSeeder bookmarkSeeder;
 
   public PostScenarioBuilder builder() {
     return new PostScenarioBuilder();
@@ -37,7 +40,8 @@ public class PostScenarioSupport {
       List<User> users,
       List<Post> posts,
       List<Prefer> prefers,
-      List<Category> categories
+      List<Category> categories,
+      List<Category> bookmarks
   ) {
 
     public User getFirstUser() {
@@ -54,6 +58,7 @@ public class PostScenarioSupport {
     private List<Post> posts;
     private List<Prefer> prefers;
     private List<Category> categories;
+    private List<Category> bookmarks;
 
     /**
      * userCount 수의 user Entity 생성
@@ -65,14 +70,16 @@ public class PostScenarioSupport {
     }
 
     /**
-     * user마다 postPerUser만큼의 post 생성
+     * user마다 postPerUser만큼의 "ThemeBoard 성격의 Post" 생성
+     * todo : 추후 ThemeBoard 생성 로직으로 대체해야함 ( 우선순위 높음 )
      * */
     @Transactional
-    public PostScenarioBuilder withPostPerUser(int postPerUser) {
+    public PostScenarioBuilder withThemeBoardPerUser(int postPerUser) {
       if (users.isEmpty()) {
         throw new RuntimeException("user must not be empty");
       }
-      posts = postSeeder.seedPerUser(users, postPerUser, "https://test-data.com");
+      posts = postSeeder
+          .seedPerUser(users, postPerUser, "https://test-data.com", PostType.THEME_BOARD);
       return this;
     }
 
@@ -112,8 +119,21 @@ public class PostScenarioSupport {
       return this;
     }
 
+    /**
+     * 사용자마다 전체 게시글 중 bookmarkRatio만큼 북마크에 게시글을 추가한다
+     * @param bookmarkRatio 전체 게시글 중 북마크에 추가할 비율 ( 0 ~ 1 )
+     * */
+    @Transactional
+    public PostScenarioBuilder withBookmarkRatio(double bookmarkRatio) {
+      if (bookmarkRatio < 0 || bookmarkRatio > 1) {
+        throw new IllegalArgumentException("bookmarkRatio must be between 0 and 1");
+      }
+      this.bookmarks = bookmarkSeeder.bookmarkByRatio(users, posts, bookmarkRatio);
+      return this;
+    }
+
     public Result build() {
-      return new Result(users, posts, prefers, categories);
+      return new Result(users, posts, prefers, categories, bookmarks);
     }
   }
 }

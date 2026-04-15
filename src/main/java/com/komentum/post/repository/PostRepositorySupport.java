@@ -6,6 +6,7 @@ import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QPost;
 import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.PostSummary;
+import com.komentum.post.service.enums.CategoryType;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
@@ -78,19 +79,49 @@ public class PostRepositorySupport {
   }
 
   /**
-   * DB에서 사용자가 카테고리에 저장한 게시글 목록 조회
-   * @param user 카테고리에 게시글을 저장한 User 엔티티
+   * DB에서 사용자가 북마크에 저장한 게시글 목록 조회
+   * @param client 카테고리에 게시글을 저장한 User 엔티티
    * @return 카테고리에 저장된 게시글 목록
    * */
-  public List<Post> findUserSavedPost(User user) {
+  public List<Post> findBookmarkedPostsByUser(User client) {
     QPost post = QPost.post;
     QCategory category = QCategory.category;
     QCategoryPost categoryPost = QCategoryPost.categoryPost;
+    QUser user = QUser.user;
     return queryFactory.select(post)
         .from(categoryPost)
         .join(categoryPost.post, post)
         .join(categoryPost.category, category)
-        .where(category.owner.eq(user))
+        .join(post.user, user).fetchJoin()
+        .where(category.owner.eq(client).and(category.categoryType.eq(CategoryType.BOOKMARK)))
+        .fetch();
+  }
+
+  /**
+   * 사용자가 좋아요를 누른 게시글 목록 조회
+   * */
+  public List<Post> findUserPreferredPosts(User client) {
+    QPost post = QPost.post;
+    QPrefer prefer = QPrefer.prefer;
+    QUser user = QUser.user;
+    return queryFactory.select(post)
+        .from(prefer)
+        .join(prefer.post, post)
+        .join(post.user, user).fetchJoin()
+        .where(prefer.user.eq(client))
+        .fetch();
+  }
+
+  /**
+   * 사용자가 소융한 게시글 목록 조회
+   * */
+  public List<Post> findMyPostsByUser(User client) {
+    QPost post = QPost.post;
+    QUser user = QUser.user;
+    return queryFactory.select(post)
+        .from(post)
+        .join(post.user, user).fetchJoin()
+        .where(post.user.eq(client))
         .fetch();
   }
 
@@ -117,19 +148,5 @@ public class PostRepositorySupport {
             categoryPost.category.owner.eq(user)
         )
         .exists();
-  }
-
-  /**
-   * 사용자가 좋아요를 누른 게시글 목록 조회
-   * */
-  public List<Post> findUserPreferredPosts(User client) {
-    QPost post = QPost.post;
-    QPrefer prefer = QPrefer.prefer;
-    QUser user = QUser.user;
-    return queryFactory.select(post)
-        .from(prefer)
-        .join(prefer.post, post)
-        .where(prefer.user.eq(client))
-        .fetch();
   }
 }

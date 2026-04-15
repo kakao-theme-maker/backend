@@ -4,8 +4,6 @@ import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QDesignBoard;
-import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
-import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.repository.DesignBoardRepository;
@@ -59,14 +57,6 @@ public class DesignBoardService {
         .post(post)
         .designComponent(designComponent)
         .build());
-  }
-
-  @Transactional
-  public DesignBoard createDesignBoard(DesignBoardCreateDto createDto,
-      DesignComponent designComponent, User author, String previewImageName) {
-    PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
-    Post savedPost = postService.createPost(postCreateDto, author, previewImageName);
-    return save(savedPost, designComponent);
   }
 
   @Transactional

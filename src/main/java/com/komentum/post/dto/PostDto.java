@@ -1,7 +1,9 @@
 package com.komentum.post.dto;
 
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.facade.BoardManagementHelper;
+import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -50,14 +52,24 @@ public class PostDto {
     LocalDateTime createdAt;
     @Schema(description = "게시글 갱신일")
     LocalDateTime updatedAt;
+    @Schema(description = "게시글 종류 ( THEME_BOARD | DESIGN_BOARD )", example = "THEME_BOARD | DESIGN_BOARD")
+    PostType postType;
+    @Schema(description = "게시글 작성자 이름")
+    String authorName;
+    @Schema(description = "게시글 작성자 프로필 이미지 URL")
+    String authorProfileImageUrl;
 
     public static UserPostListResponseDto from(Post post,
         BoardManagementHelper boardManagementHelper) {
+      User author = post.getUser();
       return UserPostListResponseDto.builder()
           .postId(post.getPostId())
           .previewImageUrl(boardManagementHelper.findPreviewImageUrl(post.getPreviewImageName()))
           .createdAt(post.getCreatedAt())
           .updatedAt(post.getUpdatedAt())
+          .postType(post.getPostType())
+          .authorName(author.getName())
+          .authorProfileImageUrl(author.getProfileImg())
           .build();
     }
   }

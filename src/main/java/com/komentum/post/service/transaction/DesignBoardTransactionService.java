@@ -2,6 +2,7 @@ package com.komentum.post.service.transaction;
 
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
@@ -61,7 +62,8 @@ public class DesignBoardTransactionService {
       User author,
       String previewImageName) {
     PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
-    Post savedPost = postService.createPost(postCreateDto, author, previewImageName);
+    Post savedPost = postService
+        .createPost(postCreateDto, author, previewImageName, PostType.DESIGN_BOARD);
     designBoardService.save(savedPost, designComponent);
     if (createDto.getPostTags() != null) {
       tagService.createTags(savedPost, createDto.getPostTags());

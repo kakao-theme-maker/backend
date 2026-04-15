@@ -31,9 +31,17 @@ public class PostManagementFacade {
   }
 
   @Transactional
-  public List<UserPostListResponseDto> findUserPreferedPosts(String clientId) {
+  public List<UserPostListResponseDto> findUserPreferredPosts(String clientId) {
     User client = userEntityFinder.findUserEntity(clientId);
-    return postService.findUserPreferedPosts(client).stream()
+    return postService.findUserPreferredPosts(client).stream()
+        .map(p -> UserPostListResponseDto.from(p, boardManagementHelper))
+        .toList();
+  }
+
+  @Transactional
+  public List<UserPostListResponseDto> findMyPostsByUser(String clientId) {
+    User client = userEntityFinder.findUserEntity(clientId);
+    return postService.findUserPostList(client).stream()
         .map(p -> UserPostListResponseDto.from(p, boardManagementHelper))
         .toList();
   }

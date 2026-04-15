@@ -3,6 +3,7 @@ package com.komentum.seed.seeder;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
@@ -35,7 +36,7 @@ public class DesignBoardSeeder {
       DesignComponent component = designComponents.get(i);
       User author = component.getUser();
       Post post = postSeeder.createOne(author,
-          fileManager.convertUrlToFileName(component.getImageUrl()));
+          fileManager.convertUrlToFileName(component.getImageUrl()), PostType.DESIGN_BOARD);
       designBoards.add(generateOne(component, post));
     }
     return designBoardRepository.saveAll(designBoards);

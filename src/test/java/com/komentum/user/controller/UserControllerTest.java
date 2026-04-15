@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.global.dto.CustomResponse;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
@@ -85,6 +86,7 @@ public class UserControllerTest {
         .title("test")
         .content("test-content")
         .user(user)
+        .postType(PostType.THEME_BOARD)
         .build();
 
     postRepository.save(post);
