@@ -46,7 +46,7 @@ public class UserAuthController {
     UserAuthResponse userAuthResponse = userAuthService.processLocalSignIn(localLoginRequestDto);
     tokenCookieManager.addTokenOnCookie(response, userAuthResponse.getAccessToken(),
         userAuthResponse.getRefreshToken());
-    return ResponseEntity.ok(userAuthService.processLocalSignIn(localLoginRequestDto));
+    return ResponseEntity.ok(userAuthResponse);
   }
 
   // 로컬 로그아웃 기능
