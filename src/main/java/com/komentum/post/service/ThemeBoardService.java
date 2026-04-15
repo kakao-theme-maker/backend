@@ -7,8 +7,11 @@ import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.post.repository.ThemeBoardRepositorySupport;
+import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.user.domain.User;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +50,31 @@ public class ThemeBoardService {
         PostSortType.PREFER_DESC :
         PostSortType.PREFER_ASC;
     return themeBoardRepositorySupport.findThemeBoardQueryPreviewList(pageable, List.of(sortType));
+  }
+
+  /**
+   * 조건에 따라 게시글 상세 정보를 조회한다
+   * @param pageable 조회할 페이지 정보
+   * @param client 조회에 사용할 사용자 정보
+   * @param pinnedPost pageNumber=0일 때, 결과 맨 앞에 포함할 게시글 정보
+   * */
+  public List<ThemeBoardQuery.Detail> findThemeBoardQueryDetailList(Pageable pageable, User client,
+      Post pinnedPost) {
+    PostSearchCondition condition = new PostSearchCondition();
+    if (pinnedPost != null) {
+      // post에 대한 condition 추가
+      condition = condition
+          .withPinnedPostIds(List.of(pinnedPost.getPostId()))
+          .withAuthorPublicId(pinnedPost.getUser().getPublicUserId());
+    }
+    return new ArrayList<>(
+        themeBoardRepositorySupport.findThemeBoardQueryDetails(
+            pageable,
+            client,
+            condition,
+            List.of(PostSortType.DEFAULT)
+        )
+    );
   }
 
   /**

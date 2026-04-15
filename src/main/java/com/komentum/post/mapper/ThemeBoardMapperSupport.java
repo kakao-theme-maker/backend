@@ -49,12 +49,13 @@ public class ThemeBoardMapperSupport {
         .userEmail(detail.getUserEmail())
         .userName(detail.getUserName())
         .createdAt(DateUtils.convertToDateString(detail.getCreatedAt()))
-        .previewImageUrl(helper.findPreviewImageUrl(detail.getPreviewImageName()))
+        .previewImageUrl(List.of(helper.findPreviewImageUrl(detail.getPreviewImageName())))
         .prefers(detail.getPrefers())
         .comments(detail.getComments())
         .tags(tags.stream().map(TagResponse::from).toList())
         .liked(detail.isLiked())
         .bookmarked(detail.isBookmarked())
+        .profileImage(detail.getProfileImage())
         .build();
   }
 }
