@@ -48,29 +48,35 @@ public class BookmarkSeeder {
     if (ratio < 0 || ratio > 1) {
       throw new IllegalArgumentException("BookmarkSeeder : ratio must be between 0 and 1");
     }
-    // make random posts list with a target ratio
+    // ratio를 기반으로 랜덤 순서의 post 목록 생성
     List<Post> shuffledPosts = new ArrayList<>(posts);
     Collections.shuffle(shuffledPosts);
     List<Post> selectedPosts = shuffledPosts.subList(0, (int) (posts.size() * ratio));
-    // create a user:bookmark map
+    // DB에서 사용자 - 북마크 카테고리 맵 조회
     Map<User, Category> userBookmarkMap = categoryRepository
         .fetchJoinAllByCategoryTypeAndOwnerIn(CategoryType.BOOKMARK, users)
         .stream()
         .collect(Collectors.toMap(Category::getOwner, Functions.identity()));
-    // create bookmark and bookmark-post mapping
-    List<Category> bookmarks = new ArrayList<>();
-    List<CategoryPost> postMappings = new ArrayList<>();
+    // 사용자별 북마크 일괄 생성
+    List<Category> newBookmarks = new ArrayList<>();
+    List<Category> allBookmarks = new ArrayList<>();
     for (User user : users) {
       Category bookmark = userBookmarkMap.get(user);
       if (bookmark == null) {
-        bookmark = categoryRepository.save(createBookmark(user));
+        newBookmarks.add(createBookmark(user));
+      } else {
+        allBookmarks.add(bookmark);
       }
-      bookmarks.add(bookmark);
+    }
+    allBookmarks.addAll(categoryRepository.saveAll(newBookmarks));
+    // 게시글 - 북마크 매핑 일괄 생성
+    List<CategoryPost> postMappings = new ArrayList<>();
+    for (Category bookmark : allBookmarks) {
       for (Post post : selectedPosts) {
         postMappings.add(createBookmarkPost(bookmark, post));
       }
     }
     categoryPostRepository.saveAll(postMappings);
-    return bookmarks;
+    return allBookmarks;
   }
 }
