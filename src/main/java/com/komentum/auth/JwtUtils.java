@@ -1,16 +1,18 @@
 package com.komentum.auth;
 
 import com.komentum.global.properties.AuthProperty;
+import com.komentum.global.properties.JwtProperty;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Component;
 
@@ -20,10 +22,12 @@ public class JwtUtils {
 
   String identifier = "publicUserId";
   private final Key SECRET_KEY;
+  private final AuthProperty authProperty;
 
-  public JwtUtils(@Value("${jwt.secret}") String secret_key) {
-    byte[] keyBytes = Decoders.BASE64.decode(secret_key);
+  public JwtUtils(JwtProperty jwtProperty, AuthProperty authProperty) {
+    byte[] keyBytes = Decoders.BASE64.decode(jwtProperty.getSecret());
     this.SECRET_KEY = Keys.hmacShaKeyFor(keyBytes);
+    this.authProperty = authProperty;
   }
 
   /**
@@ -46,14 +50,14 @@ public class JwtUtils {
    * generate access token
    */
   public String generateAccessToken(String publicUserId) {
-    return generateToken(publicUserId, AuthProperty.ACCESS_TOKEN_EXPIRES_IN);
+    return generateToken(publicUserId, authProperty.getAccessTokenExpiresIn());
   }
 
   /**
    * generate refresh token
    */
   public String generateRefreshToken(String publicUserId) {
-    return generateToken(publicUserId, AuthProperty.REFRESH_TOKEN_EXPIRES_IN);
+    return generateToken(publicUserId, authProperty.getRefreshTokenExpiresIn());
   }
 
   /**
@@ -111,14 +115,34 @@ public class JwtUtils {
    */
   public String resolveJwtToken(HttpServletRequest request) {
     try {
-      String authorization = request.getHeader(AuthProperty.ACCESS_TOKEN_HEADER);
-      if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
-        return null;
+      String accessToken = extractAccessTokenFromHeader(request);
+      if (accessToken == null) {
+        accessToken = extractAccessTokenFromCookie(request);
       }
-      return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
+      return accessToken;
     } catch (Exception e) {
       log.error(e.getMessage());
       return null;
     }
+  }
+
+  private String extractAccessTokenFromHeader(HttpServletRequest request) {
+    String authorization = request.getHeader(AuthProperty.ACCESS_TOKEN_HEADER);
+    if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
+      return null;
+    }
+    return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
+  }
+
+  private String extractAccessTokenFromCookie(HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+    if (cookies == null) {
+      return null;
+    }
+    return Arrays.stream(cookies)
+        .filter(c -> c.getName().equals(AuthProperty.ACCESS_TOKEN_COOKIE_NAME))
+        .map(Cookie::getValue)
+        .findFirst()
+        .orElse(null);
   }
 }

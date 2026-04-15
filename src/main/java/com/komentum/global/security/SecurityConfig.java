@@ -12,11 +12,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,6 +37,12 @@ public class SecurityConfig {
 
   private final FileStorageProperty fileStorageProperty;
 
+  private final CustomOauth2UserService customOauth2UserService;
+
+  private final OAuth2LogInSuccessHandler oAuth2LogInSuccessHandler;
+
+  private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
@@ -41,6 +50,9 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .formLogin(AbstractHttpConfigurer::disable)
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+        .sessionManagement(session ->
+            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        // 요청 인증 / 인가 설정
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers(securityProperties.getWhiteList()).permitAll();
           auth.requestMatchers(HttpMethod.GET, securityProperties.getWhiteListGet()).permitAll();
@@ -51,7 +63,17 @@ public class SecurityConfig {
             auth.requestMatchers(HttpMethod.GET, WebConfig.UPLOAD_URL_PREFIX + "/**").permitAll();
           }
           auth.anyRequest().authenticated();
-        });
+        })
+        // oauth2 설정
+        .oauth2Login(oauth -> {
+          oauth.userInfoEndpoint(c -> c
+                  .userService(customOauth2UserService))
+              .successHandler(oAuth2LogInSuccessHandler)
+              .failureHandler(oAuth2LoginFailureHandler);
+        })
+        .exceptionHandling(exception -> exception.authenticationEntryPoint(
+            new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
+        ));
     return http.build();
   }
 

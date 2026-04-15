@@ -8,9 +8,13 @@ import org.springframework.stereotype.Service;
 public class TokenService {
 
   private final RedisSingleDataService redisSingleDataService;
+  private final AuthProperty authProperty;
 
-  public TokenService(RedisSingleDataService redisSingleDataService) {
+  public TokenService(
+      RedisSingleDataService redisSingleDataService,
+      AuthProperty authProperty) {
     this.redisSingleDataService = redisSingleDataService;
+    this.authProperty = authProperty;
   }
 
   public String getAccessTokenKey(String email) {
@@ -23,12 +27,12 @@ public class TokenService {
 
   public boolean saveAccessToken(String email, String accessToken) {
     return redisSingleDataService.set(getAccessTokenKey(email), accessToken,
-        AuthProperty.ACCESS_TOKEN_EXPIRES_IN.intValue());
+        authProperty.getAccessTokenExpiresIn().intValue());
   }
 
   public boolean saveRefreshToken(String email, String refreshToken) {
     return redisSingleDataService.set(getRefreshTokenKey(email), refreshToken,
-        AuthProperty.REFRESH_TOKEN_EXPIRES_IN.intValue());
+        authProperty.getRefreshTokenExpiresIn().intValue());
   }
 
   public boolean saveAccessAndRefreshToken(String email, String accessToken, String refreshToken) {
