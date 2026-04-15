@@ -96,11 +96,11 @@ public class JwtUtils {
    */
   public String resolveJwtToken(HttpRequest request) {
     try {
-      String authorization = request.getHeaders().getFirst(AuthProperty.accessTokenHeader);
-      if (authorization == null || !authorization.startsWith(AuthProperty.accessTokenPrefix)) {
+      String authorization = request.getHeaders().getFirst(AuthProperty.ACCESS_TOKEN_HEADER);
+      if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
         return null;
       }
-      return authorization.substring(AuthProperty.accessTokenPrefix.length());
+      return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
     } catch (Exception e) {
       log.error(e.getMessage());
       return null;
@@ -127,11 +127,11 @@ public class JwtUtils {
   }
 
   private String extractAccessTokenFromHeader(HttpServletRequest request) {
-    String authorization = request.getHeader(AuthProperty.accessTokenHeader);
-    if (authorization == null || !authorization.startsWith(AuthProperty.accessTokenPrefix)) {
+    String authorization = request.getHeader(AuthProperty.ACCESS_TOKEN_HEADER);
+    if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
       return null;
     }
-    return authorization.substring(AuthProperty.accessTokenPrefix.length());
+    return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
   }
 
   private String extractAccessTokenFromCookie(HttpServletRequest request) {
@@ -140,7 +140,7 @@ public class JwtUtils {
       return null;
     }
     return Arrays.stream(cookies)
-        .filter(c -> c.getName().equals(AuthProperty.accessTokenCookieName))
+        .filter(c -> c.getName().equals(AuthProperty.ACCESS_TOKEN_COOKIE_NAME))
         .map(Cookie::getValue)
         .findFirst()
         .orElse(null);

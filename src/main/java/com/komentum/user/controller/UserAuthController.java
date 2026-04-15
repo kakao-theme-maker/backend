@@ -49,14 +49,6 @@ public class UserAuthController {
     return ResponseEntity.ok(userAuthService.processLocalSignIn(localLoginRequestDto));
   }
 
-//  @PostMapping("/kakao/logout")
-//  public ResponseEntity<String> logoutWithKakao(
-//      @RequestHeader(AuthProperty.accessTokenHeader) String accessToken) {
-//    accessToken = accessToken.replace(AuthProperty.accessTokenPrefix, "");
-//    userAuthService.handleLogout(accessToken);
-//    return ResponseEntity.ok("logout success");
-//  }
-
   // 로컬 로그아웃 기능
   @PostMapping("/local/sign-out")
   @Operation(summary = "인증된 사용자가 로그아웃을 진행한다")
@@ -74,8 +66,8 @@ public class UserAuthController {
   @PostMapping("/token")
   @Operation(summary = "인증된 사용자의 refresh token으로 토큰을 재발급한다")
   public ResponseEntity<UserAuthResponse> generateToken(
-      @RequestHeader(AuthProperty.accessTokenHeader) String refreshToken) {
-    refreshToken = refreshToken.replace(AuthProperty.accessTokenPrefix, "");
+      @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String refreshToken) {
+    refreshToken = refreshToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
     return ResponseEntity.ok(userAuthService.doRefreshTokenRotation(refreshToken));
   }
 }

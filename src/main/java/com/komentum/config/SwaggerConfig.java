@@ -45,8 +45,8 @@ public class SwaggerConfig {
             new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .in(SecurityScheme.In.HEADER)
-                .scheme(AuthProperty.accessTokenPrefix)
-                .name(AuthProperty.accessTokenHeader)
+                .scheme(AuthProperty.ACCESS_TOKEN_PREFIX)
+                .name(AuthProperty.ACCESS_TOKEN_HEADER)
                 .bearerFormat("JWT"));
   }
 

@@ -117,7 +117,7 @@ public class UserAuthService {
    * 로그아웃
    */
   @Transactional
-  public void handleLogout(@RequestHeader(AuthProperty.accessTokenHeader) String accessToken) {
+  public void handleLogout(@RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String accessToken) {
     if (accessToken == null || !jwtUtils.validateToken(accessToken)) {
       throw new RuntimeException("Invalid access token");
     }

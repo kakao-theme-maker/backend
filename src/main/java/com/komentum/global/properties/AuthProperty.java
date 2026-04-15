@@ -9,10 +9,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "auth")
 public class AuthProperty {
 
-  public static final String accessTokenPrefix = "Bearer";
-  public static final String accessTokenHeader = "Authorization";
-  public static final String accessTokenCookieName = "access_token";
-  public static final String refreshTokenCookieName = "refresh_token";
+  // 인증 관련 상수
+  public static final String ACCESS_TOKEN_PREFIX = "Bearer";
+  public static final String ACCESS_TOKEN_HEADER = "Authorization";
+  public static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
+  public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+  // 인증 관련 환경 변수
   private final Long accessTokenExpiresIn;
   private final Long refreshTokenExpiresIn;
   private final String oauth2RedirectUrl;

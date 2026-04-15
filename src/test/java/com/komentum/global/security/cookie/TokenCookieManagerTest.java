@@ -42,8 +42,8 @@ class TokenCookieManagerTest {
     // when
     tokenCookieManager.addTokenOnCookie(response, accessToken, refreshToken);
     // then
-    Cookie accessTokenCookie = response.getCookie(AuthProperty.accessTokenCookieName);
-    Cookie refreshTokenCookie = response.getCookie(AuthProperty.refreshTokenCookieName);
+    Cookie accessTokenCookie = response.getCookie(AuthProperty.ACCESS_TOKEN_COOKIE_NAME);
+    Cookie refreshTokenCookie = response.getCookie(AuthProperty.REFRESH_TOKEN_COOKIE_NAME);
     assertTokenCookie(accessTokenCookie, accessToken);
     assertTokenCookie(refreshTokenCookie, refreshToken);
   }
@@ -55,8 +55,8 @@ class TokenCookieManagerTest {
     // when
     tokenCookieManager.removeTokenOnCookie(response);
     // then
-    Cookie accessTokenCookie = response.getCookie(AuthProperty.accessTokenCookieName);
-    Cookie refreshTokenCookie = response.getCookie(AuthProperty.refreshTokenCookieName);
+    Cookie accessTokenCookie = response.getCookie(AuthProperty.ACCESS_TOKEN_COOKIE_NAME);
+    Cookie refreshTokenCookie = response.getCookie(AuthProperty.REFRESH_TOKEN_COOKIE_NAME);
     assertThat(accessTokenCookie).isNotNull();
     assertThat(refreshTokenCookie).isNotNull();
     assertThat(accessTokenCookie.getMaxAge()).isEqualTo(0);

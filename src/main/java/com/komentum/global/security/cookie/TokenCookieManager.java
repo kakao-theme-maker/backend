@@ -15,7 +15,7 @@ public class TokenCookieManager {
 
   private ResponseCookie generateAccessTokenCookie(String accessToken, Long maxAge) {
     return ResponseCookie
-        .from(AuthProperty.accessTokenCookieName, accessToken)
+        .from(AuthProperty.ACCESS_TOKEN_COOKIE_NAME, accessToken)
         .httpOnly(true)
         .secure(authProperty.getWithHttps())
         .path("/")
@@ -26,7 +26,7 @@ public class TokenCookieManager {
 
   private ResponseCookie generateRefreshTokenCookie(String refreshToken, Long maxAge) {
     return ResponseCookie
-        .from(AuthProperty.refreshTokenCookieName, refreshToken)
+        .from(AuthProperty.REFRESH_TOKEN_COOKIE_NAME, refreshToken)
         .httpOnly(true)
         .secure(authProperty.getWithHttps())
         .path("/")
