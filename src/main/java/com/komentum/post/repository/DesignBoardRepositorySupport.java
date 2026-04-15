@@ -7,10 +7,16 @@ import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.dto.query.QDesignBoardQuery_Detail;
 import com.komentum.post.dto.query.QDesignBoardQuery_Preview;
+import com.komentum.post.service.condition.PostSearchCondition;
+import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.component.domain.QDesignComponent;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +30,26 @@ public class DesignBoardRepositorySupport {
   private final JPAQueryFactory queryFactory;
   private final PostRepositorySupport postRepositorySupport;
 
-  public DesignBoardQuery.Detail findDetailByPostId(Long postId, User client) {
+  public JPAQuery<DesignBoardQuery.Detail> getDesignBoardDetailBaseQuery(User client) {
     QPost post = QPost.post;
     QDesignBoard designBoard = QDesignBoard.designBoard;
     QPrefer prefer = QPrefer.prefer;
     QComment comment = QComment.comment;
     QUser user = QUser.user;
     QDesignComponent designComponent = QDesignComponent.designComponent;
-    NumberExpression<Long> preferCount = prefer.countDistinct();
-    NumberExpression<Long> commentCount = comment.countDistinct();
+
+    JPQLQuery<Long> preferCount =
+        JPAExpressions
+            .select(prefer.count())
+            .from(prefer)
+            .where(prefer.post.eq(post));
+
+    JPQLQuery<Long> commentCount =
+        JPAExpressions
+            .select(comment.count())
+            .from(comment)
+            .where(comment.post.eq(post));
+
     return queryFactory.select(
             new QDesignBoardQuery_Detail(
                 post.postId,
@@ -46,17 +63,40 @@ public class DesignBoardRepositorySupport {
                 preferCount,
                 commentCount,
                 postRepositorySupport.isLiked(post, client),
-                postRepositorySupport.isBookmarked(post, client)
+                postRepositorySupport.isBookmarked(post, client),
+                user.profileImg
             )
         )
         .from(designBoard)
         .join(designBoard.designComponent, designComponent)
         .join(designBoard.post, post)
-        .join(post.user, user)
-        .leftJoin(prefer).on(prefer.post.eq(post))
-        .leftJoin(comment).on(comment.post.eq(post))
+        .join(post.user, user);
+  }
+
+  public DesignBoardQuery.Detail findDetailByPostId(Long postId, User client) {
+    QPost post = QPost.post;
+    return getDesignBoardDetailBaseQuery(client)
         .where(post.postId.eq(postId))
         .fetchOne();
+  }
+
+  public List<DesignBoardQuery.Detail> findDesignBoardDetails(
+      Pageable pageable,
+      User client,
+      PostSearchCondition condition,
+      List<PostSortType> sortTypes
+  ) {
+    QPost post = QPost.post;
+    List<OrderSpecifier<?>> orderSpecifiers = List.of();
+    PostOrder.addPinnedOrder(post, orderSpecifiers, condition.getPinnedPostIds());
+    return getDesignBoardDetailBaseQuery(client)
+        .where(
+            PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
+        )
+        .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+        .limit(pageable.getPageSize())
+        .offset(pageable.getOffset())
+        .fetch();
   }
 
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
