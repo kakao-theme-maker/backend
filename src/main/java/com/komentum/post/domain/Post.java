@@ -7,6 +7,7 @@ import com.komentum.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -56,7 +57,7 @@ public class Post {
   @LastModifiedDate
   private LocalDateTime updatedAt;
 
-  @Enumerated
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private PostType postType;
 
