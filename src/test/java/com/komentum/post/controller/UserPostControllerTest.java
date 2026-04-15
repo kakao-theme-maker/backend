@@ -149,7 +149,7 @@ public class UserPostControllerTest {
 
   @Test
   @DisplayName("사용자가 좋아요를 누른 게시글 목록 반환")
-  void findPreferedPostList_success() throws Exception {
+  void findPreferredPostList_success() throws Exception {
     // given
     User client = result.getFirstUser();
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
