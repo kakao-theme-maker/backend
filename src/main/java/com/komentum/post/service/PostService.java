@@ -44,6 +44,12 @@ public class PostService {
     return postRepository.findByUser_PublicUserId(publicUserId);
   }
 
+  public Post findByPostIdAndPostType(Long postId, PostType postType) {
+    return postRepository.findByPostIdAndPostType(postId, postType)
+        .orElseThrow(() -> new EntityNotFoundException(
+            "cannot find " + postType.name() + " post with id : " + postId));
+  }
+
   /**
    * 게시글 생성
    *

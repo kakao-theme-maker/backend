@@ -4,6 +4,7 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
@@ -85,7 +86,9 @@ public class ThemeBoardManagementFacade {
   public List<ThemeBoardDetailDto> findThemeBoardDetails(Pageable pageable, Long pinnedPostId,
       String userIdentifier) {
     User client = userEntityFinder.findUserEntity(userIdentifier);
-    Post pinnedPost = pinnedPostId == null ? null : postService.getPostByPostId(pinnedPostId);
+    Post pinnedPost = pinnedPostId == null ?
+        null :
+        postService.findByPostIdAndPostType(pinnedPostId, PostType.THEME_BOARD);
     List<ThemeBoardQuery.Detail> details = themeBoardService.findThemeBoardQueryDetailList(pageable,
         client, pinnedPost);
     List<Long> postIds = details.stream()

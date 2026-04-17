@@ -89,7 +89,7 @@ public class ThemeBoardController {
 
   @GetMapping("/details")
   @Operation(
-      summary = "인증된 사용자가 게시글 상세 목록을 조회한다",
+      summary = "인증된 사용자가 테마 게시글 상세 목록을 조회한다",
       description = """
           
           [동작 방식]
