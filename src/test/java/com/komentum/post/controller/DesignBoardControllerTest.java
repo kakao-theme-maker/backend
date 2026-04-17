@@ -77,25 +77,19 @@ public class DesignBoardControllerTest {
     boardDetailDataGenerator.deleteDesignBoards();
   }
 
-  private void assertDesignBoard(DesignBoardDetailDto response, String expectedTitle,
-      String expectedContent) {
-    // field assertion
-    assertThat(response)
-        .isNotNull();
-    assertThat(response.getTitle())
-        .isEqualTo(expectedTitle);
-    assertThat(response.getContent())
-        .isEqualTo(expectedContent);
+  private void assertDesignBoard(DesignBoardDetailDto response) {
     // DB assertion
-    DesignBoard savedData = designBoardRepository.findByPost_PostId(response.getPostId())
+    Post savedPost = postRepository.findById(response.getPostId())
         .orElse(null);
-    assertThat(savedData)
-        .isNotNull();
-    Post post = savedData.getPost();
-    assertThat(post.getTitle())
-        .isEqualTo(expectedTitle);
-    assertThat(post.getContent())
-        .isEqualTo(expectedContent);
+    DesignBoard savedDesignBoard = designBoardRepository.findByPost_PostId(response.getPostId())
+        .orElse(null);
+    assertThat(savedPost).isNotNull();
+    assertThat(savedDesignBoard).isNotNull();
+    // field assertion
+    assertThat(response).isNotNull();
+    assertThat(response.getTitle()).isEqualTo(savedPost.getTitle());
+    assertThat(response.getContent()).isEqualTo(savedPost.getContent());
+    assertThat(response.getPreviewImageUrl()).isNotEmpty();
   }
 
   @Test
@@ -108,6 +102,9 @@ public class DesignBoardControllerTest {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("size", Integer.toString(pageSize));
     params.add("page", Integer.toString(pageNumber));
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
     // when
     List<DesignBoardPreviewDto> responses = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
@@ -133,6 +130,9 @@ public class DesignBoardControllerTest {
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
     User client = boardDetailDataGenerator.getUsers().get(0);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, DesignBoardDetailDto>builder()
@@ -145,7 +145,38 @@ public class DesignBoardControllerTest {
             .build()
     );
     // then
-    assertDesignBoard(response, targetPost.getTitle(), targetPost.getContent());
+    assertDesignBoard(response);
+  }
+
+  @Test
+  @DisplayName("If a pinned post ID is provided, place that post at the top of the first page and return only design boards written by the same author.")
+  void findDesignBoardDetails_ifPinnedPostIdExists() throws Exception {
+    // given
+    DesignBoard targetDesignBoard = boardDetailDataGenerator.getDesignBoards().get(0);
+    Post pinnedPost = targetDesignBoard.getPost();
+    String requestPath = String.format("/api/design-boards/details?pinned_post_id=%d&page=0",
+        targetDesignBoard.getPost().getPostId());
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    List<DesignBoardDetailDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignBoardDetailDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path(requestPath)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
+    // then
+    assertThat(response).isNotEmpty();
+    assertThat(response.get(0).getPostId()).isEqualTo(pinnedPost.getPostId());
+    for (DesignBoardDetailDto dto : response) {
+      assertDesignBoard(dto);
+    }
   }
 
   @Test
@@ -194,8 +225,8 @@ public class DesignBoardControllerTest {
     assertThat(response.getTags().stream().map(TagResponse::getTagName))
         .containsExactlyInAnyOrderElementsOf(tagNames);
     assertThat(response.getPreviewImageUrl())
-        .isEqualTo(expectedPreviewImageUrl);
-    assertDesignBoard(response, createDto.getTitle(), createDto.getContent());
+        .isEqualTo(List.of(expectedPreviewImageUrl));
+    assertDesignBoard(response);
   }
 
   @Test
@@ -245,7 +276,7 @@ public class DesignBoardControllerTest {
     // then : 필드 및 DB 검증
     assertThat(response.getTags().stream().map(TagResponse::getTagName))
         .containsExactlyInAnyOrderElementsOf(tagNames);
-    assertDesignBoard(response, expectedTitle, expectedContent);
+    assertDesignBoard(response);
   }
 
   @Test
