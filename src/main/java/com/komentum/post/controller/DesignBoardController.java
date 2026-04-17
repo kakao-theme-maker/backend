@@ -7,6 +7,7 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
 import com.komentum.post.facade.DesignBoardManagementFacade;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,6 +56,33 @@ public class DesignBoardController {
   ) {
     return ResponseEntity.ok(
         designBoardManagementFacade.findBoardDetail(postId, userDetails.getPublicUserId()));
+  }
+
+  /**
+   * 디자인 에셋 게시글 상세 정보 리스트 조회
+   * */
+  @GetMapping("/details")
+  @Operation(
+      summary = "인증된 사용자가 디자인 에셋 게시글 상세 목록을 조회한다",
+      description = """
+          
+          [동작 방식]
+          - pinned_post_id가 있는 경우
+            - 첫 페이지(page=0)에서 해당 게시글을 최상단에 고정한다.
+            - pinned_post_id가 null이 아니라면, pinned_post 작성자의 게시글만 조회한다.
+            - pinned_post는 page=0일 때만 게시된다.
+          - pinned_post_id가 없는 경우
+            - 일반적인 페이징 기반 조회로 동작한다.
+          """)
+  public ResponseEntity<List<DesignBoardDetailDto>> findDesignBoardDetails(
+      @Parameter(description = "첫 번째 페이지 최상단에 고정할 게시글 ID")
+      @RequestParam(value = "pinned_post_id", required = false) Long pinnedPostId,
+      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable,
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    List<DesignBoardDetailDto> response = designBoardManagementFacade
+        .findBoardDetails(pageable, pinnedPostId, userDetails.getUsername());
+    return ResponseEntity.ok(response);
   }
 
   /**
