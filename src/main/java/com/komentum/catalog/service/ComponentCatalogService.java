@@ -27,7 +27,8 @@ public class ComponentCatalogService {
       String userIdentifier) {
     User client = userEntityFinder.findUserEntity(userIdentifier);
     List<ComponentSummary> summaries =
-        componentCatalogRepository.findComponentSummaryByClient(pageable, client);
+        componentCatalogRepository.findComponentSummaryByClient(pageable, client,
+            client.getUserEmail());
     // find theme preview image
     Map<Integer, String> themePreviewImageMap =
         themeImageService.findThemePreviewImages(

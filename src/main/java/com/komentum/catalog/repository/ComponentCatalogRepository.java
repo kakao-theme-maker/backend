@@ -7,5 +7,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface ComponentCatalogRepository {
 
-  public List<ComponentSummary> findComponentSummaryByClient(Pageable pageable, User client);
+  public List<ComponentSummary> findComponentSummaryByClient(Pageable pageable, User client,
+      String clientEmail);
 }

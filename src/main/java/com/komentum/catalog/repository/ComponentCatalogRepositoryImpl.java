@@ -19,7 +19,8 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
   private final EntityManager em;
 
   @Override
-  public List<ComponentSummary> findComponentSummaryByClient(Pageable pageable, User client) {
+  public List<ComponentSummary> findComponentSummaryByClient(Pageable pageable, User client,
+      String clientEmail) {
     String query = """
         SELECT id, type, preview_image_url, created_at
         FROM (
@@ -29,8 +30,7 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
             NULL as preview_image_url,
             tc.created_at as created_at
           FROM theme_component tc
-          JOIN "user" u ON tc.user_email = u.user_email
-          WHERE u.user_id = :userId
+          WHERE tc.user_email = :clientEmail
           UNION ALL
           SELECT
             dc.design_component_id as id,
@@ -49,6 +49,7 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
         .setParameter("limit", pageable.getPageSize())
         .setParameter("offset", pageable.getOffset())
         .setParameter("userId", client.getUserId())
+        .setParameter("clientEmail", clientEmail)
         .getResultList();
     List<ComponentSummary> summaries = rows.stream()
         .map(row -> new ComponentSummary(
