@@ -6,6 +6,7 @@ import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.domain.policy.PostPolicy;
 import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
+import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.user.domain.User;
@@ -109,7 +110,7 @@ public class PostService {
    *
    */
   @Transactional(readOnly = true)
-  public List<Post> findUserPostList(User user) {
+  public List<PostQuery.Detail> findUserPostList(User user) {
     return postRepositorySupport.findMyPostsByUser(user);
   }
 
@@ -121,12 +122,12 @@ public class PostService {
 
   // 사용자가 카테고리에 저장한 게시글 목록 조회
   @Transactional(readOnly = true)
-  public List<Post> findUserSavedPosts(User user) {
+  public List<PostQuery.Detail> findUserSavedPosts(User user) {
     return postRepositorySupport.findBookmarkedPostsByUser(user);
   }
 
   @Transactional(readOnly = true)
-  public List<Post> findUserPreferredPosts(User user) {
+  public List<PostQuery.Detail> findUserPreferredPosts(User user) {
     return postRepositorySupport.findUserPreferredPosts(user);
   }
 }
