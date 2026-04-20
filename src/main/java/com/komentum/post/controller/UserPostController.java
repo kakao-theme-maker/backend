@@ -7,6 +7,9 @@ import com.komentum.post.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +27,11 @@ public class UserPostController {
   // user post dto 리스트 -> 커스텀 응답
   @GetMapping("/me/upload-posts")
   @Operation(summary = "현재 인증된 사용자가 업로드/소유한 게시글 목록을 조회한다")
-  public ResponseEntity<List<UserPostListResponseDto>> findUserPostList(@AuthenticationPrincipal
-  CustomUserDetails userDetails) {
-    return ResponseEntity.ok(postManagementFacade.findMyPostsByUser(userDetails.getUsername()));
+  public ResponseEntity<List<UserPostListResponseDto>> findUserPostList(
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
+    return ResponseEntity.ok(
+        postManagementFacade.findMyPostsByUser(userDetails.getUsername(), pageable));
   }
 
   /**
@@ -35,18 +40,19 @@ public class UserPostController {
   @GetMapping("/me/bookmarked-posts")
   @Operation(summary = "현재 인증된 사용자가 북마크에 추가한 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findSavedPostList(
-      @AuthenticationPrincipal CustomUserDetails userDetails
-  ) {
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
-        postManagementFacade.findUserSavedPostsByCategory(userDetails.getUsername()));
+        postManagementFacade.findUserSavedPostsByCategory(userDetails.getUsername(), pageable));
   }
 
   @GetMapping("/me/preferred-posts")
   @Operation(summary = "현재 인증된 사용자가 좋아요를 누른 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findPreferredPostList(
-      @AuthenticationPrincipal CustomUserDetails userDetails
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable
   ) {
     return ResponseEntity.ok(
-        postManagementFacade.findUserPreferredPosts(userDetails.getUsername()));
+        postManagementFacade.findUserPreferredPosts(userDetails.getUsername(), pageable));
   }
 }

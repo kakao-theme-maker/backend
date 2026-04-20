@@ -25,4 +25,16 @@ public interface ThemeImageRepository extends JpaRepository<ThemeImage, ThemeIma
   List<ThemeImage> findByThemeComponentAndComponentType_ComponentName(
       ThemeComponent themeComponent,
       String componentTypeComponentName);
+
+  @Query("SELECT ti FROM ThemeImage ti "
+      + "JOIN FETCH ti.themeComponent tc "
+      + "JOIN FETCH ti.componentType ct "
+      + "JOIN FETCH ti.designComponent dc "
+      + "WHERE tc.themeComponentId IN :themeComponentIds "
+      + "AND ct.componentName = :componentTypeName "
+      + "AND ct.componentPath = :componentTypePath")
+  List<ThemeImage> fetchJoinByThemeComponentAndComponentInfo(
+      List<Integer> themeComponentIds,
+      String componentTypeName,
+      String componentTypePath);
 }
