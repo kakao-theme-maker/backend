@@ -75,7 +75,8 @@ public class PostDto {
       Post post = postDetail.getPost();
       String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
           post.getPreviewImageName());
-      List<String> previewImageUrls = previewImageUrl == null ? null : List.of(previewImageUrl);
+      List<String> previewImageUrls =
+          previewImageUrl == null ? List.of() : List.of(previewImageUrl);
       return UserPostListResponseDto.builder()
           .postId(post.getPostId())
           .previewImageUrl(previewImageUrls)
