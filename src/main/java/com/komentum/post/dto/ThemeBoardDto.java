@@ -49,7 +49,7 @@ public class ThemeBoardDto {
 
     @Schema(description = "게시글 대표 이미지 URL", example = "https://sample.com")
     @JsonProperty("preview_image_url")
-    private String previewImageUrl;
+    private List<String> previewImageUrl;
 
     @Schema(description = "게시글 좋아요 수")
     private Long prefers;
@@ -65,6 +65,10 @@ public class ThemeBoardDto {
 
     @Schema(description = "현재 사용자의 북마크 저장 여부")
     private boolean bookmarked;
+
+    @Schema(description = "사용자 프로필 이미지")
+    @JsonProperty("profile_image")
+    private String profileImage;
   }
 
   @Data

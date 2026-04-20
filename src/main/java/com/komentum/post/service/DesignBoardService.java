@@ -8,9 +8,12 @@ import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.DesignBoardRepositorySupport;
+import com.komentum.post.service.condition.PostSearchCondition;
+import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +52,25 @@ public class DesignBoardService {
   public DesignBoard findByPostId(long postId) {
     return designBoardRepository.findByPost_PostId(postId)
         .orElseThrow(() -> new CustomEntityNotFoundException(DesignBoard.class, postId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardQuery.Detail> findDetailList(Pageable pageable, User client,
+      Post pinnedPost) {
+    PostSearchCondition condition = new PostSearchCondition();
+    if (pinnedPost != null) {
+      condition = condition
+          .withPinnedPostIds(List.of(pinnedPost.getPostId()))
+          .withAuthorPublicId(pinnedPost.getUser().getPublicUserId());
+    }
+    return new ArrayList<>(
+        designBoardRepositorySupport.findDesignBoardDetails(
+            pageable,
+            client,
+            condition,
+            List.of(PostSortType.DEFAULT)
+        )
+    );
   }
 
   @Transactional

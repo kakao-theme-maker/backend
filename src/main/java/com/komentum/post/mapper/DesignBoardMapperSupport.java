@@ -33,6 +33,8 @@ public class DesignBoardMapperSupport {
       BoardManagementHelper helper,
       List<Tag> tags
   ) {
+    String previewImageUrl = helper.findPreviewImageUrl(detail.getPreviewImageName());
+    List<String> previewImageList = previewImageUrl == null ? List.of() : List.of(previewImageUrl);
     return DesignBoardDetailDto.builder()
         .postId(detail.getPostId())
         .title(detail.getTitle())
@@ -40,14 +42,13 @@ public class DesignBoardMapperSupport {
         .designComponentId(detail.getDesignComponentId())
         .userEmail(detail.getUserEmail())
         .createdAt(DateUtils.convertToDateString(detail.getCreatedAt()))
-        .previewImageUrl(
-            helper.findPreviewImageUrl(detail.getPreviewImageName())
-        )
+        .previewImageUrl(previewImageList)
         .prefers(detail.getPrefers())
         .comments(detail.getComments())
         .tags(tags.stream().map(TagResponse::from).toList())
         .liked(detail.isLiked())
         .bookmarked(detail.isBookmarked())
+        .profileImage(detail.getProfileImage())
         .build();
   }
 }
