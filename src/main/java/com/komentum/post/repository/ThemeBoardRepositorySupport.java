@@ -19,7 +19,6 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -141,13 +140,12 @@ public class ThemeBoardRepositorySupport {
   public List<ThemeBoardQuery.Detail> findThemeBoardQueryDetails(Pageable pageable, User client,
       PostSearchCondition condition, List<PostSortType> sortTypes) {
     QPost post = QPost.post;
-    List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
-    PostOrder.addPinnedOrder(post, orderSpecifiers, condition.getPinnedPostIds());
+    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null);
     return getThemeBoardDetailBaseQuery(client)
         .where(
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
         )
-        .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+        .orderBy(orderSpecifiers)
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();

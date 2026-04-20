@@ -18,7 +18,6 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -88,13 +87,12 @@ public class DesignBoardRepositorySupport {
       List<PostSortType> sortTypes
   ) {
     QPost post = QPost.post;
-    List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
-    PostOrder.addPinnedOrder(post, orderSpecifiers, condition.getPinnedPostIds());
+    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null);
     return getDesignBoardDetailBaseQuery(client)
         .where(
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
         )
-        .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+        .orderBy(orderSpecifiers)
         .limit(pageable.getPageSize())
         .offset(pageable.getOffset())
         .fetch();

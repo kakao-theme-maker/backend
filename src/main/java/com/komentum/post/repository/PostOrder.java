@@ -22,6 +22,32 @@ public class PostOrder {
     orders.add(priority.asc());
   }
 
+  public static void addOrderSpecifiers(
+      List<PostSortType> sortTypeList,
+      QPost post,
+      List<OrderSpecifier<?>> orderSpecifiers,
+      NumberExpression<Long> preferCount) {
+
+    sortTypeList.forEach(sortType -> {
+      OrderSpecifier<?> orderSpecifier = switch (sortType) {
+        case DEFAULT -> post.createdAt.desc();
+        case PREFER_ASC -> {
+          if (preferCount == null) {
+            throw new IllegalArgumentException("preferCount is null");
+          }
+          yield preferCount.asc();
+        }
+        case PREFER_DESC -> {
+          if (preferCount == null) {
+            throw new IllegalArgumentException("preferCount is null");
+          }
+          yield preferCount.desc();
+        }
+      };
+      orderSpecifiers.add(orderSpecifier);
+    });
+  }
+
   public static OrderSpecifier<?>[] create(
       PostSearchCondition condition,
       List<PostSortType> sortTypes,
@@ -31,13 +57,7 @@ public class PostOrder {
     List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
     addPinnedOrder(post, orderSpecifiers, condition.getPinnedPostIds());
     if (sortTypes != null && !sortTypes.isEmpty()) {
-      for (PostSortType sortType : sortTypes) {
-        switch (sortType) {
-          case DEFAULT -> orderSpecifiers.add(post.createdAt.desc());
-          case PREFER_ASC -> orderSpecifiers.add(preferCount.asc());
-          case PREFER_DESC -> orderSpecifiers.add(preferCount.desc());
-        }
-      }
+      addOrderSpecifiers(sortTypes, post, orderSpecifiers, preferCount);
     }
     return orderSpecifiers.toArray(new OrderSpecifier[0]);
   }
