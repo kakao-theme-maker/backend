@@ -23,7 +23,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
   List<Comment> findByPostIn(List<Post> posts);
 
-  @Modifying(clearAutomatically = true, flushAutomatically = true)
+  @Modifying(flushAutomatically = true)
   @Query("update Comment c set c.likeCount = c.likeCount + 1 where c.commentId = :commentId")
   int increaseLikeCount(@Param("commentId") Long commentId);
 
