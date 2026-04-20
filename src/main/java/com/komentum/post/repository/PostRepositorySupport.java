@@ -87,7 +87,7 @@ public class PostRepositorySupport {
    * @param client 카테고리에 게시글을 저장한 User 엔티티
    * @return 카테고리에 저장된 게시글 목록
    * */
-  public List<PostQuery.Detail> findBookmarkedPostsByUser(User client) {
+  public List<PostQuery.Detail> findBookmarkedPostsByUser(User client, Pageable pageable) {
     QPost post = QPost.post;
     QCategory category = QCategory.category;
     QCategoryPost categoryPost = QCategoryPost.categoryPost;
@@ -104,13 +104,15 @@ public class PostRepositorySupport {
         .join(categoryPost.category, category)
         .join(post.user, user).fetchJoin()
         .where(category.owner.eq(client).and(category.categoryType.eq(CategoryType.BOOKMARK)))
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
         .fetch();
   }
 
   /**
    * 사용자가 좋아요를 누른 게시글 목록 조회
    * */
-  public List<PostQuery.Detail> findUserPreferredPosts(User client) {
+  public List<PostQuery.Detail> findUserPreferredPosts(User client, Pageable pageable) {
     QPost post = QPost.post;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
@@ -125,13 +127,15 @@ public class PostRepositorySupport {
         .join(prefer.post, post)
         .join(post.user, user).fetchJoin()
         .where(prefer.user.eq(client))
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
         .fetch();
   }
 
   /**
    * 사용자가 소융한 게시글 목록 조회
    * */
-  public List<PostQuery.Detail> findMyPostsByUser(User client) {
+  public List<PostQuery.Detail> findMyPostsByUser(User client, Pageable pageable) {
     QPost post = QPost.post;
     QUser user = QUser.user;
     return queryFactory.select(Projections.constructor(PostQuery.Detail.class,
@@ -144,6 +148,8 @@ public class PostRepositorySupport {
         .from(post)
         .join(post.user, user).fetchJoin()
         .where(post.user.eq(client))
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
         .fetch();
   }
 

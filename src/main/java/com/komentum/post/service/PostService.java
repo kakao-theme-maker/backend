@@ -13,6 +13,7 @@ import com.komentum.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,8 +111,8 @@ public class PostService {
    *
    */
   @Transactional(readOnly = true)
-  public List<PostQuery.Detail> findUserPostList(User user) {
-    return postRepositorySupport.findMyPostsByUser(user);
+  public List<PostQuery.Detail> findUserPostList(User user, Pageable pageable) {
+    return postRepositorySupport.findMyPostsByUser(user, pageable);
   }
 
   // 업로드 수 count 반환 메서드
@@ -122,12 +123,12 @@ public class PostService {
 
   // 사용자가 카테고리에 저장한 게시글 목록 조회
   @Transactional(readOnly = true)
-  public List<PostQuery.Detail> findUserSavedPosts(User user) {
-    return postRepositorySupport.findBookmarkedPostsByUser(user);
+  public List<PostQuery.Detail> findUserSavedPosts(User user, Pageable pageable) {
+    return postRepositorySupport.findBookmarkedPostsByUser(user, pageable);
   }
 
   @Transactional(readOnly = true)
-  public List<PostQuery.Detail> findUserPreferredPosts(User user) {
-    return postRepositorySupport.findUserPreferredPosts(user);
+  public List<PostQuery.Detail> findUserPreferredPosts(User user, Pageable pageable) {
+    return postRepositorySupport.findUserPreferredPosts(user, pageable);
   }
 }
