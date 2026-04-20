@@ -41,7 +41,6 @@ public class CommentLikeService {
 
   @Transactional
   public void unlike(Long commentId, Long userId) {
-    validateCommentExists(commentId);
     int deleted = commentLikeRepository.deleteByUserIdAndCommentId(userId, commentId);
     if (deleted > 0) {
       commentRepository.decreaseLikeCount(commentId);
@@ -50,10 +49,10 @@ public class CommentLikeService {
 
   @Transactional(readOnly = true)
   public Long getLikeCount(Long commentId) {
-    validateCommentExists(commentId);
     return commentRepository.findById(commentId)
         .map(Comment::getLikeCount)
-        .orElse(0L);
+        .orElseThrow(() -> new EntityNotFoundException(
+            String.format("failed to find comment with id : %d", commentId)));
   }
 
   @Transactional(readOnly = true)
