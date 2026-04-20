@@ -27,7 +27,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
   @Query("update Comment c set c.likeCount = c.likeCount + 1 where c.commentId = :commentId")
   int increaseLikeCount(@Param("commentId") Long commentId);
 
-  @Modifying(clearAutomatically = true, flushAutomatically = true)
+  @Modifying(flushAutomatically = true)
   @Query("update Comment c set c.likeCount = c.likeCount - 1 "
       + "where c.commentId = :commentId and c.likeCount > 0")
   int decreaseLikeCount(@Param("commentId") Long commentId);
