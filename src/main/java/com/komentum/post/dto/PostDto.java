@@ -50,7 +50,7 @@ public class PostDto {
 
     @Schema(description = "게시글 ID")
     Long postId;
-    @Schema(description = "게시글 제곰")
+    @Schema(description = "게시글 제목")
     String title;
     @Schema(description = "게시글 내용")
     String content;
