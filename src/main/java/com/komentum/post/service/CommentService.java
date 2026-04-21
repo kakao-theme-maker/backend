@@ -29,7 +29,7 @@ public class CommentService {
 
   @Transactional(readOnly = true)
   public Comment getCommentById(Long commentId) {
-    return commentRepository.findById(commentId)
+    return commentRepository.findWithUserByCommentId(commentId)
         .orElseThrow(() -> new EntityNotFoundException(
             String.format("failed to find post with id : %d", commentId)));
   }
