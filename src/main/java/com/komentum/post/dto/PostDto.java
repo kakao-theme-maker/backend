@@ -1,7 +1,9 @@
 package com.komentum.post.dto;
 
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
+import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.facade.BoardManagementHelper;
 import com.komentum.user.domain.User;
@@ -48,6 +50,12 @@ public class PostDto {
 
     @Schema(description = "게시글 ID")
     Long postId;
+    @Schema(description = "게시글 제곰")
+    String title;
+    @Schema(description = "게시글 내용")
+    String content;
+    @Schema(description = "테그 목록")
+    List<TagResponse> tags;
     @Schema(description = "게시글 대표 이미지 URL 목록", example = "[https://sample.com, ... ]")
     List<String> previewImageUrl;
     @Schema(description = "게시글 생성일")
@@ -69,8 +77,9 @@ public class PostDto {
     @Schema(description = "현재 사용자의 좋아요 여부")
     Boolean preferred;
 
-    public static UserPostListResponseDto from(PostQuery.Detail postDetail,
+    public static UserPostListResponseDto from(PostQuery.Detail postDetail, List<Tag> tags,
         BoardManagementHelper boardManagementHelper) {
+      List<TagResponse> tagResponses = tags.stream().map(TagResponse::from).toList();
       User author = postDetail.getPost().getUser();
       Post post = postDetail.getPost();
       String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
@@ -79,6 +88,9 @@ public class PostDto {
           previewImageUrl == null ? List.of() : List.of(previewImageUrl);
       return UserPostListResponseDto.builder()
           .postId(post.getPostId())
+          .title(post.getTitle())
+          .content(post.getContent())
+          .tags(tagResponses)
           .previewImageUrl(previewImageUrls)
           .createdAt(post.getCreatedAt())
           .updatedAt(post.getUpdatedAt())

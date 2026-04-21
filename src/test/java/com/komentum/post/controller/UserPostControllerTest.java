@@ -95,6 +95,9 @@ public class UserPostControllerTest {
     assertThat(responseDto.getPreferred()).isNotNull();
     assertThat(responseDto.getComments()).isNotNull();
     assertThat(responseDto.getPrefers()).isNotNull();
+    assertThat(responseDto.getTitle()).isEqualTo(post.getTitle());
+    assertThat(responseDto.getContent()).isEqualTo(post.getContent());
+    assertThat(responseDto.getTags()).isNotNull();
   }
 
   @Test
