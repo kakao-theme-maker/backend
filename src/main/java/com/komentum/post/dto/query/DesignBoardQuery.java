@@ -23,6 +23,7 @@ public class DesignBoardQuery {
     private Long comments;
     private boolean liked;
     private boolean bookmarked;
+    private String profileImage;
 
     @QueryProjection
     public Detail(
@@ -37,7 +38,8 @@ public class DesignBoardQuery {
         Long prefers,
         Long comments,
         boolean liked,
-        boolean bookmarked) {
+        boolean bookmarked,
+        String profileImage) {
       this.postId = postId;
       this.title = title;
       this.content = content;
@@ -50,6 +52,7 @@ public class DesignBoardQuery {
       this.comments = comments;
       this.liked = liked;
       this.bookmarked = bookmarked;
+      this.profileImage = profileImage;
     }
   }
 

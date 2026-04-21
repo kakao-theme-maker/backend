@@ -6,6 +6,7 @@ import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,25 +24,26 @@ public class PostManagementFacade {
    * @return UserPostListResponseDto 목록
    */
   @Transactional
-  public List<UserPostListResponseDto> findUserSavedPostsByCategory(String clientId) {
+  public List<UserPostListResponseDto> findUserSavedPostsByCategory(String clientId,
+      Pageable pageable) {
     User client = userEntityFinder.findUserEntity(clientId);
-    return postService.findUserSavedPosts(client).stream()
+    return postService.findUserSavedPosts(client, pageable).stream()
         .map(p -> UserPostListResponseDto.from(p, boardManagementHelper))
         .toList();
   }
 
   @Transactional
-  public List<UserPostListResponseDto> findUserPreferredPosts(String clientId) {
+  public List<UserPostListResponseDto> findUserPreferredPosts(String clientId, Pageable pageable) {
     User client = userEntityFinder.findUserEntity(clientId);
-    return postService.findUserPreferredPosts(client).stream()
+    return postService.findUserPreferredPosts(client, pageable).stream()
         .map(p -> UserPostListResponseDto.from(p, boardManagementHelper))
         .toList();
   }
 
   @Transactional
-  public List<UserPostListResponseDto> findMyPostsByUser(String clientId) {
+  public List<UserPostListResponseDto> findMyPostsByUser(String clientId, Pageable pageable) {
     User client = userEntityFinder.findUserEntity(clientId);
-    return postService.findUserPostList(client).stream()
+    return postService.findUserPostList(client, pageable).stream()
         .map(p -> UserPostListResponseDto.from(p, boardManagementHelper))
         .toList();
   }

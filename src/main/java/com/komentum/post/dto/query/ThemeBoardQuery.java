@@ -58,6 +58,7 @@ public class ThemeBoardQuery {
     private Long comments;
     private boolean liked;
     private boolean bookmarked;
+    private String profileImage; // 사용자 프로필 이미지
 
     @QueryProjection
     public Detail(
@@ -72,7 +73,8 @@ public class ThemeBoardQuery {
         Long prefers,
         Long comments,
         boolean liked,
-        boolean bookmarked) {
+        boolean bookmarked,
+        String profileImage) {
       this.postId = postId;
       this.title = title;
       this.content = content;
@@ -85,6 +87,7 @@ public class ThemeBoardQuery {
       this.comments = comments;
       this.liked = liked;
       this.bookmarked = bookmarked;
+      this.profileImage = profileImage;
     }
   }
 }

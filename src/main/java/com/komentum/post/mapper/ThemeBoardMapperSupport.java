@@ -41,6 +41,8 @@ public class ThemeBoardMapperSupport {
    * */
   public ThemeBoardDetailDto toThemeBoardDetailDto(ThemeBoardQuery.Detail detail, List<Tag> tags,
       BoardManagementHelper helper) {
+    String previewImageUrl = helper.findPreviewImageUrl(detail.getPreviewImageName());
+    List<String> previewImageList = previewImageUrl == null ? List.of() : List.of(previewImageUrl);
     return ThemeBoardDetailDto.builder()
         .postId(detail.getPostId())
         .title(detail.getTitle())
@@ -49,12 +51,13 @@ public class ThemeBoardMapperSupport {
         .userEmail(detail.getUserEmail())
         .userName(detail.getUserName())
         .createdAt(DateUtils.convertToDateString(detail.getCreatedAt()))
-        .previewImageUrl(helper.findPreviewImageUrl(detail.getPreviewImageName()))
+        .previewImageUrl(previewImageList)
         .prefers(detail.getPrefers())
         .comments(detail.getComments())
         .tags(tags.stream().map(TagResponse::from).toList())
         .liked(detail.isLiked())
         .bookmarked(detail.isBookmarked())
+        .profileImage(detail.getProfileImage())
         .build();
   }
 }

@@ -2,21 +2,26 @@ package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.Tag;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
+import com.komentum.post.dto.query.DesignBoardQuery.Detail;
 import com.komentum.post.mapper.DesignBoardMapperSupport;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
+import com.komentum.post.service.TagService;
 import com.komentum.post.service.transaction.DesignBoardTransactionService;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +45,7 @@ public class DesignBoardManagementFacade {
 
   // mapper
   private final PostDtoMapper postDtoMapper;
+  private final TagService tagService;
 
   private String uploadOrReusePreviewImage(
       MultipartFile previewImage,
@@ -76,6 +82,25 @@ public class DesignBoardManagementFacade {
         .map(p ->
             designBoardMapperSupport.toDesignBoardPreviewDto(p, boardManagementHelper))
         .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardDetailDto> findBoardDetails(Pageable pageable, Long pinnedPostId,
+      String userIdentifier) {
+    User client = userEntityFinder.findUserEntity(userIdentifier);
+    Post pinnedPost = pinnedPostId == null ?
+        null :
+        postService.findByPostIdAndPostType(pinnedPostId, PostType.DESIGN_BOARD);
+    List<DesignBoardQuery.Detail> details = designBoardService.findDetailList(pageable, client,
+        pinnedPost);
+    List<Long> postIds = details.stream()
+        .map(Detail::getPostId)
+        .toList();
+    Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
+    return details.stream().map(detail -> {
+      List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
+      return designBoardMapperSupport.toDesignBoardDetailDto(detail, boardManagementHelper, tags);
+    }).toList();
   }
 
   /**

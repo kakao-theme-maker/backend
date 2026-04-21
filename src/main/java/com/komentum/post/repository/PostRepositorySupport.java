@@ -3,15 +3,19 @@ package com.komentum.post.repository;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QCategory;
 import com.komentum.post.domain.QCategoryPost;
+import com.komentum.post.domain.QComment;
 import com.komentum.post.domain.QPost;
 import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.PostSummary;
+import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.service.enums.CategoryType;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Map;
@@ -83,45 +87,69 @@ public class PostRepositorySupport {
    * @param client 카테고리에 게시글을 저장한 User 엔티티
    * @return 카테고리에 저장된 게시글 목록
    * */
-  public List<Post> findBookmarkedPostsByUser(User client) {
+  public List<PostQuery.Detail> findBookmarkedPostsByUser(User client, Pageable pageable) {
     QPost post = QPost.post;
     QCategory category = QCategory.category;
     QCategoryPost categoryPost = QCategoryPost.categoryPost;
     QUser user = QUser.user;
-    return queryFactory.select(post)
+    return queryFactory.select(Projections.constructor(PostQuery.Detail.class,
+            post,
+            countPrefers(post),
+            countComments(post),
+            isLiked(post, client),
+            isBookmarked(post, client)
+        ))
         .from(categoryPost)
         .join(categoryPost.post, post)
         .join(categoryPost.category, category)
         .join(post.user, user).fetchJoin()
         .where(category.owner.eq(client).and(category.categoryType.eq(CategoryType.BOOKMARK)))
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
         .fetch();
   }
 
   /**
    * 사용자가 좋아요를 누른 게시글 목록 조회
    * */
-  public List<Post> findUserPreferredPosts(User client) {
+  public List<PostQuery.Detail> findUserPreferredPosts(User client, Pageable pageable) {
     QPost post = QPost.post;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
-    return queryFactory.select(post)
+    return queryFactory.select(Projections.constructor(PostQuery.Detail.class,
+            post,
+            countPrefers(post),
+            countComments(post),
+            isLiked(post, client),
+            isBookmarked(post, client)
+        ))
         .from(prefer)
         .join(prefer.post, post)
         .join(post.user, user).fetchJoin()
         .where(prefer.user.eq(client))
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
         .fetch();
   }
 
   /**
    * 사용자가 소융한 게시글 목록 조회
    * */
-  public List<Post> findMyPostsByUser(User client) {
+  public List<PostQuery.Detail> findMyPostsByUser(User client, Pageable pageable) {
     QPost post = QPost.post;
     QUser user = QUser.user;
-    return queryFactory.select(post)
+    return queryFactory.select(Projections.constructor(PostQuery.Detail.class,
+            post,
+            countPrefers(post),
+            countComments(post),
+            isLiked(post, client),
+            isBookmarked(post, client)
+        ))
         .from(post)
         .join(post.user, user).fetchJoin()
         .where(post.user.eq(client))
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
         .fetch();
   }
 
@@ -148,5 +176,19 @@ public class PostRepositorySupport {
             categoryPost.category.owner.eq(user)
         )
         .exists();
+  }
+
+  public JPQLQuery<Long> countPrefers(QPost post) {
+    QPrefer prefer = QPrefer.prefer;
+    return JPAExpressions.select(prefer.count())
+        .from(prefer)
+        .where(prefer.post.eq(post));
+  }
+
+  public JPQLQuery<Long> countComments(QPost post) {
+    QComment comment = QComment.comment;
+    return JPAExpressions.select(comment.count())
+        .from(comment)
+        .where(comment.post.eq(post));
   }
 }

@@ -3,14 +3,17 @@ package com.komentum.post.facade;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.Tag;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.dto.query.ThemeBoardQuery;
-import com.komentum.post.mapper.PostDtoMapper;
+import com.komentum.post.dto.query.ThemeBoardQuery.Detail;
 import com.komentum.post.mapper.ThemeBoardMapperSupport;
 import com.komentum.post.service.PostService;
+import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
 import com.komentum.post.service.transaction.ThemeBoardTransactionService;
 import com.komentum.theme.component.domain.DesignComponent;
@@ -21,6 +24,7 @@ import com.komentum.theme.theme.service.ThemeRetrieveService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,10 +43,10 @@ public class ThemeBoardManagementFacade {
   private final ThemeRetrieveService themeRetrieveService;
   private final BoardManagementHelper boardManagementHelper;
   private final ThemeBoardMapperSupport themeBoardMapperSupport;
-  private final PostDtoMapper postDtoMapper;
   private final ThemeImageService themeImageService;
   private final FileManager fileManager;
   private final ThemeBoardTransactionService themeBoardTransactionService;
+  private final TagService tagService;
 
   private String uploadOrReusePreviewImage(MultipartFile previewImage,
       ThemeComponent themeComponent) {
@@ -70,6 +74,31 @@ public class ThemeBoardManagementFacade {
   @Transactional
   public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier) {
     return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
+  }
+
+  /**
+   * 게시글 상세 정보 목록 조회
+   * @param pageable 페이지 정보
+   * @param pinnedPostId 맨 앞에 제시할 게시글 정보
+   * @param userIdentifier 현재 사용자 식별자
+   * */
+  @Transactional(readOnly = true)
+  public List<ThemeBoardDetailDto> findThemeBoardDetails(Pageable pageable, Long pinnedPostId,
+      String userIdentifier) {
+    User client = userEntityFinder.findUserEntity(userIdentifier);
+    Post pinnedPost = pinnedPostId == null ?
+        null :
+        postService.findByPostIdAndPostType(pinnedPostId, PostType.THEME_BOARD);
+    List<ThemeBoardQuery.Detail> details = themeBoardService.findThemeBoardQueryDetailList(pageable,
+        client, pinnedPost);
+    List<Long> postIds = details.stream()
+        .map(Detail::getPostId)
+        .toList();
+    Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
+    return details.stream().map(detail -> {
+      List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
+      return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, boardManagementHelper);
+    }).toList();
   }
 
   /**

@@ -2,10 +2,12 @@ package com.komentum.post.dto;
 
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.enums.PostType;
+import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.facade.BoardManagementHelper;
 import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -46,8 +48,8 @@ public class PostDto {
 
     @Schema(description = "게시글 ID")
     Long postId;
-    @Schema(description = "게시글 대표 이미지 URL", example = "https://sample.com")
-    String previewImageUrl;
+    @Schema(description = "게시글 대표 이미지 URL 목록", example = "[https://sample.com, ... ]")
+    List<String> previewImageUrl;
     @Schema(description = "게시글 생성일")
     LocalDateTime createdAt;
     @Schema(description = "게시글 갱신일")
@@ -58,18 +60,35 @@ public class PostDto {
     String authorName;
     @Schema(description = "게시글 작성자 프로필 이미지 URL")
     String authorProfileImageUrl;
+    @Schema(description = "게시글 좋아요 수")
+    Long prefers;
+    @Schema(description = "게시글 댓글 수")
+    Long comments;
+    @Schema(description = "현재 사용자의 북마크 여부")
+    Boolean bookmarked;
+    @Schema(description = "현재 사용자의 좋아요 여부")
+    Boolean preferred;
 
-    public static UserPostListResponseDto from(Post post,
+    public static UserPostListResponseDto from(PostQuery.Detail postDetail,
         BoardManagementHelper boardManagementHelper) {
-      User author = post.getUser();
+      User author = postDetail.getPost().getUser();
+      Post post = postDetail.getPost();
+      String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
+          post.getPreviewImageName());
+      List<String> previewImageUrls =
+          previewImageUrl == null ? List.of() : List.of(previewImageUrl);
       return UserPostListResponseDto.builder()
           .postId(post.getPostId())
-          .previewImageUrl(boardManagementHelper.findPreviewImageUrl(post.getPreviewImageName()))
+          .previewImageUrl(previewImageUrls)
           .createdAt(post.getCreatedAt())
           .updatedAt(post.getUpdatedAt())
           .postType(post.getPostType())
           .authorName(author.getName())
           .authorProfileImageUrl(author.getProfileImg())
+          .prefers(postDetail.getPrefers())
+          .comments(postDetail.getComments())
+          .preferred(postDetail.getPreferred())
+          .bookmarked(postDetail.getBookmarked())
           .build();
     }
   }
