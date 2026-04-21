@@ -4,11 +4,13 @@ import com.komentum.global.security.UserRole;
 import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Data
 @Schema(description = "로컬 회원가입 요청 DTO")
+@AllArgsConstructor
 public class SignUpRequestDto {
 
   @Schema(description = "가입할 사용자 이메일", example = "newuser@test.com")

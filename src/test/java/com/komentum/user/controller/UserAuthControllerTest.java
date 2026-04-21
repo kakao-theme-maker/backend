@@ -1,10 +1,16 @@
 package com.komentum.user.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.net.HttpHeaders;
 import com.komentum.auth.JwtUtils;
+import com.komentum.global.properties.AuthProperty;
+import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.UserDataGenerator;
 import com.komentum.user.domain.User;
@@ -12,6 +18,7 @@ import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,8 +56,12 @@ class UserAuthControllerTest {
   private JwtUtils jwtUtils;
   @Autowired
   private BCryptPasswordEncoder passwordEncoder;
+  @Autowired
+  private MockMvcUtils mockMvcUtils;
 
   User user;
+
+  User testClient;
 
   @BeforeEach
   void setUp() {
@@ -141,4 +152,69 @@ class UserAuthControllerTest {
 
     assertThat(updatedUSer.matchPassword(newPassword, passwordEncoder)).isTrue();
   }
+
+  @Test
+  @DisplayName("when send request, rotate refresh token and return new tokens")
+  public void doRefreshTokenRotation_success() throws Exception {
+    // given: 사용자 1명 로그인 처리
+    LocalLoginRequestDto localLoginRequestDto = new LocalLoginRequestDto(email, password);
+    String response = mockMvc.perform(
+        MockMvcRequestBuilders.post("/api/auth/local/sign-in")
+            .content(objectMapper.writeValueAsString(localLoginRequestDto))
+            .contentType(MediaType.APPLICATION_JSON)
+    ).andReturn().getResponse().getContentAsString();
+    UserAuthResponse tokenResponse = objectMapper.readValue(response, UserAuthResponse.class);
+    // when: 토큰 재발급 시도
+    String newResponse = mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/auth/reissue")
+                .cookie(
+                    new Cookie(AuthProperty.REFRESH_TOKEN_COOKIE_NAME, tokenResponse.getRefreshToken())
+                )
+        )
+        .andExpect(header().stringValues(
+            HttpHeaders.SET_COOKIE,
+            hasItem(containsString(AuthProperty.ACCESS_TOKEN_COOKIE_NAME))
+        ))
+        .andExpect(header().stringValues(
+            HttpHeaders.SET_COOKIE,
+            hasItem(containsString(AuthProperty.REFRESH_TOKEN_COOKIE_NAME))
+        ))
+        .andReturn().getResponse().getContentAsString();
+    UserAuthResponse newTokenResponse = objectMapper.readValue(newResponse, UserAuthResponse.class);
+    // then: 토큰 유효성 확인
+    assertThat(jwtUtils.isAccessToken(newTokenResponse.getAccessToken())).isTrue();
+    assertThat(jwtUtils.validateToken(newTokenResponse.getAccessToken())).isTrue();
+    assertThat(jwtUtils.isRefreshToken(newTokenResponse.getRefreshToken())).isTrue();
+    assertThat(jwtUtils.validateToken(newTokenResponse.getRefreshToken())).isTrue();
+    // then: 새로운 토큰이 발급되었는지 확인
+    assertThat(newTokenResponse.getAccessToken()).isNotEqualTo(tokenResponse.getAccessToken());
+    assertThat(newTokenResponse.getRefreshToken()).isNotEqualTo(tokenResponse.getRefreshToken());
+  }
+
+  @Test
+  @DisplayName("when send request with used refresh token, throw 401 exception")
+  public void doRefreshTokenRotation_withUsedRefreshToken() throws Exception {
+    // given: 사용자 1명 로그인 처리
+    LocalLoginRequestDto localLoginRequestDto = new LocalLoginRequestDto(email, password);
+    String response = mockMvc.perform(
+        MockMvcRequestBuilders.post("/api/auth/local/sign-in")
+            .content(objectMapper.writeValueAsString(localLoginRequestDto))
+            .contentType(MediaType.APPLICATION_JSON)
+    ).andReturn().getResponse().getContentAsString();
+    UserAuthResponse tokenResponse = objectMapper.readValue(response, UserAuthResponse.class);
+    // when: 토큰 재발급 시도
+    mockMvc.perform(
+        MockMvcRequestBuilders.post("/api/auth/reissue")
+            .cookie(
+                new Cookie(AuthProperty.REFRESH_TOKEN_COOKIE_NAME, tokenResponse.getRefreshToken()))
+    );
+    // when: 이전에 사용한 refresh token 재사용
+    mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/auth/reissue")
+                .cookie(
+                    new Cookie(AuthProperty.REFRESH_TOKEN_COOKIE_NAME, tokenResponse.getRefreshToken()))
+        )
+        .andExpect(status().isUnauthorized());
+  }
+
 }
