@@ -165,7 +165,7 @@ class UserAuthControllerTest {
     ).andReturn().getResponse().getContentAsString();
     UserAuthResponse tokenResponse = objectMapper.readValue(response, UserAuthResponse.class);
     // when: 토큰 재발급 시도
-    Thread.sleep(500);
+    Thread.sleep(1000);
     String newResponse = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/auth/reissue")
                 .cookie(
@@ -204,7 +204,7 @@ class UserAuthControllerTest {
     ).andReturn().getResponse().getContentAsString();
     UserAuthResponse tokenResponse = objectMapper.readValue(response, UserAuthResponse.class);
     // when: 토큰 재발급 시도
-    Thread.sleep(500);
+    Thread.sleep(1000);
     mockMvc.perform(
         MockMvcRequestBuilders.post("/api/auth/reissue")
             .cookie(
