@@ -32,7 +32,7 @@ public class DevAuthController {
     User user = userSeeder.createOrRetrieveRootUser();
     String accessToken = jwtUtils.generateAccessToken(user.getPublicUserId());
     String refreshToken = jwtUtils.generateRefreshToken(user.getPublicUserId());
-    tokenService.saveAccessAndRefreshToken(user.getUserEmail(), accessToken, refreshToken);
+    tokenService.saveAccessAndRefreshToken(user.getPublicUserId(), accessToken, refreshToken);
     tokenCookieManager.addTokenOnCookie(response, accessToken, refreshToken);
     return ResponseEntity.ok(new UserAuthResponse(accessToken, refreshToken));
   }
