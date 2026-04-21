@@ -37,7 +37,7 @@ public class PostManagementFacade {
   @Transactional
   public List<UserPostListResponseDto> findUserPreferredPosts(String clientId, Pageable pageable) {
     User client = userEntityFinder.findUserEntity(clientId);
-    List<PostQuery.Detail> preferredPosts = postService.findUserSavedPosts(client, pageable);
+    List<PostQuery.Detail> preferredPosts = postService.findUserPreferredPosts(client, pageable);
     return postMapperSupport.toUserPostListResponseDtoList(preferredPosts);
   }
 

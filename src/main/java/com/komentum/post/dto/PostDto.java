@@ -54,7 +54,7 @@ public class PostDto {
     String title;
     @Schema(description = "게시글 내용")
     String content;
-    @Schema(description = "테그 목록")
+    @Schema(description = "태그 목록")
     List<TagResponse> tags;
     @Schema(description = "게시글 대표 이미지 URL 목록", example = "[https://sample.com, ... ]")
     List<String> previewImageUrl;
