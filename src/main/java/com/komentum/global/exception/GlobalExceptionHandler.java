@@ -1,5 +1,6 @@
-package com.komentum.theme.exception;
+package com.komentum.global.exception;
 
+import com.komentum.theme.exception.ResourceNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -46,5 +47,13 @@ public class GlobalExceptionHandler {
     Map<String, String> errors = new HashMap<>();
     errors.put("message", ex.getMessage());
     return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(UnauthorizedException.class)
+  public ResponseEntity<Map<String, String>> handleUnauthorizedException(
+      AccessDeniedException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", ex.getMessage());
+    return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
   }
 }
