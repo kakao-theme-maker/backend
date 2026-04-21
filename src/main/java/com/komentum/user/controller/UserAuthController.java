@@ -53,7 +53,10 @@ public class UserAuthController {
   @PostMapping("/local/sign-out")
   @Operation(summary = "인증된 사용자가 로그아웃을 진행한다")
   public ResponseEntity<String> signOut(HttpServletRequest request, HttpServletResponse response) {
-    String accessToken = jwtUtils.resolveJwtToken(request);
+    String accessToken = jwtUtils.resolveToken(request, AuthProperty.ACCESS_TOKEN_HEADER);
+    if (!jwtUtils.isAccessToken(accessToken)) {
+      throw new IllegalArgumentException("invalid access token");
+    }
     userAuthService.handleLogout(accessToken);
     tokenCookieManager.removeTokenOnCookie(response);
     return ResponseEntity.ok("logout success");

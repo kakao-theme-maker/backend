@@ -13,7 +13,6 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -21,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class JwtUtils {
 
   String identifier = "publicUserId";
+  private final String TOKEN_TYPE_KEY = "tokenType";
   private final Key SECRET_KEY;
   private final AuthProperty authProperty;
 
@@ -33,9 +33,10 @@ public class JwtUtils {
   /**
    * generate token
    */
-  private String generateToken(String publicUserId, Long expTime) {
+  private String generateToken(String publicUserId, Long expTime, TokenType tokenType) {
     Claims claims = Jwts.claims().setSubject(publicUserId);
     claims.put(identifier, publicUserId);
+    claims.put(TOKEN_TYPE_KEY, tokenType.name());
     ZonedDateTime issuedDate = ZonedDateTime.now();
     ZonedDateTime expiresDate = issuedDate.plusSeconds(expTime);
     return Jwts.builder()
@@ -50,14 +51,14 @@ public class JwtUtils {
    * generate access token
    */
   public String generateAccessToken(String publicUserId) {
-    return generateToken(publicUserId, authProperty.getAccessTokenExpiresIn());
+    return generateToken(publicUserId, authProperty.getAccessTokenExpiresIn(), TokenType.ACCESS);
   }
 
   /**
    * generate refresh token
    */
   public String generateRefreshToken(String publicUserId) {
-    return generateToken(publicUserId, authProperty.getRefreshTokenExpiresIn());
+    return generateToken(publicUserId, authProperty.getRefreshTokenExpiresIn(), TokenType.REFRESH);
   }
 
   /**
@@ -91,16 +92,15 @@ public class JwtUtils {
     }
   }
 
-  /**
-   * extract token from request
-   */
-  public String resolveJwtToken(HttpRequest request) {
+  public String getTokenType(String token) {
     try {
-      String authorization = request.getHeaders().getFirst(AuthProperty.ACCESS_TOKEN_HEADER);
-      if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
-        return null;
-      }
-      return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
+      return Jwts
+          .parserBuilder()
+          .setSigningKey(SECRET_KEY)
+          .build()
+          .parseClaimsJws(token)
+          .getBody()
+          .get(TOKEN_TYPE_KEY, String.class);
     } catch (Exception e) {
       log.error(e.getMessage());
       return null;
@@ -113,20 +113,23 @@ public class JwtUtils {
    * @param request HttpServletRequest
    * @return jwt token without prefix or null if token not exists
    */
-  public String resolveJwtToken(HttpServletRequest request) {
+  public String resolveToken(HttpServletRequest request, String cookieName) {
     try {
-      String accessToken = extractAccessTokenFromHeader(request);
-      if (accessToken == null) {
-        accessToken = extractAccessTokenFromCookie(request);
+      String token = extractTokenFromHeader(request);
+      if (token == null) {
+        token = extractTokenFromCookie(request, cookieName);
       }
-      return accessToken;
+      return token;
     } catch (Exception e) {
       log.error(e.getMessage());
       return null;
     }
   }
 
-  private String extractAccessTokenFromHeader(HttpServletRequest request) {
+  /**
+   * 헤더에서 토큰를 추출하고, 없으면 null을 반환한다
+   * */
+  private String extractTokenFromHeader(HttpServletRequest request) {
     String authorization = request.getHeader(AuthProperty.ACCESS_TOKEN_HEADER);
     if (authorization == null || !authorization.startsWith(AuthProperty.ACCESS_TOKEN_PREFIX)) {
       return null;
@@ -134,15 +137,32 @@ public class JwtUtils {
     return authorization.substring(AuthProperty.ACCESS_TOKEN_PREFIX.length());
   }
 
-  private String extractAccessTokenFromCookie(HttpServletRequest request) {
+  /**
+   * 쿠키에서 토큰을 추출하고, 없으면 null을 반환한다
+   * */
+  private String extractTokenFromCookie(HttpServletRequest request, String cookieName) {
     Cookie[] cookies = request.getCookies();
     if (cookies == null) {
       return null;
     }
     return Arrays.stream(cookies)
-        .filter(c -> c.getName().equals(AuthProperty.ACCESS_TOKEN_COOKIE_NAME))
+        .filter(c -> c.getName().equals(cookieName))
         .map(Cookie::getValue)
         .findFirst()
         .orElse(null);
+  }
+
+  /**
+   * 토큰이 ACCESS_TOKEN인지 확인한다
+   * */
+  public boolean isAccessToken(String token) {
+    return token != null && TokenType.ACCESS.name().equals(getTokenType(token));
+  }
+
+  /**
+   * 토큰이 REFRESH_TOKEN인지 확인한다
+   * */
+  public boolean isRefreshToken(String token) {
+    return token != null && TokenType.REFRESH.name().equals(getTokenType(token));
   }
 }
