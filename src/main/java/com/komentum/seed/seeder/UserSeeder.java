@@ -4,15 +4,19 @@ import com.github.javafaker.Faker;
 import com.komentum.global.properties.TestUserProperty;
 import com.komentum.global.security.UserRole;
 import com.komentum.global.utils.DateUtils;
+import com.komentum.global.utils.FileManager;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -27,8 +31,22 @@ public class UserSeeder {
   private final Faker faker;
   private final BCryptPasswordEncoder passwordEncoder;
   private final TestUserProperty testUserProperty;
+  private final FileManager fileManager;
+
+  private String loadSampleProfileImageName() {
+    ClassPathResource sampleProfileImage = new ClassPathResource("dev_resource/test.png");
+    String fileName =
+        "user_" + UUID.randomUUID() + "_" + System.currentTimeMillis() + ".png";
+    try (InputStream is = sampleProfileImage.getInputStream()) {
+      fileManager.uploadFile(is.readAllBytes(), fileName);
+    } catch (IOException e) {
+      throw new RuntimeException("failed to load sample image");
+    }
+    return fileName;
+  }
 
   private User generateOne() {
+    String profileImageName = loadSampleProfileImageName();
     return User.builder()
         .userEmail(UUID.randomUUID() + "@test.com")
         .name(faker.name().name())
@@ -40,7 +58,7 @@ public class UserSeeder {
             faker.number().randomDigit() % 2 == 0 ?
                 Gender.male :
                 Gender.female)
-        .profileImg(faker.internet().image())
+        .profileImg(fileManager.resolveFilePath(profileImageName))
         .introduce(faker.lorem().word())
         .build();
   }
@@ -57,7 +75,7 @@ public class UserSeeder {
             .role(UserRole.USER)
             .birth(DateUtils.toLocalDate(faker.date().birthday()))
             .gender(Gender.male)
-            .profileImg(faker.internet().image())
+            .profileImg(fileManager.resolveFilePath(loadSampleProfileImageName()))
             .introduce(faker.lorem().word())
             .build()));
   }

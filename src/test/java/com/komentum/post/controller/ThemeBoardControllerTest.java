@@ -93,7 +93,7 @@ class ThemeBoardControllerTest {
     Post savedPost = postRepository.findById(detailDto.getPostId()).orElse(null);
     assertThat(savedPost).isNotNull();
     assertThat(detailDto.getThemeComponentId()).isNotNull();
-    assertThat(detailDto.getPreviewImageUrl()).isNotBlank();
+    assertThat(detailDto.getPreviewImageUrl()).isNotNull().isNotEmpty();
     assertThat(detailDto.getContent()).isEqualTo(savedPost.getContent());
     assertThat(detailDto.getTitle()).isEqualTo(savedPost.getTitle());
     assertThat(detailDto.getCreatedAt()).isNotBlank();
@@ -220,6 +220,35 @@ class ThemeBoardControllerTest {
   }
 
   @Test
+  @DisplayName("If a pinned post ID is provided, place that post at the top of the first page and return only theme boards written by the same author.")
+  void findThemeBoardDetails_ifPinnedPostIdExists() throws Exception {
+    // given
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    Post pinnedPost = boardDetailDataGenerator.getThemeBoards().get(0).getPost();
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    List<ThemeBoardDetailDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardDetailDto>>builder()
+            .mockMvc(mockMvc)
+            .path(String.format("/api/theme-boards/details?pinned_post_id=%d&page=0",
+                pinnedPost.getPostId()))
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build());
+    // then
+    assertThat(response).isNotEmpty();
+    assertThat(response.get(0).getPostId()).isEqualTo(pinnedPost.getPostId());
+    for (ThemeBoardDetailDto dto : response) {
+      assertThemeBoardDetail(dto);
+    }
+  }
+
+  @Test
   @DisplayName("테마 게시글 생성 성공 테스트")
   void createPost_success() throws Exception {
     // given
@@ -316,7 +345,7 @@ class ThemeBoardControllerTest {
     // then : 필드 검증
     assertThat(response.getTags().stream().map(TagResponse::getTagName))
         .containsExactlyInAnyOrderElementsOf(tagNames);
-    assertThat(response.getPreviewImageUrl()).isEqualTo(testPreviewImageUrl);
+    assertThat(response.getPreviewImageUrl()).isEqualTo(List.of(testPreviewImageUrl));
     assertThemeBoardDetail(response);
   }
 

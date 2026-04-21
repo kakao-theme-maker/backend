@@ -8,12 +8,16 @@ import com.komentum.post.dto.query.QThemeBoardQuery_Detail;
 import com.komentum.post.dto.query.QThemeBoardQuery_Preview;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.dto.query.ThemeBoardQuery.Preview;
+import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.theme.domain.QThemeComponent;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.stream.Stream;
@@ -75,15 +79,29 @@ public class ThemeBoardRepositorySupport {
         .fetch();
   }
 
-  public ThemeBoardQuery.Detail findThemeBoardQueryDetail(Long postId, User client) {
+  /**
+   * ThemeBoardQuery.Detail 조회를 위한 공통 부분 분리
+   * */
+  private JPAQuery<ThemeBoardQuery.Detail> getThemeBoardDetailBaseQuery(User client) {
     QPost post = QPost.post;
     QPrefer prefer = QPrefer.prefer;
     QComment comment = QComment.comment;
     QUser user = QUser.user;
     QThemeBoard themeBoard = QThemeBoard.themeBoard;
     QThemeComponent themeComponent = QThemeComponent.themeComponent;
-    NumberExpression<Long> preferCount = prefer.countDistinct();
-    NumberExpression<Long> commentCount = comment.countDistinct();
+
+    JPQLQuery<Long> preferCount =
+        JPAExpressions
+            .select(prefer.count())
+            .from(prefer)
+            .where(prefer.post.eq(post));
+
+    JPQLQuery<Long> commentCount =
+        JPAExpressions
+            .select(comment.count())
+            .from(comment)
+            .where(comment.post.eq(post));
+
     return queryFactory
         .select(new QThemeBoardQuery_Detail(
             post.postId,
@@ -97,16 +115,40 @@ public class ThemeBoardRepositorySupport {
             preferCount,
             commentCount,
             postRepositorySupport.isLiked(post, client),
-            postRepositorySupport.isBookmarked(post, client)
+            postRepositorySupport.isBookmarked(post, client),
+            user.profileImg
         ))
         .from(themeBoard)
         .join(themeBoard.themeComponent, themeComponent)
         .join(themeBoard.post, post)
-        .join(post.user, user)
-        .leftJoin(prefer).on(prefer.post.eq(post))
-        .leftJoin(comment).on(comment.post.eq(post))
+        .join(post.user, user);
+  }
+
+  /**
+   * 테마 게시글 상세 정보 단건 조회
+   * */
+  public ThemeBoardQuery.Detail findThemeBoardQueryDetail(Long postId, User client) {
+    QPost post = QPost.post;
+    return getThemeBoardDetailBaseQuery(client)
         .where(post.postId.eq(postId))
         .fetchOne();
+  }
+
+  /**
+   * 테마 게시글 목록 상세 정보 일괄 조회
+   * */
+  public List<ThemeBoardQuery.Detail> findThemeBoardQueryDetails(Pageable pageable, User client,
+      PostSearchCondition condition, List<PostSortType> sortTypes) {
+    QPost post = QPost.post;
+    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null);
+    return getThemeBoardDetailBaseQuery(client)
+        .where(
+            PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
+        )
+        .orderBy(orderSpecifiers)
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetch();
   }
 
   /**

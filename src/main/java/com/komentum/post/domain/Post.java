@@ -1,11 +1,14 @@
 package com.komentum.post.domain;
 
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
 import com.komentum.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -54,10 +57,19 @@ public class Post {
   @LastModifiedDate
   private LocalDateTime updatedAt;
 
-  public static Post createTransient(PostCreateDto createDto, User user, String previewImageName) {
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private PostType postType;
+
+  public static Post createTransient(
+      PostCreateDto createDto,
+      User user,
+      String previewImageName,
+      PostType postType) {
     return Post.builder()
         .title(createDto.getTitle())
         .user(user)
+        .postType(postType)
         .previewImageName(previewImageName)
         .content(createDto.getContent()).build();
   }

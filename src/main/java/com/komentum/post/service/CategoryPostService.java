@@ -4,7 +4,6 @@ import com.komentum.post.domain.Category;
 import com.komentum.post.domain.CategoryPost;
 import com.komentum.post.domain.Post;
 import com.komentum.post.repository.CategoryPostRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,11 +39,8 @@ public class CategoryPostService {
    * */
   @Transactional
   public void deleteCategoryPost(Long categoryId, Long postId) {
-    CategoryPost target = categoryPostRepository
+    categoryPostRepository
         .findByCategory_CategoryIdAndPost_PostId(categoryId, postId)
-        .orElseThrow(
-            () -> new EntityNotFoundException(
-                "CategoryPost not found. categoryId=" + categoryId + ", postId=" + postId));
-    categoryPostRepository.deleteById(target.getCategoryPostId());
+        .ifPresent(target -> categoryPostRepository.deleteById(target.getCategoryPostId()));
   }
 }

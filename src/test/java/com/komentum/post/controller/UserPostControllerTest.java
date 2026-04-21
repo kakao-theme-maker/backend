@@ -11,8 +11,8 @@ import com.komentum.post.dto.PostDto.UserPostListResponseDto;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
-import com.komentum.test.data.CategoryPostDataGenerator;
-import com.komentum.test.data.PostTestDataGenerator;
+import com.komentum.test.data.TestDataRemover;
+import com.komentum.test.data.scenario.PostScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
@@ -42,28 +42,38 @@ public class UserPostControllerTest {
   FileManager fileManager;
 
   @Autowired
-  private PostTestDataGenerator postTestDataGenerator;
-
-  @Autowired
-  private CategoryPostDataGenerator categoryPostDataGenerator;
-
-  @Autowired
   MockMvcUtils mockMvcUtils;
 
-  private final int postPerUser = 6;
-  private final int postPerCategory = 6;
-  private final int categoryPerUser = 1;
+  @Autowired
+  TestDataRemover testDataRemover;
+
+  @Autowired
+  PostScenarioSupport postScenarioSupport;
+
+  int postPerUser = 5;
+  int bookmarkedPostsPerUser;
+  int prefersPerUser;
+  PostScenarioSupport.Result result;
 
   @BeforeEach
   void setUp() {
-    categoryPostDataGenerator.deleteAllData();
-    categoryPostDataGenerator.generateCategoriesAndPosts(1, postPerUser, 5, categoryPerUser,
-        postPerCategory);
+    int userCount = 3;
+    int prefersPerPost = 3;
+    // generate data
+    result = postScenarioSupport.builder()
+        .withUsers(userCount)
+        .withThemeBoardPerUser(postPerUser)
+        .withPrefersPerPost(prefersPerPost)
+        .withBookmarkRatio(1)
+        .build();
+    // set values
+    bookmarkedPostsPerUser = postPerUser * userCount;
+    prefersPerUser = postPerUser * prefersPerPost;
   }
 
   @AfterEach
   void tearDown() {
-    categoryPostDataGenerator.deleteAllData();
+    testDataRemover.deleteAll();
   }
 
   public void assertUserPostListResponseDto(UserPostListResponseDto responseDto,
@@ -76,14 +86,25 @@ public class UserPostControllerTest {
     // response assertion
     assertThat(responseDto.getCreatedAt()).isNotNull();
     assertThat(responseDto.getUpdatedAt()).isNotNull();
-    assertThat(responseDto.getPreviewImageUrl()).isEqualTo(previewImageUrl);
+    assertThat(responseDto.getPreviewImageUrl())
+        .containsExactlyInAnyOrderElementsOf(List.of(previewImageUrl));
+    assertThat(responseDto.getAuthorName()).isEqualTo(post.getUser().getName());
+    assertThat(responseDto.getAuthorProfileImageUrl()).isEqualTo(post.getUser().getProfileImg());
+    assertThat(responseDto.getPostType()).isEqualTo(post.getPostType());
+    assertThat(responseDto.getBookmarked()).isNotNull();
+    assertThat(responseDto.getPreferred()).isNotNull();
+    assertThat(responseDto.getComments()).isNotNull();
+    assertThat(responseDto.getPrefers()).isNotNull();
+    assertThat(responseDto.getTitle()).isEqualTo(post.getTitle());
+    assertThat(responseDto.getContent()).isEqualTo(post.getContent());
+    assertThat(responseDto.getTags()).isNotNull();
   }
 
   @Test
   @DisplayName("유저가 작성한 게시글 목록 조회")
   void getUserPostTest() throws Exception {
     //given
-    User targetUser = postTestDataGenerator.getUsers().get(0);
+    User targetUser = result.getFirstUser();
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
     // stub
     given(fileManager.resolveFilePath(any()))
@@ -108,10 +129,10 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("사용자가 카테고리에 저장한 게시글 목록 반환")
+  @DisplayName("사용자가 북마크에 저장한 게시글 목록 반환")
   void findSavedPostList_success() throws Exception {
     // given
-    User client = postTestDataGenerator.getUsers().get(0);
+    User client = result.getFirstUser();
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
     // stub
     given(fileManager.resolveFilePath(any()))
@@ -120,7 +141,7 @@ public class UserPostControllerTest {
     List<UserPostListResponseDto> response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
             .mockMvc(mockMvc)
-            .path("/api/users/me/saved-posts")
+            .path("/api/users/me/bookmarked-posts")
             .httpMethod(HttpMethod.GET)
             .clientDto(TestClientDto.fromEntity(client))
             .responseType(new TypeReference<>() {
@@ -128,7 +149,34 @@ public class UserPostControllerTest {
             .build()
     );
     // then
-    assertThat(response).hasSize(categoryPerUser * postPerCategory);
+    assertThat(response).hasSize(bookmarkedPostsPerUser);
+    for (UserPostListResponseDto res : response) {
+      assertUserPostListResponseDto(res, expectedPreviewImageUrl);
+    }
+  }
+
+  @Test
+  @DisplayName("사용자가 좋아요를 누른 게시글 목록 반환")
+  void findPreferredPostList_success() throws Exception {
+    // given
+    User client = result.getFirstUser();
+    String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
+    // stub
+    given(fileManager.resolveFilePath(any()))
+        .willReturn(expectedPreviewImageUrl);
+    // when
+    List<UserPostListResponseDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me/preferred-posts")
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response).hasSize(prefersPerUser);
     for (UserPostListResponseDto res : response) {
       assertUserPostListResponseDto(res, expectedPreviewImageUrl);
     }

@@ -2,16 +2,18 @@ package com.komentum.post.service;
 
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.domain.policy.PostPolicy;
 import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
-import com.komentum.post.dto.PostDto.UserPostListResponseDto;
+import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PostRepositorySupport;
 import com.komentum.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,12 @@ public class PostService {
     return postRepository.findByUser_PublicUserId(publicUserId);
   }
 
+  public Post findByPostIdAndPostType(Long postId, PostType postType) {
+    return postRepository.findByPostIdAndPostType(postId, postType)
+        .orElseThrow(() -> new EntityNotFoundException(
+            "cannot find " + postType.name() + " post with id : " + postId));
+  }
+
   /**
    * 게시글 생성
    *
@@ -53,8 +61,10 @@ public class PostService {
    *
    */
   @Transactional
-  public Post createPost(PostCreateDto postCreateDto, User author, String profileImageName) {
-    return postRepository.save(Post.createTransient(postCreateDto, author, profileImageName));
+  public Post createPost(PostCreateDto postCreateDto, User author, String profileImageName,
+      PostType postType) {
+    return postRepository.save(
+        Post.createTransient(postCreateDto, author, profileImageName, postType));
   }
 
   /**
@@ -106,24 +116,25 @@ public class PostService {
    * 특정 사용자의 게시글 목록 반환
    *
    */
-  public List<UserPostListResponseDto> findUserPostList(String publicUserId) {
-
-    // 필요한 정보 추출
-    return getPostsByPublicUserId(publicUserId).stream()
-        .map(post -> UserPostListResponseDto.builder().postId(post.getPostId())
-            .previewImageUrl(fileManager.resolveFilePath(post.getPreviewImageName()))
-            .createdAt(post.getCreatedAt())
-            .updatedAt(post.getUpdatedAt())
-            .build())
-        .toList(); // 리스트 변환
+  @Transactional(readOnly = true)
+  public List<PostQuery.Detail> findUserPostList(User user, Pageable pageable) {
+    return postRepositorySupport.findMyPostsByUser(user, pageable);
   }
 
   // 업로드 수 count 반환 메서드
+  @Transactional(readOnly = true)
   public int countPost(String publicUserId) {
     return postRepository.countByUser_PublicUserId(publicUserId);
   }
 
-  public List<Post> findUserSavedPosts(User user) {
-    return postRepositorySupport.findUserSavedPost(user);
+  // 사용자가 카테고리에 저장한 게시글 목록 조회
+  @Transactional(readOnly = true)
+  public List<PostQuery.Detail> findUserSavedPosts(User user, Pageable pageable) {
+    return postRepositorySupport.findBookmarkedPostsByUser(user, pageable);
+  }
+
+  @Transactional(readOnly = true)
+  public List<PostQuery.Detail> findUserPreferredPosts(User user, Pageable pageable) {
+    return postRepositorySupport.findUserPreferredPosts(user, pageable);
   }
 }

@@ -4,15 +4,16 @@ import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QDesignBoard;
-import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
-import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.DesignBoardRepositorySupport;
+import com.komentum.post.service.condition.PostSearchCondition;
+import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -53,20 +54,31 @@ public class DesignBoardService {
         .orElseThrow(() -> new CustomEntityNotFoundException(DesignBoard.class, postId));
   }
 
+  @Transactional(readOnly = true)
+  public List<DesignBoardQuery.Detail> findDetailList(Pageable pageable, User client,
+      Post pinnedPost) {
+    PostSearchCondition condition = new PostSearchCondition();
+    if (pinnedPost != null) {
+      condition = condition
+          .withPinnedPostIds(List.of(pinnedPost.getPostId()))
+          .withAuthorPublicId(pinnedPost.getUser().getPublicUserId());
+    }
+    return new ArrayList<>(
+        designBoardRepositorySupport.findDesignBoardDetails(
+            pageable,
+            client,
+            condition,
+            List.of(PostSortType.DEFAULT)
+        )
+    );
+  }
+
   @Transactional
   public DesignBoard save(Post post, DesignComponent designComponent) {
     return designBoardRepository.save(DesignBoard.builder()
         .post(post)
         .designComponent(designComponent)
         .build());
-  }
-
-  @Transactional
-  public DesignBoard createDesignBoard(DesignBoardCreateDto createDto,
-      DesignComponent designComponent, User author, String previewImageName) {
-    PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
-    Post savedPost = postService.createPost(postCreateDto, author, previewImageName);
-    return save(savedPost, designComponent);
   }
 
   @Transactional

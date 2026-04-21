@@ -3,6 +3,7 @@ package com.komentum.test.data;
 import com.komentum.post.domain.Category;
 import com.komentum.post.domain.CategoryPost;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.CategoryPostRepository;
 import com.komentum.post.repository.CategoryRepository;
 import com.komentum.user.domain.User;
@@ -36,7 +37,8 @@ public class CategoryPostDataGenerator {
     if (postPerCategory > userCount * postPerUser) {
       throw new RuntimeException("post count per category is bigger than total post count");
     }
-    postTestDataGenerator.generateData(userCount, postPerUser, commentPerPost);
+    postTestDataGenerator.generateData(userCount, postPerUser, commentPerPost,
+        PostType.THEME_BOARD);
     this.categories = generateCategoryData(categoryPerUser, postTestDataGenerator.users);
     this.categoryPosts = generateCategoryPostData(postPerCategory, categories, getPosts());
     this.categoryRegisteredPosts = postTestDataGenerator.posts;
@@ -49,7 +51,8 @@ public class CategoryPostDataGenerator {
   }
 
   public void generateCategoryUnregisteredPosts(int postPerUser) {
-    this.categoryUnregisteredPosts = postTestDataGenerator.generatePost(getUsers(), postPerUser);
+    this.categoryUnregisteredPosts = postTestDataGenerator.generatePost(getUsers(), postPerUser,
+        PostType.THEME_BOARD);
   }
 
   public List<Category> generateCategoryData(int categoryPerUser, List<User> owners) {

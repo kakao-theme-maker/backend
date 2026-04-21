@@ -5,6 +5,7 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
@@ -58,7 +59,8 @@ public class ThemeBoardSeeder {
                   + component.getThemeComponentId()));
       Post post = postSeeder.createOne(
           author,
-          fileManager.convertUrlToFileName(iconThemeImage.getDesignComponent().getImageUrl())
+          fileManager.convertUrlToFileName(iconThemeImage.getDesignComponent().getImageUrl()),
+          PostType.THEME_BOARD
       );
       if (!themeBoardRepository.existsByThemeComponentAndPost(component, post)) {
         themeBoards.add(generateOne(component, post));

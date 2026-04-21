@@ -32,9 +32,10 @@ public class PreferSeeder {
   }
 
   @Transactional
-  public List<Prefer> seedPerPost(int size, List<User> likerList) {
-    if (likerList.size() < size) {
-      throw new IllegalArgumentException("authors must be >= size");
+  public List<Prefer> seedPerPost(int preferPerPost, List<User> likerList) {
+    if (likerList.size() < preferPerPost) {
+      throw new IllegalArgumentException(
+          "liker list size must be bigger than prefer count per post");
     }
     List<Post> posts = postRepository.findAll();
     List<Prefer> existingPrefers = preferRepository.fetchJoinByPostIn(posts);
@@ -56,7 +57,7 @@ public class PreferSeeder {
       for (User liker : likerList) {
         Set<Post> alreadyPreferPosts = userPostPreferMap.getOrDefault(liker,
             Collections.emptySet());
-        if (created >= size) {
+        if (created >= preferPerPost) {
           break;
         } else if (alreadyPreferPosts.contains(post)) {
           continue;
