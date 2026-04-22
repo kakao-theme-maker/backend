@@ -31,7 +31,7 @@ public class UserDataGenerator {
     String uuid = UUID.randomUUID().toString(); //publicUserId 생성
     return userRepository.save(User.builder()
         .publicUserId(uuid)
-        .profileImg(faker.internet().image())
+        .profileImgUrl(faker.internet().image())
         .birth(LocalDate.now())
         .gender(Gender.male)
         .role(UserRole.USER)
@@ -54,7 +54,7 @@ public class UserDataGenerator {
     String uuid = UUID.randomUUID().toString();
     userRepository.save(User.builder()
         .publicUserId(uuid)
-        .profileImg(faker.internet().image())
+        .profileImgUrl(faker.internet().image())
         .birth(LocalDate.now())
         .gender(Gender.male)
         .role(UserRole.USER)
@@ -67,7 +67,7 @@ public class UserDataGenerator {
     String uuid = UUID.randomUUID().toString();
     userRepository.save(User.builder()
         .publicUserId(uuid)
-        .profileImg("https://example")
+        .profileImgUrl("https://example")
         .birth(LocalDate.now())
         .gender(Gender.male)
         .role(UserRole.USER)
