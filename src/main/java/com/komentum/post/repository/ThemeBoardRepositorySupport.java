@@ -116,7 +116,7 @@ public class ThemeBoardRepositorySupport {
             commentCount,
             postRepositorySupport.isLiked(post, client),
             postRepositorySupport.isBookmarked(post, client),
-            user.profileImg
+            user.profileImgUrl
         ))
         .from(themeBoard)
         .join(themeBoard.themeComponent, themeComponent)

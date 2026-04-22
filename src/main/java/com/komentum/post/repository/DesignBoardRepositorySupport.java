@@ -64,7 +64,7 @@ public class DesignBoardRepositorySupport {
                 commentCount,
                 postRepositorySupport.isLiked(post, client),
                 postRepositorySupport.isBookmarked(post, client),
-                user.profileImg
+                user.profileImgUrl
             )
         )
         .from(designBoard)

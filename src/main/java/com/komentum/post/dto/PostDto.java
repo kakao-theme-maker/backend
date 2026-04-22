@@ -96,7 +96,7 @@ public class PostDto {
           .updatedAt(post.getUpdatedAt())
           .postType(post.getPostType())
           .authorName(author.getName())
-          .authorProfileImageUrl(author.getProfileImg())
+          .authorProfileImageUrl(author.getProfileImgUrl())
           .prefers(postDetail.getPrefers())
           .comments(postDetail.getComments())
           .preferred(postDetail.getPreferred())

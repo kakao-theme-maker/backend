@@ -26,6 +26,10 @@ public class UserResponseDto {
   @JsonProperty("profile_image")
   private String profileImage;
 
+  @Schema(description = "사용자 프로필 이미지 파일명", example = "profile-image.png")
+  @JsonProperty("profile_image_name")
+  private String profileImageName;
+
   // 유저 조회에 필요한 정보 추가
   @Schema(description = "사용자 이름", example = "홍길동")
   private String name;
@@ -59,6 +63,7 @@ public class UserResponseDto {
         .birth(user.getBirth())
         .publicUserId(user.getPublicUserId())
         .profileImage(profileImageUrl)
+        .profileImageName(user.getProfileImgName())
         .uploads(uploads)
         .followers(followers)
         .following(following)
