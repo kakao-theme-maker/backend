@@ -1,6 +1,5 @@
 package com.komentum.user.service;
 
-import com.komentum.global.utils.FileManager;
 import com.komentum.post.facade.BoardManagementHelper;
 import com.komentum.post.service.PostService;
 import com.komentum.user.domain.User;
@@ -23,18 +22,15 @@ public class UserService implements UserEntityFinder {
   private final SubscriptionRepository subscriptionRepository;
   private final PostService postService;
   private final BoardManagementHelper boardManagementHelper;
-  private final FileManager fileManager;
 
   public UserService(UserRepository userRepository,
       SubscriptionRepository subscriptionRepository,
       PostService postService,
-      BoardManagementHelper boardManagementHelper,
-      FileManager fileManager) {
+      BoardManagementHelper boardManagementHelper) {
     this.userRepository = userRepository;
     this.subscriptionRepository = subscriptionRepository;
     this.postService = postService;
     this.boardManagementHelper = boardManagementHelper;
-    this.fileManager = fileManager;
   }
 
   public UserResponseDto getUserByPublicId(String publicUserId) {
@@ -45,9 +41,7 @@ public class UserService implements UserEntityFinder {
     int following = subscriptionRepository.countByUser_publicUserId(publicUserId);
     //업로드 수
     int uploads = postService.countPost(publicUserId);
-    // 프로필 이미지 URL 변환
-    String profileImageUrl = resolveProfileImageUrl(user.getProfileImg());
-    return UserResponseDto.from(user, followers, following, uploads, profileImageUrl);
+    return UserResponseDto.from(user, followers, following, uploads, user.getProfileImgUrl());
   }
 
   public User findUserEntity(String PublicUserId) {
@@ -72,17 +66,19 @@ public class UserService implements UserEntityFinder {
   @Transactional
   public UserResponseDto updateUserProfileImage(String publicUserId, MultipartFile profileImage) {
     User user = findUserEntityByPublicId(publicUserId);
-    String oldImageFileName = user.getProfileImg();
+    String oldImageFileName = resolveDeletableProfileImageName(user);
 
     // 새 이미지 업로드
     String newImageFileName = boardManagementHelper.savePreviewImageIfPresent(User.class,
         profileImage);
 
     try {
-      user.setProfileImg(newImageFileName);
+      String newImageUrl = boardManagementHelper.findPreviewImageUrl(newImageFileName);
+      user.setProfileImgUrl(newImageUrl);
+      user.setProfileImgName(newImageFileName);
 
       // 기존 이미지 삭제
-      if (oldImageFileName != null && !oldImageFileName.startsWith("http")) {
+      if (oldImageFileName != null) {
         boardManagementHelper.deleteFileSilently(oldImageFileName, "프로필 이미지 수정 시 기존 이미지 삭제 실패");
       }
     } catch (Exception e) {
@@ -110,19 +106,15 @@ public class UserService implements UserEntityFinder {
     return getUserByPublicId(publicUserId);
   }
 
-  /**
-   * 프로필 이미지 URL 변환
-   *
-   * @param profileImg
-   * @return
-   */
-  private String resolveProfileImageUrl(String profileImg) {
-    if (profileImg == null) {
+  private String resolveDeletableProfileImageName(User user) {
+    if (user.getProfileImgName() != null) {
+      return user.getProfileImgName();
+    }
+    String profileImgUrl = user.getProfileImgUrl();
+    if (profileImgUrl == null || profileImgUrl.startsWith("http://")
+        || profileImgUrl.startsWith("https://")) {
       return null;
     }
-    if (profileImg.startsWith("http://") || profileImg.startsWith("https://")) {
-      return profileImg;
-    }
-    return fileManager.resolveFilePath(profileImg);
+    return profileImgUrl;
   }
 }
