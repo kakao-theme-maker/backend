@@ -9,7 +9,7 @@ import com.komentum.post.facade.CommentManagementFacade;
 import com.komentum.post.service.CommentLikeService;
 import com.komentum.post.service.CommentService;
 import com.komentum.user.domain.User;
-import com.komentum.user.service.UserRetrieveService;
+import com.komentum.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +35,7 @@ public class CommentController {
 
   private final CommentService commentService;
   private final CommentLikeService commentLikeService;
-  private final UserRetrieveService userRetrieveService;
+  private final UserService userRetrieveService;
   private final CommentManagementFacade commentManagementFacade;
 
   @GetMapping("/{post_id}/comments")
