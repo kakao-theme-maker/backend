@@ -32,12 +32,15 @@ public class PreferSeeder {
   }
 
   @Transactional
-  public List<Prefer> seedPerPost(int preferPerPost, List<User> likerList) {
+  public List<Prefer> seedPerPost(int preferPerPost, List<User> likerList, double postRatio) {
     if (likerList.size() < preferPerPost) {
       throw new IllegalArgumentException(
           "liker list size must be bigger than prefer count per post");
     }
     List<Post> posts = postRepository.findAll();
+    List<Post> shuffledPosts = new ArrayList<>(posts);
+    Collections.shuffle(shuffledPosts);
+    List<Post> selectedPosts = shuffledPosts.subList(0, (int) (posts.size() * postRatio));
     List<Prefer> existingPrefers = preferRepository.fetchJoinByPostIn(posts);
     Map<User, Set<Post>> userPostPreferMap = existingPrefers.stream()
         .collect(Collectors.groupingBy(
@@ -51,7 +54,7 @@ public class PreferSeeder {
             Prefer::getPost,
             Collectors.toSet()));
     List<Prefer> prefers = new ArrayList<>();
-    for (Post post : posts) {
+    for (Post post : selectedPosts) {
       Set<Prefer> existing = existingPostPreferMap.getOrDefault(post, Collections.emptySet());
       int created = existing.size();
       for (User liker : likerList) {

@@ -28,6 +28,11 @@ public class BookmarkSeeder {
   private final CategoryPostRepository categoryPostRepository;
   private final Faker faker;
 
+  public static record BookmarkSeedResult(List<Category> bookmarks,
+                                          List<CategoryPost> bookmarkMappings) {
+
+  }
+
   public Category createBookmark(User user) {
     return Category.builder()
         .name(faker.animal().name())
@@ -44,7 +49,7 @@ public class BookmarkSeeder {
   }
 
   @Transactional
-  public List<Category> bookmarkByRatio(List<User> users, List<Post> posts, double ratio) {
+  public BookmarkSeedResult bookmarkByRatio(List<User> users, List<Post> posts, double ratio) {
     if (ratio < 0 || ratio > 1) {
       throw new IllegalArgumentException("BookmarkSeeder : ratio must be between 0 and 1");
     }
@@ -76,7 +81,7 @@ public class BookmarkSeeder {
         postMappings.add(createBookmarkPost(bookmark, post));
       }
     }
-    categoryPostRepository.saveAll(postMappings);
-    return allBookmarks;
+    List<CategoryPost> bookmarkMappings = categoryPostRepository.saveAll(postMappings);
+    return new BookmarkSeedResult(allBookmarks, bookmarkMappings);
   }
 }

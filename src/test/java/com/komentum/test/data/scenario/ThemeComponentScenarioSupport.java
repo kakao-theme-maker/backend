@@ -1,6 +1,7 @@
 package com.komentum.test.data.scenario;
 
 import com.komentum.seed.seeder.ThemeComponentSeeder;
+import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.service.ColorStyleSeeder;
 import com.komentum.theme.component.service.ComponentTypeSeeder;
 import com.komentum.theme.theme.domain.ThemeComponent;
@@ -23,17 +24,21 @@ public class ThemeComponentScenarioSupport {
 
   }
 
-  public ThemeComponentScenarioBuilder builder(List<User> users) {
-    return new ThemeComponentScenarioBuilder().builder(users);
+  public ThemeComponentScenarioBuilder builder(List<User> users,
+      List<DesignComponent> designComponents) {
+    return new ThemeComponentScenarioBuilder().builder(users, designComponents);
   }
 
   public class ThemeComponentScenarioBuilder {
 
     private List<User> users;
     private int countPerUser;
+    private List<DesignComponent> designComponents;
 
-    public ThemeComponentScenarioBuilder builder(List<User> users) {
+    public ThemeComponentScenarioBuilder builder(List<User> users,
+        List<DesignComponent> designComponents) {
       this.users = users;
+      this.designComponents = designComponents;
       return this;
     }
 
@@ -50,7 +55,8 @@ public class ThemeComponentScenarioSupport {
       if (countPerUser <= 0) {
         throw new IllegalArgumentException("countPerUser must be bigger than 0");
       }
-      List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(countPerUser, users);
+      List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(countPerUser, users,
+          designComponents);
       // convert data to result
       return new ThemeComponentScenarioResult(themeComponents);
     }

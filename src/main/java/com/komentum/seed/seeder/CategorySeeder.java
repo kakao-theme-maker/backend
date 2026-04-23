@@ -47,7 +47,8 @@ public class CategorySeeder {
   }
 
   @Transactional
-  public void seedPostMappingsPerCategory(int categoryPostPerCategory, List<Category> categories,
+  public List<CategoryPost> seedPostMappingsPerCategory(int categoryPostPerCategory,
+      List<Category> categories,
       List<Post> posts) {
     List<CategoryPost> categoryPosts = new ArrayList<>();
     for (int i = 0; i < categories.size(); i++) {
@@ -56,6 +57,6 @@ public class CategorySeeder {
         categoryPosts.add(createOneCategoryPost(category, posts.get(j % posts.size())));
       }
     }
-    categoryPostRepository.saveAll(categoryPosts);
+    return categoryPostRepository.saveAll(categoryPosts);
   }
 }

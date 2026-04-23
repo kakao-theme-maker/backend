@@ -29,6 +29,13 @@ public class ThemeBoardSeeder {
   private final FileManager fileManager;
   private final Faker faker;
 
+  public static record ThemeBoardSeedResult(
+      List<ThemeBoard> themeBoards,
+      List<Post> posts
+  ) {
+
+  }
+
   private ThemeBoard generateOne(ThemeComponent themeComponent, Post post) {
     return ThemeBoard.builder()
         .post(post)
@@ -37,8 +44,9 @@ public class ThemeBoardSeeder {
   }
 
   @Transactional
-  public List<ThemeBoard> seedData(List<ThemeComponent> themeComponents) {
+  public ThemeBoardSeedResult seedData(List<ThemeComponent> themeComponents) {
     List<ThemeBoard> themeBoards = new ArrayList<>();
+    List<Post> posts = new ArrayList<>();
     int size = themeComponents.size();
     for (int i = 0; i < size; i++) {
       ThemeComponent component = themeComponents.get(i);
@@ -62,10 +70,12 @@ public class ThemeBoardSeeder {
           fileManager.convertUrlToFileName(iconThemeImage.getDesignComponent().getImageUrl()),
           PostType.THEME_BOARD
       );
+      posts.add(post);
       if (!themeBoardRepository.existsByThemeComponentAndPost(component, post)) {
         themeBoards.add(generateOne(component, post));
       }
     }
-    return themeBoardRepository.saveAll(themeBoards);
+    List<ThemeBoard> saved = themeBoardRepository.saveAll(themeBoards);
+    return new ThemeBoardSeedResult(saved, posts);
   }
 }

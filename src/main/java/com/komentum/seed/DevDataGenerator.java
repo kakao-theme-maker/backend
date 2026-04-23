@@ -44,10 +44,11 @@ public class DevDataGenerator {
     colorStyleSeeder.upsertColorStyleSeed();
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
         users); // 110
-    List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users); // 110
+    List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users,
+        designComponents); // 110
     themeBoardSeeder.seedData(themeComponents.subList(0, 90)); //
     designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
     commentSeeder.seedPerPost(5, users); // 550
-    preferSeeder.seedPerPost(5, users); // 550
+    preferSeeder.seedPerPost(5, users, 0.5); // 550
   }
 }

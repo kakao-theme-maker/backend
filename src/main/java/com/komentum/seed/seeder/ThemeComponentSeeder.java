@@ -14,7 +14,6 @@ import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,11 +38,9 @@ public class ThemeComponentSeeder {
         .build();
   }
 
-  private List<ThemeImage> seedThemeImages(ThemeComponent themeComponent) {
+  private List<ThemeImage> seedThemeImages(ThemeComponent themeComponent,
+      List<DesignComponent> designComponents) {
     List<ComponentType> componentTypes = componentTypeRepository.findByPlatform(Platform.ANDROID);
-    List<DesignComponent> designComponents = designComponentRepository
-        .findAll(Pageable.ofSize(5))
-        .getContent();
     List<ThemeImage> themeImages = new ArrayList<>();
     for (int i = 0; i < componentTypes.size(); i++) {
       themeImages.add(ThemeImage.builder()
@@ -56,7 +53,8 @@ public class ThemeComponentSeeder {
   }
 
   @Transactional
-  public List<ThemeComponent> seedPerUser(int size, List<User> authors) {
+  public List<ThemeComponent> seedPerUser(int size, List<User> authors,
+      List<DesignComponent> designComponents) {
     List<String> userEmailList = authors.stream()
         .map(User::getUserEmail)
         .toList();
@@ -72,7 +70,7 @@ public class ThemeComponentSeeder {
     }
     themeComponents = themeComponentRepository.saveAll(themeComponents);
     for (ThemeComponent themeComponent : themeComponents) {
-      List<ThemeImage> themeImages = seedThemeImages(themeComponent);
+      List<ThemeImage> themeImages = seedThemeImages(themeComponent, designComponents);
       for (ThemeImage themeImage : themeImages) {
         themeComponent.addThemeImage(themeImage);
       }
