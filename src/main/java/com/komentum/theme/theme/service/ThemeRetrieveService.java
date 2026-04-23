@@ -94,6 +94,21 @@ public class ThemeRetrieveService {
     return toPreviewDto(themeComponents);
   }
 
+
+  @Transactional(readOnly = true)
+  public List<ThemePreviewDto> findBookmarkedThemeList(Pageable pageable, String userIdentifier) {
+    User client = userEntityFinder.findUserEntity(userIdentifier);
+    ThemeSearchCondition condition = new ThemeSearchCondition();
+    condition.withBookmarked(true);
+    List<ThemeComponent> themeComponents = themeComponentRepositorySupport.findAllThemesByCondition(
+        pageable,
+        client,
+        condition,
+        List.of(ThemeSortType.CREATED_DESC)
+    );
+    return toPreviewDto(themeComponents);
+  }
+
   private List<ThemePreviewDto> toPreviewDto(List<ThemeComponent> themeComponents) {
     List<Integer> themeIds = themeComponents.stream()
         .map(ThemeComponent::getThemeComponentId)

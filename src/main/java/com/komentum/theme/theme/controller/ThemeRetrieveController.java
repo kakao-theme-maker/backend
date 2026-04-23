@@ -89,4 +89,15 @@ public class ThemeRetrieveController {
         userDetails.getUsername());
     return ResponseEntity.ok(res);
   }
+
+  @GetMapping("/bookmarked")
+  @Operation(summary = "인증된 사용자가 현재 북마크한 테마 목록을 조회한다")
+  public ResponseEntity<List<ThemePreviewDto>> findBookmarkedThemes(
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable,
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    List<ThemePreviewDto> res = themeRetrieveService.findBookmarkedThemeList(pageable,
+        userDetails.getUsername());
+    return ResponseEntity.ok(res);
+  }
 }
