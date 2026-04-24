@@ -109,7 +109,8 @@ public class UserControllerTest {
             .name(user.getName())
             .gender(user.getGender())
             .birth(user.getBirth())
-            .profileImage(user.getProfileImg())
+            .profileImage(user.getProfileImgUrl())
+            .profileImageName(user.getProfileImgName())
             .publicUserId(user.getPublicUserId())
             .uploads(1)
             .followers(0)
@@ -198,7 +199,8 @@ public class UserControllerTest {
   void updateUserProfileImageTest() throws Exception {
     // given
     String oldImageFileName = "old_image.png";
-    user.setProfileImg(oldImageFileName);
+    user.setProfileImgName(oldImageFileName);
+    user.setProfileImgUrl("https://test.com/" + oldImageFileName);
     userRepository.save(user);
 
     MockMultipartFile profileImage = new MockMultipartFile(
@@ -236,14 +238,15 @@ public class UserControllerTest {
 
     // 파일명이 저장되었는지 검증
     User updatedUser = userRepository.findByUserEmail(email).orElseThrow();
-    assertThat(updatedUser.getProfileImg()).isNotNull();
-    assertThat(updatedUser.getProfileImg()).endsWith(".png");
-    assertThat(updatedUser.getProfileImg()).isNotEqualTo(oldImageFileName);
+    assertThat(updatedUser.getProfileImgUrl()).isEqualTo(expectedImageUrl);
+    assertThat(updatedUser.getProfileImgName()).isNotNull();
+    assertThat(updatedUser.getProfileImgName()).endsWith(".png");
+    assertThat(updatedUser.getProfileImgName()).isNotEqualTo(oldImageFileName);
 
     // FileManager 호출 검증
     Mockito.verify(fileManager).uploadFile(any(byte[].class), contains("User"));
     Mockito.verify(fileManager, Mockito.times(1)).deleteFile(oldImageFileName);
-    Mockito.verify(fileManager).resolveFilePath(updatedUser.getProfileImg());
+    Mockito.verify(fileManager).resolveFilePath(updatedUser.getProfileImgName());
   }
 
   @Test

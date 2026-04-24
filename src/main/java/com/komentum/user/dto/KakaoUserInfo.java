@@ -23,7 +23,7 @@ public class KakaoUserInfo {
   public User toEntity() {
     return User.builder()
         .userEmail(email)
-        .profileImg(profileImage)
+        .profileImgUrl(profileImage)
         .gender(Gender.valueOf(gender))
         .birth(birth)
         .role(UserRole.USER)

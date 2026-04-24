@@ -9,6 +9,7 @@ import com.komentum.test.data.ThemeDataGenerator;
 import com.komentum.test.data.UserDataGenerator;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.theme.service.ThemeImageService;
 import com.komentum.user.domain.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,9 @@ class ThemeRetrieveControllerTest {
 
   @Autowired
   private MockMvcUtils mockMvcUtils;
+
+  @Autowired
+  private ThemeImageService themeImageService;
 
   private TestClientDto testClient;
 
@@ -70,7 +74,9 @@ class ThemeRetrieveControllerTest {
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(pageSize));
+        .andExpect(jsonPath("$.length()").value(pageSize))
+        .andExpect(jsonPath("$[0].createdAt").exists())
+        .andExpect(jsonPath("$[0].previewImageUrl").isNotEmpty());
   }
 
   @Test
@@ -86,7 +92,10 @@ class ThemeRetrieveControllerTest {
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.themeComponentId").value(toFind.getThemeComponentId()));
+        .andExpect(jsonPath("$.themeComponentId").value(toFind.getThemeComponentId()))
+        .andExpect(jsonPath("$.createdAt").exists())
+        .andExpect(jsonPath("$.previewImageUrl").value(
+            themeImageService.findThemePreviewImageUrl(toFind.getThemeComponentId())));
   }
 
   @Test

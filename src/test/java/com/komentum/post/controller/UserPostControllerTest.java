@@ -89,7 +89,7 @@ public class UserPostControllerTest {
     assertThat(responseDto.getPreviewImageUrl())
         .containsExactlyInAnyOrderElementsOf(List.of(previewImageUrl));
     assertThat(responseDto.getAuthorName()).isEqualTo(post.getUser().getName());
-    assertThat(responseDto.getAuthorProfileImageUrl()).isEqualTo(post.getUser().getProfileImg());
+    assertThat(responseDto.getAuthorProfileImageUrl()).isEqualTo(post.getUser().getProfileImgUrl());
     assertThat(responseDto.getPostType()).isEqualTo(post.getPostType());
     assertThat(responseDto.getBookmarked()).isNotNull();
     assertThat(responseDto.getPreferred()).isNotNull();

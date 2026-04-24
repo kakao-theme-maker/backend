@@ -9,7 +9,7 @@ import com.komentum.post.facade.CommentManagementFacade;
 import com.komentum.post.service.CommentLikeService;
 import com.komentum.post.service.CommentService;
 import com.komentum.user.domain.User;
-import com.komentum.user.service.UserRetrieveService;
+import com.komentum.user.service.UserEntityFinder;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +35,7 @@ public class CommentController {
 
   private final CommentService commentService;
   private final CommentLikeService commentLikeService;
-  private final UserRetrieveService userRetrieveService;
+  private final UserEntityFinder userEntityFinder;
   private final CommentManagementFacade commentManagementFacade;
 
   @GetMapping("/{post_id}/comments")
@@ -43,7 +43,7 @@ public class CommentController {
   public ResponseEntity<List<CommentResponse>> getComments(@PathVariable("post_id") Long postId,
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    User client = userRetrieveService.findUserEntity(userDetails.getUsername());
+    User client = userEntityFinder.findUserEntity(userDetails.getUsername());
     List<Comment> comments = commentService.getComments(postId, pageable);
     // 내가 좋아요 누른 댓글 목록
     Set<Long> likedCommentIds = Set.copyOf(commentLikeService.getLikedCommentIds(
@@ -62,7 +62,7 @@ public class CommentController {
   public ResponseEntity<CommentResponse> getComment(
       @PathVariable("comment_id") Long commentId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    User client = userRetrieveService.findUserEntity(userDetails.getUsername());
+    User client = userEntityFinder.findUserEntity(userDetails.getUsername());
     return ResponseEntity.ok(CommentResponse.from(
         commentService.getCommentById(commentId),
         commentLikeService.isLiked(commentId, client.getUserId())));
@@ -95,7 +95,7 @@ public class CommentController {
 
   // public ResponseEntity<UserInquiryResponseDto<UserResponseDto>>
   // dto. from
-  // data + PostService.countPost  + UserRetrieveService.countsubs---
+  // data + PostService.countPost + UserEntityFinder.countsubs---
 
 
 }

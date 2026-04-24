@@ -58,7 +58,8 @@ public class UserSeeder {
             faker.number().randomDigit() % 2 == 0 ?
                 Gender.male :
                 Gender.female)
-        .profileImg(fileManager.resolveFilePath(profileImageName))
+        .profileImgUrl(fileManager.resolveFilePath(profileImageName))
+        .profileImgName(profileImageName)
         .introduce(faker.lorem().word())
         .build();
   }
@@ -66,8 +67,9 @@ public class UserSeeder {
   @Transactional
   public User createOrRetrieveRootUser() {
     Optional<User> rootUser = userRepository.findByUserEmail(testUserProperty.getUserEmail());
-    return rootUser.orElseGet(() ->
-        userRepository.save(User.builder()
+    return rootUser.orElseGet(() -> {
+      String profileImageName = loadSampleProfileImageName();
+      return userRepository.save(User.builder()
             .userEmail(testUserProperty.getUserEmail())
             .name("root1234")
             .publicUserId(testUserProperty.getPublicUserId())
@@ -75,9 +77,11 @@ public class UserSeeder {
             .role(UserRole.USER)
             .birth(DateUtils.toLocalDate(faker.date().birthday()))
             .gender(Gender.male)
-            .profileImg(fileManager.resolveFilePath(loadSampleProfileImageName()))
+            .profileImgUrl(fileManager.resolveFilePath(profileImageName))
+            .profileImgName(profileImageName)
             .introduce(faker.lorem().word())
-            .build()));
+            .build());
+    });
   }
 
   @Transactional

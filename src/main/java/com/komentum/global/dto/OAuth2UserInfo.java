@@ -24,7 +24,7 @@ public class OAuth2UserInfo {
   public User toEntity() {
     return User.builder()
         .userEmail(this.userEmail)
-        .profileImg(profileImageUrl)
+        .profileImgUrl(profileImageUrl)
         .authProvider(authProvider)
         .name(name)
         .role(UserRole.USER)

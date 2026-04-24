@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {ThemeStyleMapper.class, ThemeImageMapper.class})
 public interface ThemeComponentMapper {
 
+  @Mapping(target = "previewImageUrl", ignore = true)
   @Mapping(target = "images", source = "component.themeImages")
   @Mapping(target = "styles", source = "component.themeStyles")
   ThemeComponentDto convertToDto(ThemeComponent component);

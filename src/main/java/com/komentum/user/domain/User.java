@@ -51,7 +51,9 @@ public class User {
   @Column
   LocalDate birth;
   @Column
-  String profileImg;
+  String profileImgUrl;
+  @Column
+  String profileImgName;
   @Column
   String introduce;
   @Enumerated(EnumType.STRING)
