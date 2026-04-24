@@ -1,5 +1,6 @@
 package com.komentum.user.service;
 
+import com.komentum.global.utils.FileManager;
 import com.komentum.post.facade.BoardManagementHelper;
 import com.komentum.post.service.PostService;
 import com.komentum.user.domain.User;
@@ -22,15 +23,18 @@ public class UserService implements UserEntityFinder {
   private final SubscriptionRepository subscriptionRepository;
   private final PostService postService;
   private final BoardManagementHelper boardManagementHelper;
+  private final FileManager fileManager;
 
   public UserService(UserRepository userRepository,
       SubscriptionRepository subscriptionRepository,
       PostService postService,
-      BoardManagementHelper boardManagementHelper) {
+      BoardManagementHelper boardManagementHelper,
+      FileManager fileManager) {
     this.userRepository = userRepository;
     this.subscriptionRepository = subscriptionRepository;
     this.postService = postService;
     this.boardManagementHelper = boardManagementHelper;
+    this.fileManager = fileManager;
   }
 
   public UserResponseDto getUserByPublicId(String publicUserId) {
@@ -111,10 +115,13 @@ public class UserService implements UserEntityFinder {
       return user.getProfileImgName();
     }
     String profileImgUrl = user.getProfileImgUrl();
-    if (profileImgUrl == null || profileImgUrl.startsWith("http://")
-        || profileImgUrl.startsWith("https://")) {
+    if (profileImgUrl == null) {
       return null;
     }
-    return profileImgUrl;
+    try {
+      return fileManager.convertUrlToFileName(profileImgUrl);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 }
