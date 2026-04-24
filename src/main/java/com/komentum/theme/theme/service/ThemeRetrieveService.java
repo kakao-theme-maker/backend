@@ -42,9 +42,8 @@ public class ThemeRetrieveService {
   public ThemeComponentDto getThemeById(Integer id) {
     ThemeComponent themeComponent = themeComponentRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Theme not found with id: " + id));
-    ThemeComponentDto themeComponentDto = themeComponentMapper.convertToDto(themeComponent);
-    themeComponentDto.setPreviewImageUrl(themeImageService.findThemePreviewImageUrl(id));
-    return themeComponentDto;
+    return convertToDtoWithPreviewImage(themeComponent, themeImageService.findThemePreviewImageUrl(
+        id));
   }
 
   @Transactional(readOnly = true)
@@ -73,15 +72,16 @@ public class ThemeRetrieveService {
             .map(ThemeComponent::getThemeComponentId)
             .toList());
     return themeComponents.stream()
-        .map(themeComponent -> convertToDtoWithPreviewImage(themeComponent, previewImages))
+        .map(themeComponent -> convertToDtoWithPreviewImage(
+            themeComponent, previewImages.get(themeComponent.getThemeComponentId())))
         .collect(Collectors.toList());
   }
 
   private ThemeComponentDto convertToDtoWithPreviewImage(
       ThemeComponent themeComponent,
-      Map<Integer, String> previewImages) {
+      String previewImageUrl) {
     ThemeComponentDto themeComponentDto = themeComponentMapper.convertToDto(themeComponent);
-    themeComponentDto.setPreviewImageUrl(previewImages.get(themeComponent.getThemeComponentId()));
+    themeComponentDto.setPreviewImageUrl(previewImageUrl);
     return themeComponentDto;
   }
 }
