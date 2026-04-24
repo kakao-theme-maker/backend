@@ -59,7 +59,7 @@ class ThemeRetrieveServiceTest {
     Pageable pageable = PageRequest.of(pageNumber, pageSize);
     // when
     List<ThemeComponentDto> themeComponents = themeRetrieveService.getAllThemes(pageable);
-    Map<Integer, String> previewImages = findPreviewImages(themeComponents);
+    Map<Integer, String> previewImages = findPreviewImageMap(themeComponents);
     // then
     assertThat(themeComponents).hasSize(pageSize).allSatisfy(themeComponentDto -> {
       assertThat(themeComponentDto.getCreatedAt()).isNotNull();
@@ -168,7 +168,7 @@ class ThemeRetrieveServiceTest {
     System.out.println("---end completed themes by user");
   }
 
-  private Map<Integer, String> findPreviewImages(List<ThemeComponentDto> themeComponents) {
+  private Map<Integer, String> findPreviewImageMap(List<ThemeComponentDto> themeComponents) {
     return themeImageService.findThemePreviewImages(
         themeComponents.stream()
             .map(ThemeComponentDto::getThemeComponentId)
