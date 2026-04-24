@@ -42,8 +42,9 @@ public class ThemeRetrieveService {
   public ThemeComponentDto getThemeById(Integer id) {
     ThemeComponent themeComponent = themeComponentRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Theme not found with id: " + id));
-    return convertToDtoWithPreviewImage(themeComponent,
-        themeImageService.findThemePreviewImages(List.of(id)));
+    ThemeComponentDto themeComponentDto = themeComponentMapper.convertToDto(themeComponent);
+    themeComponentDto.setPreviewImageUrl(themeImageService.findThemePreviewImageUrl(id));
+    return themeComponentDto;
   }
 
   @Transactional(readOnly = true)
