@@ -11,7 +11,6 @@ import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.service.ThemeImageService;
 import com.komentum.user.domain.User;
-import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -96,7 +95,7 @@ class ThemeRetrieveControllerTest {
         .andExpect(jsonPath("$.themeComponentId").value(toFind.getThemeComponentId()))
         .andExpect(jsonPath("$.createdAt").exists())
         .andExpect(jsonPath("$.previewImageUrl").value(
-            findPreviewImageUrl(toFind.getThemeComponentId())));
+            themeImageService.findThemePreviewImageUrl(toFind.getThemeComponentId())));
   }
 
   @Test
@@ -171,10 +170,5 @@ class ThemeRetrieveControllerTest {
     // then
     mockMvc.perform(requestBuilder)
         .andExpect(status().isOk());
-  }
-
-  private String findPreviewImageUrl(Integer themeComponentId) {
-    return themeImageService.findThemePreviewImages(List.of(themeComponentId))
-        .get(themeComponentId);
   }
 }

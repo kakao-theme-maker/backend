@@ -83,7 +83,7 @@ class ThemeRetrieveServiceTest {
     assertThat(founded.getThemeComponentId()).isEqualTo(toFind.getThemeComponentId());
     assertThat(founded.getCreatedAt()).isEqualTo(toFind.getCreatedAt());
     assertThat(founded.getPreviewImageUrl()).isEqualTo(
-        findPreviewImageUrl(toFind.getThemeComponentId()));
+        themeImageService.findThemePreviewImageUrl(toFind.getThemeComponentId()));
     assertThat(founded.getStyles()).hasSize(initialStylePerTheme);
     assertThat(founded.getImages()).hasSize(initialImagePerTheme);
     System.out.println("---end the theme");
@@ -173,10 +173,5 @@ class ThemeRetrieveServiceTest {
         themeComponents.stream()
             .map(ThemeComponentDto::getThemeComponentId)
             .toList());
-  }
-
-  private String findPreviewImageUrl(Integer themeComponentId) {
-    return themeImageService.findThemePreviewImages(List.of(themeComponentId))
-        .get(themeComponentId);
   }
 }
