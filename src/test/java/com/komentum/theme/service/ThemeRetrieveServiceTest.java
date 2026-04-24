@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
+import com.komentum.test.data.UserDataGenerator;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.service.ThemeImageService;
@@ -32,6 +33,9 @@ class ThemeRetrieveServiceTest {
   @Autowired
   private ThemeDataGenerator themeDataGenerator;
 
+  @Autowired
+  private UserDataGenerator userDataGenerator;
+
   private final int initialThemeCount = 10;
   private int initialStylePerTheme = 5;
   private int initialImagePerTheme = 4;
@@ -39,6 +43,7 @@ class ThemeRetrieveServiceTest {
   @BeforeEach
   void setUp() {
     themeDataGenerator.deleteTestData();
+    userDataGenerator.deleteAllUsers();
     themeDataGenerator.generateTestData(initialThemeCount);
     this.initialStylePerTheme = themeDataGenerator.initialColorStyles.size();
     this.initialImagePerTheme = themeDataGenerator.initialComponentTypes.size();
@@ -47,6 +52,7 @@ class ThemeRetrieveServiceTest {
   @AfterEach
   void tearDown() {
     themeDataGenerator.deleteTestData();
+    userDataGenerator.deleteAllUsers();
   }
 
   @Test
