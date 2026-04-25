@@ -35,7 +35,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     handleAccessToken(request);
     // 토큰 재발급 요청인 경우, 유효한 refresh token가 있어야하고, 없으면 401 응답을 반환한다
     if (isReissueRequest(request) && !handleRefreshToken(request)) {
-      System.out.println("invalid refresh token");
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       return;
     }

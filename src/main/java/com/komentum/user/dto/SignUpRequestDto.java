@@ -5,10 +5,12 @@ import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-@Data
+@Getter
+@Setter
 @Schema(description = "로컬 회원가입 요청 DTO")
 @AllArgsConstructor
 public class SignUpRequestDto {

@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 public class JwtUtils {
 
   String identifier = "publicUserId";
-  private final String TOKEN_TYPE_KEY = "tokenType";
+  private static final String TOKEN_TYPE_KEY = "tokenType";
   private final Key SECRET_KEY;
   private final AuthProperty authProperty;
 
