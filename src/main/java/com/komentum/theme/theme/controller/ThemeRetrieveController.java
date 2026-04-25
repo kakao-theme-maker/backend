@@ -1,6 +1,8 @@
 package com.komentum.theme.theme.controller;
 
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
+import com.komentum.theme.theme.dto.ThemePreviewDto;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +13,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -74,5 +77,27 @@ public class ThemeRetrieveController {
     List<ThemeComponentDto> completedThemes = themeRetrieveService.getCompletedThemesByUser(
         userEmail, pageable);
     return ResponseEntity.ok(completedThemes);
+  }
+
+  @GetMapping("/popular")
+  @Operation(summary = "인증된 사용자가 인기 테마 목록을 조회한다")
+  public ResponseEntity<List<ThemePreviewDto>> findPopularThemes(
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable,
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    List<ThemePreviewDto> res = themeRetrieveService.findPopularThemeList(pageable,
+        userDetails.getUsername());
+    return ResponseEntity.ok(res);
+  }
+
+  @GetMapping("/bookmarked")
+  @Operation(summary = "인증된 사용자가 현재 북마크한 테마 목록을 조회한다")
+  public ResponseEntity<List<ThemePreviewDto>> findBookmarkedThemes(
+      @PageableDefault(size = 20) @ParameterObject Pageable pageable,
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    List<ThemePreviewDto> res = themeRetrieveService.findBookmarkedThemeList(pageable,
+        userDetails.getUsername());
+    return ResponseEntity.ok(res);
   }
 }

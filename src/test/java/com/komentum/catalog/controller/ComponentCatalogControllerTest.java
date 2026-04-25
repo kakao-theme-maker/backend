@@ -15,6 +15,7 @@ import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
+import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -76,10 +77,10 @@ class ComponentCatalogControllerTest {
     List<User> users = userScenarioSupport.builder()
         .withUsers(2)
         .build().users();
-    var dc = designComponentScenarioSupport.builder(users)
+    List<DesignComponent> dc = designComponentScenarioSupport.builder(users)
         .withCountPerUser(3)
-        .build();
-    var tc = themeComponentScenarioSupport.builder(users)
+        .build().designComponents();
+    var tc = themeComponentScenarioSupport.builder(users, dc)
         .withCountPerUser(3)
         .build();
     // given: page=0, size=5로 설정

@@ -18,5 +18,7 @@ public interface ThemeComponentMapper {
   @Mapping(target = "isDone", ignore = true)
   @Mapping(target = "themeImages", ignore = true)
   @Mapping(target = "themeStyles", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   ThemeComponent convertToTransientEntity(CreateThemeRequest request, String versionNumber);
 }

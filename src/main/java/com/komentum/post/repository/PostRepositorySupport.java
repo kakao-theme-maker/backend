@@ -14,6 +14,8 @@ import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -190,5 +192,16 @@ public class PostRepositorySupport {
     return JPAExpressions.select(comment.count())
         .from(comment)
         .where(comment.post.eq(post));
+  }
+
+  public NumberExpression<Long> makePreferCountExpression(QPost post, QPrefer prefer) {
+    return Expressions.numberTemplate(
+        Long.class,
+        "({0})",
+        JPAExpressions
+            .select(prefer.preferId.countDistinct())
+            .from(prefer)
+            .where(prefer.post.eq(post))
+    );
   }
 }
