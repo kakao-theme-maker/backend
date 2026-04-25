@@ -46,4 +46,9 @@ public class ThemeImageService {
             (v1, v2) -> v1
         ));
   }
+
+  @Transactional(readOnly = true)
+  public String findThemePreviewImageUrl(Integer themeComponentId) {
+    return findThemePreviewImages(List.of(themeComponentId)).get(themeComponentId);
+  }
 }

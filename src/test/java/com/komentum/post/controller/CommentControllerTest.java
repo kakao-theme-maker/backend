@@ -64,7 +64,7 @@ class CommentControllerTest {
     assertThat(target.getContent()).isEqualTo(saved.getContent());
     assertThat(target.getUserEmail()).isEqualTo(saved.getUser().getUserEmail());
     assertThat(target.getUserName()).isEqualTo(saved.getUser().getName());
-    assertThat(target.getProfileImageUrl()).isEqualTo(saved.getUser().getProfileImg());
+    assertThat(target.getProfileImageUrl()).isEqualTo(saved.getUser().getProfileImgUrl());
     assertThat(target.getLikeCount()).isEqualTo(saved.getLikeCount());
     assertThat(target.getCreatedAt()).isNotBlank();
   }

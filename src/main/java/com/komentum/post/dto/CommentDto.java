@@ -46,7 +46,7 @@ public class CommentDto {
           .commentId(comment.getCommentId())
           .userEmail(comment.getUser().getUserEmail())
           .userName(comment.getUser().getName())
-          .profileImageUrl(comment.getUser().getProfileImg())
+          .profileImageUrl(comment.getUser().getProfileImgUrl())
           .content(comment.getContent())
           .likeCount(comment.getLikeCount())
           .isLiked(liked)

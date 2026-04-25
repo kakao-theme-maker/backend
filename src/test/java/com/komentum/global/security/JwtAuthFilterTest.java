@@ -52,7 +52,7 @@ class JwtAuthFilterTest {
         .role(UserRole.USER)
         .birth(LocalDate.now().minusYears(10))
         .gender(Gender.male)
-        .profileImg(faker.internet().image())
+        .profileImgUrl(faker.internet().image())
         .introduce(faker.lorem().word())
         .build();
     user = userRepository.save(newUser);

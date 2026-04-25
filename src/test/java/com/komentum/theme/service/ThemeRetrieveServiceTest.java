@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
+import com.komentum.test.data.UserDataGenerator;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
+import com.komentum.theme.theme.service.ThemeImageService;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +28,13 @@ class ThemeRetrieveServiceTest {
   private ThemeRetrieveService themeRetrieveService;
 
   @Autowired
+  private ThemeImageService themeImageService;
+
+  @Autowired
   private ThemeDataGenerator themeDataGenerator;
+
+  @Autowired
+  private UserDataGenerator userDataGenerator;
 
   private final int initialThemeCount = 10;
   private int initialStylePerTheme = 5;
@@ -34,6 +43,7 @@ class ThemeRetrieveServiceTest {
   @BeforeEach
   void setUp() {
     themeDataGenerator.deleteTestData();
+    userDataGenerator.deleteAllUsers();
     themeDataGenerator.generateTestData(initialThemeCount);
     this.initialStylePerTheme = themeDataGenerator.initialColorStyles.size();
     this.initialImagePerTheme = themeDataGenerator.initialComponentTypes.size();
@@ -42,6 +52,7 @@ class ThemeRetrieveServiceTest {
   @AfterEach
   void tearDown() {
     themeDataGenerator.deleteTestData();
+    userDataGenerator.deleteAllUsers();
   }
 
   @Test
@@ -54,8 +65,12 @@ class ThemeRetrieveServiceTest {
     Pageable pageable = PageRequest.of(pageNumber, pageSize);
     // when
     List<ThemeComponentDto> themeComponents = themeRetrieveService.getAllThemes(pageable);
+    Map<Integer, String> previewImages = findPreviewImageMap(themeComponents);
     // then
     assertThat(themeComponents).hasSize(pageSize).allSatisfy(themeComponentDto -> {
+      assertThat(themeComponentDto.getCreatedAt()).isNotNull();
+      assertThat(themeComponentDto.getPreviewImageUrl())
+          .isEqualTo(previewImages.get(themeComponentDto.getThemeComponentId()));
       assertThat(themeComponentDto.getStyles()).hasSize(initialStylePerTheme);
       assertThat(themeComponentDto.getImages()).hasSize(initialImagePerTheme);
     });
@@ -72,6 +87,9 @@ class ThemeRetrieveServiceTest {
     ThemeComponentDto founded = themeRetrieveService.getThemeById(toFind.getThemeComponentId());
     // then
     assertThat(founded.getThemeComponentId()).isEqualTo(toFind.getThemeComponentId());
+    assertThat(founded.getCreatedAt()).isEqualTo(toFind.getCreatedAt());
+    assertThat(founded.getPreviewImageUrl()).isEqualTo(
+        themeImageService.findThemePreviewImageUrl(toFind.getThemeComponentId()));
     assertThat(founded.getStyles()).hasSize(initialStylePerTheme);
     assertThat(founded.getImages()).hasSize(initialImagePerTheme);
     System.out.println("---end the theme");
@@ -154,5 +172,12 @@ class ThemeRetrieveServiceTest {
       assertThat(themeComponentDto.getUserEmail()).isEqualTo(userEmail);
     });
     System.out.println("---end completed themes by user");
+  }
+
+  private Map<Integer, String> findPreviewImageMap(List<ThemeComponentDto> themeComponents) {
+    return themeImageService.findThemePreviewImages(
+        themeComponents.stream()
+            .map(ThemeComponentDto::getThemeComponentId)
+            .toList());
   }
 }
