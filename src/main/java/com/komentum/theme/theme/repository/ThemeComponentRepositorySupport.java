@@ -39,7 +39,7 @@ public class ThemeComponentRepositorySupport {
         post,
         prefer
     );
-    BooleanExpression isBookmarked = condition.isBookmarked() ?
+    BooleanExpression isBookmarked = condition.getBookmarked() ?
         postRepositorySupport.isBookmarked(post, client) :
         null;
     return queryFactory.select(themeComponent)

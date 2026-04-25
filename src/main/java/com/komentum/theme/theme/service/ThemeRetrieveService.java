@@ -27,7 +27,6 @@ public class ThemeRetrieveService {
   private final ThemeComponentRepository themeComponentRepository;
   private final ThemeComponentMapper themeComponentMapper;
   private final ThemeImageService themeImageService;
-  private final ThemeImageService themeImageService;
   private final UserEntityFinder userEntityFinder;
   private final ThemeComponentRepositorySupport themeComponentRepositorySupport;
 

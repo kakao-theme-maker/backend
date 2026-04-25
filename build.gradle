@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.3'
     id 'io.spring.dependency-management' version '1.1.7'
+//    id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
 }
 
 group = 'com.komentum'
@@ -14,6 +15,12 @@ springBoot {
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
     }
 }
 
@@ -77,6 +84,7 @@ dependencies {
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
     // mapstruct
@@ -105,7 +113,6 @@ tasks.register("copyTestConfig", Copy) {
 processResources.dependsOn(copyConfig)
 processTestResources.dependsOn(copyTestConfig)
 // ### config settings end
-
 
 // ### query-dsl settings start
 def generated = 'src/main/generated'
