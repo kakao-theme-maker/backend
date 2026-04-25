@@ -1,10 +1,11 @@
 package com.komentum.user.redis;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -37,6 +38,16 @@ public class RedisSingleDataService {
     } catch (Exception e) {
       log.error(e.getMessage());
       return false;
+    }
+  }
+
+  public Long executeLua(String script, List<String> keys, String... args) {
+    try {
+      DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(script, Long.class);
+      return redisTemplate.execute(redisScript, keys, (Object[]) args.clone());
+    } catch (Exception e) {
+      log.error("Redis Lua execution error: {}", e.getMessage(), e);
+      return null;
     }
   }
 }

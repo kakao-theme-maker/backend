@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,7 +52,10 @@ public class UserAuthController {
   @PostMapping("/local/sign-out")
   @Operation(summary = "인증된 사용자가 로그아웃을 진행한다")
   public ResponseEntity<String> signOut(HttpServletRequest request, HttpServletResponse response) {
-    String accessToken = jwtUtils.resolveJwtToken(request);
+    String accessToken = jwtUtils.resolveToken(request, AuthProperty.ACCESS_TOKEN_COOKIE_NAME);
+    if (!jwtUtils.isAccessToken(accessToken)) {
+      throw new IllegalArgumentException("invalid access token");
+    }
     userAuthService.handleLogout(accessToken);
     tokenCookieManager.removeTokenOnCookie(response);
     return ResponseEntity.ok("logout success");
@@ -63,11 +65,15 @@ public class UserAuthController {
   /**
    * 토큰 재발급
    */
-  @PostMapping("/token")
-  @Operation(summary = "인증된 사용자의 refresh token으로 토큰을 재발급한다")
-  public ResponseEntity<UserAuthResponse> generateToken(
-      @RequestHeader(AuthProperty.ACCESS_TOKEN_HEADER) String refreshToken) {
-    refreshToken = refreshToken.replace(AuthProperty.ACCESS_TOKEN_PREFIX, "");
-    return ResponseEntity.ok(userAuthService.doRefreshTokenRotation(refreshToken));
+  @PostMapping("/reissue")
+  @Operation(summary = "인증된 사용자의 refresh token으로 access token을 재발급한다")
+  public ResponseEntity<UserAuthResponse> reissueToken(HttpServletRequest request,
+      HttpServletResponse response) {
+    String refreshToken = jwtUtils.resolveToken(request, AuthProperty.REFRESH_TOKEN_COOKIE_NAME);
+    UserAuthResponse tokenResponse = userAuthService.doRefreshTokenRotation(refreshToken);
+    tokenCookieManager.removeTokenOnCookie(response);
+    tokenCookieManager.addTokenOnCookie(response, tokenResponse.getAccessToken(),
+        tokenResponse.getRefreshToken());
+    return ResponseEntity.ok(tokenResponse);
   }
 }

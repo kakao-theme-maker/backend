@@ -2,6 +2,7 @@ package com.komentum.user.service;
 
 import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.exception.UnauthorizedException;
 import com.komentum.global.properties.AuthProperty;
 import com.komentum.global.security.CustomUserDetailsService;
 import com.komentum.user.client.KakaoAuthHttpClient;
@@ -16,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.RequestHeader;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 public class UserAuthService {
@@ -54,24 +53,6 @@ public class UserAuthService {
       throw new RuntimeException("failed to save access and refresh token");
     }
     return new UserAuthResponse(accessToken, refreshToken);
-  }
-
-  /**
-   * 카카오 로그인 및 회원가입
-   */
-  @Transactional
-  public Mono<UserAuthResponse> processKakaoAuth(String authCode) {
-    return kakaoAuthHttpClient.processLogin(authCode)
-        .flatMap(userInfo ->
-            Mono.fromCallable(() -> transactionTemplate.execute(status -> {
-                  User user = userRepository.findById(userInfo.getEmail()).orElse(null);
-                  if (user == null) {
-                    user = userRepository.save(userInfo.toEntity());
-                  }
-                  return initializeToken(user.getPublicUserId());
-                }
-            )).subscribeOn(Schedulers.boundedElastic())
-        );
   }
 
 
@@ -132,31 +113,24 @@ public class UserAuthService {
   /**
    * refresh token 으로 토큰 재발급
    */
-  public UserAuthResponse doRefreshTokenRotation(String refreshToken) {
-    validateRefreshToken(refreshToken);
-    String userEmail = jwtUtils.getUserId(refreshToken);
-    String newAccessToken = jwtUtils.generateAccessToken(userEmail);
-    String newRefreshToken = jwtUtils.generateRefreshToken(userEmail);
-    if (!tokenService.saveAccessAndRefreshToken(userEmail, newAccessToken, newRefreshToken)) {
-      throw new RuntimeException("failed to save access and refresh token");
+  public UserAuthResponse doRefreshTokenRotation(String oldRefreshToken) {
+    // refresh token 유효성 여부 확인
+    if (!jwtUtils.validateToken(oldRefreshToken) || !jwtUtils.isRefreshToken(oldRefreshToken)) {
+      throw new UnauthorizedException("[token reissue failed] refresh token is invalid or expired");
+    }
+    // refresh token rotation ( 기존 refresh 토큰과 비교 및 교체 )
+    String publicUserId = jwtUtils.getUserId(oldRefreshToken);
+    String newAccessToken = jwtUtils.generateAccessToken(publicUserId);
+    String newRefreshToken = jwtUtils.generateRefreshToken(publicUserId);
+    boolean rotated = tokenService.rotateRefreshToken(
+        publicUserId,
+        oldRefreshToken,
+        newRefreshToken
+    );
+    if (!rotated) {
+      tokenService.deleteRefreshToken(publicUserId);
+      throw new UnauthorizedException("[token reissue failed] refresh token is already reused");
     }
     return new UserAuthResponse(newAccessToken, newRefreshToken);
-  }
-
-  /**
-   * refresh token 유효성 검사
-   */
-  void validateRefreshToken(String refreshToken) {
-    if (refreshToken == null || !jwtUtils.validateToken(refreshToken)) {
-      throw new RuntimeException("Invalid refresh token");
-    }
-    String email = jwtUtils.getUserId(refreshToken);
-    String stored = tokenService.getRefreshToken(email);
-    if (stored == null || !stored.equals(refreshToken)) {
-      if (stored != null) {
-        tokenService.deleteRefreshToken(email);
-      }
-      throw new RuntimeException("Invalid refresh token : prev version");
-    }
   }
 }

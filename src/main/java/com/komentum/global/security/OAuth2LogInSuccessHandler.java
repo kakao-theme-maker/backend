@@ -4,6 +4,7 @@ import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomOAuth2User;
 import com.komentum.global.properties.AuthProperty;
 import com.komentum.global.security.cookie.TokenCookieManager;
+import com.komentum.user.service.TokenService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +21,7 @@ public class OAuth2LogInSuccessHandler extends SimpleUrlAuthenticationSuccessHan
   private final JwtUtils jwtUtils;
   private final AuthProperty authProperty;
   private final TokenCookieManager tokenCookieManager;
+  private final TokenService tokenService;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -29,7 +31,8 @@ public class OAuth2LogInSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     String accessToken = jwtUtils.generateAccessToken(oAuth2User.getUserIdentifier());
     String refreshToken = jwtUtils.generateRefreshToken(oAuth2User.getUserIdentifier());
     tokenCookieManager.addTokenOnCookie(response, accessToken, refreshToken);
-
+    tokenService.saveAccessAndRefreshToken(oAuth2User.getUserIdentifier(), accessToken,
+        refreshToken);
     String redirectUrl = authProperty.getOauth2RedirectUrl();
     response.sendRedirect(redirectUrl);
   }
