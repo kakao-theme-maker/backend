@@ -1,6 +1,5 @@
 package com.komentum.post.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.post.domain.Comment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +30,6 @@ public class CommentDto {
     @Schema(description = "댓글 좋아요 수")
     Long likeCount;
     @Schema(description = "현재 로그인 사용자의 댓글 좋아요 여부")
-    @JsonProperty("isLiked")
     Boolean isLiked;
     @Schema(description = "댓글 생성일")
     String createdAt;

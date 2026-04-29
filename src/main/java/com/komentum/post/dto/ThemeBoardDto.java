@@ -1,6 +1,5 @@
 package com.komentum.post.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
@@ -22,7 +21,6 @@ public class ThemeBoardDto {
   public static class ThemeBoardDetailDto {
 
     @Schema(description = "게시글 ID")
-    @JsonProperty("post_id")
     private Long postId;
 
     @Schema(description = "게시글 제목")
@@ -32,23 +30,18 @@ public class ThemeBoardDto {
     private String content;
 
     @Schema(description = "테마 데이터 ID")
-    @JsonProperty("theme_component_id")
     private Integer themeComponentId;
 
     @Schema(description = "작성자 이메일")
-    @JsonProperty("user_email")
     private String userEmail;
 
     @Schema(description = "작성자 이름")
-    @JsonProperty("user_name")
     private String userName;
 
     @Schema(description = "게시글 생성일")
-    @JsonProperty("created_at")
     private String createdAt;
 
     @Schema(description = "게시글 대표 이미지 URL", example = "https://sample.com")
-    @JsonProperty("preview_image_url")
     private List<String> previewImageUrl;
 
     @Schema(description = "게시글 좋아요 수")
@@ -67,7 +60,6 @@ public class ThemeBoardDto {
     private boolean bookmarked;
 
     @Schema(description = "사용자 프로필 이미지")
-    @JsonProperty("profile_image")
     private String profileImage;
   }
 
@@ -79,26 +71,21 @@ public class ThemeBoardDto {
   public static class ThemeBoardPreviewDto {
 
     @Schema(description = "게시글 ID")
-    @JsonProperty("post_id")
     private Long postId;
 
     @Schema(description = "테마 데이터 ID")
-    @JsonProperty("theme_component_id")
     private Integer themeComponentId;
 
     @Schema(description = "게시글 제목")
     private String title;
 
     @Schema(description = "게시글 대표 이미지 URL", example = "https://sample.com")
-    @JsonProperty("preview_image_url")
     private String previewImageUrl;
 
     @Schema(description = "게시글 작성자 이메일")
-    @JsonProperty("user_email")
     private String userEmail;
 
     @Schema(description = "게시글 생성일")
-    @JsonProperty("created_at")
     private String createdAt;
 
     @Schema(description = "게시글 좋아요 수")
@@ -132,14 +119,12 @@ public class ThemeBoardDto {
     String content;
 
     @Schema(description = "생성할 게시글의 태그 목록")
-    @JsonProperty("post_tags")
     List<TagCreateDto> postTags;
 
     @Schema(description = "테마 데이터 ID")
     int themeComponentId;
 
     @Schema(description = "게시글 공개여부")
-    @JsonProperty("public_flag")
     boolean publicFlag;
   }
 
@@ -169,11 +154,9 @@ public class ThemeBoardDto {
     String content;
 
     @Schema(description = "게시글의 태그 목록 ( 요청으로 받는 tag 목록으로 덮어쓰기 진행 )")
-    @JsonProperty("post_tags")
     List<TagUpdateDto> postTags;
 
     @Schema(description = "게시글 공개여부")
-    @JsonProperty("public_flag")
     boolean publicFlag;
   }
 }
