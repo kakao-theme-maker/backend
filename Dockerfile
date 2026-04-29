@@ -15,14 +15,16 @@ RUN ./gradlew dependencies --no-daemon
 COPY src src
 COPY ${CONFIG_MODULE} ${CONFIG_MODULE}
 # build and copy jar file
-RUN ./gradlew build --no-daemon
+RUN ./gradlew build --no-daemon -x test
 RUN cp build/libs/kakao-theme-maker.jar /app.jar
 
 # runtime stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
-# install docker
-RUN apk add --no-cache docker-cli
+# docker CLI
+RUN apt-get update && \
+    apt-get install -y docker.io && \
+    rm -rf /var/lib/apt/lists/*
 # run backend container
 COPY --from=builder ./app.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
