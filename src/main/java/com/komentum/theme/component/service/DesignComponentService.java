@@ -56,7 +56,7 @@ public class DesignComponentService {
 
   @Transactional(readOnly = true)
   public List<DesignComponentDto> getByPublicUserId(String publicUserId) {
-    return designComponentRepository.findByUser_PublicUserId(publicUserId).stream()
+    return designComponentRepository.findByUser_PublicUserIdAndIsPublicTrue(publicUserId).stream()
         .map(mapper::toDto).toList();
   }
 

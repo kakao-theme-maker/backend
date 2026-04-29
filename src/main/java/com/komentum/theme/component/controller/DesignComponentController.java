@@ -5,7 +5,6 @@ import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.facade.DesignComponentFacade;
-import com.komentum.theme.component.service.DesignComponentService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -34,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class DesignComponentController {
 
   private final DesignComponentFacade designComponentFacade;
-  private final DesignComponentService designComponentService;
 
   /**
    * designComponent 생성
@@ -77,7 +75,7 @@ public class DesignComponentController {
   @Operation(summary = "designComponent 목록을 전체 조회한다.")
   public ResponseEntity<Page<DesignComponentDto>> getAllDesignComponents(
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
-    return ResponseEntity.ok(designComponentService.getAllDesignComponents(pageable));
+    return ResponseEntity.ok(designComponentFacade.getAllDesignComponents(pageable));
   }
 
   @GetMapping("/user/{publicUserId}")
@@ -85,7 +83,7 @@ public class DesignComponentController {
   public ResponseEntity<List<DesignComponentDto>> getDesignComponentsByPublicUserId(
       @PathVariable("publicUserId") String publicUserId
   ) {
-    return ResponseEntity.ok(designComponentService.getByPublicUserId(publicUserId));
+    return ResponseEntity.ok(designComponentFacade.getByPublicUserId(publicUserId));
   }
 
 

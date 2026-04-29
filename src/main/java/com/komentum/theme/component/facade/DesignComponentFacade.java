@@ -6,6 +6,7 @@ import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +39,11 @@ public class DesignComponentFacade {
   @Transactional(readOnly = true)
   public Page<DesignComponentDto> getAllDesignComponents(Pageable pageable) {
     return designComponentService.getAllDesignComponents(pageable);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignComponentDto> getByPublicUserId(String publicUserId) {
+    return designComponentService.getByPublicUserId(publicUserId);
   }
 
   // UPDATE
