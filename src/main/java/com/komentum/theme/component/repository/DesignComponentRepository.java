@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DesignComponentRepository extends JpaRepository<DesignComponent, Integer> {
 
+  List<DesignComponent> findByUser_PublicUserId(String userPublicUserId);
+
   List<DesignComponent> findByUser_PublicUserIdAndIsPublicTrue(String userPublicUserId);
 
   List<DesignComponent> findByUser_UserEmailIn(List<String> userEmails);

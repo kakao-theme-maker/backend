@@ -1,5 +1,6 @@
 package com.komentum.theme.component.service;
 
+import com.komentum.global.security.CurrentPrincipalProvider;
 import com.komentum.global.utils.FileManager;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.domain.policy.DesignComponentPolicy;
@@ -30,6 +31,7 @@ public class DesignComponentService {
   private final DesignComponentPolicy designComponentPolicy;
   private final DesignComponentMapper mapper;
   private final FileManager fileManager;
+  private final CurrentPrincipalProvider currentPrincipalProvider;
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
@@ -56,7 +58,15 @@ public class DesignComponentService {
 
   @Transactional(readOnly = true)
   public List<DesignComponentDto> getByPublicUserId(String publicUserId) {
-    return designComponentRepository.findByUser_PublicUserIdAndIsPublicTrue(publicUserId).stream()
+    boolean isOwnerRequest = currentPrincipalProvider.retrievePrincipal()
+        .map(principal -> principal.getPublicUserId().equals(publicUserId))
+        .orElse(false);
+
+    List<DesignComponent> components = isOwnerRequest
+        ? designComponentRepository.findByUser_PublicUserId(publicUserId)
+        : designComponentRepository.findByUser_PublicUserIdAndIsPublicTrue(publicUserId);
+
+    return components.stream()
         .map(mapper::toDto).toList();
   }
 
