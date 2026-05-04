@@ -1,32 +1,46 @@
 package com.komentum.theme.component.service;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.domain.policy.DesignComponentPolicy;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.mapper.DesignComponentMapper;
+import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class DesignComponentService {
 
   private final DesignComponentRepository designComponentRepository;
+  private final ComponentTypeRepository componentTypeRepository;
   private final DesignComponentPolicy designComponentPolicy;
   private final DesignComponentMapper mapper;
   private final FileManager fileManager;
@@ -35,9 +49,17 @@ public class DesignComponentService {
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
       MultipartFile image,
       User user) {
+    List<ComponentType> componentTypes = resolveComponentTypes(request.getComponentTypeIds());
     String imageUrl = uploadImage(image);
-    DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
-    return mapper.toDto(designComponentRepository.save(newComponent));
+
+    try {
+      DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
+      newComponent.replaceComponentTypes(componentTypes);
+      return mapper.toDto(designComponentRepository.saveAndFlush(newComponent));
+    } catch (RuntimeException e) {
+      deleteUploadedImageQuietly(imageUrl);
+      throw e;
+    }
   }
 
   // READ
@@ -49,7 +71,7 @@ public class DesignComponentService {
 
   @Transactional(readOnly = true)
   public DesignComponent getEntityById(Integer id) {
-    return designComponentRepository.findById(id)
+    return designComponentRepository.findByDesignComponentId(id)
         .orElseThrow(
             () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
   }
@@ -63,8 +85,24 @@ public class DesignComponentService {
   // 페이지네이션 지원 메서드 (새로 추가)
   @Transactional(readOnly = true)
   public Page<DesignComponentDto> getAllDesignComponents(Pageable pageable) {
-    return designComponentRepository.findAll(pageable)
-        .map(mapper::toDto);
+    Page<Integer> designComponentIdPage = designComponentRepository.findDesignComponentIdPage(
+        pageable);
+    if (designComponentIdPage.isEmpty()) {
+      return new PageImpl<>(List.of(), pageable, designComponentIdPage.getTotalElements());
+    }
+
+    List<Integer> designComponentIds = designComponentIdPage.getContent();
+    Map<Integer, DesignComponent> componentMap = designComponentRepository
+        .findByDesignComponentIdIn(designComponentIds).stream()
+        .collect(Collectors.toMap(DesignComponent::getDesignComponentId, Function.identity()));
+
+    List<DesignComponentDto> content = designComponentIds.stream()
+        .map(componentMap::get)
+        .filter(Objects::nonNull)
+        .map(mapper::toDto)
+        .toList();
+
+    return new PageImpl<>(content, pageable, designComponentIdPage.getTotalElements());
   }
 
   // UPDATE
@@ -77,11 +115,24 @@ public class DesignComponentService {
       throw new AccessDeniedException("failed to update designComponent : invalid user or role");
     }
 
+    List<ComponentType> componentTypes = null;
+    if (request.getComponentTypeIds() != null) {
+      componentTypes = resolveComponentTypes(request.getComponentTypeIds());
+    }
+
     String imageUrl = (image != null) ? uploadImage(image) : null;
 
-    component.update(imageUrl, request.getIsPublic()
-    );
-    return mapper.toDto(component);
+    try {
+      component.update(imageUrl, request.getIsPublic());
+      if (componentTypes != null) {
+        component.replaceComponentTypes(componentTypes);
+      }
+      designComponentRepository.flush();
+      return mapper.toDto(component);
+    } catch (RuntimeException e) {
+      deleteUploadedImageQuietly(imageUrl);
+      throw e;
+    }
   }
 
   // DELETE
@@ -105,5 +156,63 @@ public class DesignComponentService {
 
   }
 
+  private void deleteUploadedImageQuietly(String imageUrl) {
+    if (imageUrl == null) {
+      return;
+    }
+    try {
+      fileManager.deleteFile(fileManager.convertUrlToFileName(imageUrl));
+    } catch (RuntimeException e) {
+      log.warn("failed to cleanup uploaded image after rollback: {}", imageUrl, e);
+    }
+  }
+
+  /**
+   * 입력된 componentsTypeIds 를 검증하고 정규화, 엔티티 변환한다.
+   *
+   * @param requestedIds
+   * @return
+   */
+  private List<ComponentType> resolveComponentTypes(List<Integer> requestedIds) {
+    validateDuplicateComponentTypeIds(requestedIds);
+    LinkedHashSet<Integer> uniqueRequestedIds = new LinkedHashSet<>(requestedIds);
+    List<ComponentType> componentTypes = componentTypeRepository.findAllById(uniqueRequestedIds);
+
+    Set<Integer> foundIds = componentTypes.stream()
+        .map(ComponentType::getComponentTypeId)
+        .collect(Collectors.toSet());
+    List<Integer> missingIds = uniqueRequestedIds.stream()
+        .filter(id -> !foundIds.contains(id))
+        .toList();
+    if (!missingIds.isEmpty()) {
+      throw new ResourceNotFoundException("ComponentType not found with ids: " + missingIds);
+    }
+
+    Map<Integer, ComponentType> componentTypeMap = componentTypes.stream()
+        .collect(Collectors.toMap(ComponentType::getComponentTypeId, Function.identity()));
+    return uniqueRequestedIds.stream()
+        .map(componentTypeMap::get)
+        .toList();
+  }
+
+  /**
+   * componentType의 중복 검증
+   *
+   * @param requestedIds
+   */
+  private void validateDuplicateComponentTypeIds(List<Integer> requestedIds) {
+    // 이미 처리한 id 집합
+    Set<Integer> seen = new LinkedHashSet<>();
+    List<Integer> duplicateIds = requestedIds.stream()
+        .filter(id -> !seen.add(id))
+        .distinct()
+        .toList();
+    if (!duplicateIds.isEmpty()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Duplicate componentTypeIds are not allowed: " + duplicateIds
+      );
+    }
+  }
 
 }
