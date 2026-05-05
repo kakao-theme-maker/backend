@@ -87,6 +87,15 @@ public class DesignComponentController {
     return ResponseEntity.ok(designComponentService.getByPublicUserId(publicUserId));
   }
 
+  @GetMapping("/component-types/{componentTypeId}")
+  @Operation(summary = "component type ID로 designComponent 목록을 조회한다.")
+  public ResponseEntity<List<DesignComponentDto>> getDesignComponentsByComponentTypeId(
+      @PathVariable("componentTypeId") Integer componentTypeId
+  ) {
+    return ResponseEntity.ok(
+        designComponentService.getDesignComponentsByComponentTypeId(componentTypeId));
+  }
+
 
   /**
    * designComponent 수정
