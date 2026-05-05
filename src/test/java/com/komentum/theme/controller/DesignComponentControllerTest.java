@@ -240,6 +240,75 @@ public class DesignComponentControllerTest {
     }
 
     @Test
+    @DisplayName("componentTypeId로 DesignComponent 목록 조회 테스트")
+    void getDesignComponentsByComponentTypeId() throws Exception {
+      // Given
+      DesignComponent componentAOnly = designComponentDataGenerator.generateDesignComponent(
+          testUser, "http://example.com/image-a.png", true, List.of(componentTypeA));
+      DesignComponent componentAAndB = designComponentDataGenerator.generateDesignComponent(
+          testUser, "http://example.com/image-ab.png", true, List.of(componentTypeA, componentTypeB));
+      designComponentDataGenerator.generateDesignComponent(
+          testUser, "http://example.com/image-b.png", true, List.of(componentTypeB));
+
+      // When
+      MockHttpServletRequestBuilder requestBuilder = get(
+          "/api/design-components/component-types/{componentTypeId}",
+          componentTypeA.getComponentTypeId());
+
+      MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+          .andExpect(status().isOk())
+          .andReturn();
+
+      // Then
+      DesignComponentDto[] responses = objectMapper.readValue(
+          result.getResponse().getContentAsString(), DesignComponentDto[].class);
+
+      assertThat(responses).hasSize(2);
+      assertThat(responses)
+          .extracting(DesignComponentDto::getDesignComponentId)
+          .containsExactlyInAnyOrder(
+              componentAOnly.getDesignComponentId(),
+              componentAAndB.getDesignComponentId()
+          );
+      assertThat(responses).allSatisfy(response ->
+          assertThat(response.getComponentTypes())
+              .extracting("componentTypeId")
+              .contains(componentTypeA.getComponentTypeId()));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 componentTypeId 조회 시 404 반환")
+    void getDesignComponentsByUnknownComponentTypeId() throws Exception {
+      MockHttpServletRequestBuilder requestBuilder = get(
+          "/api/design-components/component-types/{componentTypeId}", 999999);
+
+      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("componentType에 속한 DesignComponent가 없으면 빈 리스트 반환")
+    void getDesignComponentsByComponentTypeId_emptyResult() throws Exception {
+      // Given
+      designComponentDataGenerator.generateDesignComponent(
+          testUser, "http://example.com/image-b.png", true, List.of(componentTypeB));
+
+      // When
+      MockHttpServletRequestBuilder requestBuilder = get(
+          "/api/design-components/component-types/{componentTypeId}",
+          componentTypeA.getComponentTypeId());
+
+      MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
+          .andExpect(status().isOk())
+          .andReturn();
+
+      // Then
+      DesignComponentDto[] responses = objectMapper.readValue(
+          result.getResponse().getContentAsString(), DesignComponentDto[].class);
+      assertThat(responses).isEmpty();
+    }
+
+    @Test
     @DisplayName("특정 사용자의 DesignComponent 목록 조회 테스트")
     void getDesignComponentsByPublicUserId() throws Exception {
       // Given
