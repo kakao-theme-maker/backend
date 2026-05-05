@@ -82,6 +82,20 @@ public class DesignComponentService {
         .map(mapper::toDto).toList();
   }
 
+  @Transactional(readOnly = true)
+  public List<DesignComponentDto> getDesignComponentsByComponentTypeId(Integer componentTypeId) {
+    if (!componentTypeRepository.existsById(componentTypeId)) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND,
+          "ComponentType not found with id: " + componentTypeId
+      );
+    }
+
+    List<Integer> designComponentIds = designComponentRepository
+        .findDesignComponentIdsByComponentTypeId(componentTypeId);
+    return findDtosByOrderedIds(designComponentIds);
+  }
+
   // 페이지네이션 지원 메서드 (새로 추가)
   @Transactional(readOnly = true)
   public Page<DesignComponentDto> getAllDesignComponents(Pageable pageable) {
@@ -91,16 +105,7 @@ public class DesignComponentService {
       return new PageImpl<>(List.of(), pageable, designComponentIdPage.getTotalElements());
     }
 
-    List<Integer> designComponentIds = designComponentIdPage.getContent();
-    Map<Integer, DesignComponent> componentMap = designComponentRepository
-        .findByDesignComponentIdIn(designComponentIds).stream()
-        .collect(Collectors.toMap(DesignComponent::getDesignComponentId, Function.identity()));
-
-    List<DesignComponentDto> content = designComponentIds.stream()
-        .map(componentMap::get)
-        .filter(Objects::nonNull)
-        .map(mapper::toDto)
-        .toList();
+    List<DesignComponentDto> content = findDtosByOrderedIds(designComponentIdPage.getContent());
 
     return new PageImpl<>(content, pageable, designComponentIdPage.getTotalElements());
   }
@@ -213,6 +218,22 @@ public class DesignComponentService {
           "Duplicate componentTypeIds are not allowed: " + duplicateIds
       );
     }
+  }
+
+  private List<DesignComponentDto> findDtosByOrderedIds(List<Integer> designComponentIds) {
+    if (designComponentIds.isEmpty()) {
+      return List.of();
+    }
+
+    Map<Integer, DesignComponent> componentMap = designComponentRepository
+        .findByDesignComponentIdIn(designComponentIds).stream()
+        .collect(Collectors.toMap(DesignComponent::getDesignComponentId, Function.identity()));
+
+    return designComponentIds.stream()
+        .map(componentMap::get)
+        .filter(Objects::nonNull)
+        .map(mapper::toDto)
+        .toList();
   }
 
 }
