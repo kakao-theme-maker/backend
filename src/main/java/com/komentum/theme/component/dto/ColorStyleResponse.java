@@ -1,6 +1,6 @@
 package com.komentum.theme.component.dto;
 
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.StyleCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,15 +20,10 @@ public class ColorStyleResponse {
   @Schema(description = "color style의 설명")
   private String explain;
 
-  @Schema(description = "color style의 플랫폼", example = "ANDROID | IOS")
-  private Platform platform;
+  @Schema(description = "color style 이름")
+  private String name;
 
-  @Schema(description = "color style의 파일 경로")
-  private String styleSheetPath;
-
-  @Schema(description = "color style의 요소 이름")
-  private String styleElementName;
-  
-  @Schema(description = "color style의 속성 이름")
-  private String stylePropsName;
+  // API 응답 시 enum name 대신 styleCode string 사용 ( @JsonValue )
+  @Schema(description = "color style 종류")
+  private StyleCode styleCode;
 }
