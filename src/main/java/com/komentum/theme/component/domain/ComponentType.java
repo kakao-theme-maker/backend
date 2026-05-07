@@ -1,7 +1,7 @@
 package com.komentum.theme.component.domain;
 
 import com.komentum.theme.component.dto.ComponentTypeUpdateRequest;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.TypeCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,20 +39,10 @@ public class ComponentType {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private Platform platform;
+  private TypeCode typeCode;
 
-  @Column(name = "component_path", nullable = false)
-  private String componentPath;
-
-  @Column(name = "component_name", nullable = false)
-  private String componentName;
-
-  @Column(name = "size_x")
-  private Integer sizeX;
-
-  @Column(name = "size_y")
-  private Integer sizeY;
-
+  @Column(nullable = false)
+  private String name;
 
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)
@@ -65,31 +55,14 @@ public class ComponentType {
   public void update(ComponentTypeUpdateRequest componentType) {
     if (componentType.getExplain() != null) {
       this.explain = componentType.getExplain();
-    }
-    if (componentType.getPlatform() != null) {
-      this.platform = componentType.getPlatform();
-    }
-    if (componentType.getComponentName() != null) {
-      this.componentName = componentType.getComponentName();
-    }
-    if (componentType.getComponentPath() != null) {
-      this.componentPath = componentType.getComponentPath();
-    }
-    if (componentType.getSizeX() != null) {
-      this.sizeX = componentType.getSizeX();
-    }
-    if (componentType.getSizeY() != null) {
-      this.sizeY = componentType.getSizeY();
+      this.name = componentType.getName();
+      this.typeCode = componentType.getTypeCode();
     }
   }
 
   public void replace(ComponentType componentType) {
     this.explain = componentType.getExplain();
-    this.platform = componentType.getPlatform();
-    this.componentName = componentType.getComponentName();
-    this.componentPath = componentType.getComponentPath();
-    this.sizeX = componentType.getSizeX();
-    this.sizeY = componentType.getSizeY();
+    this.typeCode = componentType.getTypeCode();
   }
 
   public boolean isSame(ComponentType other) {
@@ -97,10 +70,6 @@ public class ComponentType {
       return false;
     }
     return Objects.equals(this.explain, other.explain)
-        && this.platform == other.platform
-        && Objects.equals(this.componentPath, other.componentPath)
-        && Objects.equals(this.componentName, other.componentName)
-        && Objects.equals(this.sizeX, other.sizeX)
-        && Objects.equals(this.sizeY, other.sizeY);
+        && this.typeCode.equals(other.typeCode);
   }
 }
