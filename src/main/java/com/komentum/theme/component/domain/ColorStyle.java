@@ -1,7 +1,7 @@
 package com.komentum.theme.component.domain;
 
 import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.StyleCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -34,43 +34,25 @@ public class ColorStyle {
   @Column(name = "`explain`")
   private String explain;
 
+  @Column(nullable = false)
+  private String name;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private Platform platform;
-
-  @Column(name = "style_sheet_path", nullable = false)
-  private String styleSheetPath;
-
-  @Column(name = "style_element_name", nullable = false)
-  private String styleElementName;
-
-  @Column(name = "style_props_name", nullable = false)
-  private String stylePropsName;
+  private StyleCode styleCode;
 
   public void update(ColorStyleUpdateRequest colorStyle) {
     if (colorStyle.getExplain() != null) {
       this.explain = colorStyle.getExplain();
-    }
-    if (colorStyle.getPlatform() != null) {
-      this.platform = colorStyle.getPlatform();
-    }
-    if (colorStyle.getStyleSheetPath() != null) {
-      this.styleSheetPath = colorStyle.getStyleSheetPath();
-    }
-    if (colorStyle.getStyleElementName() != null) {
-      this.styleElementName = colorStyle.getStyleElementName();
-    }
-    if (colorStyle.getStylePropsName() != null) {
-      this.stylePropsName = colorStyle.getStylePropsName();
+      this.name = colorStyle.getName();
+      this.styleCode = colorStyle.getStyleCode();
     }
   }
 
   public void replace(ColorStyle source) {
     this.explain = source.getExplain();
-    this.platform = source.getPlatform();
-    this.styleSheetPath = source.getStyleSheetPath();
-    this.styleElementName = source.getStyleElementName();
-    this.stylePropsName = source.stylePropsName;
+    this.styleCode = source.getStyleCode();
+    this.name = source.getName();
   }
 
   public boolean isSame(ColorStyle other) {
@@ -78,9 +60,7 @@ public class ColorStyle {
       return false;
     }
     return Objects.equals(this.explain, other.explain)
-        && this.platform == other.platform
-        && Objects.equals(this.styleSheetPath, other.styleSheetPath)
-        && Objects.equals(this.styleElementName, other.styleElementName)
-        && Objects.equals(this.stylePropsName, other.stylePropsName);
+        && this.styleCode.equals(other.styleCode)
+        && this.name.equals(other.name);
   }
 }
