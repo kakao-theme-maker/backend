@@ -44,7 +44,11 @@ public class ColorStyle {
   public void update(ColorStyleUpdateRequest colorStyle) {
     if (colorStyle.getExplain() != null) {
       this.explain = colorStyle.getExplain();
+    }
+    if (colorStyle.getName() != null) {
       this.name = colorStyle.getName();
+    }
+    if (colorStyle.getStyleCode() != null) {
       this.styleCode = colorStyle.getStyleCode();
     }
   }

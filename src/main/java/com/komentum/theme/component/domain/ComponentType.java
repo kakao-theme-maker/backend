@@ -55,13 +55,18 @@ public class ComponentType {
   public void update(ComponentTypeUpdateRequest componentType) {
     if (componentType.getExplain() != null) {
       this.explain = componentType.getExplain();
-      this.name = componentType.getName();
+    }
+    if (componentType.getTypeCode() != null) {
       this.typeCode = componentType.getTypeCode();
+    }
+    if (componentType.getName() != null) {
+      this.name = componentType.getName();
     }
   }
 
   public void replace(ComponentType componentType) {
     this.explain = componentType.getExplain();
+    this.name = componentType.getName();
     this.typeCode = componentType.getTypeCode();
   }
 
@@ -70,6 +75,7 @@ public class ComponentType {
       return false;
     }
     return Objects.equals(this.explain, other.explain)
-        && this.typeCode.equals(other.typeCode);
+        && this.typeCode.equals(other.typeCode)
+        && this.name.equals(other.name);
   }
 }
