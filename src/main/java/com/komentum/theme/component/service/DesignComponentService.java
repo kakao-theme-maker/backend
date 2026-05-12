@@ -105,7 +105,16 @@ public class DesignComponentService {
       return new PageImpl<>(List.of(), pageable, designComponentIdPage.getTotalElements());
     }
 
-    List<DesignComponentDto> content = findDtosByOrderedIds(designComponentIdPage.getContent());
+    List<Integer> designComponentIds = designComponentIdPage.getContent();
+    Map<Integer, DesignComponent> componentMap = designComponentRepository
+        .findByDesignComponentIdIn(designComponentIds).stream()
+        .collect(Collectors.toMap(DesignComponent::getDesignComponentId, Function.identity()));
+
+    List<DesignComponentDto> content = designComponentIds.stream()
+        .map(componentMap::get)
+        .filter(Objects::nonNull)
+        .map(mapper::toDto)
+        .toList();
 
     return new PageImpl<>(content, pageable, designComponentIdPage.getTotalElements());
   }
