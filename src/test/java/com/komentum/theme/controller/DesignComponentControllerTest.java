@@ -3,13 +3,15 @@ package com.komentum.theme.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.security.UserRole;
@@ -17,13 +19,18 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.data.DesignComponentDataGenerator;
 import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
+import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -42,7 +51,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -63,6 +71,9 @@ public class DesignComponentControllerTest {
   private DesignComponentRepository designComponentRepository;
 
   @Autowired
+  private ComponentTypeRepository componentTypeRepository;
+
+  @Autowired
   private MockMvcUtils mockMvcUtils;
 
   @MockitoBean
@@ -76,6 +87,8 @@ public class DesignComponentControllerTest {
 
   private User testUser;
   private TestClientDto testClient;
+  private ComponentType componentTypeA;
+  private ComponentType componentTypeB;
 
 
   @BeforeEach
@@ -83,6 +96,9 @@ public class DesignComponentControllerTest {
     userDataGenerator.deleteAllUsers();
     testUser = userDataGenerator.generateTestUser("test@example.com");
     testClient = TestClientDto.fromEntity(testUser);
+    componentTypeRepository.deleteAll();
+    componentTypeA = createComponentType("comp-a");
+    componentTypeB = createComponentType("comp-b");
 
     when(fileManager.uploadFile(any(byte[].class), anyString()))
         .thenReturn("https://s3.example.com/uploaded-image.png");
@@ -101,7 +117,32 @@ public class DesignComponentControllerTest {
   @AfterEach
   void tearDown() {
     designComponentDataGenerator.deleteDesignComponents();
+    componentTypeRepository.deleteAll();
     userDataGenerator.deleteAllUsers();
+  }
+
+  private ComponentType createComponentType(String suffix) {
+    String fileName = "theme_maintab_cell_image_" + suffix + ".png";
+    return componentTypeRepository.save(ComponentType.builder()
+        .platform(Platform.ANDROID)
+        .componentName(fileName)
+        .componentPath("res/drawable-sw600dp/" + fileName)
+        .sizeX(100)
+        .sizeY(200)
+        .build());
+  }
+
+  private MockMultipartFile createRequestPart(Object request) throws Exception {
+    return mockMvcUtils.jsonToTestFormData("request", request);
+  }
+
+  private MockMultipartFile createImagePart(String fileName) {
+    return mockMvcUtils.fileToTestFormData(
+        "image",
+        fileName,
+        MediaType.IMAGE_PNG,
+        "test-image-content".getBytes()
+    );
   }
 
   @Nested
@@ -112,31 +153,45 @@ public class DesignComponentControllerTest {
     @DisplayName("DesignComponent 생성 테스트")
     void createDesignComponent() throws Exception {
       // Given
-      CreateDesignComponentRequest request = CreateDesignComponentRequest.builder()
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
           .isPublic(true)
+          .componentTypeIds(
+              List.of(componentTypeA.getComponentTypeId(), componentTypeB.getComponentTypeId()))
           .build();
-
-      MockMultipartFile image = new MockMultipartFile(
-          "image", "test.png", "image/png", "test-image-content".getBytes());
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile image = createImagePart("test.png");
 
       // When & Then
-      MockHttpServletRequestBuilder requestBuilder = multipart("/api/design-components")
-          .file(image)
-          .param("isPublic", "true");
-
-      MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
-          .andExpect(status().isOk())
-          .andReturn();
-      DesignComponentDto response = objectMapper.readValue(
-          result.getResponse().getContentAsString(), DesignComponentDto.class);
+      DesignComponentDto response = mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<DesignComponentDto>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(200)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
 
       assertThat(response.getDesignComponentId()).isNotNull();
       assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
       assertThat(response.getIsPublic()).isTrue();
       assertThat(response.getCreatedAt()).isNotNull();
       assertThat(response.getUpdatedAt()).isNotNull();
+      assertThat(response.getComponentTypes())
+          .extracting("componentTypeId")
+          .containsExactlyInAnyOrder(componentTypeA.getComponentTypeId(),
+              componentTypeB.getComponentTypeId());
 
       assertThat(designComponentRepository.count()).isEqualTo(1);
+      DesignComponent saved = designComponentRepository.findByDesignComponentId(
+          response.getDesignComponentId()).orElseThrow();
+      assertThat(saved.getComponentTypes())
+          .extracting(ComponentType::getComponentTypeId)
+          .containsExactlyInAnyOrder(componentTypeA.getComponentTypeId(),
+              componentTypeB.getComponentTypeId());
     }
 
     @Test
@@ -144,7 +199,7 @@ public class DesignComponentControllerTest {
     void getDesignComponent() throws Exception {
       // Given
       DesignComponent savedComponent = designComponentDataGenerator.generateDesignComponent(
-          testUser, "http://example.com/image.png", false);
+          testUser, "http://example.com/image.png", false, List.of(componentTypeA, componentTypeB));
 
       // When & Then
       MockHttpServletRequestBuilder requestBuilder = get("/api/design-components/{id}",
@@ -162,20 +217,26 @@ public class DesignComponentControllerTest {
       assertThat(response.getImageUrl()).isEqualTo("http://example.com/image.png");
       assertThat(response.getCreatedAt()).isNotNull();
       assertThat(response.getUpdatedAt()).isNotNull();
+      assertThat(response.getComponentTypes())
+          .extracting("componentTypeId")
+          .containsExactlyInAnyOrder(componentTypeA.getComponentTypeId(),
+              componentTypeB.getComponentTypeId());
     }
 
     @Test
     @DisplayName("DesignComponent 전체 조회 테스트")
     void getAllDesignComponents() throws Exception {
       // Given
-      designComponentDataGenerator.generateData(5, 4);
+      designComponentDataGenerator.generateDesignComponents(
+          userDataGenerator.generateTestUsers(5), 4, List.of(componentTypeA));
 
       // When & Then
       MockHttpServletRequestBuilder requestBuilder = get("/api/design-components");
 
       mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.content.length()").value(20));
+          .andExpect(jsonPath("$.content.length()").value(20))
+          .andExpect(jsonPath("$.content[0].component_types.length()").value(1));
     }
 
     @Test
@@ -186,17 +247,17 @@ public class DesignComponentControllerTest {
 
       // testUser의 design components
       designComponentDataGenerator.generateDesignComponent(testUser,
-          "http://example.com/image1.png", true);
+          "http://example.com/image1.png", true, List.of(componentTypeA));
       designComponentDataGenerator.generateDesignComponent(testUser,
-          "http://example.com/image2.png", true);
+          "http://example.com/image2.png", true, List.of(componentTypeA));
       designComponentDataGenerator.generateDesignComponent(testUser,
-          "http://example.com/image3.png", true);
+          "http://example.com/image3.png", true, List.of(componentTypeB));
 
       // otherUser의 design component
       designComponentDataGenerator.generateDesignComponent(otherUser,
-          "http://example.com/other1.png", true);
+          "http://example.com/other1.png", true, List.of(componentTypeA));
       designComponentDataGenerator.generateDesignComponent(otherUser,
-          "http://example.com/other2.png", true);
+          "http://example.com/other2.png", true, List.of(componentTypeB));
 
       // When & Then - testUser의 desgin components만 조회
       MockHttpServletRequestBuilder requestBuilder = get(
@@ -228,30 +289,27 @@ public class DesignComponentControllerTest {
     void updateDesignComponent() throws Exception {
       // Given
       DesignComponent savedComponent = designComponentDataGenerator.generateDesignComponent(
-          testUser, "http://example.com/image.png", false);
-
+          testUser, "http://example.com/image.png", false, List.of(componentTypeA));
       UpdateDesignComponentRequest updateRequest = UpdateDesignComponentRequest.builder()
           .isPublic(true)
+          .componentTypeIds(List.of(componentTypeB.getComponentTypeId()))
           .build();
-      MockMultipartFile image = new MockMultipartFile(
-          "image", "updated.png", "image/png", "updated-image-content".getBytes());
+      MockMultipartFile requestPart = createRequestPart(updateRequest);
+      MockMultipartFile image = createImagePart("updated.png");
 
       // When & Then
-      MockHttpServletRequestBuilder requestBuilder = multipart(
-          "/api/design-components/{id}", savedComponent.getDesignComponentId())
-          .file(image)
-          .param("isPublic", "true");
-
-      requestBuilder.with(request -> {
-        request.setMethod("PUT");
-        return request;
-      });
-
-      MvcResult result = mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
-          .andExpect(status().isOk())
-          .andReturn();
-      DesignComponentDto response = objectMapper.readValue(
-          result.getResponse().getContentAsString(), DesignComponentDto.class);
+      DesignComponentDto response = mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<DesignComponentDto>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/" + savedComponent.getDesignComponentId())
+              .httpMethod(HttpMethod.PUT)
+              .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(200)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
       assertThat(response.getDesignComponentId()).isEqualTo(savedComponent.getDesignComponentId());
       assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
       assertThat(response.getIsPublic()).isTrue();
@@ -260,6 +318,15 @@ public class DesignComponentControllerTest {
       assertThat(response.getImageUrl()).isEqualTo("https://s3.example.com/uploaded-image.png");
       assertThat(response.getCreatedAt()).isNotNull();
       assertThat(response.getUpdatedAt()).isNotNull();
+      assertThat(response.getComponentTypes())
+          .extracting("componentTypeId")
+          .containsExactly(componentTypeB.getComponentTypeId());
+
+      DesignComponent updated = designComponentRepository.findByDesignComponentId(
+          savedComponent.getDesignComponentId()).orElseThrow();
+      assertThat(updated.getComponentTypes())
+          .extracting(ComponentType::getComponentTypeId)
+          .containsExactly(componentTypeB.getComponentTypeId());
     }
 
     @Test
@@ -268,37 +335,136 @@ public class DesignComponentControllerTest {
       // Given - 다른 사용자가 만든 컴포넌트
       User otherUser = userDataGenerator.generateTestUser("other@test.com");
       DesignComponent savedComponent = designComponentDataGenerator.generateDesignComponent(
-          otherUser, "http://example.com/image.png", false);
-
+          otherUser, "http://example.com/image.png", false, List.of(componentTypeA));
       UpdateDesignComponentRequest updateRequest = UpdateDesignComponentRequest.builder()
           .isPublic(true)
+          .componentTypeIds(List.of(componentTypeB.getComponentTypeId()))
           .build();
-
-      MockMultipartFile image = new MockMultipartFile(
-          "image", "updated.png", "image/png", "updated-image-content".getBytes());
-      MockMultipartFile requestPart = new MockMultipartFile(
-          "request", "", "application/json", objectMapper.writeValueAsBytes(updateRequest));
-
+      MockMultipartFile requestPart = createRequestPart(updateRequest);
+      MockMultipartFile image = createImagePart("updated.png");
       // When & Then - testUser로 수정 시도 (실패해야 함)
-      MockMultipartHttpServletRequestBuilder requestBuilder = multipart(
-          "/api/design-components/{id}", savedComponent.getDesignComponentId())
-          .file(image)
-          .file(requestPart);
-
-      requestBuilder.with(request -> {
-        request.setMethod("PUT");
-        return request;
-      });
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/" + savedComponent.getDesignComponentId())
+              .httpMethod(HttpMethod.PUT)
+              .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(403)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
 
       // 수정 안됐는지 확인
-      mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
-          .andExpect(status().isForbidden());
-
       DesignComponent afterComponent = designComponentRepository.findById(
           savedComponent.getDesignComponentId()).get();
       assertThat(afterComponent.getImageUrl()).isEqualTo("http://example.com/image.png");
       assertThat(afterComponent.getIsPublic()).isFalse();
+      assertThat(afterComponent.getComponentTypes())
+          .extracting(ComponentType::getComponentTypeId)
+          .containsExactly(componentTypeA.getComponentTypeId());
 
+    }
+
+    @Test
+    @DisplayName("DesignComponent 생성 시 componentTypeIds 누락 검증")
+    void createDesignComponent_withoutComponentTypeIds() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile image = createImagePart("test.png");
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(400)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    }
+
+    @Test
+    @DisplayName("DesignComponent 생성 시 중복 componentTypeIds 검증")
+    void createDesignComponent_duplicateComponentTypeIds() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(
+              List.of(componentTypeA.getComponentTypeId(), componentTypeA.getComponentTypeId()))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile image = createImagePart("test.png");
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(400)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+    }
+
+    @Test
+    @DisplayName("DesignComponent 생성 시 존재하지 않는 componentTypeId 검증")
+    void createDesignComponent_withUnknownComponentTypeId() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(List.of(componentTypeA.getComponentTypeId(), 999999))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile image = createImagePart("test.png");
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(404)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    }
+
+    @Test
+    @DisplayName("DesignComponent 수정 시 존재하지 않는 componentTypeId 검증")
+    void updateDesignComponent_withUnknownComponentTypeId() throws Exception {
+      DesignComponent savedComponent = designComponentDataGenerator.generateDesignComponent(
+          testUser, "http://example.com/image.png", false, List.of(componentTypeA));
+      UpdateDesignComponentRequest updateRequest = UpdateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(List.of(999999))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(updateRequest);
+      MockMultipartFile image = createImagePart("updated.png");
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/" + savedComponent.getDesignComponentId())
+              .httpMethod(HttpMethod.PUT)
+              .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(404)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
     }
 
 
@@ -327,7 +493,8 @@ public class DesignComponentControllerTest {
       // Given - 다른 사용자가 만든 컴포넌트
       User otherUser = userDataGenerator.generateTestUser("other@test.com");
       DesignComponent savedComponent = designComponentDataGenerator
-          .generateDesignComponent(otherUser, "https://other.com/image.png", false);
+          .generateDesignComponent(otherUser, "https://other.com/image.png", false,
+              List.of(componentTypeA));
 
       // When & Then - testUser로 삭제 시도 (실패해야 함)
       MockHttpServletRequestBuilder requestBuilder =
