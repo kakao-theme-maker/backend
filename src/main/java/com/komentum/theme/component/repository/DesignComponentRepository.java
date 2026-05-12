@@ -21,7 +21,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
   Page<Integer> findDesignComponentIdPage(Pageable pageable);
 
   @Query("""
-      select distinct dc.designComponentId
+      select dc.designComponentId
       from DesignComponent dc
       join dc.componentTypeMappings componentTypeMapping
       where componentTypeMapping.componentType.componentTypeId = :componentTypeId
