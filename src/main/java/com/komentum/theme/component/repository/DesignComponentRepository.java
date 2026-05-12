@@ -25,6 +25,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
       from DesignComponent dc
       join dc.componentTypeMappings componentTypeMapping
       where componentTypeMapping.componentType.componentTypeId = :componentTypeId
+      order by dc.createdAt desc, dc.designComponentId desc
       """)
   List<Integer> findDesignComponentIdsByComponentTypeId(
       @Param("componentTypeId") Integer componentTypeId);
