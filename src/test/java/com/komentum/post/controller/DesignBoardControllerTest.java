@@ -183,9 +183,9 @@ public class DesignBoardControllerTest {
   @DisplayName("when send request, save and return design board info")
   public void whenSendRequest_saveAndReturnDesignBoard() throws Exception {
     // given
-    String expectedPreviewImageUrl = UUID.randomUUID().toString();
     DesignComponent unsavedBoardDesignComponent = boardDetailDataGenerator.getNonDesignBoardDesignComponents()
         .get(0);
+    String expectedPreviewImageUrl = unsavedBoardDesignComponent.getImageUrl();
     User author = boardDetailDataGenerator.getUsers().get(0);
     List<String> tagNames = List.of("a", "b");
     List<TagCreateDto> tagCreateDtoList = tagNames.stream()
@@ -194,7 +194,7 @@ public class DesignBoardControllerTest {
     DesignBoardCreateDto createDto = DesignBoardCreateDto.builder()
         .title("test title")
         .content("test content")
-        .designComponentId(unsavedBoardDesignComponent.getDesignComponentId())
+        .designComponentIds(List.of(unsavedBoardDesignComponent.getDesignComponentId()))
         .publicFlag(true)
         .postTags(tagCreateDtoList)
         .build();
