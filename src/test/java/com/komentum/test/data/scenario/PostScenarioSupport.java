@@ -121,11 +121,7 @@ public class PostScenarioSupport {
      */
     @Transactional
     public PostScenarioBuilder withPrefersPerPost(int preferPerPost) {
-      if (users.isEmpty() || posts.isEmpty()) {
-        throw new RuntimeException("user or post must not be empty");
-      }
-      this.prefers = preferSeeder.seedPerPost(preferPerPost, users, 1);
-      return this;
+      return withPrefersPerPost(preferPerPost, 1.0);
     }
 
     /**

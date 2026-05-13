@@ -13,6 +13,7 @@ import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
 import com.komentum.test.data.scenario.PostScenarioSupport;
 import com.komentum.test.data.scenario.PostScenarioSupport.Result;
+import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
@@ -37,6 +38,9 @@ class BookmarkControllerTest {
 
   @Autowired
   private PostScenarioSupport postScenarioSupport;
+
+  @Autowired
+  private UserScenarioSupport userScenarioSupport;
 
   @Autowired
   private TestDataRemover testDataRemover;
