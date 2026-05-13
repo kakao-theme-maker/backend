@@ -26,7 +26,7 @@ import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
@@ -124,11 +124,9 @@ public class DesignComponentControllerTest {
   private ComponentType createComponentType(String suffix) {
     String fileName = "theme_maintab_cell_image_" + suffix + ".png";
     return componentTypeRepository.save(ComponentType.builder()
-        .platform(Platform.ANDROID)
-        .componentName(fileName)
-        .componentPath("res/drawable-sw600dp/" + fileName)
-        .sizeX(100)
-        .sizeY(200)
+        .explain("explain")
+        .name("test component type")
+        .typeCode(TypeCode.MAIN_TAB_BG_IMAGE)
         .build());
   }
 
@@ -246,7 +244,8 @@ public class DesignComponentControllerTest {
       DesignComponent componentAOnly = designComponentDataGenerator.generateDesignComponent(
           testUser, "http://example.com/image-a.png", true, List.of(componentTypeA));
       DesignComponent componentAAndB = designComponentDataGenerator.generateDesignComponent(
-          testUser, "http://example.com/image-ab.png", true, List.of(componentTypeA, componentTypeB));
+          testUser, "http://example.com/image-ab.png", true,
+          List.of(componentTypeA, componentTypeB));
       designComponentDataGenerator.generateDesignComponent(
           testUser, "http://example.com/image-b.png", true, List.of(componentTypeB));
 
