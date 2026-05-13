@@ -145,6 +145,15 @@ public class DesignComponentControllerTest {
     );
   }
 
+  private MockMultipartFile createFilesPart(String fileName) {
+    return mockMvcUtils.fileToTestFormData(
+        "files",
+        fileName,
+        MediaType.IMAGE_PNG,
+        "test-image-content".getBytes()
+    );
+  }
+
   @Nested
   @DisplayName("DesignComponent CRUD 테스트")
   class DesignComponentTests {
@@ -192,6 +201,69 @@ public class DesignComponentControllerTest {
           .extracting(ComponentType::getComponentTypeId)
           .containsExactlyInAnyOrder(componentTypeA.getComponentTypeId(),
               componentTypeB.getComponentTypeId());
+    }
+
+    @Test
+    @DisplayName("DesignComponent 다중 업로드 생성 테스트")
+    void createDesignComponents_multiUpload() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(List.of(componentTypeA.getComponentTypeId()))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile file1 = createFilesPart("test-1.png");
+      MockMultipartFile file2 = createFilesPart("test-2.png");
+
+      List<DesignComponentDto> response = mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<List<DesignComponentDto>>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/bulk")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, file1, file2))
+              .clientDto(testClient)
+              .statusCode(200)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      assertThat(response).hasSize(2);
+      assertThat(response)
+          .extracting(DesignComponentDto::getPublicUserId)
+          .containsOnly(testUser.getPublicUserId());
+      assertThat(response).allSatisfy(asset -> assertThat(
+              asset.getComponentTypes())
+              .extracting("componentTypeId")
+              .containsExactly(componentTypeA.getComponentTypeId()));
+
+      assertThat(designComponentRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("files 1개 업로드도 정상 동작")
+    void createDesignComponents_singleFileUpload() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(List.of(componentTypeA.getComponentTypeId()))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile file = createFilesPart("single-file.png");
+
+      List<DesignComponentDto> response = mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<List<DesignComponentDto>>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/bulk")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, file))
+              .clientDto(testClient)
+              .statusCode(200)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      assertThat(response).hasSize(1);
+      assertThat(designComponentRepository.count()).isEqualTo(1);
     }
 
     @Test
@@ -450,6 +522,113 @@ public class DesignComponentControllerTest {
               .path("/api/design-components")
               .httpMethod(HttpMethod.POST)
               .formDataList(List.of(requestPart, image))
+              .clientDto(testClient)
+              .statusCode(400)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    }
+
+    @Test
+    @DisplayName("DesignComponent 생성 시 잘못된 componentType 검증")
+    void createDesignComponent_withInvalidComponentType() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(List.of(999999))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile file = createFilesPart("test.png");
+
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/bulk")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, file))
+              .clientDto(testClient)
+              .statusCode(404)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    }
+
+    @Test
+    @DisplayName("DesignComponent 생성 시 파일 누락 검증")
+    void createDesignComponent_withoutImageAndFiles() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(List.of(componentTypeA.getComponentTypeId()))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/bulk")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart))
+              .clientDto(testClient)
+              .statusCode(400)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+    }
+
+    @Test
+    @DisplayName("DesignComponent 생성 시 빈 파일 검증")
+    void createDesignComponent_withEmptyFile() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(List.of(componentTypeA.getComponentTypeId()))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile emptyFile = mockMvcUtils.fileToTestFormData(
+          "files",
+          "empty.png",
+          MediaType.IMAGE_PNG,
+          new byte[0]
+      );
+
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/bulk")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, emptyFile))
+              .clientDto(testClient)
+              .statusCode(400)
+              .responseType(new TypeReference<>() {
+              })
+              .build()
+      );
+
+      verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    }
+
+    @Test
+    @DisplayName("다중 업로드 생성 시 componentTypeIds 단일값 강제 검증")
+    void createDesignComponents_requiresSingleComponentTypeId() throws Exception {
+      CreateDesignComponentRequest createRequest = CreateDesignComponentRequest.builder()
+          .isPublic(true)
+          .componentTypeIds(
+              List.of(componentTypeA.getComponentTypeId(), componentTypeB.getComponentTypeId()))
+          .build();
+      MockMultipartFile requestPart = createRequestPart(createRequest);
+      MockMultipartFile file = createFilesPart("single-file.png");
+
+      mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Void>builder()
+              .mockMvc(mockMvc)
+              .path("/api/design-components/bulk")
+              .httpMethod(HttpMethod.POST)
+              .formDataList(List.of(requestPart, file))
               .clientDto(testClient)
               .statusCode(400)
               .responseType(new TypeReference<>() {
