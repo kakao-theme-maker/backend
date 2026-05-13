@@ -55,11 +55,9 @@ public class DesignBoardRepositorySupport {
                 post.postId,
                 post.title,
                 post.content,
-                designComponent.designComponentId,
                 user.userEmail,
                 user.name,
                 post.createdAt,
-                post.previewImageName,
                 preferCount,
                 commentCount,
                 postRepositorySupport.isLiked(post, client),
@@ -73,10 +71,11 @@ public class DesignBoardRepositorySupport {
         .join(post.user, user);
   }
 
-  public DesignBoardQuery.Detail findDetailByPostId(Long postId, User client) {
+  public DesignBoardQuery.Detail findDetailsByPostId(Long postId, User client) {
     QPost post = QPost.post;
     return getDesignBoardDetailBaseQuery(client)
         .where(post.postId.eq(postId))
+        .groupBy(post.postId)
         .fetchOne();
   }
 

@@ -40,7 +40,7 @@ public class DesignBoardService {
 
   @Transactional(readOnly = true)
   public DesignBoardQuery.Detail findDetailById(Long postId, User client) {
-    return designBoardRepositorySupport.findDetailByPostId(postId, client);
+    return designBoardRepositorySupport.findDetailsByPostId(postId, client);
   }
 
   @Transactional(readOnly = true)
@@ -52,6 +52,16 @@ public class DesignBoardService {
   public DesignBoard findByPostId(long postId) {
     return designBoardRepository.findByPost_PostId(postId)
         .orElseThrow(() -> new CustomEntityNotFoundException(DesignBoard.class, postId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoard> findWithDesignComponentsByPostIdIn(List<Long> postIds) {
+    return designBoardRepository.findWithDesignComponentByPost_PostIdIn(postIds);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoard> findWithDesignComponentsByPostId(Long postId) {
+    return findWithDesignComponentsByPostIdIn(List.of(postId));
   }
 
   @Transactional(readOnly = true)

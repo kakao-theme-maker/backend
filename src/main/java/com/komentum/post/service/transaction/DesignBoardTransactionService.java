@@ -47,24 +47,30 @@ public class DesignBoardTransactionService {
     }
     User client = userEntityFinder.findUserEntity(userIdentifier);
     DesignBoardQuery.Detail detail = designBoardRepositorySupport
-        .findDetailByPostId(postId, client);
+        .findDetailsByPostId(postId, client);
     List<Tag> tags = tagService.findAllByPostId(postId);
+    List<String> previewImageUrls = designBoardService.findWithDesignComponentsByPostId(postId)
+        .stream()
+        .map(db -> db.getDesignComponent().getImageUrl())
+        .toList();
     return designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
-        helper,
-        tags);
+        tags,
+        previewImageUrls);
   }
 
   @Transactional
   public Post saveDesignBoardAndGetPost(
       DesignBoardCreateDto createDto,
-      DesignComponent designComponent,
+      List<DesignComponent> designComponents,
       User author,
       String previewImageName) {
     PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
     Post savedPost = postService
         .createPost(postCreateDto, author, previewImageName, PostType.DESIGN_BOARD);
-    designBoardService.save(savedPost, designComponent);
+    for (DesignComponent designComponent : designComponents) {
+      designBoardService.save(savedPost, designComponent);
+    }
     if (createDto.getPostTags() != null) {
       tagService.createTags(savedPost, createDto.getPostTags());
     }

@@ -55,6 +55,15 @@ public class DesignComponentService {
   }
 
   @Transactional(readOnly = true)
+  public List<DesignComponent> findByIdIn(List<Integer> ids) {
+    List<DesignComponent> res = designComponentRepository.findByDesignComponentIdIn(ids);
+    if (res.size() != ids.size()) {
+      throw new ResourceNotFoundException("DesignComponent not found with id in post id list");
+    }
+    return res;
+  }
+
+  @Transactional(readOnly = true)
   public List<DesignComponentDto> getByPublicUserId(String publicUserId) {
     return designComponentRepository.findByUser_PublicUserId(publicUserId).stream()
         .map(mapper::toDto).toList();

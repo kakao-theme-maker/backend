@@ -11,5 +11,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
   List<DesignComponent> findByUser_PublicUserId(String userPublicUserId);
 
   List<DesignComponent> findByUser_UserEmailIn(List<String> userEmails);
+
+  List<DesignComponent> findByDesignComponentIdIn(List<Integer> designComponentIds);
 }
 

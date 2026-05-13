@@ -96,38 +96,44 @@ public class DesignBoardManagementFacade {
     List<Long> postIds = details.stream()
         .map(Detail::getPostId)
         .toList();
+    List<String> previewImageUrls = designBoardService.findWithDesignComponentsByPostIdIn(postIds)
+        .stream()
+        .map(p -> p.getDesignComponent().getImageUrl())
+        .toList();
     Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
-      return designBoardMapperSupport.toDesignBoardDetailDto(detail, boardManagementHelper, tags);
+      return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls);
     }).toList();
   }
 
   /**
-   * 디자인 에셋 게시글 생성
+   * <p>디자인 에셋들에 대한 디자인 에셋 게시글을 생성한다</p>
+   * <p>디자인 에셋 생성은 별도 디자인 에셋 생성 API에서 처리한다 </p>
    * @param createDto 게시글 생성에 필요한 정보
-   * @param previewImage 게시글 대표 이미지, null=true
    * @param authorId 게시글 작성자 ID
    * @return 생성된 게시글 상세 정보
    * */
+  @Transactional
   public DesignBoardDetailDto createDesignBoard(DesignBoardCreateDto createDto,
       MultipartFile previewImage, String authorId) {
     // 이미지 저장
-    DesignComponent designComponent =
-        designComponentService.getEntityById(createDto.getDesignComponentId());
-    String previewImageName = uploadOrReusePreviewImage(previewImage, designComponent);
+    List<DesignComponent> designComponents = designComponentService.findByIdIn(
+        createDto.getDesignComponentIds());
+    String previewImageName = uploadOrReusePreviewImage(previewImage, designComponents.get(0));
     // DB 작업 수행
     User author = userEntityFinder.findUserEntity(authorId);
     try {
       Post savedPost = designBoardTransactionService.saveDesignBoardAndGetPost(
           createDto,
-          designComponent,
+          designComponents,
           author,
           previewImageName
       );
       return designBoardTransactionService.findDesignBoardDetail(savedPost.getPostId(), authorId);
     } catch (Exception e) {
       boardManagementHelper.deleteFileSilently(previewImageName, "디자인 게시글 생성 실패로 인한 저장된 파일 롤백");
+      log.error(e.getMessage(), e);
       throw new RuntimeException("디자인 에셋 게시글 생성 실패", e);
     }
   }

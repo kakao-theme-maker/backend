@@ -131,7 +131,7 @@ public class DesignBoardDto {
     String content;
 
     @Schema(description = "디자인 에셋 게시글에 대한 디자인 에셋 데이터 ID")
-    int designComponentId;
+    List<Integer> designComponentIds;
 
     @Schema(description = "공개여부")
     @JsonProperty("public_flag")
