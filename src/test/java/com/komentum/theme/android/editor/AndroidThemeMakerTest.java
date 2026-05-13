@@ -13,6 +13,7 @@ import com.komentum.theme.android.dto.AndroidComponentDto;
 import com.komentum.theme.component.domain.ColorStyle;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeStyle;
@@ -65,7 +66,7 @@ class AndroidThemeMakerTest {
   void setUp() {
     themeDataGenerator.deleteTestData();
     List<ComponentType> backgroundImages = themeDataGenerator.generateComponentTypes().stream()
-        .filter(v -> v.getComponentName().equals("theme_background_image.png")).toList();
+        .filter(v -> v.getTypeCode().equals(TypeCode.BACKGROUND_IMAGE)).toList();
     List<ColorStyle> colorStyles = themeDataGenerator.generateColorStyles();
     List<DesignComponent> designComponents = themeDataGenerator.generateDesignComponents(
         backgroundImages.size());

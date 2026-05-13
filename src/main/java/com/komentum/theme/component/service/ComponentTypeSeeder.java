@@ -1,65 +1,52 @@
 package com.komentum.theme.component.service;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.dto.SeedResult;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.utils.JsonUtils;
 import jakarta.persistence.EntityManager;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
-public class ComponentTypeSeeder {
-
-  private final JsonUtils jsonUtils;
+public class ComponentTypeSeeder extends AbstractMapJsonSeeder<ComponentType> {
 
   private final ComponentTypeRepository componentTypeRepository;
 
   private final EntityManager entityManager;
 
-  public static final String COMPONENT_TYPE_JSON_PATH = "theme-data/component_type.json";
+  public static final String COMPONENT_TYPE_JSON_PATH = "theme-data/theme_spec.json";
 
-  public static class ComponentTypeSeed {
-
-    @JsonProperty("platform")
-    Platform platform;
-    @JsonProperty("component_path")
-    String componentPath;
-    @JsonProperty("component_name")
-    String componentName;
-
-    public ComponentType toEntity() {
-      return ComponentType.builder()
-          .platform(platform)
-          .componentPath(componentPath)
-          .componentName(componentName)
-          .build();
-    }
+  public ComponentTypeSeeder(JsonUtils jsonUtils, ComponentTypeRepository componentTypeRepository,
+      EntityManager entityManager) {
+    super(jsonUtils);
+    this.componentTypeRepository = componentTypeRepository;
+    this.entityManager = entityManager;
   }
 
-  /**
-   * component type의 seed 문서를 읽어서 ComponentType 목록 반환
-   * @return 비영속 상태의 seed 기반 component type 목록
-   * */
-  private List<ComponentType> readComponentTypeSeedList() {
-    try {
-      return jsonUtils.readListAsType(COMPONENT_TYPE_JSON_PATH, ComponentTypeSeed.class)
-          .stream().map(ComponentTypeSeed::toEntity)
-          .toList();
-    } catch (IOException e) {
-      throw new RuntimeException(
-          "Failed to read component type seed file: " + COMPONENT_TYPE_JSON_PATH,
-          e);
-    }
+  @Override
+  protected String getJsonPath() {
+    return COMPONENT_TYPE_JSON_PATH;
+  }
+
+  @Override
+  protected JsonNode extractFromRoot(JsonNode root) {
+    return root.get("definitions").get("typeCodes");
+  }
+
+  @Override
+  protected ComponentType convertToTarget(String key, JsonNode node) {
+    return ComponentType.builder()
+        .typeCode(TypeCode.from(key))
+        .name(node.path("name").asText())
+        .explain(node.path("description").asText())
+        .build();
   }
 
   /**
@@ -67,16 +54,15 @@ public class ComponentTypeSeeder {
    * @param transientSeedList seed 기반 비영속 ComponentType
    * @return 엉속 상태의 ComponentType 목록
    * */
-  private Map<String, ComponentType> findPersistComponentTypeMap(
+  private Map<TypeCode, ComponentType> findPersistComponentTypeMap(
       List<ComponentType> transientSeedList) {
-    List<String> identifierList = transientSeedList.stream()
-        .map(ComponentType::getComponentPath)
+    List<TypeCode> identifierList = transientSeedList.stream()
+        .map(ComponentType::getTypeCode)
         .toList();
-    List<ComponentType> persistList = componentTypeRepository.findAllByComponentPathIn(
-        identifierList);
+    List<ComponentType> persistList = componentTypeRepository.findAllByTypeCodeIn(identifierList);
     return persistList.stream()
         .collect(Collectors.toMap(
-            ComponentType::getComponentPath,
+            ComponentType::getTypeCode,
             Function.identity()));
   }
 
@@ -86,10 +72,10 @@ public class ComponentTypeSeeder {
   @Transactional
   public SeedResult upsertComponentType() {
     int created = 0, updated = 0;
-    List<ComponentType> transientSeedList = readComponentTypeSeedList();
-    Map<String, ComponentType> persistMap = findPersistComponentTypeMap(transientSeedList);
+    List<ComponentType> transientSeedList = super.readSeed();
+    Map<TypeCode, ComponentType> persistMap = findPersistComponentTypeMap(transientSeedList);
     for (ComponentType transientSeed : transientSeedList) {
-      String seedIdentifier = transientSeed.getComponentPath();
+      TypeCode seedIdentifier = transientSeed.getTypeCode();
       ComponentType persistComponentType = persistMap.get(seedIdentifier);
       if (persistComponentType != null && !persistComponentType.isSame(transientSeed)) {
         updated++;

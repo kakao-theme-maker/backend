@@ -3,7 +3,6 @@ package com.komentum.seed.seeder;
 import com.github.javafaker.Faker;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.enums.Platform;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
@@ -40,7 +39,7 @@ public class ThemeComponentSeeder {
 
   private List<ThemeImage> seedThemeImages(ThemeComponent themeComponent,
       List<DesignComponent> designComponents) {
-    List<ComponentType> componentTypes = componentTypeRepository.findByPlatform(Platform.ANDROID);
+    List<ComponentType> componentTypes = componentTypeRepository.findAll();
     List<ThemeImage> themeImages = new ArrayList<>();
     for (int i = 0; i < componentTypes.size(); i++) {
       themeImages.add(ThemeImage.builder()

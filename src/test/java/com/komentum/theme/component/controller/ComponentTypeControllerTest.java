@@ -6,7 +6,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.javafaker.Faker;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
-import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.data.TestDataRemover;
+import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.component.domain.ComponentType;
@@ -14,17 +15,14 @@ import com.komentum.theme.component.dto.ComponentTypeCreateRequest;
 import com.komentum.theme.component.dto.ComponentTypeDto;
 import com.komentum.theme.component.dto.ComponentTypeUpdateRequest;
 import com.komentum.theme.component.dto.SeedResult;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.service.ComponentTypeSeeder;
-import com.komentum.theme.utils.JsonUtils;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,25 +48,25 @@ public class ComponentTypeControllerTest {
   private ComponentTypeRepository componentTypeRepository;
 
   @Autowired
-  private UserDataGenerator userDataGenerator;
-
-  @Autowired
   private ComponentTypeSeeder seeder;
 
   @Autowired
-  private JsonUtils jsonUtils;
+  private UserScenarioSupport userScenarioSupport;
+
+  @Autowired
+  private TestDataRemover testDataRemover;
 
   private User client;
 
   @BeforeEach
   public void setUp() {
-    client = userDataGenerator.generateTestUsers(1).get(0);
+    client = userScenarioSupport.builder()
+        .withRootUser().build().rootUser();
   }
 
   @AfterEach
   public void tearDown() {
-    userDataGenerator.deleteAllUsers();
-    componentTypeRepository.deleteAll();
+    testDataRemover.deleteAll();
   }
 
   public void assertComponentTypeDto(ComponentTypeDto response) {
@@ -82,32 +80,21 @@ public class ComponentTypeControllerTest {
       ComponentType componentType) {
     assertThat(componentType)
         .extracting(
-            ComponentType::getComponentName,
-            ComponentType::getComponentPath,
-            ComponentType::getPlatform,
-            ComponentType::getExplain,
-            ComponentType::getCreatedAt,
-            ComponentType::getSizeX,
-            ComponentType::getSizeY)
+            ComponentType::getTypeCode,
+            ComponentType::getName,
+            ComponentType::getExplain)
         .containsExactly(
-            response.getComponentName(),
-            response.getComponentPath(),
-            response.getPlatform(),
-            response.getExplain(),
-            response.getCreatedAt(),
-            response.getSizeX(),
-            response.getSizeY());
+            response.getTypeCode(),
+            response.getName(),
+            response.getExplain());
   }
 
-  public ComponentType createTestComponentType() {
+  public ComponentType createTestComponentType(TypeCode typeCode) {
     Faker faker = new Faker();
     return componentTypeRepository.save(ComponentType.builder()
         .explain(faker.lorem().paragraph())
-        .platform(Platform.ANDROID)
-        .componentName(UUID.randomUUID().toString())
-        .componentPath(UUID.randomUUID().toString())
-        .sizeX(faker.number().numberBetween(1, 9999))
-        .sizeY(faker.number().numberBetween(1, 9999))
+        .name(faker.color().name())
+        .typeCode(typeCode)
         .build());
   }
 
@@ -116,12 +103,9 @@ public class ComponentTypeControllerTest {
   void createComponentType_success() throws Exception {
     // Given
     ComponentTypeCreateRequest request = ComponentTypeCreateRequest.builder()
-        .explain("버튼 컴포넌트")
-        .platform(Platform.ANDROID)
-        .componentPath("/components/button")
-        .componentName("Button")
-        .sizeX(100)
-        .sizeY(50)
+        .explain("아이콘")
+        .name("icon")
+        .typeCode(TypeCode.COMMON_ICO_THEME)
         .build();
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(
@@ -140,19 +124,13 @@ public class ComponentTypeControllerTest {
     assertThat(response)
         .extracting(
             ComponentTypeDto::getExplain,
-            ComponentTypeDto::getPlatform,
-            ComponentTypeDto::getComponentPath,
-            ComponentTypeDto::getComponentName,
-            ComponentTypeDto::getSizeX,
-            ComponentTypeDto::getSizeY
+            ComponentTypeDto::getName,
+            ComponentTypeDto::getTypeCode
         )
         .containsExactly(
             request.getExplain(),
-            request.getPlatform(),
-            request.getComponentPath(),
-            request.getComponentName(),
-            request.getSizeX(),
-            request.getSizeY()
+            request.getName(),
+            request.getTypeCode()
         );
     assertComponentTypeDto(response);
   }
@@ -161,7 +139,7 @@ public class ComponentTypeControllerTest {
   @DisplayName("ComponentType 조회 테스트")
   void getComponentType_success() throws Exception {
     // Given
-    ComponentType savedComponentType = createTestComponentType();
+    ComponentType savedComponentType = createTestComponentType(TypeCode.COMMON_ICO_THEME);
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, ComponentTypeDto>builder()
@@ -182,11 +160,9 @@ public class ComponentTypeControllerTest {
   @DisplayName("ComponentType 전체 조회 테스트")
   void getAllComponentTypes() throws Exception {
     // Given
-    Map<Integer, ComponentType> expectedMap = IntStream.range(0, 5)
-        .mapToObj(i -> createTestComponentType())
-        .collect(Collectors.toMap(
-            ComponentType::getComponentTypeId,
-            Function.identity()));
+    List<TypeCode> typeCodes = List.of(TypeCode.COMMON_ICO_THEME, TypeCode.BACKGROUND_IMAGE);
+    Map<Integer, ComponentType> expectedMap = typeCodes.stream().map(this::createTestComponentType)
+        .collect(Collectors.toMap(ComponentType::getComponentTypeId, Function.identity()));
     // When
     List<ComponentTypeDto> response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<ComponentTypeDto>>builder()
@@ -212,14 +188,11 @@ public class ComponentTypeControllerTest {
   @DisplayName("ComponentType 수정 테스트")
   void updateComponentType() throws Exception {
     // Given
-    ComponentType savedComponent = createTestComponentType();
+    ComponentType savedComponent = createTestComponentType(TypeCode.COMMON_ICO_THEME);
     ComponentTypeUpdateRequest updateRequest = ComponentTypeUpdateRequest.builder()
         .explain("수정된 컴포넌트")
-        .platform(Platform.IOS)
-        .componentPath("/updated")
-        .componentName("UpdatedComponent")
-        .sizeX(150)
-        .sizeY(75)
+        .name("updated icon")
+        .typeCode(TypeCode.COMMON_ICO_THEME)
         .build();
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(
@@ -238,19 +211,13 @@ public class ComponentTypeControllerTest {
     assertThat(response)
         .extracting(
             ComponentTypeDto::getExplain,
-            ComponentTypeDto::getPlatform,
-            ComponentTypeDto::getComponentPath,
-            ComponentTypeDto::getComponentName,
-            ComponentTypeDto::getSizeX,
-            ComponentTypeDto::getSizeY
+            ComponentTypeDto::getName,
+            ComponentTypeDto::getTypeCode
         )
         .containsExactly(
             updateRequest.getExplain(),
-            updateRequest.getPlatform(),
-            updateRequest.getComponentPath(),
-            updateRequest.getComponentName(),
-            updateRequest.getSizeX(),
-            updateRequest.getSizeY()
+            updateRequest.getName(),
+            updateRequest.getTypeCode()
         );
     assertComponentTypeDto(response);
   }
@@ -259,9 +226,7 @@ public class ComponentTypeControllerTest {
   @DisplayName("시드 데이터 생성 성공 테스트")
   public void upsertComponentTypeWithSeed_success() throws Exception {
     // given
-    List<ComponentTypeSeeder.ComponentTypeSeed> seeds = jsonUtils.readListAsType(
-        ComponentTypeSeeder.COMPONENT_TYPE_JSON_PATH,
-        ComponentTypeSeeder.ComponentTypeSeed.class);
+    List<ComponentType> seeds = seeder.readSeed();
     // when
     SeedResult response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, SeedResult>builder()

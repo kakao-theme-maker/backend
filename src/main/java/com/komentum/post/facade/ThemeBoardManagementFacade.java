@@ -1,7 +1,6 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -16,9 +15,7 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
 import com.komentum.post.service.transaction.ThemeBoardTransactionService;
-import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.service.ThemeImageService;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
 import com.komentum.user.domain.User;
@@ -52,10 +49,9 @@ public class ThemeBoardManagementFacade {
       ThemeComponent themeComponent) {
     // previewImage가 유효하지 않으면, ThemeComponent의 이미지 사용
     if (previewImage == null || previewImage.isEmpty()) {
-      ThemeImage themeImage = themeImageService.findByThemeComponentAndComponentTypeName(
-          themeComponent, ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME);
-      DesignComponent designComponent = themeImage.getDesignComponent();
-      String fileName = fileManager.convertUrlToFileName(designComponent.getImageUrl());
+      String themePreviewImageUrl = themeImageService.findThemePreviewImageUrl(
+          themeComponent.getThemeComponentId());
+      String fileName = fileManager.convertUrlToFileName(themePreviewImageUrl);
       byte[] previewImageBytes = fileManager.downloadFile(fileName);
       return boardManagementHelper
           .savePreviewImageIfPresent(Post.class, fileName, previewImageBytes);

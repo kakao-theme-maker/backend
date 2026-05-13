@@ -17,12 +17,16 @@ public class AndroidColorDto {
   String color;
   String attrName;
 
+  /**
+   * TODO: 추후 별도 커밋에서 개선할 예정
+   * */
+  @Deprecated
   public static AndroidColorDto fromEntity(ThemeStyle themeStyle) {
     ColorStyle colorStyle = themeStyle.getColorStyle();
     return AndroidColorDto.builder()
         .color(themeStyle.getColor())
-        .attrName(colorStyle.getStylePropsName())
-        .sheetPath(colorStyle.getStyleSheetPath())
+//        .attrName(colorStyle.getStylePropsName())
+//        .sheetPath(colorStyle.getStyleSheetPath())
         .build();
   }
 }

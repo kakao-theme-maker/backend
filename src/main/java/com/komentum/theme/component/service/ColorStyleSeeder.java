@@ -1,90 +1,68 @@
 package com.komentum.theme.component.service;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.komentum.theme.component.domain.ColorStyle;
 import com.komentum.theme.component.dto.SeedResult;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.StyleCode;
 import com.komentum.theme.component.repository.ColorStyleRepository;
 import com.komentum.theme.utils.JsonUtils;
 import jakarta.persistence.EntityManager;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
-public class ColorStyleSeeder {
+public class ColorStyleSeeder extends AbstractMapJsonSeeder<ColorStyle> {
 
-  private final JsonUtils jsonUtils;
 
   private final ColorStyleRepository colorStyleRepository;
 
   private final EntityManager entityManager;
 
-  public static final String COLOR_STYLE_JSON_PATH = "theme-data/color_style.json";
+  public static final String COLOR_STYLE_JSON_PATH = "theme-data/theme_spec.json";
 
-  @Getter
-  public static class ColorStyleSeed {
-
-    String explain;
-
-    String platform;
-
-    @JsonProperty("sheet_style_path")
-    String sheetStylePath;
-
-    @JsonProperty("sheet_element_name")
-    String sheetElementName;
-
-    @JsonProperty("sheet_props_name")
-    String sheetPropsName;
-
-    public ColorStyle toEntity() {
-      return ColorStyle.builder()
-          .explain(explain)
-          .stylePropsName(sheetPropsName)
-          .styleElementName(sheetElementName)
-          .styleSheetPath(sheetStylePath)
-          .platform(Platform.fromString(platform))
-          .build();
-    }
+  public ColorStyleSeeder(JsonUtils jsonUtils, ColorStyleRepository colorStyleRepository,
+      EntityManager entityManager) {
+    super(jsonUtils);
+    this.colorStyleRepository = colorStyleRepository;
+    this.entityManager = entityManager;
   }
 
-  /**
-   * 내부 color style seed 문서(color_style.json)에서 시드 읽기
-   * @return 비영속 상태의 시드 ColorStyle 반환
-   * */
-  private List<ColorStyle> readColorStyleSeedList() {
-    try {
-      return jsonUtils.readListAsType(COLOR_STYLE_JSON_PATH, ColorStyleSeed.class)
-          .stream().map(ColorStyleSeed::toEntity)
-          .toList();
-    } catch (IOException e) {
-      throw new RuntimeException(
-          "Failed to read color style seed file: " + COLOR_STYLE_JSON_PATH,
-          e);
-    }
+  @Override
+  protected String getJsonPath() {
+    return COLOR_STYLE_JSON_PATH;
+  }
+
+  @Override
+  protected JsonNode extractFromRoot(JsonNode root) {
+    return root.get("definitions").get("styleCodes");
+  }
+
+  @Override
+  protected ColorStyle convertToTarget(String key, JsonNode node) {
+    return ColorStyle.builder()
+        .styleCode(StyleCode.from(key))
+        .name(node.path("name").asText())
+        .explain(node.path("description").asText())
+        .build();
   }
 
   /**
    * color style 엔티티 목록을 기반으로 영속 상태의 ColorStyle Entity 리스트 반환
    * @return stylePropsName - ColorStyle 맵 반환
    * */
-  private Map<String, ColorStyle> findPersistColorStyleMap(
+  private Map<StyleCode, ColorStyle> findPersistColorStyleMap(
       List<ColorStyle> transientSeedList) {
-    List<String> identifierList = transientSeedList.stream()
-        .map(ColorStyle::getStylePropsName)
+    List<StyleCode> identifierList = transientSeedList.stream()
+        .map(ColorStyle::getStyleCode)
         .toList();
-    List<ColorStyle> persistList = colorStyleRepository.findByStylePropsNameIn(identifierList);
+    List<ColorStyle> persistList = colorStyleRepository.findAllByStyleCodeIn(identifierList);
     return persistList.stream()
         .collect(Collectors.toMap(
-            ColorStyle::getStylePropsName,
+            ColorStyle::getStyleCode,
             Function.identity()));
   }
 
@@ -94,10 +72,11 @@ public class ColorStyleSeeder {
   @Transactional
   public SeedResult upsertColorStyleSeed() {
     int created = 0, updated = 0;
-    List<ColorStyle> transientSeedList = readColorStyleSeedList();
-    Map<String, ColorStyle> persistMap = findPersistColorStyleMap(transientSeedList);
+    // 부모 클래스의 readSeed(템플릿 메서드) 호출
+    List<ColorStyle> transientSeedList = super.readSeed();
+    Map<StyleCode, ColorStyle> persistMap = findPersistColorStyleMap(transientSeedList);
     for (ColorStyle transientSeed : transientSeedList) {
-      String seedIdentifier = transientSeed.getStylePropsName();
+      StyleCode seedIdentifier = transientSeed.getStyleCode();
       ColorStyle persistColorStyle = persistMap.get(seedIdentifier);
       if (persistColorStyle != null && !persistColorStyle.isSame(transientSeed)) {
         updated++;

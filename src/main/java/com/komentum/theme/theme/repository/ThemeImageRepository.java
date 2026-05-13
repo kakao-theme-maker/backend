@@ -1,6 +1,6 @@
 package com.komentum.theme.theme.repository;
 
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeImageId;
 import java.util.List;
@@ -22,19 +22,12 @@ public interface ThemeImageRepository extends JpaRepository<ThemeImage, ThemeIma
   void deleteByThemeComponentId(
       @Param("themeComponentId") Integer themeComponentId); // theme Image 엔티티 삭제
 
-  List<ThemeImage> findByThemeComponentAndComponentType_ComponentName(
-      ThemeComponent themeComponent,
-      String componentTypeComponentName);
-
   @Query("SELECT ti FROM ThemeImage ti "
       + "JOIN FETCH ti.themeComponent tc "
       + "JOIN FETCH ti.componentType ct "
       + "JOIN FETCH ti.designComponent dc "
       + "WHERE tc.themeComponentId IN :themeComponentIds "
-      + "AND ct.componentName = :componentTypeName "
-      + "AND ct.componentPath = :componentTypePath")
-  List<ThemeImage> fetchJoinByThemeComponentAndComponentInfo(
-      List<Integer> themeComponentIds,
-      String componentTypeName,
-      String componentTypePath);
+      + "AND ti.componentType.typeCode = :typeCode")
+  List<ThemeImage> fetchJoinByThemeComponentAndTypeCode(
+      List<Integer> themeComponentIds, TypeCode typeCode);
 }

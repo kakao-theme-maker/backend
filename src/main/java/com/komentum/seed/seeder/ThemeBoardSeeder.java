@@ -2,14 +2,13 @@ package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.repository.ThemeImageRepository;
+import com.komentum.theme.theme.service.ThemeImageService;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import java.util.ArrayList;
@@ -28,6 +27,7 @@ public class ThemeBoardSeeder {
   private final PostSeeder postSeeder;
   private final FileManager fileManager;
   private final Faker faker;
+  private final ThemeImageService themeImageService;
 
   public static record ThemeBoardSeedResult(
       List<ThemeBoard> themeBoards,
@@ -53,21 +53,11 @@ public class ThemeBoardSeeder {
       User author = userRepository.findByUserEmail(component.getUserEmail())
           .orElseThrow(() -> new IllegalArgumentException(
               "user with " + component.getUserEmail() + " doesn't exists"));
-      ThemeImage iconThemeImage = component.getThemeImages().stream()
-          .filter(image -> {
-            String componentName = image.getComponentType().getComponentName();
-            if (componentName.equals(ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME)) {
-              return true;
-            }
-            return false;
-          })
-          .findFirst()
-          .orElseThrow(() -> new IllegalStateException(
-              "Default theme image not found for theme component : "
-                  + component.getThemeComponentId()));
+      String previewImage = themeImageService.findThemePreviewImageUrl(
+          component.getThemeComponentId());
       Post post = postSeeder.createOne(
           author,
-          fileManager.convertUrlToFileName(iconThemeImage.getDesignComponent().getImageUrl()),
+          fileManager.convertUrlToFileName(previewImage),
           PostType.THEME_BOARD
       );
       posts.add(post);

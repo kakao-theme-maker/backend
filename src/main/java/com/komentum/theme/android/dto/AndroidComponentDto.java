@@ -20,14 +20,15 @@ public class AndroidComponentDto {
   Integer sizeX;
   Integer sizeY;
 
+  /**
+   * TODO : componentType이 global componentType으로 변경되었으므로 android 전용 componentType을 사용하도록 변경 필요
+   * TODO : 현재 PR에서 하기에 너무 무거운 작업이므로 별도 PR에서 관리할 예정
+   * */
+  @Deprecated
   public static AndroidComponentDto fromEntity(ThemeImage themeImage) {
     DesignComponent component = themeImage.getDesignComponent();
     ComponentType componentType = themeImage.getComponentType();
     return AndroidComponentDto.builder()
-        .imageUrl(component.getImageUrl())
-        .AndroidComponentName(componentType.getComponentName())
-        .AndroidComponentPath(componentType.getComponentPath())
-        .sizeX(componentType.getSizeX())
-        .sizeY(componentType.getSizeY()).build();
+        .imageUrl(component.getImageUrl()).build();
   }
 }

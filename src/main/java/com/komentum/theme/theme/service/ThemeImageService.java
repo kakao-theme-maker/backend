@@ -1,10 +1,8 @@
 package com.komentum.theme.theme.service;
 
-import com.komentum.post.consts.ThemeBoardConsts;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.repository.ThemeImageRepository;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,25 +17,10 @@ public class ThemeImageService {
   private final ThemeImageRepository themeImageRepository;
 
   @Transactional(readOnly = true)
-  public ThemeImage findByThemeComponentAndComponentTypeName(
-      ThemeComponent themeComponent,
-      String componentTypeName) {
-    List<ThemeImage> themeImages = themeImageRepository.findByThemeComponentAndComponentType_ComponentName(
-        themeComponent,
-        componentTypeName);
-    if (themeImages.isEmpty()) {
-      throw new EntityNotFoundException(
-          "ThemeImage not found for componentTypeName : " + componentTypeName);
-    }
-    return themeImages.get(0);
-  }
-
-  @Transactional(readOnly = true)
   public Map<Integer, String> findThemePreviewImages(List<Integer> themeComponentIds) {
-    List<ThemeImage> themeImageList = themeImageRepository.fetchJoinByThemeComponentAndComponentInfo(
+    List<ThemeImage> themeImageList = themeImageRepository.fetchJoinByThemeComponentAndTypeCode(
         themeComponentIds,
-        ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME,
-        ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_PATH
+        TypeCode.COMMON_ICO_THEME
     );
     return themeImageList.stream()
         .collect(Collectors.toMap(
