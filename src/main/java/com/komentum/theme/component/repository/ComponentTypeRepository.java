@@ -2,6 +2,7 @@ package com.komentum.theme.component.repository;
 
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.enums.TypeCode;
+import com.komentum.theme.component.enums.Platform;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;

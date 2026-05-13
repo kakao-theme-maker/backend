@@ -3,6 +3,7 @@ package com.komentum.theme.component.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,4 +39,8 @@ public class DesignComponentDto {
   @Schema(description = "공개 여부", example = "true")
   @JsonProperty("is_public")
   private Boolean isPublic;
+
+  @Schema(description = "연결된 component type 목록")
+  @JsonProperty("component_types")
+  private List<ComponentTypeDto> componentTypes;
 }
