@@ -1,6 +1,7 @@
 package com.komentum.test.data;
 
 import com.github.javafaker.Faker;
+import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
@@ -46,14 +47,21 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent 리스트
    */
   public List<DesignComponent> generateDesignComponents(List<User> users, int componentPerUser) {
+    return generateDesignComponents(users, componentPerUser, List.of());
+  }
+
+  public List<DesignComponent> generateDesignComponents(List<User> users, int componentPerUser,
+      List<ComponentType> componentTypes) {
     List<DesignComponent> components = new ArrayList<>();
     for (User user : users) {
       for (int j = 0; j < componentPerUser; j++) {
-        components.add(DesignComponent.builder()
+        DesignComponent designComponent = DesignComponent.builder()
             .user(user)
             .imageUrl(faker.internet().image())
             .isPublic(j % 2 == 0) // 짝수일 때는 public 홀수일때는 private
-            .build());
+            .build();
+        designComponent.replaceComponentTypes(componentTypes);
+        components.add(designComponent);
       }
     }
     return designComponentRepository.saveAll(components);
@@ -69,11 +77,18 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent
    */
   public DesignComponent generateDesignComponent(User user, String imageUrl, Boolean isPublic) {
-    return designComponentRepository.save(DesignComponent.builder()
+    return generateDesignComponent(user, imageUrl, isPublic, List.of());
+  }
+
+  public DesignComponent generateDesignComponent(User user, String imageUrl, Boolean isPublic,
+      List<ComponentType> componentTypes) {
+    DesignComponent designComponent = DesignComponent.builder()
         .user(user)
         .imageUrl(imageUrl)
         .isPublic(isPublic)
-        .build());
+        .build();
+    designComponent.replaceComponentTypes(componentTypes);
+    return designComponentRepository.save(designComponent);
   }
 
   /**
@@ -83,7 +98,7 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent
    */
   public DesignComponent generateDesignComponent(User user) {
-    return generateDesignComponent(user, faker.internet().image(), true);
+    return generateDesignComponent(user, faker.internet().image(), true, List.of());
   }
 
 

@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -40,6 +41,14 @@ public class GlobalExceptionHandler {
     Map<String, String> errors = new HashMap<>();
     errors.put("message", ex.getMessage());
     return new ResponseEntity<>(errors, HttpStatus.FORBIDDEN);
+  }
+
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<Map<String, String>> handleResponseStatusException(
+      ResponseStatusException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", ex.getReason());
+    return new ResponseEntity<>(errors, ex.getStatusCode());
   }
 
   @ExceptionHandler(Exception.class)
