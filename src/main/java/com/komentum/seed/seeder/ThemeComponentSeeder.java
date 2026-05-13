@@ -65,16 +65,19 @@ public class ThemeComponentSeeder {
     List<ThemeComponent> themeComponents = new ArrayList<>();
     for (User author : authors) {
       for (int i = 0; i < size; i++) {
-        themeComponents.add(generateOne(author));
-      }
-    }
-    themeComponents = themeComponentRepository.saveAll(themeComponents);
-    for (ThemeComponent themeComponent : themeComponents) {
-      List<ThemeImage> themeImages = seedThemeImages(themeComponent, designComponents);
-      for (ThemeImage themeImage : themeImages) {
-        themeComponent.addThemeImage(themeImage);
+        themeComponents.add(seedOne(author, designComponents));
       }
     }
     return themeComponents;
+  }
+
+  @Transactional
+  public ThemeComponent seedOne(User author, List<DesignComponent> designComponents) {
+    ThemeComponent themeComponent = themeComponentRepository.save(generateOne(author));
+    List<ThemeImage> themeImages = seedThemeImages(themeComponent, designComponents);
+    for (ThemeImage themeImage : themeImages) {
+      themeComponent.addThemeImage(themeImage);
+    }
+    return themeComponent;
   }
 }
