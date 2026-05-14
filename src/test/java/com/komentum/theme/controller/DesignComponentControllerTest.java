@@ -18,6 +18,8 @@ import com.komentum.global.security.UserRole;
 import com.komentum.global.utils.FileManager;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.data.DesignComponentDataGenerator;
+import com.komentum.test.data.MockMultipartFileUtils;
+import com.komentum.test.data.MockMultipartFileUtils.ImageExtension;
 import com.komentum.test.data.UserDataGenerator;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.TestClientDto;
@@ -41,7 +43,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -130,17 +131,12 @@ public class DesignComponentControllerTest {
         .build());
   }
 
-  private MockMultipartFile createRequestPart(Object request) throws Exception {
-    return mockMvcUtils.jsonToTestFormData("request", request);
+  private MockMultipartFile createRequestPart(Object request) {
+    return MockMultipartFileUtils.generateJsonFormData("request", request);
   }
 
-  private MockMultipartFile createImagePart(String fileName) {
-    return mockMvcUtils.fileToTestFormData(
-        "image",
-        fileName,
-        MediaType.IMAGE_PNG,
-        "test-image-content".getBytes()
-    );
+  private MockMultipartFile createImagePart() {
+    return MockMultipartFileUtils.generateImageFormData("image", ImageExtension.PNG);
   }
 
   @Nested
@@ -157,7 +153,7 @@ public class DesignComponentControllerTest {
               List.of(componentTypeA.getComponentTypeId(), componentTypeB.getComponentTypeId()))
           .build();
       MockMultipartFile requestPart = createRequestPart(createRequest);
-      MockMultipartFile image = createImagePart("test.png");
+      MockMultipartFile image = createImagePart();
 
       // When & Then
       DesignComponentDto response = mockMvcUtils.doAuthMultipartRequest(
@@ -363,7 +359,7 @@ public class DesignComponentControllerTest {
           .componentTypeIds(List.of(componentTypeB.getComponentTypeId()))
           .build();
       MockMultipartFile requestPart = createRequestPart(updateRequest);
-      MockMultipartFile image = createImagePart("updated.png");
+      MockMultipartFile image = createImagePart();
 
       // When & Then
       DesignComponentDto response = mockMvcUtils.doAuthMultipartRequest(
@@ -409,7 +405,7 @@ public class DesignComponentControllerTest {
           .componentTypeIds(List.of(componentTypeB.getComponentTypeId()))
           .build();
       MockMultipartFile requestPart = createRequestPart(updateRequest);
-      MockMultipartFile image = createImagePart("updated.png");
+      MockMultipartFile image = createImagePart();
       // When & Then - testUser로 수정 시도 (실패해야 함)
       mockMvcUtils.doAuthMultipartRequest(
           MockMvcMultipartRequestDto.<Void>builder()
@@ -442,7 +438,7 @@ public class DesignComponentControllerTest {
           .isPublic(true)
           .build();
       MockMultipartFile requestPart = createRequestPart(createRequest);
-      MockMultipartFile image = createImagePart("test.png");
+      MockMultipartFile image = createImagePart();
       mockMvcUtils.doAuthMultipartRequest(
           MockMvcMultipartRequestDto.<Void>builder()
               .mockMvc(mockMvc)
@@ -468,7 +464,7 @@ public class DesignComponentControllerTest {
               List.of(componentTypeA.getComponentTypeId(), componentTypeA.getComponentTypeId()))
           .build();
       MockMultipartFile requestPart = createRequestPart(createRequest);
-      MockMultipartFile image = createImagePart("test.png");
+      MockMultipartFile image = createImagePart();
       mockMvcUtils.doAuthMultipartRequest(
           MockMvcMultipartRequestDto.<Void>builder()
               .mockMvc(mockMvc)
@@ -491,7 +487,7 @@ public class DesignComponentControllerTest {
           .componentTypeIds(List.of(componentTypeA.getComponentTypeId(), 999999))
           .build();
       MockMultipartFile requestPart = createRequestPart(createRequest);
-      MockMultipartFile image = createImagePart("test.png");
+      MockMultipartFile image = createImagePart();
       mockMvcUtils.doAuthMultipartRequest(
           MockMvcMultipartRequestDto.<Void>builder()
               .mockMvc(mockMvc)
@@ -518,7 +514,7 @@ public class DesignComponentControllerTest {
           .componentTypeIds(List.of(999999))
           .build();
       MockMultipartFile requestPart = createRequestPart(updateRequest);
-      MockMultipartFile image = createImagePart("updated.png");
+      MockMultipartFile image = createImagePart();
       mockMvcUtils.doAuthMultipartRequest(
           MockMvcMultipartRequestDto.<Void>builder()
               .mockMvc(mockMvc)
