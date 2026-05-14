@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
-import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.data.TestDataRemover;
+import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.theme.component.domain.ColorStyle;
@@ -16,11 +17,9 @@ import com.komentum.theme.component.dto.ColorStyleCreateDto;
 import com.komentum.theme.component.dto.ColorStyleResponse;
 import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
 import com.komentum.theme.component.dto.SeedResult;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.StyleCode;
 import com.komentum.theme.component.repository.ColorStyleRepository;
 import com.komentum.theme.component.service.ColorStyleSeeder;
-import com.komentum.theme.component.service.ColorStyleSeeder.ColorStyleSeed;
-import com.komentum.theme.utils.JsonUtils;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
@@ -59,13 +58,11 @@ public class ColorStyleControllerTest {
   private ObjectMapper objectMapper;
 
   @Autowired
-  private UserDataGenerator userDataGenerator;
-
-  @Autowired
   private ColorStyleSeeder seeder;
-
   @Autowired
-  private JsonUtils jsonUtils;
+  private UserScenarioSupport userScenarioSupport;
+  @Autowired
+  private TestDataRemover testDataRemover;
 
   private void assertColorStyleResponse(ColorStyleResponse response) {
     assertThat(response.getColorStyleId()).isNotNull();
@@ -77,43 +74,38 @@ public class ColorStyleControllerTest {
   private void compareResponseWithColorStyle(ColorStyleResponse response, ColorStyle colorStyle) {
     assertThat(colorStyle)
         .extracting(
-            ColorStyle::getStylePropsName,
-            ColorStyle::getStyleSheetPath,
-            ColorStyle::getStyleElementName,
-            ColorStyle::getExplain,
-            ColorStyle::getPlatform
+            ColorStyle::getStyleCode,
+            ColorStyle::getName,
+            ColorStyle::getExplain
         )
         .containsExactly(
-            response.getStylePropsName(),
-            response.getStyleSheetPath(),
-            response.getStyleElementName(),
-            response.getExplain(),
-            response.getPlatform()
+            response.getStyleCode(),
+            response.getName(),
+            response.getExplain()
         );
   }
 
-  private ColorStyle createColorStyle() {
+  private ColorStyle createColorStyle(StyleCode styleCode) {
     Faker faker = new Faker();
     return colorStyleRepository.save(ColorStyle.builder()
-        .explain(faker.color().name())
-        .platform(Platform.ANDROID)
-        .styleSheetPath(UUID.randomUUID().toString())
-        .styleElementName(UUID.randomUUID().toString())
-        .stylePropsName(UUID.randomUUID().toString())
+        .name(faker.color().name())
+        .explain(faker.lorem().paragraph())
+        .styleCode(styleCode)
         .build());
   }
 
-  User client;
+  User rootUser;
 
   @BeforeEach
   public void setUp() {
-    client = userDataGenerator.generateTestUsers(1).get(0);
+    rootUser = userScenarioSupport.builder()
+        .withRootUser()
+        .build().rootUser();
   }
 
   @AfterEach
   public void tearDown() {
-    userDataGenerator.deleteAllUsers();
-    colorStyleRepository.deleteAll();
+    testDataRemover.deleteAll();
   }
 
   @Test
@@ -121,18 +113,16 @@ public class ColorStyleControllerTest {
   void createColorStyle_success() throws Exception {
     // Given
     ColorStyleCreateDto createRequest = ColorStyleCreateDto.builder()
-        .explain("기본 색상 스타일")
-        .platform(Platform.ANDROID)
-        .styleSheetPath("/styles/colors.css")
-        .styleElementName("primaryColor")
-        .stylePropsName("color")
+        .explain("test")
+        .name("test")
+        .styleCode(StyleCode.CHAT_ROOM_MENU_ICON_COLOR)
         .build();
     MockHttpServletRequestBuilder requestBuilder = mockMvcUtils.addAuthentication(
         MockMvcRequestBuilders
             .post("/api/color-styles")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(createRequest)),
-        TestClientDto.fromEntity(client)
+        TestClientDto.fromEntity(rootUser)
     );
     // When
     ColorStyleResponse response = mockMvcUtils.parseResponse(
@@ -142,17 +132,13 @@ public class ColorStyleControllerTest {
     // then
     assertThat(response)
         .extracting(
-            ColorStyleResponse::getStyleSheetPath,
-            ColorStyleResponse::getStylePropsName,
-            ColorStyleResponse::getStyleElementName,
-            ColorStyleResponse::getPlatform,
+            ColorStyleResponse::getName,
+            ColorStyleResponse::getStyleCode,
             ColorStyleResponse::getExplain
         )
         .containsExactly(
-            createRequest.getStyleSheetPath(),
-            createRequest.getStylePropsName(),
-            createRequest.getStyleElementName(),
-            createRequest.getPlatform(),
+            createRequest.getName(),
+            createRequest.getStyleCode(),
             createRequest.getExplain()
         );
     assertColorStyleResponse(response);
@@ -162,12 +148,12 @@ public class ColorStyleControllerTest {
   @DisplayName("ColorStyle 조회 테스트")
   void getColorStyle_success() throws Exception {
     // Given
-    ColorStyle savedColorStyle = createColorStyle();
+    ColorStyle savedColorStyle = createColorStyle(StyleCode.BACKGROUND_COLOR);
     MockHttpServletRequestBuilder requestBuilder = mockMvcUtils.addAuthentication(
         MockMvcRequestBuilders
             .get("/api/color-styles/{id}", savedColorStyle.getColorStyleId())
             .contentType(MediaType.APPLICATION_JSON),
-        TestClientDto.fromEntity(client)
+        TestClientDto.fromEntity(rootUser)
     );
     // When
     ColorStyleResponse response = mockMvcUtils.parseResponse(
@@ -183,7 +169,7 @@ public class ColorStyleControllerTest {
   void getAllColorStyles_success() throws Exception {
     // Given
     Map<Integer, ColorStyle> expectedMap = IntStream.range(0, 5)
-        .mapToObj(i -> createColorStyle())
+        .mapToObj(i -> createColorStyle(StyleCode.BACKGROUND_COLOR))
         .collect(Collectors.toMap(
             ColorStyle::getColorStyleId,
             Function.identity()));
@@ -193,7 +179,7 @@ public class ColorStyleControllerTest {
             .mockMvc(mockMvc)
             .path("/api/color-styles")
             .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(client))
+            .clientDto(TestClientDto.fromEntity(rootUser))
             .statusCode(200)
             .responseType(new TypeReference<>() {
             })
@@ -212,13 +198,11 @@ public class ColorStyleControllerTest {
   @DisplayName("ColorStyle 수정 테스트")
   void updateColorStyle_success() throws Exception {
     // Given
-    ColorStyle savedColorStyle = createColorStyle();
+    ColorStyle savedColorStyle = createColorStyle(StyleCode.BACKGROUND_COLOR);
     ColorStyleUpdateRequest updateRequest = ColorStyleUpdateRequest.builder()
         .explain(UUID.randomUUID().toString())
-        .platform(Platform.IOS)
-        .styleSheetPath(UUID.randomUUID().toString())
-        .styleElementName(UUID.randomUUID().toString())
-        .stylePropsName(UUID.randomUUID().toString())
+        .name(UUID.randomUUID().toString())
+        .styleCode(StyleCode.BACKGROUND_COLOR)
         .build();
     // When
     ColorStyleResponse response = mockMvcUtils.doAuthRequest(
@@ -226,7 +210,7 @@ public class ColorStyleControllerTest {
             .mockMvc(mockMvc)
             .path(String.format("/api/color-styles/%d", savedColorStyle.getColorStyleId()))
             .httpMethod(HttpMethod.PUT)
-            .clientDto(TestClientDto.fromEntity(client))
+            .clientDto(TestClientDto.fromEntity(rootUser))
             .body(updateRequest)
             .statusCode(200)
             .responseType(new TypeReference<>() {
@@ -236,17 +220,13 @@ public class ColorStyleControllerTest {
     // then
     assertThat(response)
         .extracting(
-            ColorStyleResponse::getStyleSheetPath,
-            ColorStyleResponse::getStylePropsName,
-            ColorStyleResponse::getStyleElementName,
-            ColorStyleResponse::getPlatform,
+            ColorStyleResponse::getName,
+            ColorStyleResponse::getStyleCode,
             ColorStyleResponse::getExplain
         )
         .containsExactly(
-            updateRequest.getStyleSheetPath(),
-            updateRequest.getStylePropsName(),
-            updateRequest.getStyleElementName(),
-            updateRequest.getPlatform(),
+            updateRequest.getName(),
+            updateRequest.getStyleCode(),
             updateRequest.getExplain()
         );
     assertColorStyleResponse(response);
@@ -256,16 +236,14 @@ public class ColorStyleControllerTest {
   @DisplayName("color style 시드 데이터를 생성한다")
   public void upsertColorStyleBySeed_onlyInsert() throws Exception {
     // given
-    List<ColorStyleSeed> seeds = jsonUtils.readListAsType(
-        ColorStyleSeeder.COLOR_STYLE_JSON_PATH,
-        ColorStyleSeed.class);
+    List<ColorStyle> seeds = seeder.readSeed();
     // when
     SeedResult response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, SeedResult>builder()
             .mockMvc(mockMvc)
             .httpMethod(HttpMethod.PUT)
             .path("/api/color-styles/seed")
-            .clientDto(TestClientDto.fromEntity(client))
+            .clientDto(TestClientDto.fromEntity(rootUser))
             .statusCode(200)
             .responseType(new TypeReference<>() {
             })
@@ -286,7 +264,7 @@ public class ColorStyleControllerTest {
             .mockMvc(mockMvc)
             .httpMethod(HttpMethod.PUT)
             .path("/api/color-styles/seed")
-            .clientDto(TestClientDto.fromEntity(client))
+            .clientDto(TestClientDto.fromEntity(rootUser))
             .statusCode(200)
             .responseType(new TypeReference<>() {
             })

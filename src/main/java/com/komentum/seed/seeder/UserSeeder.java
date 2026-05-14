@@ -70,17 +70,17 @@ public class UserSeeder {
     return rootUser.orElseGet(() -> {
       String profileImageName = loadSampleProfileImageName();
       return userRepository.save(User.builder()
-            .userEmail(testUserProperty.getUserEmail())
-            .name("root1234")
-            .publicUserId(testUserProperty.getPublicUserId())
-            .encryptedPassword(passwordEncoder.encode(testUserProperty.getPassword()))
-            .role(UserRole.USER)
-            .birth(DateUtils.toLocalDate(faker.date().birthday()))
-            .gender(Gender.male)
-            .profileImgUrl(fileManager.resolveFilePath(profileImageName))
-            .profileImgName(profileImageName)
-            .introduce(faker.lorem().word())
-            .build());
+          .userEmail(testUserProperty.getUserEmail())
+          .name("root1234")
+          .publicUserId(testUserProperty.getPublicUserId())
+          .encryptedPassword(passwordEncoder.encode(testUserProperty.getPassword()))
+          .role(UserRole.ADMIN)
+          .birth(DateUtils.toLocalDate(faker.date().birthday()))
+          .gender(Gender.male)
+          .profileImgUrl(fileManager.resolveFilePath(profileImageName))
+          .profileImgName(profileImageName)
+          .introduce(faker.lorem().word())
+          .build());
     });
   }
 

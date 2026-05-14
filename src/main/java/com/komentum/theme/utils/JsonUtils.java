@@ -1,5 +1,6 @@
 package com.komentum.theme.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import java.io.IOException;
@@ -22,6 +23,13 @@ public class JsonUtils {
         .constructCollectionType(List.class, clazz);
     try (InputStream is = resource.getInputStream()) {
       return objectMapper.readValue(is, collectionType);
+    }
+  }
+
+  public JsonNode readJsonNode(String path) throws IOException {
+    Resource resource = new ClassPathResource(path);
+    try (InputStream is = resource.getInputStream()) {
+      return objectMapper.readTree(is);
     }
   }
 }
