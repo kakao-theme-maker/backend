@@ -12,7 +12,7 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.test.data.UserDataGenerator;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
-import com.komentum.theme.component.enums.Platform;
+import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.component.service.DesignComponentService;
@@ -61,11 +61,9 @@ class DesignComponentServiceTest {
 
     user = userDataGenerator.generateTestUser("service-test@example.com");
     componentType = componentTypeRepository.save(ComponentType.builder()
-        .platform(Platform.ANDROID)
-        .componentName("theme_maintab_cell_image_service_test.png")
-        .componentPath("res/drawable-sw600dp/theme_maintab_cell_image_service_test.png")
-        .sizeX(100)
-        .sizeY(200)
+        .typeCode(TypeCode.MAIN_TAB_BG_IMAGE)
+        .name("service test component type")
+        .explain("service test component type explain")
         .build());
   }
 
