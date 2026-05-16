@@ -100,13 +100,25 @@ public class DesignBoardTransactionService {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
       throw new EntityNotFoundException("cannot find design board with post id = " + postId);
     }
+    // update post info
     PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, previewImageName);
     Post targetPost = postService.getPostByPostId(postId);
     String oldFileName = targetPost.getPreviewImageName();
     targetPost.update(postUpdateDto);
+    // update tags
     if (updateDto.getPostTags() != null) {
       tagService.synchronizeTags(targetPost, updateDto.getPostTags());
     }
+    // synchronize design boards
+    if (updateDto.getDesignComponentIds() != null && !updateDto.getDesignComponentIds().isEmpty()) {
+      List<DesignComponent> requestedComponents = designComponentService.findByIdIn(
+          updateDto.getDesignComponentIds());
+      List<DesignComponent> currentComponents = designBoardService.findWithDesignBoardByPostId(
+          targetPost.getPostId()).stream().map(DesignBoard::getDesignComponent).toList();
+      designBoardService.synchronizeDesignBoards(targetPost, currentComponents,
+          requestedComponents);
+    }
+    // retrieve old file name
     return oldFileName;
   }
 }

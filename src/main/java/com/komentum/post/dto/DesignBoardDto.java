@@ -114,7 +114,7 @@ public class DesignBoardDto {
           
           - title (String, not null) : 새로운 게시글 제목
           - content (String, not null) : 새로운 게시글 내용
-          - designComponentId(String, not null) : 게시글을 생성할 design component ID
+          - designComponentIds(List<String>, not null) : 게시글을 생성할 design component ID 목록
           - publicFlag (String, optional) : 게시글 공개 여부 (null 허용)
           
           - post_tags (List<TagCreateDto>, optional) : 생성할 게시글 태그 목록 (전체 덮어쓰기)
@@ -153,6 +153,7 @@ public class DesignBoardDto {
           - title (String, optional) : 새로운 게시글 제목 (null 허용)
           - content (String, optional) : 새로운 게시글 내용 (null 허용)
           - publicFlag (String, optional) : 게시글 공개 여부 (null 허용)
+          - designComponentIds (String, optional) : 현재 디자인 에셋 목록으로 디자인 에셋 게시글을 덮어쓴다
           
           - post_tags (List<TagUpdateDto>, optional) : 게시글 태그 목록 (전체 덮어쓰기)
             - TagUpdateDto 구조:
@@ -166,6 +167,9 @@ public class DesignBoardDto {
 
     @Schema(description = "수정할 디자인 에셋 게시글 내용(null 가능)", example = "수정할 디자인 에셋 게시글 내용(null 가능)")
     String content;
+
+    @Schema(description = "현재 디자인 에셋 목록으로 디자인 에셋 게시글을 덮어쓴다(null 허용)")
+    List<Integer> designComponentIds;
 
     @Schema(description = "공개여부(null 허용)", example = "공개여부(null 허용) : true|false")
     @JsonProperty("public_flag")

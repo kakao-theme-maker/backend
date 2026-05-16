@@ -30,7 +30,7 @@ public class DesignBoard {
   private Post post;
 
   @ManyToOne
-  @JoinColumn(nullable = false)
+  @JoinColumn(nullable = false, name = "design_component_id")
   private DesignComponent designComponent;
 
   public Long findPostId() {
