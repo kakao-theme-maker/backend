@@ -1,5 +1,6 @@
 package com.komentum.post.service.transaction;
 
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -18,10 +19,12 @@ import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,7 @@ public class DesignBoardTransactionService {
   private final DesignBoardService designBoardService;
   private final TagService tagService;
   private final DesignBoardRepository designBoardRepository;
+  private final DesignComponentService designComponentService;
 
   @Transactional(readOnly = true)
   public DesignBoardDetailDto findDesignBoardDetail(Long postId, String userIdentifier) {
@@ -47,12 +51,22 @@ public class DesignBoardTransactionService {
     }
     User client = userEntityFinder.findUserEntity(userIdentifier);
     DesignBoardQuery.Detail detail = designBoardRepositorySupport
-        .findDetailsByPostId(postId, client);
+        .findDetailByPostId(postId, client);
     List<Tag> tags = tagService.findAllByPostId(postId);
-    List<String> previewImageUrls = designBoardService.findWithDesignComponentsByPostId(postId)
+    // generate preview image url list
+    Post targetPost = postService.getPostByPostId(postId);
+    String previewImageUrl =
+        helper.findPreviewImageUrl(targetPost.getPreviewImageName());
+    List<String> designImageUrls = designBoardService.findWithDesignComponentsByPostId(postId)
         .stream()
-        .map(db -> db.getDesignComponent().getImageUrl())
+        .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
         .toList();
+    List<String> previewImageUrls = Stream.concat(
+            Stream.of(previewImageUrl),
+            designImageUrls.stream()
+        )
+        .toList();
+    // generate response dto
     return designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
         tags,

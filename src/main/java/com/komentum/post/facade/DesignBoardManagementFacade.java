@@ -11,7 +11,6 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.dto.query.DesignBoardQuery.Detail;
 import com.komentum.post.mapper.DesignBoardMapperSupport;
-import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
@@ -42,9 +41,6 @@ public class DesignBoardManagementFacade {
   private final FileManager fileManager;
   private final DesignBoardMapperSupport designBoardMapperSupport;
   private final DesignBoardTransactionService designBoardTransactionService;
-
-  // mapper
-  private final PostDtoMapper postDtoMapper;
   private final TagService tagService;
 
   private String uploadOrReusePreviewImage(
