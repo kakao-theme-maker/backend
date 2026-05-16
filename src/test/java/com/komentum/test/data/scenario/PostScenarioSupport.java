@@ -2,6 +2,7 @@ package com.komentum.test.data.scenario;
 
 import com.komentum.post.domain.Category;
 import com.komentum.post.domain.CategoryPost;
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
 import com.komentum.post.domain.ThemeBoard;
@@ -9,15 +10,17 @@ import com.komentum.post.domain.enums.PostType;
 import com.komentum.seed.seeder.BookmarkSeeder;
 import com.komentum.seed.seeder.BookmarkSeeder.BookmarkSeedResult;
 import com.komentum.seed.seeder.CategorySeeder;
+import com.komentum.seed.seeder.DesignBoardSeeder;
 import com.komentum.seed.seeder.PostSeeder;
 import com.komentum.seed.seeder.PreferSeeder;
 import com.komentum.seed.seeder.ThemeBoardSeeder;
 import com.komentum.seed.seeder.ThemeBoardSeeder.ThemeBoardSeedResult;
-import com.komentum.seed.seeder.UserSeeder;
+import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
+import java.util.ArrayList;
 import java.util.List;
-import lombok.NoArgsConstructor;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,16 +33,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PostScenarioSupport {
 
-  private final UserSeeder userSeeder;
   private final PostSeeder postSeeder;
   private final PreferSeeder preferSeeder;
   private final CategorySeeder categorySeeder;
   private final BookmarkSeeder bookmarkSeeder;
   private final ThemeBoardSeeder themeBoardSeeder;
-
-  public PostScenarioBuilder builder() {
-    return new PostScenarioBuilder();
-  }
+  private final DesignBoardSeeder designBoardSeeder;
 
   public PostScenarioBuilder builder(List<User> users) {
     return new PostScenarioBuilder(users);
@@ -49,45 +48,33 @@ public class PostScenarioSupport {
    * PostScenarioBuilder의 결과 클래스
    * */
   public record Result(
-      List<User> users,
       List<Post> posts,
       List<Prefer> prefers,
       List<Category> categories,
       List<Category> bookmarks,
       List<CategoryPost> bookmarkMappings,
-      List<ThemeBoard> themeBoards
+      List<ThemeBoard> themeBoards,
+      List<DesignBoard> designBoards
   ) {
 
-    public User getFirstUser() {
-      return users.get(0);
-    }
   }
 
   /**
    * 게시글 관련 테스트 데이터 생성 시나리오를 조합하는 클래스
    * */
-  @NoArgsConstructor
   public class PostScenarioBuilder {
 
-    private List<User> users;
-    private List<Post> posts;
-    private List<Prefer> prefers;
-    private List<Category> categories;
-    private List<Category> bookmarks;
-    private List<CategoryPost> bookmarkMappings;
-    private List<ThemeBoard> themeBoards;
+    private final List<User> users;
+    private final List<Post> posts = new ArrayList<>();
+    private final List<Prefer> prefers = new ArrayList<>();
+    private final List<Category> categories = new ArrayList<>();
+    private final List<Category> bookmarks = new ArrayList<>();
+    private final List<CategoryPost> bookmarkMappings = new ArrayList<>();
+    private final List<ThemeBoard> themeBoards = new ArrayList<>();
+    private final List<DesignBoard> designBoards = new ArrayList<>();
 
     public PostScenarioBuilder(List<User> users) {
       this.users = users;
-    }
-
-    /**
-     * userCount 수의 user Entity 생성
-     * */
-    @Transactional
-    public PostScenarioBuilder withUsers(int userCount) {
-      users = userSeeder.seedData(userCount);
-      return this;
     }
 
     /**
@@ -100,8 +87,9 @@ public class PostScenarioSupport {
       if (users.isEmpty()) {
         throw new RuntimeException("user must not be empty");
       }
-      posts = postSeeder
-          .seedPerUser(users, postPerUser, "https://test-data.com", PostType.THEME_BOARD);
+      posts.addAll(
+          postSeeder.seedPerUser(users, postPerUser, "https://test-data.com", PostType.THEME_BOARD)
+      );
       return this;
     }
 
@@ -111,8 +99,27 @@ public class PostScenarioSupport {
         throw new RuntimeException("user must not be empty");
       }
       ThemeBoardSeedResult result = themeBoardSeeder.seedData(themeComponents);
-      this.posts = result.posts();
-      this.themeBoards = result.themeBoards();
+      this.posts.addAll(result.posts());
+      this.themeBoards.addAll(result.themeBoards());
+      return this;
+    }
+
+    @Transactional
+    public PostScenarioBuilder withDesignBoardsPerUser(
+        int postPerUser,
+        Map<User, List<DesignComponent>> designComponentOwnerMap) {
+      for (User user : users) {
+        List<DesignComponent> components = designComponentOwnerMap.get(user);
+        if (components == null || components.isEmpty()) {
+          throw new IllegalArgumentException(
+              "designComponentOwnerMap users must exists in builder's users");
+        }
+        for (int i = 0; i < postPerUser; i++) {
+          var result = designBoardSeeder.seedWithSinglePost(user, components);
+          designBoards.addAll(result.designBoards());
+          posts.addAll(result.posts());
+        }
+      }
       return this;
     }
 
@@ -129,10 +136,10 @@ public class PostScenarioSupport {
      */
     @Transactional
     public PostScenarioBuilder withPrefersPerPost(int preferPerPost, double ratio) {
-      if (users.isEmpty() || posts == null || posts.isEmpty()) {
+      if (users.isEmpty() || posts.isEmpty()) {
         throw new RuntimeException("user or post must not be empty");
       }
-      this.prefers = preferSeeder.seedPerPost(preferPerPost, users, ratio);
+      this.prefers.addAll(preferSeeder.seedPerPost(preferPerPost, users, ratio));
       return this;
     }
 
@@ -144,7 +151,7 @@ public class PostScenarioSupport {
       if (users.isEmpty()) {
         throw new RuntimeException("user must not be empty");
       }
-      this.categories = categorySeeder.seedCategoryPerUser(categoryPerUser, users);
+      this.categories.addAll(categorySeeder.seedCategoryPerUser(categoryPerUser, users));
       return this;
     }
 
@@ -170,14 +177,14 @@ public class PostScenarioSupport {
         throw new IllegalArgumentException("bookmarkRatio must be between 0 and 1");
       }
       BookmarkSeedResult result = bookmarkSeeder.bookmarkByRatio(users, posts, bookmarkRatio);
-      bookmarks = result.bookmarks();
-      bookmarkMappings = result.bookmarkMappings();
+      bookmarks.addAll(result.bookmarks());
+      bookmarkMappings.addAll(result.bookmarkMappings());
       return this;
     }
 
     public Result build() {
-      return new Result(users, posts, prefers, categories, bookmarks, bookmarkMappings,
-          themeBoards);
+      return new Result(posts, prefers, categories, bookmarks, bookmarkMappings,
+          themeBoards, designBoards);
     }
   }
 }

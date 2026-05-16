@@ -55,11 +55,13 @@ class BookmarkControllerTest {
   private CategoryPostRepository categoryPostRepository;
 
   private Result postScenarioResult;
+  private UserScenarioSupport.UserScenarioResult userScenarioResult;
 
   @BeforeEach
   public void setUp() {
-    postScenarioResult = postScenarioSupport.builder()
-        .withUsers(3)
+    userScenarioResult = userScenarioSupport.builder()
+        .withUsers(3).build();
+    postScenarioResult = postScenarioSupport.builder(userScenarioResult.users())
         .withThemeBoardPerUser(5)
         .build();
   }
@@ -73,7 +75,7 @@ class BookmarkControllerTest {
   @DisplayName("when send request, add post on bookmark category")
   void addPostOnBookmark_success() throws Exception {
     // given
-    User client = postScenarioResult.getFirstUser();
+    User client = userScenarioResult.getFirstUser();
     Post postToAddonBookmark = postScenarioResult.posts().get(0);
     // when
     mockMvcUtils.doAuthRequest(
@@ -102,7 +104,7 @@ class BookmarkControllerTest {
   @DisplayName("If posts are stored in bookmarks in duplicate, maintain the existing state")
   void addPostOnBookmark_whenExists_returnsExisting() throws Exception {
     // given
-    User client = postScenarioResult.getFirstUser();
+    User client = userScenarioResult.getFirstUser();
     Post postToAdd = postScenarioResult.posts().get(0);
     // when: 북마크에 게시글을 추가한다
     mockMvcUtils.doAuthRequest(
@@ -143,7 +145,7 @@ class BookmarkControllerTest {
   @DisplayName("If remove non-existent posts from bookmarks, maintain the existing state")
   void deletePostFromBookmark_whenNotExists_returnsNoContent() throws Exception {
     // given
-    User client = postScenarioResult.getFirstUser();
+    User client = userScenarioResult.getFirstUser();
     Post targetPost = postScenarioResult.posts().get(0);
     // when: bookmark에서 post 제거
     mockMvcUtils.doAuthRequest(
@@ -167,7 +169,7 @@ class BookmarkControllerTest {
   @DisplayName("when send request, delete post from bookmark category")
   void deletePostFromBookmark_success() throws Exception {
     // given
-    User client = postScenarioResult.getFirstUser();
+    User client = userScenarioResult.getFirstUser();
     Post targetPost = postScenarioResult.posts().get(0);
     // when: bookmark에 post 등록
     mockMvcUtils.doAuthRequest(

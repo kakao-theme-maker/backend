@@ -6,6 +6,7 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -51,9 +52,20 @@ public class DesignBoardSeeder {
     if (designComponents.isEmpty()) {
       throw new IllegalArgumentException("designComponent list must not be empty");
     }
+    DesignComponent component = designComponents.get(0);
+    User author = component.getUser();
+    return seedWithSinglePost(author, designComponents);
+  }
+
+  @Transactional
+  public DesignBoardSeedResult seedWithSinglePost(User author,
+      List<DesignComponent> designComponents) {
+    if (designComponents.isEmpty()) {
+      throw new IllegalArgumentException("designComponent list must not be empty");
+    }
     List<DesignBoard> designBoards = new ArrayList<>();
     DesignComponent component = designComponents.get(0);
-    Post targetPost = postSeeder.createOne(component.getUser(),
+    Post targetPost = postSeeder.createOne(author,
         fileManager.convertUrlToFileName(component.getImageUrl()), PostType.DESIGN_BOARD);
     for (DesignComponent designComponent : designComponents) {
       designBoards.add(generateOne(designComponent, targetPost));
