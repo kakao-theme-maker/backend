@@ -19,16 +19,22 @@ import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
-import com.komentum.test.data.BoardDetailDataGenerator;
 import com.komentum.test.data.MockMultipartFileUtils;
 import com.komentum.test.data.MockMultipartFileUtils.ImageExtension;
+import com.komentum.test.data.TestDataRemover;
+import com.komentum.test.data.scenario.DesignComponentScenarioSupport;
+import com.komentum.test.data.scenario.PostScenarioSupport;
+import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.test.dto.TestParams;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +46,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 @SpringBootTest
@@ -50,9 +55,6 @@ public class DesignBoardControllerTest {
 
   @Autowired
   private MockMvc mockMvc;
-
-  @Autowired
-  private BoardDetailDataGenerator boardDetailDataGenerator;
 
   @Autowired
   private PostRepository postRepository;
@@ -66,30 +68,73 @@ public class DesignBoardControllerTest {
   @Autowired
   private FileManager fileManager;
 
+  @Autowired
+  private UserScenarioSupport userScenarioSupport;
+
+  @Autowired
+  private DesignComponentScenarioSupport designComponentScenarioSupport;
+
+  @Autowired
+  private PostScenarioSupport postScenarioSupport;
+
+  @Autowired
+  private TestDataRemover testDataRemover;
+
+  UserScenarioSupport.UserScenarioResult userResult;
+  DesignComponentScenarioSupport.DesignComponentScenarioResult designComponentResult;
+  PostScenarioSupport.Result postResult;
+
   @BeforeEach
   public void setUp() {
-    boardDetailDataGenerator.deleteDesignBoards();
-    boardDetailDataGenerator.generateDesignBoards(3, 3, 3);
+    userResult = userScenarioSupport.builder() // 사용자 3명
+        .withUsers(3)
+        .build();
+    designComponentResult = designComponentScenarioSupport // 사용자마다 3개의 design components
+        .builder(userResult.users())
+        .withCountPerUser(3)
+        .build();
+    Map<User, List<DesignComponent>> designComponentOwnerMap = designComponentResult.designComponents()
+        .stream()
+        .collect(Collectors.groupingBy(
+            DesignComponent::getUser
+        ));
+    postResult = postScenarioSupport.builder(userResult.users()) // 사용자마다 3개의 design boards
+        .withDesignBoardsPerUser(3, designComponentOwnerMap)
+        .build();
   }
 
   @AfterEach
   public void tearDown() {
-    boardDetailDataGenerator.deleteDesignBoards();
+    testDataRemover.deleteAll();
   }
 
   private void assertDesignBoard(DesignBoardDetailDto response) {
     // DB assertion
     Post savedPost = postRepository.findById(response.getPostId())
         .orElse(null);
-    DesignBoard savedDesignBoard = designBoardRepository.findByPost_PostId(response.getPostId())
-        .orElse(null);
+    List<DesignBoard> savedDesignBoards = designBoardRepository.findByPost_PostId(
+        response.getPostId());
     assertThat(savedPost).isNotNull();
-    assertThat(savedDesignBoard).isNotNull();
+    assertThat(savedDesignBoards).isNotEmpty();
     // field assertion
     assertThat(response).isNotNull();
     assertThat(response.getTitle()).isEqualTo(savedPost.getTitle());
     assertThat(response.getContent()).isEqualTo(savedPost.getContent());
     assertThat(response.getPreviewImageUrl()).isNotEmpty();
+    assertThat(response.getCreatedAt()).isNotBlank();
+    assertThat(response.getUserEmail()).isNotBlank();
+    assertThat(response.getUserName()).isNotBlank();
+    assertThat(response.getComments()).isGreaterThanOrEqualTo(0);
+    assertThat(response.getPrefers()).isGreaterThanOrEqualTo(0);
+    assertThat(response.getTags()).isNotNull();
+  }
+
+  private void stubImageUploadAndRetrieve(String expectedImageUrl) {
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(expectedImageUrl);
+    Mockito.when(
+            fileManager.uploadFile(any(byte[].class), anyString()))
+        .thenReturn(UUID.randomUUID().toString());
   }
 
   @Test
@@ -98,13 +143,10 @@ public class DesignBoardControllerTest {
     // given
     int pageSize = 2;
     int pageNumber = 0;
-    User client = boardDetailDataGenerator.getUsers().get(0);
-    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    params.add("size", Integer.toString(pageSize));
-    params.add("page", Integer.toString(pageNumber));
+    User client = userResult.getFirstUser();
+    MultiValueMap<String, String> params = TestParams.withPaging(pageNumber, pageSize);
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
-        .thenReturn(UUID.randomUUID().toString());
+    stubImageUploadAndRetrieve(UUID.randomUUID().toString());
     // when
     List<DesignBoardPreviewDto> responses = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
@@ -125,14 +167,13 @@ public class DesignBoardControllerTest {
   @DisplayName("when send request, retrieve design board by id")
   public void whenSendRequest_retrieveDesignBoardById() throws Exception {
     // given
-    DesignBoard targetDesignBoard = boardDetailDataGenerator.getDesignBoards().get(0);
+    DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     Post targetPost = targetDesignBoard.getPost();
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
-    User client = boardDetailDataGenerator.getUsers().get(0);
+    User client = userResult.getFirstUser();
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
-        .thenReturn(UUID.randomUUID().toString());
+    stubImageUploadAndRetrieve(UUID.randomUUID().toString());
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, DesignBoardDetailDto>builder()
@@ -152,27 +193,27 @@ public class DesignBoardControllerTest {
   @DisplayName("If a pinned post ID is provided, place that post at the top of the first page and return only design boards written by the same author.")
   void findDesignBoardDetails_ifPinnedPostIdExists() throws Exception {
     // given
-    DesignBoard targetDesignBoard = boardDetailDataGenerator.getDesignBoards().get(0);
+    DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     Post pinnedPost = targetDesignBoard.getPost();
-    String requestPath = String.format("/api/design-boards/details?pinned_post_id=%d&page=0",
-        targetDesignBoard.getPost().getPostId());
-    User client = boardDetailDataGenerator.getUsers().get(0);
+    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
+    params.add("pinned_post_id", pinnedPost.getPostId().toString());
+    User client = userResult.getFirstUser();
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
-        .thenReturn(UUID.randomUUID().toString());
+    stubImageUploadAndRetrieve(UUID.randomUUID().toString());
     // when
     List<DesignBoardDetailDto> response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<DesignBoardDetailDto>>builder()
             .mockMvc(mockMvc)
             .httpMethod(HttpMethod.GET)
-            .path(requestPath)
+            .path("/api/design-boards/details")
+            .params(params)
             .responseType(new TypeReference<>() {
             })
             .clientDto(TestClientDto.fromEntity(client))
             .build()
     );
     // then
-    assertThat(response).isNotEmpty();
+    assertThat(response).hasSize(3);
     assertThat(response.get(0).getPostId()).isEqualTo(pinnedPost.getPostId());
     for (DesignBoardDetailDto dto : response) {
       assertDesignBoard(dto);
@@ -183,18 +224,20 @@ public class DesignBoardControllerTest {
   @DisplayName("when send request, save and return design board info")
   public void whenSendRequest_saveAndReturnDesignBoard() throws Exception {
     // given
-    DesignComponent unsavedBoardDesignComponent = boardDetailDataGenerator.getNonDesignBoardDesignComponents()
-        .get(0);
-    String expectedPreviewImageUrl = unsavedBoardDesignComponent.getImageUrl();
-    User author = boardDetailDataGenerator.getUsers().get(0);
+    List<DesignComponent> targetDesignComponents = designComponentResult.designComponents()
+        .subList(0, 2);
+    String expectedPreviewImageUrl = targetDesignComponents.get(0).getImageUrl();
+    User author = userResult.getFirstUser();
     List<String> tagNames = List.of("a", "b");
     List<TagCreateDto> tagCreateDtoList = tagNames.stream()
         .map(tagName -> TagCreateDto.builder().tagName(tagName).build())
         .toList();
+    List<Integer> designComponentIds = targetDesignComponents.stream()
+        .map(DesignComponent::getDesignComponentId).toList();
     DesignBoardCreateDto createDto = DesignBoardCreateDto.builder()
         .title("test title")
         .content("test content")
-        .designComponentIds(List.of(unsavedBoardDesignComponent.getDesignComponentId()))
+        .designComponentIds(designComponentIds)
         .publicFlag(true)
         .postTags(tagCreateDtoList)
         .build();
@@ -204,11 +247,7 @@ public class DesignBoardControllerTest {
         .generateJsonFormData("board_info", createDto);
     List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
-        .thenReturn(expectedPreviewImageUrl);
-    Mockito.when(
-            fileManager.uploadFile(any(byte[].class), anyString()))
-        .thenReturn(UUID.randomUUID().toString());
+    stubImageUploadAndRetrieve(expectedPreviewImageUrl);
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
         MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
@@ -224,8 +263,8 @@ public class DesignBoardControllerTest {
     // then : 필드 및 DB 검증
     assertThat(response.getTags().stream().map(TagResponse::getTagName))
         .containsExactlyInAnyOrderElementsOf(tagNames);
-    assertThat(response.getPreviewImageUrl())
-        .isEqualTo(List.of(expectedPreviewImageUrl));
+    assertThat(response.getPreviewImageUrl()).hasSize(
+        targetDesignComponents.size() + 1);//대표 이미지 1개 + design component url 목록
     assertDesignBoard(response);
   }
 
@@ -234,7 +273,7 @@ public class DesignBoardControllerTest {
   public void whenSendRequest_updateDesignBoard() throws Exception {
     // given
     String expectedPreviewImageUrl = UUID.randomUUID().toString();
-    DesignBoard targetDesignBoard = boardDetailDataGenerator.getDesignBoards().get(0);
+    DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
     List<String> tagNames = List.of("a", "b");
@@ -242,12 +281,16 @@ public class DesignBoardControllerTest {
         .map(tagName -> TagUpdateDto.builder().tagName(tagName).build())
         .toList();
     User author = targetDesignBoard.getPost().getUser();
+    List<Integer> designComponentIds = designComponentResult.designComponents().stream()
+        .filter(dc -> dc.getUser().getUserId().equals(author.getUserId()))
+        .map(DesignComponent::getDesignComponentId).toList();
     String expectedTitle = UUID.randomUUID().toString();
     String expectedContent = UUID.randomUUID().toString();
     DesignBoardUpdateDto updateDto = DesignBoardUpdateDto.builder()
         .title(expectedTitle)
         .content(expectedContent)
         .publicFlag(false)
+        .designComponentIds(designComponentIds.subList(0, 1))
         .postTags(tagUpdateDtoList)
         .build();
     MockMultipartFile previewImage = MockMultipartFileUtils
@@ -256,11 +299,7 @@ public class DesignBoardControllerTest {
         .generateJsonFormData("board_info", updateDto);
     List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
-        .thenReturn(expectedPreviewImageUrl);
-    Mockito.when(
-            fileManager.uploadFile(any(byte[].class), anyString()))
-        .thenReturn(UUID.randomUUID().toString());
+    stubImageUploadAndRetrieve(expectedPreviewImageUrl);
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
         MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
@@ -276,6 +315,7 @@ public class DesignBoardControllerTest {
     // then : 필드 및 DB 검증
     assertThat(response.getTags().stream().map(TagResponse::getTagName))
         .containsExactlyInAnyOrderElementsOf(tagNames);
+    assertThat(response.getPreviewImageUrl()).hasSize(2);
     assertDesignBoard(response);
   }
 
@@ -283,7 +323,7 @@ public class DesignBoardControllerTest {
   @DisplayName("when send request, delete board info")
   public void whenSendRequest_deleteDesignBoard() throws Exception {
     // given
-    DesignBoard targetDesignBoard = boardDetailDataGenerator.getDesignBoards().get(0);
+    DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     User author = targetDesignBoard.getPost().getUser();
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
