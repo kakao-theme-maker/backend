@@ -28,7 +28,6 @@ public class DesignBoardMapperSupport {
         .build();
   }
 
-  @Deprecated
   public DesignBoardDetailDto toDesignBoardDetailDto(
       DesignBoardQuery.Detail detail,
       List<Tag> tags,
@@ -39,6 +38,7 @@ public class DesignBoardMapperSupport {
         .title(detail.getTitle())
         .content(detail.getContent())
         .userEmail(detail.getUserEmail())
+        .userName(detail.getUserName())
         .createdAt(DateUtils.convertToDateString(detail.getCreatedAt()))
         .previewImageUrl(previewImageList)
         .prefers(detail.getPrefers())
