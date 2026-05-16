@@ -1,6 +1,5 @@
 package com.komentum.post.repository;
 
-import com.komentum.post.domain.QComment;
 import com.komentum.post.domain.QDesignBoard;
 import com.komentum.post.domain.QPost;
 import com.komentum.post.domain.QPrefer;
@@ -14,7 +13,6 @@ import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -30,25 +28,13 @@ public class DesignBoardRepositorySupport {
   private final JPAQueryFactory queryFactory;
   private final PostRepositorySupport postRepositorySupport;
 
-  public JPAQuery<DesignBoardQuery.Detail> getDesignBoardDetailBaseQuery(User client) {
+  private JPAQuery<DesignBoardQuery.Detail> getDesignBoardDetailBaseQuery(User client) {
     QPost post = QPost.post;
     QDesignBoard designBoard = QDesignBoard.designBoard;
-    QPrefer prefer = QPrefer.prefer;
-    QComment comment = QComment.comment;
     QUser user = QUser.user;
     QDesignComponent designComponent = QDesignComponent.designComponent;
-
-    JPQLQuery<Long> preferCount =
-        JPAExpressions
-            .select(prefer.count())
-            .from(prefer)
-            .where(prefer.post.eq(post));
-
-    JPQLQuery<Long> commentCount =
-        JPAExpressions
-            .select(comment.count())
-            .from(comment)
-            .where(comment.post.eq(post));
+    JPQLQuery<Long> preferCount = postRepositorySupport.countPrefers(post);
+    JPQLQuery<Long> commentCount = postRepositorySupport.countComments(post);
 
     return queryFactory.select(
             new QDesignBoardQuery_Detail(
@@ -71,7 +57,7 @@ public class DesignBoardRepositorySupport {
         .join(post.user, user);
   }
 
-  public DesignBoardQuery.Detail findDetailsByPostId(Long postId, User client) {
+  public DesignBoardQuery.Detail findDetailByPostId(Long postId, User client) {
     QPost post = QPost.post;
     return getDesignBoardDetailBaseQuery(client)
         .where(post.postId.eq(postId))
@@ -91,6 +77,7 @@ public class DesignBoardRepositorySupport {
         .where(
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
         )
+        .groupBy(post.postId)
         .orderBy(orderSpecifiers)
         .limit(pageable.getPageSize())
         .offset(pageable.getOffset())
