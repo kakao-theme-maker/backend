@@ -23,6 +23,7 @@ import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -110,14 +111,18 @@ public class DesignBoardManagementFacade {
         .collect(Collectors.groupingBy(
             designBoard -> designBoard.getPost().getPostId()
         ));
-    // post id별 tag 목록 조호
+    // post id별 tag 목록 조회
     Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
       List<DesignBoard> designBoards = designBoardMap.getOrDefault(detail.getPostId(), List.of());
-      List<String> previewImageUrls = designBoards.stream()
-          .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
-          .toList();
+      String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
+          detail.getPostPreviewImageName());
+      List<String> previewImageUrls = Stream.concat(
+          Stream.ofNullable(postPreviewImageUrl),
+          designBoards.stream()
+              .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+      ).toList();
       return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls);
     }).toList();
   }

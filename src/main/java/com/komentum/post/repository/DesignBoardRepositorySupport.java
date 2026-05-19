@@ -41,6 +41,7 @@ public class DesignBoardRepositorySupport {
                 post.postId,
                 post.title,
                 post.content,
+                post.previewImageName,
                 user.userEmail,
                 user.name,
                 post.createdAt,

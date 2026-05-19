@@ -14,6 +14,7 @@ public class DesignBoardQuery {
     private Long postId;
     private String title;
     private String content;
+    private String postPreviewImageName;
     private String userEmail;
     private String userName;
     private LocalDateTime createdAt;
@@ -28,6 +29,7 @@ public class DesignBoardQuery {
         Long postId,
         String title,
         String content,
+        String postPreviewImageName,
         String userEmail,
         String userName,
         LocalDateTime createdAt,
@@ -39,6 +41,7 @@ public class DesignBoardQuery {
       this.postId = postId;
       this.title = title;
       this.content = content;
+      this.postPreviewImageName = postPreviewImageName;
       this.userEmail = userEmail;
       this.userName = userName;
       this.createdAt = createdAt;
