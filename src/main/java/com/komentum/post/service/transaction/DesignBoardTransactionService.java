@@ -24,6 +24,7 @@ import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -62,9 +63,10 @@ public class DesignBoardTransactionService {
         .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
         .toList();
     List<String> previewImageUrls = Stream.concat(
-            Stream.of(previewImageUrl),
+            Stream.ofNullable(previewImageUrl),
             designImageUrls.stream()
         )
+        .filter(Objects::nonNull)
         .toList();
     // generate response dto
     return designBoardMapperSupport.toDesignBoardDetailDto(
