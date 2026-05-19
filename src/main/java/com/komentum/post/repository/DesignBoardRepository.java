@@ -17,7 +17,7 @@ public interface DesignBoardRepository extends JpaRepository<DesignBoard, Long> 
 
   List<DesignBoard> findByPost_PostId(Long postPostId);
 
-  @EntityGraph(attributePaths = {"design_component_id"})
+  @EntityGraph(attributePaths = {"designComponent"})
   List<DesignBoard> findWithDesignComponentByPost(Post post);
 
   boolean existsByDesignComponentAndPost(DesignComponent designComponent, Post post);
