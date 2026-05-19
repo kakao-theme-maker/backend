@@ -1,6 +1,7 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -21,6 +22,7 @@ import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -80,6 +82,13 @@ public class DesignBoardManagementFacade {
         .toList();
   }
 
+  /**
+   * 디자인 에셋 게시글 상세 조회 시 연관 디자인 에셋 게시글을 함께 제공한다
+   * @param pageable 페이징 정보
+   * @param pinnedPostId page=0일 때, 위에 고정할 게시글 정보
+   * @param userIdentifier 사용자 식별자
+   * @return 디자인 에셋 상세 정보 목록
+   * */
   @Transactional(readOnly = true)
   public List<DesignBoardDetailDto> findBoardDetails(Pageable pageable, Long pinnedPostId,
       String userIdentifier) {
@@ -87,18 +96,28 @@ public class DesignBoardManagementFacade {
     Post pinnedPost = pinnedPostId == null ?
         null :
         postService.findByPostIdAndPostType(pinnedPostId, PostType.DESIGN_BOARD);
+    // 디자인 에셋 상세 정보 DTO Projection
     List<DesignBoardQuery.Detail> details = designBoardService.findDetailList(pageable, client,
         pinnedPost);
+    // post id 추출
     List<Long> postIds = details.stream()
         .map(Detail::getPostId)
         .toList();
-    List<String> previewImageUrls = designBoardService.findWithDesignComponentsByPostIdIn(postIds)
+    // post id별 design board 목록 조회
+    Map<Long, List<DesignBoard>> designBoardMap = designBoardService.findWithDesignComponentsByPostIdIn(
+            postIds)
         .stream()
-        .map(p -> p.getDesignComponent().getImageUrl())
-        .toList();
+        .collect(Collectors.groupingBy(
+            designBoard -> designBoard.getPost().getPostId()
+        ));
+    // post id별 tag 목록 조호
     Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
+      List<DesignBoard> designBoards = designBoardMap.getOrDefault(detail.getPostId(), List.of());
+      List<String> previewImageUrls = designBoards.stream()
+          .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+          .toList();
       return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls);
     }).toList();
   }
