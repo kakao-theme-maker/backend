@@ -1,4 +1,4 @@
-package com.komentum.theme.utils;
+package com.komentum.global.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package com.komentum.theme.utils;
+package com.komentum.global.utils;
 
 import java.awt.image.BufferedImage;
 import lombok.extern.slf4j.Slf4j;
