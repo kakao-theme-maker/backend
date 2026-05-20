@@ -13,8 +13,6 @@ import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -86,28 +84,17 @@ public class DesignBoardService {
   @Transactional
   public void synchronizeDesignBoards(
       Post post,
-      List<DesignComponent> currentComponents,
       List<DesignComponent> requestedComponents
   ) {
-    // generate current / requested design component id set
-    Set<Integer> requestedDCIDSet = requestedComponents.stream()
-        .map(DesignComponent::getDesignComponentId)
-        .collect(Collectors.toSet());
-    Set<Integer> currentDCIDSet = currentComponents.stream()
-        .map(DesignComponent::getDesignComponentId)
-        .collect(Collectors.toSet());
-    // delete design boards from current design component list
-    List<DesignComponent> componentsToDelete = currentComponents.stream()
-        .filter(dc -> !requestedDCIDSet.contains(dc.getDesignComponentId()))
-        .toList();
-    designBoardRepository.deleteByPostAndDesignComponentIn(post, componentsToDelete);
-    // generate design boards from requested design component list
-    List<DesignComponent> componentsToGenerate = requestedComponents.stream()
-        .filter(dc -> !currentDCIDSet.contains(dc.getDesignComponentId()))
-        .toList();
-    for (DesignComponent dc : componentsToGenerate) {
-      save(post, dc);
+    // delete all design boards
+    designBoardRepository.deleteByPost_PostId(post.getPostId());
+    // generate all design boards
+    List<DesignBoard> designBoards = findWithDesignBoardByPostId(post.getPostId());
+    for (DesignComponent component : requestedComponents) {
+      save(post, component);
     }
+    List<DesignBoard> updated = findWithDesignBoardByPostId(post.getPostId());
+    int a = 1;
   }
 
   @Transactional

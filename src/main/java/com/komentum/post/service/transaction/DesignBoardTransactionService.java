@@ -1,6 +1,5 @@
 package com.komentum.post.service.transaction;
 
-import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -115,10 +114,7 @@ public class DesignBoardTransactionService {
     if (updateDto.getDesignComponentIds() != null && !updateDto.getDesignComponentIds().isEmpty()) {
       List<DesignComponent> requestedComponents = designComponentService.findByIdIn(
           updateDto.getDesignComponentIds());
-      List<DesignComponent> currentComponents = designBoardService.findWithDesignBoardByPostId(
-          targetPost.getPostId()).stream().map(DesignBoard::getDesignComponent).toList();
-      designBoardService.synchronizeDesignBoards(targetPost, currentComponents,
-          requestedComponents);
+      designBoardService.synchronizeDesignBoards(targetPost, requestedComponents);
     }
     // retrieve old file name
     return oldFileName;

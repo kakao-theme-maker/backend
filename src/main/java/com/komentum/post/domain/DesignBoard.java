@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +21,12 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(
+    uniqueConstraints = @UniqueConstraint(
+        name = "unique_design_board",
+        columnNames = {"post_id", "design_component_id"}
+    )
+)
 public class DesignBoard {
 
   @Id
@@ -26,14 +34,10 @@ public class DesignBoard {
   private Long designBoardId;
 
   @ManyToOne
-  @JoinColumn(nullable = false)
+  @JoinColumn(nullable = false, name = "post_id")
   private Post post;
 
   @ManyToOne
   @JoinColumn(nullable = false, name = "design_component_id")
   private DesignComponent designComponent;
-
-  public Long findPostId() {
-    return this.post.getPostId();
-  }
 }
