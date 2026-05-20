@@ -1,6 +1,7 @@
-package com.komentum.test.data;
+package com.komentum.test.fixture.component;
 
 import com.github.javafaker.Faker;
+import com.komentum.test.data.UserDataGenerator;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.component.repository.DesignComponentRepository;

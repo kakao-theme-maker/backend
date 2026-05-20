@@ -1,5 +1,8 @@
 package com.komentum.theme.controller;
 
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.UPLOADED_IMAGE_URL;
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequestPart;
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.updateRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -23,11 +26,12 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
   @Test
   @DisplayName("DesignComponent 수정 테스트")
   void updateDesignComponent() throws Exception {
+    stubImageUpload();
     DesignComponent savedComponent = testUserComponent(
         "http://example.com/image.png", false, componentTypeA);
     UpdateDesignComponentRequest updateRequest = updateRequest(true, componentTypeB);
     MockMultipartFile requestPart = createRequestPart(updateRequest);
-    MockMultipartFile image = createImagePart("updated.png");
+    MockMultipartFile image = multipartFixture.imagePart("updated.png");
 
     DesignComponentDto response = doMultipartRequest(
         "/api/design-components/" + savedComponent.getDesignComponentId(),
@@ -65,7 +69,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
         "other@test.com", "http://example.com/image.png", false, componentTypeA);
     UpdateDesignComponentRequest updateRequest = updateRequest(true, componentTypeB);
     MockMultipartFile requestPart = createRequestPart(updateRequest);
-    MockMultipartFile image = createImagePart("updated.png");
+    MockMultipartFile image = multipartFixture.imagePart("updated.png");
 
     doMultipartRequest(
         "/api/design-components/" + savedComponent.getDesignComponentId(),
@@ -93,7 +97,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
         "http://example.com/image.png", false, componentTypeA);
     UpdateDesignComponentRequest updateRequest = updateRequest(true, List.of(999999));
     MockMultipartFile requestPart = createRequestPart(updateRequest);
-    MockMultipartFile image = createImagePart("updated.png");
+    MockMultipartFile image = multipartFixture.imagePart("updated.png");
 
     doMultipartRequest(
         "/api/design-components/" + savedComponent.getDesignComponentId(),

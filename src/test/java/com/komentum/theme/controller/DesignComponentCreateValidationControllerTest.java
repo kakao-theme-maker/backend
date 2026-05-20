@@ -1,5 +1,9 @@
 package com.komentum.theme.controller;
 
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequest;
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequestPart;
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequestWithoutComponentTypeIds;
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.publicCreateRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -22,7 +26,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   void createDesignComponent_withoutComponentTypeIds() throws Exception {
     CreateDesignComponentRequest createRequest = createRequestWithoutComponentTypeIds(true);
     MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile image = createImagePart("test.png");
+    MockMultipartFile image = multipartFixture.imagePart("test.png");
 
     doMultipartRequest(
         "/api/design-components",
@@ -42,7 +46,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   void createDesignComponents_withUnknownComponentTypeId() throws Exception {
     CreateDesignComponentRequest createRequest = createRequest(true, List.of(999999));
     MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile file = createFilesPart("test.png");
+    MockMultipartFile file = multipartFixture.filesPart("test.png");
 
     doMultipartRequest(
         "/api/design-components/bulk",
@@ -78,7 +82,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   void createDesignComponents_withEmptyFile() throws Exception {
     CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA);
     MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile emptyFile = emptyFilesPart("empty.png");
+    MockMultipartFile emptyFile = multipartFixture.emptyFilesPart("empty.png");
 
     doMultipartRequest(
         "/api/design-components/bulk",
@@ -98,8 +102,8 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   void createDesignComponents_withEmptyFileAfterValidFile() throws Exception {
     CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA);
     MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile validFile = createFilesPart("valid.png");
-    MockMultipartFile emptyFile = emptyFilesPart("empty.png");
+    MockMultipartFile validFile = multipartFixture.filesPart("valid.png");
+    MockMultipartFile emptyFile = multipartFixture.emptyFilesPart("empty.png");
 
     doMultipartRequest(
         "/api/design-components/bulk",
@@ -121,7 +125,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   void createDesignComponents_withoutComponentTypeIds() throws Exception {
     CreateDesignComponentRequest createRequest = createRequestWithoutComponentTypeIds(true);
     MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile file = createFilesPart("single-file.png");
+    MockMultipartFile file = multipartFixture.filesPart("single-file.png");
 
     doMultipartRequest(
         "/api/design-components/bulk",
@@ -142,7 +146,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
     CreateDesignComponentRequest createRequest = createRequest(true,
         List.of(componentTypeA.getComponentTypeId(), componentTypeA.getComponentTypeId()));
     MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile image = createImagePart("test.png");
+    MockMultipartFile image = multipartFixture.imagePart("test.png");
 
     doMultipartRequest(
         "/api/design-components",
@@ -161,7 +165,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
     CreateDesignComponentRequest createRequest = createRequest(true,
         List.of(componentTypeA.getComponentTypeId(), 999999));
     MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile image = createImagePart("test.png");
+    MockMultipartFile image = multipartFixture.imagePart("test.png");
 
     doMultipartRequest(
         "/api/design-components",

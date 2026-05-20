@@ -1,5 +1,6 @@
 package com.komentum.theme.controller;
 
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.UPLOADED_IMAGE_URL;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.reset;
@@ -11,20 +12,17 @@ import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.security.UserRole;
 import com.komentum.global.utils.FileManager;
 import com.komentum.test.MockMvcUtils;
-import com.komentum.test.data.DesignComponentDataGenerator;
-import com.komentum.test.data.MockMultipartFileUtils;
 import com.komentum.test.data.UserDataGenerator;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.test.fixture.component.DesignComponentDataGenerator;
+import com.komentum.test.fixture.component.DesignComponentMultipartFixture;
 import com.komentum.theme.component.domain.ComponentType;
 import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.dto.CreateDesignComponentRequest;
-import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +31,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -52,8 +49,6 @@ import org.springframework.transaction.annotation.Transactional;
 @ActiveProfiles("test")
 @Transactional
 abstract class DesignComponentControllerTestSupport {
-
-  protected static final String UPLOADED_IMAGE_URL = "https://s3.example.com/uploaded-image.png";
 
   @Autowired
   protected MockMvc mockMvc;
@@ -79,6 +74,9 @@ abstract class DesignComponentControllerTestSupport {
   @Autowired
   protected UserDataGenerator userDataGenerator;
 
+  @Autowired
+  protected DesignComponentMultipartFixture multipartFixture;
+
   protected User testUser;
   protected TestClientDto testClient;
   protected ComponentType componentTypeA;
@@ -96,9 +94,6 @@ abstract class DesignComponentControllerTestSupport {
     componentTypeA = createComponentType("comp-a");
     componentTypeB = createComponentType("comp-b");
 
-    when(fileManager.uploadFile(any(byte[].class), anyString()))
-        .thenReturn(UPLOADED_IMAGE_URL);
-
     authenticateAs(testUser);
   }
 
@@ -111,71 +106,9 @@ abstract class DesignComponentControllerTestSupport {
     reset(fileManager);
   }
 
-  protected CreateDesignComponentRequest publicCreateRequest(ComponentType... componentTypes) {
-    return createRequest(true, componentTypes);
-  }
-
-  protected CreateDesignComponentRequest createRequest(boolean isPublic,
-      ComponentType... componentTypes) {
-    return createRequest(isPublic, componentTypeIds(componentTypes));
-  }
-
-  protected CreateDesignComponentRequest createRequest(boolean isPublic,
-      List<Integer> componentTypeIds) {
-    return CreateDesignComponentRequest.builder()
-        .isPublic(isPublic)
-        .componentTypeIds(componentTypeIds)
-        .build();
-  }
-
-  protected CreateDesignComponentRequest createRequestWithoutComponentTypeIds(boolean isPublic) {
-    return CreateDesignComponentRequest.builder()
-        .isPublic(isPublic)
-        .build();
-  }
-
-  protected UpdateDesignComponentRequest updateRequest(boolean isPublic,
-      ComponentType... componentTypes) {
-    return updateRequest(isPublic, componentTypeIds(componentTypes));
-  }
-
-  protected UpdateDesignComponentRequest updateRequest(boolean isPublic,
-      List<Integer> componentTypeIds) {
-    return UpdateDesignComponentRequest.builder()
-        .isPublic(isPublic)
-        .componentTypeIds(componentTypeIds)
-        .build();
-  }
-
-  protected MockMultipartFile createRequestPart(Object request) throws Exception {
-    return MockMultipartFileUtils.generateJsonFormData("request", request);
-  }
-
-  protected MockMultipartFile createImagePart(String fileName) {
-    return mockMvcUtils.fileToTestFormData(
-        "image",
-        fileName,
-        MediaType.IMAGE_PNG,
-        "test-image-content".getBytes()
-    );
-  }
-
-  protected MockMultipartFile createFilesPart(String fileName) {
-    return mockMvcUtils.fileToTestFormData(
-        "files",
-        fileName,
-        MediaType.IMAGE_PNG,
-        "test-image-content".getBytes()
-    );
-  }
-
-  protected MockMultipartFile emptyFilesPart(String fileName) {
-    return mockMvcUtils.fileToTestFormData(
-        "files",
-        fileName,
-        MediaType.IMAGE_PNG,
-        new byte[0]
-    );
+  protected void stubImageUpload() {
+    when(fileManager.uploadFile(any(byte[].class), anyString()))
+        .thenReturn(UPLOADED_IMAGE_URL);
   }
 
   protected <R> R doMultipartRequest(String path, HttpMethod httpMethod, int statusCode,
@@ -216,12 +149,6 @@ abstract class DesignComponentControllerTestSupport {
 
   protected User createOtherUser(String email) {
     return userDataGenerator.generateTestUser(email);
-  }
-
-  protected List<Integer> componentTypeIds(ComponentType... componentTypes) {
-    return Arrays.stream(componentTypes)
-        .map(ComponentType::getComponentTypeId)
-        .toList();
   }
 
   private DesignComponent componentForUser(User user, String imageUrl, boolean isPublic,
