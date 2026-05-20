@@ -1,14 +1,14 @@
 package com.komentum.test.data;
 
 import com.github.javafaker.Faker;
-import com.komentum.theme.component.domain.ColorStyle;
-import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.repository.ColorStyleRepository;
-import com.komentum.theme.component.repository.ComponentTypeRepository;
-import com.komentum.theme.component.repository.DesignComponentRepository;
-import com.komentum.theme.component.service.ColorStyleSeeder;
-import com.komentum.theme.component.service.ComponentTypeSeeder;
+import com.komentum.designcomponent.domain.ColorStyle;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.repository.ColorStyleRepository;
+import com.komentum.designcomponent.repository.ComponentTypeRepository;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
+import com.komentum.designcomponent.service.ColorStyleSeeder;
+import com.komentum.designcomponent.service.ComponentTypeSeeder;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeStyle;

@@ -1,6 +1,6 @@
 package com.komentum.theme.theme.mapper;
 
-import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.designcomponent.domain.ColorStyle;
 import com.komentum.theme.theme.domain.ThemeStyle;
 import com.komentum.theme.theme.dto.ThemeStyleDto;
 import com.komentum.theme.theme.dto.ThemeStyleRequest;

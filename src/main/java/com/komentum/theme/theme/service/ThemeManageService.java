@@ -1,15 +1,15 @@
 package com.komentum.theme.theme.service;
 
 import com.komentum.global.utils.NumberUtils;
-import com.komentum.theme.component.domain.ColorStyle;
-import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.dto.CreateThemeRequest;
-import com.komentum.theme.component.repository.ColorStyleRepository;
-import com.komentum.theme.exception.ResourceNotFoundException;
+import com.komentum.designcomponent.domain.ColorStyle;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.repository.ColorStyleRepository;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeStyle;
+import com.komentum.theme.theme.dto.CreateThemeRequest;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.mapper.ThemeComponentMapper;
 import com.komentum.theme.theme.mapper.ThemeImageMapper;

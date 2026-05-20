@@ -1,6 +1,6 @@
 package com.komentum.theme.theme.domain;
 
-import com.komentum.theme.component.domain.ColorStyle;
+import com.komentum.designcomponent.domain.ColorStyle;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

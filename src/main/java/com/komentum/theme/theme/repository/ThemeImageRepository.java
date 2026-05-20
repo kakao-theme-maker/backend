@@ -1,6 +1,6 @@
 package com.komentum.theme.theme.repository;
 
-import com.komentum.theme.component.enums.TypeCode;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.domain.ThemeImageId;
 import java.util.List;

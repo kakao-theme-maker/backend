@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
-import com.komentum.theme.component.dto.CreateThemeRequest;
 import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.theme.dto.CreateThemeRequest;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.dto.ThemeImageRequest;
 import com.komentum.theme.theme.dto.ThemeStyleRequest;

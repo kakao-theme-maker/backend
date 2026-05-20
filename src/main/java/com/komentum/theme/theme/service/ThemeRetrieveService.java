@@ -1,7 +1,7 @@
 package com.komentum.theme.theme.service;
 
 import com.komentum.global.exception.CustomEntityNotFoundException;
-import com.komentum.theme.exception.ResourceNotFoundException;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.dto.ThemePreviewDto;

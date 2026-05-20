@@ -1,7 +1,7 @@
 package com.komentum.theme.theme.mapper;
 
-import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeImage;
 import com.komentum.theme.theme.dto.ThemeImageDto;
 import org.mapstruct.Mapper;

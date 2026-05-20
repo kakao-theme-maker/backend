@@ -1,6 +1,6 @@
 package com.komentum.theme.theme.controller;
 
-import com.komentum.theme.component.dto.CreateThemeRequest;
+import com.komentum.theme.theme.dto.CreateThemeRequest;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
 import com.komentum.theme.theme.service.ThemeManageService;
 import io.swagger.v3.oas.annotations.Operation;

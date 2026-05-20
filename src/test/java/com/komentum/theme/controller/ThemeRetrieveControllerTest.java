@@ -18,7 +18,7 @@ import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
-import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.dto.ThemePreviewDto;
 import com.komentum.theme.theme.service.ThemeImageService;

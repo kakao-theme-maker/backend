@@ -9,7 +9,7 @@ import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.service.enums.CategoryType;
-import com.komentum.theme.exception.ResourceNotFoundException;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.Projections;

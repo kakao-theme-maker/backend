@@ -8,7 +8,7 @@ import com.komentum.post.dto.query.QDesignBoardQuery_Detail;
 import com.komentum.post.dto.query.QDesignBoardQuery_Preview;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
-import com.komentum.theme.component.domain.QDesignComponent;
+import com.komentum.designcomponent.domain.QDesignComponent;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
