@@ -83,9 +83,12 @@ public class DesignBoardControllerTest {
   UserScenarioSupport.UserScenarioResult userResult;
   DesignComponentScenarioSupport.DesignComponentScenarioResult designComponentResult;
   PostScenarioSupport.Result postResult;
+  String expectedImageUrl;
 
   @BeforeEach
   public void setUp() {
+    this.expectedImageUrl = UUID.randomUUID().toString();
+    stubImageUploadAndRetrieve(expectedImageUrl);
     userResult = userScenarioSupport.builder() // 사용자 3명
         .withUsers(3)
         .build();
@@ -134,7 +137,7 @@ public class DesignBoardControllerTest {
         .thenReturn(expectedImageUrl);
     Mockito.when(
             fileManager.uploadFile(any(byte[].class), anyString()))
-        .thenReturn(UUID.randomUUID().toString());
+        .thenReturn(expectedImageUrl);
   }
 
   @Test
@@ -145,8 +148,6 @@ public class DesignBoardControllerTest {
     int pageNumber = 0;
     User client = userResult.getFirstUser();
     MultiValueMap<String, String> params = TestParams.withPaging(pageNumber, pageSize);
-    // stub
-    stubImageUploadAndRetrieve(UUID.randomUUID().toString());
     // when
     List<DesignBoardPreviewDto> responses = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
@@ -168,12 +169,9 @@ public class DesignBoardControllerTest {
   public void whenSendRequest_retrieveDesignBoardById() throws Exception {
     // given
     DesignBoard targetDesignBoard = postResult.designBoards().get(0);
-    Post targetPost = targetDesignBoard.getPost();
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
     User client = userResult.getFirstUser();
-    // stub
-    stubImageUploadAndRetrieve(UUID.randomUUID().toString());
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, DesignBoardDetailDto>builder()
@@ -198,8 +196,6 @@ public class DesignBoardControllerTest {
     MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
     params.add("pinned_post_id", pinnedPost.getPostId().toString());
     User client = userResult.getFirstUser();
-    // stub
-    stubImageUploadAndRetrieve(UUID.randomUUID().toString());
     // when
     List<DesignBoardDetailDto> response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, List<DesignBoardDetailDto>>builder()
@@ -226,7 +222,6 @@ public class DesignBoardControllerTest {
     // given
     List<DesignComponent> targetDesignComponents = designComponentResult.designComponents()
         .subList(0, 2);
-    String expectedPreviewImageUrl = targetDesignComponents.get(0).getImageUrl();
     User author = userResult.getFirstUser();
     List<String> tagNames = List.of("a", "b");
     List<TagCreateDto> tagCreateDtoList = tagNames.stream()
@@ -246,8 +241,6 @@ public class DesignBoardControllerTest {
     MockMultipartFile boardInfo = MockMultipartFileUtils
         .generateJsonFormData("board_info", createDto);
     List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
-    // stub
-    stubImageUploadAndRetrieve(expectedPreviewImageUrl);
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
         MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
@@ -272,7 +265,6 @@ public class DesignBoardControllerTest {
   @DisplayName("when send request, update design board info")
   public void whenSendRequest_updateDesignBoard() throws Exception {
     // given
-    String expectedPreviewImageUrl = UUID.randomUUID().toString();
     DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
@@ -290,7 +282,7 @@ public class DesignBoardControllerTest {
         .title(expectedTitle)
         .content(expectedContent)
         .publicFlag(false)
-        .designComponentIds(designComponentIds.subList(0, 1))
+        .designComponentIds(designComponentIds.subList(0, 2))
         .postTags(tagUpdateDtoList)
         .build();
     MockMultipartFile previewImage = MockMultipartFileUtils
@@ -298,8 +290,6 @@ public class DesignBoardControllerTest {
     MockMultipartFile boardInfo = MockMultipartFileUtils
         .generateJsonFormData("board_info", updateDto);
     List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
-    // stub
-    stubImageUploadAndRetrieve(expectedPreviewImageUrl);
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
         MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
@@ -315,7 +305,7 @@ public class DesignBoardControllerTest {
     // then : 필드 및 DB 검증
     assertThat(response.getTags().stream().map(TagResponse::getTagName))
         .containsExactlyInAnyOrderElementsOf(tagNames);
-    assertThat(response.getPreviewImageUrl()).hasSize(2);
+    assertThat(response.getPreviewImageUrl()).hasSize(3);
     assertDesignBoard(response);
   }
 
