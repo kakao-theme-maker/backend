@@ -1,4 +1,4 @@
-package com.komentum.theme.utils;
+package com.komentum.theme.android.utils;
 
 import com.komentum.theme.android.dto.AndroidComponentDto;
 import java.nio.file.Path;

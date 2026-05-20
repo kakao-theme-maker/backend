@@ -1,4 +1,4 @@
-package com.komentum.theme.utils;
+package com.komentum.theme.android.utils;
 
 import java.io.FileReader;
 import java.io.FileWriter;

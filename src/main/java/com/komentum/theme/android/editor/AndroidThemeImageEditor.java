@@ -2,7 +2,7 @@ package com.komentum.theme.android.editor;
 
 import com.komentum.global.utils.FileManager;
 import com.komentum.theme.android.dto.AndroidComponentDto;
-import com.komentum.theme.utils.ThemePathManager;
+import com.komentum.theme.android.utils.ThemePathManager;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;

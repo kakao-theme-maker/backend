@@ -1,4 +1,4 @@
-package com.komentum.theme.utils;
+package com.komentum.theme.android.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

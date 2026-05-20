@@ -1,4 +1,4 @@
-package com.komentum.theme.utils;
+package com.komentum.theme.android.utils;
 
 import java.io.File;
 import javax.xml.parsers.DocumentBuilder;

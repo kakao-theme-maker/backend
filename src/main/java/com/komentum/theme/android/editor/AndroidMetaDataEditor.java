@@ -1,9 +1,9 @@
 package com.komentum.theme.android.editor;
 
-import com.komentum.theme.utils.ThemePathManager;
-import com.komentum.theme.utils.XmlEditor;
-import com.komentum.theme.utils.YamlEditor;
-import com.komentum.theme.utils.YamlEditor.YamlData;
+import com.komentum.theme.android.utils.ThemePathManager;
+import com.komentum.theme.android.utils.XmlEditor;
+import com.komentum.theme.android.utils.YamlEditor;
+import com.komentum.theme.android.utils.YamlEditor.YamlData;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

@@ -4,7 +4,7 @@ import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.android.dto.AndroidComponentDto;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.theme.theme.repository.ThemeComponentRepository;
-import com.komentum.theme.utils.ThemePathManager;
+import com.komentum.theme.android.utils.ThemePathManager;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
