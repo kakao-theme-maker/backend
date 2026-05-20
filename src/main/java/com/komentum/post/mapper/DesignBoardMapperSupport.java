@@ -30,17 +30,15 @@ public class DesignBoardMapperSupport {
 
   public DesignBoardDetailDto toDesignBoardDetailDto(
       DesignBoardQuery.Detail detail,
-      BoardManagementHelper helper,
-      List<Tag> tags
+      List<Tag> tags,
+      List<String> previewImageList
   ) {
-    String previewImageUrl = helper.findPreviewImageUrl(detail.getPreviewImageName());
-    List<String> previewImageList = previewImageUrl == null ? List.of() : List.of(previewImageUrl);
     return DesignBoardDetailDto.builder()
         .postId(detail.getPostId())
         .title(detail.getTitle())
         .content(detail.getContent())
-        .designComponentId(detail.getDesignComponentId())
         .userEmail(detail.getUserEmail())
+        .userName(detail.getUserName())
         .createdAt(DateUtils.convertToDateString(detail.getCreatedAt()))
         .previewImageUrl(previewImageList)
         .prefers(detail.getPrefers())

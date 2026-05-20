@@ -30,8 +30,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -74,6 +74,18 @@ public class DesignComponentService {
     return designComponentRepository.findByDesignComponentId(id)
         .orElseThrow(
             () -> new ResourceNotFoundException("DesignComponent not found with id: " + id));
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignComponent> findByIdIn(List<Integer> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return List.of();
+    }
+    List<DesignComponent> res = designComponentRepository.findByDesignComponentIdIn(ids);
+    if (res.size() != ids.size()) {
+      throw new ResourceNotFoundException("DesignComponent not found with id in post id list");
+    }
+    return res;
   }
 
   @Transactional(readOnly = true)
