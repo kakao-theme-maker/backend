@@ -52,20 +52,26 @@ public class DesignComponentService {
       User user) {
     validateImageFile(image, "image");
     List<ComponentType> componentTypes = resolveComponentTypes(request.getComponentTypeIds());
-    return createDesignComponentInternal(request, user, componentTypes, image);
+    DesignComponent saved = createDesignComponentInternal(request, user, componentTypes, image);
+    try {
+      designComponentRepository.flush();
+      return mapper.toDto(saved);
+    } catch (RuntimeException e) {
+      deleteUploadedImageQuietly(saved.getImageUrl());
+      throw e;
+    }
   }
 
   public List<DesignComponentDto> createDesignComponents(CreateDesignComponentRequest request,
       List<MultipartFile> files, User user) {
     validateFiles(files);
-    validateSingleComponentTypeForBulk(request.getComponentTypeIds());
     List<ComponentType> componentTypes = resolveComponentTypes(request.getComponentTypeIds());
     List<DesignComponent> savedComponents = new ArrayList<>();
     List<String> uploadedImageUrls = new ArrayList<>();
 
     try {
       for (MultipartFile file : files) {
-        DesignComponent saved = createDesignComponentForBulkInternal(
+        DesignComponent saved = createDesignComponentInternal(
             request, user, componentTypes, file);
         savedComponents.add(saved);
         uploadedImageUrls.add(saved.getImageUrl());
@@ -188,21 +194,7 @@ public class DesignComponentService {
 
   }
 
-  private DesignComponentDto createDesignComponentInternal(CreateDesignComponentRequest request,
-      User user, List<ComponentType> componentTypes, MultipartFile image) {
-    String imageUrl = uploadImage(image);
-
-    try {
-      DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
-      newComponent.replaceComponentTypes(componentTypes);
-      return mapper.toDto(designComponentRepository.saveAndFlush(newComponent));
-    } catch (RuntimeException e) {
-      deleteUploadedImageQuietly(imageUrl);
-      throw e;
-    }
-  }
-
-  private DesignComponent createDesignComponentForBulkInternal(CreateDesignComponentRequest request,
+  private DesignComponent createDesignComponentInternal(CreateDesignComponentRequest request,
       User user, List<ComponentType> componentTypes, MultipartFile image) {
     String imageUrl = uploadImage(image);
 
@@ -216,24 +208,13 @@ public class DesignComponentService {
     }
   }
 
-  private void validateSingleComponentTypeForBulk(List<Integer> componentTypeIds) {
-    if (componentTypeIds == null || componentTypeIds.size() != 1) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "componentTypeIds must contain exactly one id for bulk upload");
-    }
-  }
-
   private void validateFiles(List<MultipartFile> files) {
     if (files == null || files.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "files is required");
     }
 
     for (int i = 0; i < files.size(); i++) {
-      MultipartFile file = files.get(i);
-      if (file == null || file.isEmpty()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-            "files[" + i + "] must not be empty");
-      }
+      validateImageFile(files.get(i), "files[" + i + "]");
     }
   }
 
