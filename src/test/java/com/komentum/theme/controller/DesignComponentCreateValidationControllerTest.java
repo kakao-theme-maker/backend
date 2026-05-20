@@ -59,7 +59,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
 
   @Test
   @DisplayName("다중 업로드 생성 시 파일 누락 검증")
-  void createDesignComponent_withoutImageAndFiles() throws Exception {
+  void createDesignComponents_withoutFiles() throws Exception {
     CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA);
     MockMultipartFile requestPart = createRequestPart(createRequest);
 
@@ -75,7 +75,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
 
   @Test
   @DisplayName("다중 업로드 생성 시 빈 파일 검증")
-  void createDesignComponent_withEmptyFile() throws Exception {
+  void createDesignComponents_withEmptyFile() throws Exception {
     CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA);
     MockMultipartFile requestPart = createRequestPart(createRequest);
     MockMultipartFile emptyFile = emptyFilesPart("empty.png");
@@ -117,10 +117,9 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   }
 
   @Test
-  @DisplayName("다중 업로드 생성 시 componentTypeIds 단일값 강제 검증")
-  void createDesignComponents_requiresSingleComponentTypeId() throws Exception {
-    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA,
-        componentTypeB);
+  @DisplayName("다중 업로드 생성 시 componentTypeIds 누락 검증")
+  void createDesignComponents_withoutComponentTypeIds() throws Exception {
+    CreateDesignComponentRequest createRequest = createRequestWithoutComponentTypeIds(true);
     MockMultipartFile requestPart = createRequestPart(createRequest);
     MockMultipartFile file = createFilesPart("single-file.png");
 

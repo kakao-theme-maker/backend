@@ -102,4 +102,32 @@ class DesignComponentCreateControllerTest extends DesignComponentControllerTestS
     assertThat(response).hasSize(1);
     assertThat(designComponentRepository.count()).isEqualTo(1);
   }
+
+  @Test
+  @DisplayName("다중 업로드 생성 시 여러 componentType 공유 가능")
+  void createDesignComponents_multiUploadWithMultipleComponentTypes() throws Exception {
+    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA, componentTypeB);
+    MockMultipartFile requestPart = createRequestPart(createRequest);
+    MockMultipartFile file1 = createFilesPart("test-1.png");
+    MockMultipartFile file2 = createFilesPart("test-2.png");
+
+    List<DesignComponentDto> response = doMultipartRequest(
+        "/api/design-components/bulk",
+        HttpMethod.POST,
+        200,
+        new TypeReference<>() {
+        },
+        requestPart,
+        file1,
+        file2
+    );
+
+    assertThat(response).hasSize(2);
+    assertThat(response).allSatisfy(asset -> assertThat(asset.getComponentTypes())
+        .extracting("componentTypeId")
+        .containsExactlyInAnyOrder(componentTypeA.getComponentTypeId(),
+            componentTypeB.getComponentTypeId()));
+
+    assertThat(designComponentRepository.count()).isEqualTo(2);
+  }
 }
