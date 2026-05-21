@@ -13,6 +13,7 @@ import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,15 +50,38 @@ public class DesignComponentService {
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
       MultipartFile image,
       User user) {
+    validateImageFile(image, "image");
     List<ComponentType> componentTypes = resolveComponentTypes(request.getComponentTypeIds());
-    String imageUrl = uploadImage(image);
+    DesignComponent saved = createDesignComponentInternal(request, user, componentTypes, image);
+    try {
+      designComponentRepository.flush();
+      return mapper.toDto(saved);
+    } catch (RuntimeException e) {
+      deleteUploadedImageQuietly(saved.getImageUrl());
+      throw e;
+    }
+  }
+
+  public List<DesignComponentDto> createDesignComponents(CreateDesignComponentRequest request,
+      List<MultipartFile> files, User user) {
+    validateFiles(files);
+    List<ComponentType> componentTypes = resolveComponentTypes(request.getComponentTypeIds());
+    List<DesignComponent> savedComponents = new ArrayList<>();
+    List<String> uploadedImageUrls = new ArrayList<>();
 
     try {
-      DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
-      newComponent.replaceComponentTypes(componentTypes);
-      return mapper.toDto(designComponentRepository.saveAndFlush(newComponent));
+      for (MultipartFile file : files) {
+        DesignComponent saved = createDesignComponentInternal(
+            request, user, componentTypes, file);
+        savedComponents.add(saved);
+        uploadedImageUrls.add(saved.getImageUrl());
+      }
+      designComponentRepository.flush();
+      return savedComponents.stream()
+          .map(mapper::toDto)
+          .toList();
     } catch (RuntimeException e) {
-      deleteUploadedImageQuietly(imageUrl);
+      uploadedImageUrls.forEach(this::deleteUploadedImageQuietly);
       throw e;
     }
   }
@@ -180,6 +204,37 @@ public class DesignComponentService {
       throw new RuntimeException("Failed to upload image", e);
     }
 
+  }
+
+  private DesignComponent createDesignComponentInternal(CreateDesignComponentRequest request,
+      User user, List<ComponentType> componentTypes, MultipartFile image) {
+    String imageUrl = uploadImage(image);
+
+    try {
+      DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
+      newComponent.replaceComponentTypes(componentTypes);
+      return designComponentRepository.save(newComponent);
+    } catch (RuntimeException e) {
+      deleteUploadedImageQuietly(imageUrl);
+      throw e;
+    }
+  }
+
+  private void validateFiles(List<MultipartFile> files) {
+    if (files == null || files.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "files is required");
+    }
+
+    for (int i = 0; i < files.size(); i++) {
+      validateImageFile(files.get(i), "files[" + i + "]");
+    }
+  }
+
+  private void validateImageFile(MultipartFile image, String fieldName) {
+    if (image == null || image.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          fieldName + " must not be empty");
+    }
   }
 
   private void deleteUploadedImageQuietly(String imageUrl) {
