@@ -12,11 +12,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "file.storage", havingValue = "local")
 @EnableConfigurationProperties(FileStorageProperty.class)
@@ -70,6 +72,7 @@ public class LocalFileManager implements FileManager {
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
       Files.copy(inputStream, Paths.get(fileLocation));
     } catch (IOException e) {
+      log.error("failed to upload file : {}", fileLocation, e);
       throw new RuntimeException("failed to upload file : " + fileLocation, e);
     }
     return resolveFilePath(fileName);

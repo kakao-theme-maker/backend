@@ -198,7 +198,7 @@ public class DesignComponentService {
   private String uploadImage(MultipartFile image) {
     try {
       String fileName =
-          "design-components/" + UUID.randomUUID() + "_" + image.getOriginalFilename();
+          "design-components_" + UUID.randomUUID() + "_" + image.getOriginalFilename();
       return fileManager.uploadFile(image.getBytes(), fileName);
     } catch (IOException e) {
       throw new RuntimeException("Failed to upload image", e);
