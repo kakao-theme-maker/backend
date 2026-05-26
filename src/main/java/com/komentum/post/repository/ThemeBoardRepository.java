@@ -2,7 +2,7 @@ package com.komentum.post.repository;
 
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeComponent;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -10,7 +10,7 @@ import com.komentum.seed.seeder.UserSeeder;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.service.ColorStyleSeeder;
 import com.komentum.designcomponent.service.ComponentTypeSeeder;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;

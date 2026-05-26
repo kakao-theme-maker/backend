@@ -16,7 +16,7 @@ import com.komentum.seed.seeder.PreferSeeder;
 import com.komentum.seed.seeder.ThemeBoardSeeder;
 import com.komentum.seed.seeder.ThemeBoardSeeder.ThemeBoardSeedResult;
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;

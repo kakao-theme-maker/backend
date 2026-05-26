@@ -2,7 +2,7 @@ package com.komentum.theme.android.dto;
 
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.theme.theme.domain.ThemeImage;
+import com.komentum.theme.core.domain.ThemeImage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

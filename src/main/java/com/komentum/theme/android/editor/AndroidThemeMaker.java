@@ -2,8 +2,8 @@ package com.komentum.theme.android.editor;
 
 import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.android.dto.AndroidComponentDto;
-import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.theme.theme.repository.ThemeComponentRepository;
+import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.android.utils.ThemePathManager;
 import java.nio.file.Path;
 import java.util.List;
