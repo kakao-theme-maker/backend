@@ -12,7 +12,9 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 public class PostDto {
 
@@ -40,7 +42,8 @@ public class PostDto {
   }
 
   // 사용자가 작성 / 업로드 / 북마크 / 좋아요한 게시글 목록 조회 응답
-  @Data
+  @Getter
+  @Setter
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
