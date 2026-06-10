@@ -3,22 +3,42 @@ package com.komentum.post.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.komentum.global.utils.DateUtils;
 import com.komentum.global.utils.FileManager;
+import com.komentum.post.domain.Category;
+import com.komentum.post.domain.CategoryPost;
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.ThemeBoard;
+import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
-import com.komentum.post.repository.PostRepository;
+import com.komentum.post.repository.CategoryPostRepository;
+import com.komentum.post.repository.CategoryRepository;
+import com.komentum.post.service.enums.CategoryType;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
+import com.komentum.test.data.scenario.DesignComponentScenarioSupport;
 import com.komentum.test.data.scenario.PostScenarioSupport;
+import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport;
-import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,56 +46,95 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpMethod;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @EnableTestProfile
 @AutoConfigureMockMvc
 @SpringBootTest
 public class UserPostControllerTest {
 
+  private static final String PREVIEW_IMAGE_URL = "http://mocked-url/user-post-preview.png";
+  private static final String PREVIEW_IMAGE_NAME = "user-post-preview.png";
+
   @Autowired
   private MockMvc mockMvc;
-  @Autowired
-  private PostRepository postRepository;
 
   @Autowired
-  FileManager fileManager;
+  private ObjectMapper objectMapper;
 
   @Autowired
-  MockMvcUtils mockMvcUtils;
+  private FileManager fileManager;
 
   @Autowired
-  TestDataRemover testDataRemover;
-
-
-  @Autowired
-  UserScenarioSupport userScenarioSupport;
+  private MockMvcUtils mockMvcUtils;
 
   @Autowired
-  PostScenarioSupport postScenarioSupport;
+  private TestDataRemover testDataRemover;
 
-  int postPerUser = 5;
-  int bookmarkedPostsPerUser;
-  int prefersPerUser;
-  PostScenarioSupport.Result postResult;
-  UserScenarioSupport.UserScenarioResult userResult;
+  @Autowired
+  private UserScenarioSupport userScenarioSupport;
+
+  @Autowired
+  private DesignComponentScenarioSupport designComponentScenarioSupport;
+
+  @Autowired
+  private ThemeComponentScenarioSupport themeComponentScenarioSupport;
+
+  @Autowired
+  private PostScenarioSupport postScenarioSupport;
+
+  @Autowired
+  private CategoryRepository categoryRepository;
+
+  @Autowired
+  private CategoryPostRepository categoryPostRepository;
+
+  private User client;
+  private Post customCategoryOnlyPost;
+  private PostScenarioSupport.Result postResult;
+  private Map<Long, Post> postById;
+  private Map<Long, Integer> componentIdByPostId;
+  private Set<Long> bookmarkedPostIds;
+  private Set<Long> preferredPostIds;
 
   @BeforeEach
   void setUp() {
-    int userCount = 3;
-    int prefersPerPost = 3;
-    // generate data
-    userResult = userScenarioSupport.builder()
-        .withUsers(userCount).build();
-    postResult = postScenarioSupport.builder(userResult.users())
-        .withThemeBoardPerUser(postPerUser)
-        .withPrefersPerPost(prefersPerPost)
-        .withBookmarkRatio(1)
+    given(fileManager.resolveFilePath(any())).willReturn(PREVIEW_IMAGE_URL);
+    given(fileManager.convertUrlToFileName(any())).willReturn(PREVIEW_IMAGE_NAME);
+
+    List<User> users = userScenarioSupport.builder()
+        .withUsers(3)
+        .build()
+        .users();
+    client = users.get(0);
+
+    List<DesignComponent> designComponents = designComponentScenarioSupport.builder(users)
+        .withCountPerUser(2)
+        .build()
+        .designComponents();
+    List<ThemeComponent> themeComponents = themeComponentScenarioSupport.builder(users,
+            designComponents)
+        .withCountPerUser(2)
+        .build()
+        .themeComponents();
+    Map<Long, List<DesignComponent>> designComponentsByUserId = designComponents.stream()
+        .collect(Collectors.groupingBy(dc -> dc.getUser().getUserId()));
+    Map<User, List<DesignComponent>> designComponentOwnerMap = users.stream()
+        .collect(Collectors.toMap(Function.identity(),
+            user -> designComponentsByUserId.get(user.getUserId())));
+
+    postResult = postScenarioSupport.builder(users)
+        .withThemeBoards(themeComponents)
+        .withDesignBoardsPerUser(1, designComponentOwnerMap)
+        .withPrefersPerPost(1)
         .build();
-    // set values
-    bookmarkedPostsPerUser = postPerUser * userCount;
-    prefersPerUser = postPerUser * prefersPerPost;
+    postById = postResult.posts().stream()
+        .collect(Collectors.toMap(Post::getPostId, Function.identity()));
+    componentIdByPostId = resolveExpectedComponentIdByPostId();
+    preferredPostIds = resolvePreferredPostIds();
+    bookmarkedPostIds = createBookmarkAndCustomCategory();
   }
 
   @AfterEach
@@ -83,110 +142,226 @@ public class UserPostControllerTest {
     testDataRemover.deleteAll();
   }
 
-  public void assertUserPostListResponseDto(UserPostListResponseDto responseDto,
-      String previewImageUrl) {
-    // post ID assertion
-    assertThat(responseDto.getPostId()).isNotNull();
-    // DB assertion
-    Post post = postRepository.findById(responseDto.getPostId()).orElse(null);
-    assertThat(post).isNotNull();
-    // response assertion
-    assertThat(responseDto.getCreatedAt()).isNotNull();
-    assertThat(responseDto.getUpdatedAt()).isNotNull();
-    assertThat(responseDto.getPreviewImageUrl())
-        .containsExactlyInAnyOrderElementsOf(List.of(previewImageUrl));
-    assertThat(responseDto.getAuthorName()).isEqualTo(post.getUser().getName());
-    assertThat(responseDto.getAuthorProfileImageUrl()).isEqualTo(post.getUser().getProfileImgUrl());
-    assertThat(responseDto.getPostType()).isEqualTo(post.getPostType());
-    assertThat(responseDto.getBookmarked()).isNotNull();
-    assertThat(responseDto.getPreferred()).isNotNull();
-    assertThat(responseDto.getComments()).isNotNull();
-    assertThat(responseDto.getPrefers()).isNotNull();
-    assertThat(responseDto.getTitle()).isEqualTo(post.getTitle());
-    assertThat(responseDto.getContent()).isEqualTo(post.getContent());
-    assertThat(responseDto.getTags()).isNotNull();
+  @Test
+  @DisplayName("내가 작성한 게시글 목록은 post_type으로 필터링하고 component_id를 매핑한다")
+  void findUserPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
+    assertEndpointFilters(
+        "/api/users/me/upload-posts",
+        expectedUploadedPostIds(null),
+        expectedUploadedPostIds(PostType.THEME_BOARD),
+        expectedUploadedPostIds(PostType.DESIGN_BOARD)
+    );
   }
 
   @Test
-  @DisplayName("유저가 작성한 게시글 목록 조회")
-  void getUserPostTest() throws Exception {
-    //given
-    User targetUser = userResult.getFirstUser();
-    String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
-    // stub
-    given(fileManager.resolveFilePath(any()))
-        .willReturn(expectedPreviewImageUrl);
-    //when
-    List<UserPostListResponseDto> result = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
-            .mockMvc(mockMvc)
-            .path("/api/users/me/upload-posts")
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(targetUser))
-            .statusCode(200)
-            .responseType(new TypeReference<>() {
-            })
-            .build()
+  @DisplayName("북마크한 게시글 목록은 post_type으로 필터링하고 component_id를 매핑한다")
+  void findSavedPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
+    assertEndpointFilters(
+        "/api/users/me/bookmarked-posts",
+        expectedBookmarkedPostIds(null),
+        expectedBookmarkedPostIds(PostType.THEME_BOARD),
+        expectedBookmarkedPostIds(PostType.DESIGN_BOARD)
     );
-    //then
-    assertThat(result).hasSize(postPerUser);
-    for (UserPostListResponseDto res : result) {
-      assertUserPostListResponseDto(res, expectedPreviewImageUrl);
-    }
   }
 
   @Test
-  @DisplayName("사용자가 북마크에 저장한 게시글 목록 반환")
-  void findSavedPostList_success() throws Exception {
-    // given
-    User client = userResult.getFirstUser();
-    String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
-    // stub
-    given(fileManager.resolveFilePath(any()))
-        .willReturn(expectedPreviewImageUrl);
-    // when
-    List<UserPostListResponseDto> response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
-            .mockMvc(mockMvc)
-            .path("/api/users/me/bookmarked-posts")
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(client))
-            .responseType(new TypeReference<>() {
-            })
-            .build()
+  @DisplayName("좋아요한 게시글 목록은 post_type으로 필터링하고 component_id를 매핑한다")
+  void findPreferredPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
+    assertEndpointFilters(
+        "/api/users/me/preferred-posts",
+        expectedPreferredPostIds(null),
+        expectedPreferredPostIds(PostType.THEME_BOARD),
+        expectedPreferredPostIds(PostType.DESIGN_BOARD)
     );
-    // then
-    assertThat(response).hasSize(bookmarkedPostsPerUser);
-    for (UserPostListResponseDto res : response) {
-      assertUserPostListResponseDto(res, expectedPreviewImageUrl);
-    }
   }
 
   @Test
-  @DisplayName("사용자가 좋아요를 누른 게시글 목록 반환")
-  void findPreferredPostList_success() throws Exception {
-    // given
-    User client = userResult.getFirstUser();
-    String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
-    // stub
-    given(fileManager.resolveFilePath(any()))
-        .willReturn(expectedPreviewImageUrl);
-    // when
-    List<UserPostListResponseDto> response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<UserPostListResponseDto>>builder()
-            .mockMvc(mockMvc)
-            .path("/api/users/me/preferred-posts")
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(client))
-            .responseType(new TypeReference<>() {
-            })
-            .build()
-    );
-    // then
-    assertThat(response).hasSize(prefersPerUser);
-    for (UserPostListResponseDto res : response) {
-      assertUserPostListResponseDto(res, expectedPreviewImageUrl);
-    }
+  @DisplayName("사용자 게시글 목록 응답은 통일된 snake_case 필드를 사용한다")
+  void userPostListResponse_usesUnifiedSnakeCaseFields() throws Exception {
+    MvcResult result = performGet("/api/users/me/upload-posts", null);
+    JsonNode first = objectMapper.readTree(result.getResponse().getContentAsString()).get(0);
+
+    assertThat(first.has("post_id")).isTrue();
+    assertThat(first.has("post_type")).isTrue();
+    assertThat(first.has("component_id")).isTrue();
+    assertThat(first.has("preview_image_url")).isTrue();
+    assertThat(first.has("created_at")).isTrue();
+    assertThat(first.has("updated_at")).isTrue();
+    assertThat(first.has("user_name")).isTrue();
+    assertThat(first.has("profile_image")).isTrue();
+    assertThat(first.has("liked")).isTrue();
+    assertThat(first.has("bookmarked")).isTrue();
+    assertThat(first.get("created_at").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
+    assertThat(first.get("updated_at").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
+
+    assertThat(first.has("authorName")).isFalse();
+    assertThat(first.has("authorProfileImageUrl")).isFalse();
+    assertThat(first.has("preferred")).isFalse();
   }
 
+  @Test
+  @DisplayName("커스텀 카테고리에만 담긴 게시글은 북마크로 표시하지 않는다")
+  void customCategoryPost_isNotMarkedAsBookmarked() throws Exception {
+    List<UserPostListResponseDto> response = requestUserPosts("/api/users/me/upload-posts", null);
+
+    UserPostListResponseDto customCategoryPostResponse = response.stream()
+        .filter(dto -> dto.getPostId().equals(customCategoryOnlyPost.getPostId()))
+        .findFirst()
+        .orElseThrow();
+
+    assertThat(customCategoryPostResponse.isBookmarked()).isFalse();
+  }
+
+  private void assertEndpointFilters(String path, List<Long> allPostIds, List<Long> themePostIds,
+      List<Long> designPostIds) throws Exception {
+    assertUserPostListResponse(requestUserPosts(path, null), allPostIds);
+    assertUserPostListResponse(requestUserPosts(path, PostType.THEME_BOARD), themePostIds);
+    assertUserPostListResponse(requestUserPosts(path, PostType.DESIGN_BOARD), designPostIds);
+  }
+
+  private void assertUserPostListResponse(List<UserPostListResponseDto> response,
+      List<Long> expectedPostIds) {
+    assertThat(response)
+        .extracting(UserPostListResponseDto::getPostId)
+        .containsExactlyElementsOf(expectedPostIds);
+
+    response.forEach(dto -> {
+      Post post = postById.get(dto.getPostId());
+      assertThat(post).isNotNull();
+      assertThat(dto.getPostType()).isEqualTo(post.getPostType());
+      assertThat(dto.getComponentId()).isEqualTo(componentIdByPostId.get(dto.getPostId()));
+      assertThat(dto.getTitle()).isEqualTo(post.getTitle());
+      assertThat(dto.getContent()).isEqualTo(post.getContent());
+      assertThat(dto.getUserName()).isEqualTo(post.getUser().getName());
+      assertThat(dto.getProfileImage()).isEqualTo(post.getUser().getProfileImgUrl());
+      assertThat(dto.getCreatedAt()).isEqualTo(DateUtils.convertToDateString(post.getCreatedAt()));
+      assertThat(dto.getUpdatedAt()).isEqualTo(DateUtils.convertToDateString(post.getUpdatedAt()));
+      assertThat(dto.getPreviewImageUrl()).containsExactly(PREVIEW_IMAGE_URL);
+      assertThat(dto.getTags()).isNotNull();
+      assertThat(dto.getPrefers()).isEqualTo(1L);
+      assertThat(dto.getComments()).isNotNull();
+      assertThat(dto.isLiked()).isEqualTo(preferredPostIds.contains(dto.getPostId()));
+      assertThat(dto.isBookmarked()).isEqualTo(bookmarkedPostIds.contains(dto.getPostId()));
+    });
+  }
+
+  private List<UserPostListResponseDto> requestUserPosts(String path, PostType postType)
+      throws Exception {
+    MvcResult result = performGet(path, postType);
+    return objectMapper.readValue(
+        result.getResponse().getContentAsString(),
+        new TypeReference<List<UserPostListResponseDto>>() {
+        }
+    );
+  }
+
+  private MvcResult performGet(String path, PostType postType) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = get(path);
+    if (postType != null) {
+      requestBuilder.param("post_type", postType.name());
+    }
+    return mockMvc.perform(
+            mockMvcUtils.addAuthentication(requestBuilder, TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andReturn();
+  }
+
+  private List<Long> expectedUploadedPostIds(PostType postType) {
+    return orderedPostIds(postResult.posts().stream()
+        .filter(post -> post.getUser().getUserId().equals(client.getUserId()))
+        .toList(), postType);
+  }
+
+  private List<Long> expectedBookmarkedPostIds(PostType postType) {
+    return orderedPostIds(postResult.posts().stream()
+        .filter(post -> bookmarkedPostIds.contains(post.getPostId()))
+        .toList(), postType);
+  }
+
+  private List<Long> expectedPreferredPostIds(PostType postType) {
+    return orderedPostIds(postResult.posts().stream()
+        .filter(post -> preferredPostIds.contains(post.getPostId()))
+        .toList(), postType);
+  }
+
+  private List<Long> orderedPostIds(List<Post> posts, PostType postType) {
+    return posts.stream()
+        .filter(post -> postType == null || post.getPostType() == postType)
+        .sorted(userPostListOrder())
+        .map(Post::getPostId)
+        .distinct()
+        .toList();
+  }
+
+  private Comparator<Post> userPostListOrder() {
+    return Comparator.comparing(Post::getCreatedAt)
+        .reversed()
+        .thenComparing(Post::getPostId, Comparator.reverseOrder());
+  }
+
+  private Set<Long> createBookmarkAndCustomCategory() {
+    Post bookmarkedThemePost = postResult.themeBoards().get(0).getPost();
+    Post bookmarkedDesignPost = postResult.designBoards().stream()
+        .min(Comparator.comparing(DesignBoard::getDesignBoardId))
+        .map(DesignBoard::getPost)
+        .orElseThrow();
+    Set<Long> bookmarkedIds = Set.of(bookmarkedThemePost.getPostId(),
+        bookmarkedDesignPost.getPostId());
+
+    Category bookmark = categoryRepository.save(Category.builder()
+        .owner(client)
+        .name("bookmark")
+        .categoryType(CategoryType.BOOKMARK)
+        .build());
+    categoryPostRepository.saveAll(List.of(bookmarkedThemePost, bookmarkedDesignPost).stream()
+        .map(post -> CategoryPost.builder()
+            .category(bookmark)
+            .post(post)
+            .build())
+        .toList());
+
+    customCategoryOnlyPost = postResult.themeBoards().stream()
+        .map(ThemeBoard::getPost)
+        .filter(post -> post.getUser().getUserId().equals(client.getUserId()))
+        .filter(post -> !bookmarkedIds.contains(post.getPostId()))
+        .findFirst()
+        .orElseThrow();
+    Category customCategory = categoryRepository.save(Category.builder()
+        .owner(client)
+        .name("custom")
+        .categoryType(CategoryType.CUSTOM)
+        .build());
+    categoryPostRepository.save(CategoryPost.builder()
+        .category(customCategory)
+        .post(customCategoryOnlyPost)
+        .build());
+
+    return bookmarkedIds;
+  }
+
+  private Map<Long, Integer> resolveExpectedComponentIdByPostId() {
+    Map<Long, Integer> result = new HashMap<>();
+    postResult.themeBoards().forEach(themeBoard ->
+        result.put(themeBoard.getPost().getPostId(),
+            themeBoard.getThemeComponent().getThemeComponentId()));
+
+    postResult.designBoards().stream()
+        .collect(Collectors.groupingBy(designBoard -> designBoard.getPost().getPostId()))
+        .forEach((postId, designBoards) -> {
+          Integer componentId = designBoards.stream()
+              .min(Comparator.comparing(DesignBoard::getDesignBoardId))
+              .map(DesignBoard::getDesignComponent)
+              .map(DesignComponent::getDesignComponentId)
+              .orElseThrow();
+          result.put(postId, componentId);
+    });
+    return result;
+  }
+
+  private Set<Long> resolvePreferredPostIds() {
+    return postResult.prefers().stream()
+        .filter(prefer -> prefer.getUser().getUserId().equals(client.getUserId()))
+        .map(prefer -> prefer.getPost().getPostId())
+        .collect(Collectors.toSet());
+  }
 }
