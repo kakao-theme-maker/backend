@@ -19,7 +19,7 @@ import com.komentum.theme.component.dto.ColorStyleUpdateRequest;
 import com.komentum.theme.component.dto.SeedResult;
 import com.komentum.theme.component.enums.StyleCode;
 import com.komentum.theme.component.repository.ColorStyleRepository;
-import com.komentum.theme.component.service.ColorStyleSeeder;
+import com.komentum.theme.component.service.seeder.ColorStyleSeeder;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
@@ -115,7 +115,7 @@ public class ColorStyleControllerTest {
     ColorStyleCreateDto createRequest = ColorStyleCreateDto.builder()
         .explain("test")
         .name("test")
-        .styleCode(StyleCode.CHAT_ROOM_MENU_ICON_COLOR)
+        .styleCode(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR)
         .build();
     MockHttpServletRequestBuilder requestBuilder = mockMvcUtils.addAuthentication(
         MockMvcRequestBuilders
@@ -148,7 +148,7 @@ public class ColorStyleControllerTest {
   @DisplayName("ColorStyle 조회 테스트")
   void getColorStyle_success() throws Exception {
     // Given
-    ColorStyle savedColorStyle = createColorStyle(StyleCode.BACKGROUND_COLOR);
+    ColorStyle savedColorStyle = createColorStyle(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR);
     MockHttpServletRequestBuilder requestBuilder = mockMvcUtils.addAuthentication(
         MockMvcRequestBuilders
             .get("/api/color-styles/{id}", savedColorStyle.getColorStyleId())
@@ -169,7 +169,7 @@ public class ColorStyleControllerTest {
   void getAllColorStyles_success() throws Exception {
     // Given
     Map<Integer, ColorStyle> expectedMap = IntStream.range(0, 5)
-        .mapToObj(i -> createColorStyle(StyleCode.BACKGROUND_COLOR))
+        .mapToObj(i -> createColorStyle(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR))
         .collect(Collectors.toMap(
             ColorStyle::getColorStyleId,
             Function.identity()));
@@ -198,11 +198,11 @@ public class ColorStyleControllerTest {
   @DisplayName("ColorStyle 수정 테스트")
   void updateColorStyle_success() throws Exception {
     // Given
-    ColorStyle savedColorStyle = createColorStyle(StyleCode.BACKGROUND_COLOR);
+    ColorStyle savedColorStyle = createColorStyle(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR);
     ColorStyleUpdateRequest updateRequest = ColorStyleUpdateRequest.builder()
         .explain(UUID.randomUUID().toString())
         .name(UUID.randomUUID().toString())
-        .styleCode(StyleCode.BACKGROUND_COLOR)
+        .styleCode(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR)
         .build();
     // When
     ColorStyleResponse response = mockMvcUtils.doAuthRequest(

@@ -6,47 +6,46 @@ import lombok.Getter;
 
 @Getter
 public enum TypeCode {
-  // theme preview image
-  COMMON_ICO_THEME("commonIcoTheme"),
-  // friend / chat tab background image
-  BACKGROUND_IMAGE("backgroundImage"),
-  // main tab images
-  MAIN_TAB_BG_IMAGE("maintabBgImage"),
-  MAIN_TAB_ICO_FRIENDS("maintabIcoFriends"),
-  MAIN_TAB_ICO_FRIENDS_SELECTED("maintabIcoFriendsSelected"),
-  MAIN_TAB_ICO_CHAT("maintabIcoChat"),
-  MAIN_TAB_ICO_CHAT_SELECTED("maintabIcoChatSelected"),
-  MAIN_TAB_ICO_OPENCHAT("maintabIcoOpenchat"),
-  MAIN_TAB_ICO_OPENCHAT_SELECTED("maintabIcoOpenchatSelected"),
-  MAIN_TAB_ICO_MORE("maintabIcoMore"),
-  MAIN_TAB_ICO_MORE_SELECTED("maintabIcoMoreSelected"),
-  MAIN_TAB_ICO_SHOPPING("maintabIcoShopping"),
-  MAIN_TAB_ICO_SHOPPING_SELECTED("maintabIcoShoppingSelected"),
-  FIND_BTN_ADD_FRIEND("findBtnAddFriend"),
-  FIND_BTN_ADD_FRIEND_SELECTED("findBtnAddFriendSelected"),
-  // user default profile image
-  DEFAULT_PROFILE_IMG("defaultProfileImg"),
+
+  // main view images
+  MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE("mainviewStylePrimaryBackgroundImage"),
+
+  // tab bar images
+  TABBAR_STYLE_BACKGROUND_IMAGE("tabbarStyleBackgroundImage"),
+  TABBAR_STYLE_FRIENDS_NORMAL_ICON_IMAGE("tabbarStyleFriendsNormalIconImage"),
+  TABBAR_STYLE_FRIENDS_SELECTED_ICON_IMAGE("tabbarStyleFriendsSelectedIconImage"),
+  TABBAR_STYLE_CHATS_NORMAL_ICON_IMAGE("tabbarStyleChatsNormalIconImage"),
+  TABBAR_STYLE_CHATS_SELECTED_ICON_IMAGE("tabbarStyleChatsSelectedIconImage"),
+  TABBAR_STYLE_OPEN_CHATS_NORMAL_ICON_IMAGE("tabbarStyleOpenChatsNormalIconImage"),
+  TABBAR_STYLE_OPEN_CHATS_SELECTED_ICON_IMAGE("tabbarStyleOpenChatsSelectedIconImage"),
+  TABBAR_STYLE_SHOPPING_NORMAL_ICON_IMAGE("tabbarStyleShoppingNormalIconImage"),
+  TABBAR_STYLE_SHOPPING_SELECTED_ICON_IMAGE("tabbarStyleShoppingSelectedIconImage"),
+  TABBAR_STYLE_MORE_NORMAL_ICON_IMAGE("tabbarStyleMoreNormalIconImage"),
+  TABBAR_STYLE_MORE_SELECTED_ICON_IMAGE("tabbarStyleMoreSelectedIconImage"),
+
+  // passcode page images
+  PASSCODE_BACKGROUND_IMAGE("passcodeBackgroundImage"),
+  PASSCODE_STYLE_BULLET_FIRST_IMAGE("passcodeStyleBulletFirstImage"),
+  PASSCODE_STYLE_BULLET_SECOND_IMAGE("passcodeStyleBulletSecondImage"),
+  PASSCODE_STYLE_BULLET_THIRD_IMAGE("passcodeStyleBulletThirdImage"),
+  PASSCODE_STYLE_BULLET_FOURTH_IMAGE("passcodeStyleBulletFourthImage"),
+  PASSCODE_STYLE_BULLET_SELECTED_FIRST_IMAGE("passcodeStyleBulletSelectedFirstImage"),
+  PASSCODE_STYLE_BULLET_SELECTED_SECOND_IMAGE("passcodeStyleBulletSelectedSecondImage"),
+  PASSCODE_STYLE_BULLET_SELECTED_THIRD_IMAGE("passcodeStyleBulletSelectedThirdImage"),
+  PASSCODE_STYLE_BULLET_SELECTED_FOURTH_IMAGE("passcodeStyleBulletSelectedFourthImage"),
+
   // chat room images
-  CHAT_ROOM_BG_IMAGE("chatRoomBgImage"),
-  SENDER_FIRST_BUBBLE_IMAGE("senderFirstBubbleImage"),
-  SENDER_FIRST_BUBBLE_IMAGE_SELECTED("senderFirstBubbleImageSelected"),
-  SENDER_MIDDLE_BUBBLE_IMAGE("senderMiddleBubbleImage"),
-  SENDER_MIDDLE_BUBBLE_IMAGE_SELECTED("senderMiddleBubbleImageSelected"),
-  RECEIVER_FIRST_BUBBLE_IMAGE("receiverFirstBubbleImage"),
-  RECEIVER_FIRST_BUBBLE_IMAGE_SELECTED("receiverFirstBubbleImageSelected"),
-  RECEIVER_MIDDLE_BUBBLE_IMAGE("receiverMiddleBubbleImage"),
-  RECEIVER_MIDDLE_BUBBLE_IMAGE_SELECTED("receiverMiddleBubbleImageSelected"),
-  // pass code page images
-  PASS_CODE_BG_IMAGE("passCodeBgImage"),
-  PASS_CODE_INPUT_IMAGE_EMPTY_1("passCodeInputImageEmpty1"),
-  PASS_CODE_INPUT_IMAGE_EMPTY_2("passCodeInputImageEmpty2"),
-  PASS_CODE_INPUT_IMAGE_EMPTY_3("passCodeInputImageEmpty3"),
-  PASS_CODE_INPUT_IMAGE_EMPTY_4("passCodeInputImageEmpty4"),
-  PASS_CODE_INPUT_IMAGE_FILLED_1("passCodeInputImageFilled1"),
-  PASS_CODE_INPUT_IMAGE_FILLED_2("passCodeInputImageFilled2"),
-  PASS_CODE_INPUT_IMAGE_FILLED_3("passCodeInputImageFilled3"),
-  PASS_CODE_INPUT_IMAGE_FILLED_4("passCodeInputImageFilled4"),
-  PASS_CODE_KEYPAD_PRESS_IMAGE("passCodeKeypadPressImage");
+  CHAT_ROOM_BACKGROUND_IMAGE("chatRoomBackgroundImage"),
+  MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE("messageCellStyleSendBackgroundImage"),
+  MESSAGE_CELL_STYLE_SEND_GROUP_BACKGROUND_IMAGE("messageCellStyleSendGroupBackgroundImage"),
+  MESSAGE_CELL_STYLE_RECEIVE_BACKGROUND_IMAGE("messageCellStyleReceiveBackgroundImage"),
+  MESSAGE_CELL_STYLE_RECEIVE_GROUP_BACKGROUND_IMAGE("messageCellStyleReceiveGroupBackgroundImage"),
+
+  // profile style
+  DEFAULT_PROFILE_STYLE_PROFILE_IMAGE("defaultProfileStyleProfileImage"),
+
+  // button style
+  BUTTON_STYLE_ADD_FRIEND_IMAGE("buttonStyleAddFriendImage");
 
   private final String typeCode;
 
@@ -67,6 +66,7 @@ public enum TypeCode {
     return Arrays.stream(values())
         .filter(typeCode -> typeCode.typeCode.equals(typeCodeString))
         .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Unsupported type code"));
+        .orElseThrow(
+            () -> new IllegalArgumentException("Unsupported type code : " + typeCodeString));
   }
 }

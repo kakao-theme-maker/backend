@@ -127,7 +127,7 @@ public class DesignComponentControllerTest {
     return componentTypeRepository.save(ComponentType.builder()
         .explain("explain")
         .name("test component type")
-        .typeCode(TypeCode.MAIN_TAB_BG_IMAGE)
+        .typeCode(TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE)
         .build());
   }
 
