@@ -18,6 +18,9 @@ public class UserScenarioSupport {
       User rootUser
   ) {
 
+    public User getFirstUser() {
+      return users.get(0);
+    }
   }
 
   public UserScenarioBuilder builder() {

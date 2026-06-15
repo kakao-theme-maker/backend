@@ -1,6 +1,7 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -11,7 +12,6 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.dto.query.DesignBoardQuery.Detail;
 import com.komentum.post.mapper.DesignBoardMapperSupport;
-import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
@@ -22,6 +22,8 @@ import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -42,9 +44,6 @@ public class DesignBoardManagementFacade {
   private final FileManager fileManager;
   private final DesignBoardMapperSupport designBoardMapperSupport;
   private final DesignBoardTransactionService designBoardTransactionService;
-
-  // mapper
-  private final PostDtoMapper postDtoMapper;
   private final TagService tagService;
 
   private String uploadOrReusePreviewImage(
@@ -84,6 +83,13 @@ public class DesignBoardManagementFacade {
         .toList();
   }
 
+  /**
+   * 디자인 에셋 게시글 상세 조회 시 연관 디자인 에셋 게시글을 함께 제공한다
+   * @param pageable 페이징 정보
+   * @param pinnedPostId page=0일 때, 위에 고정할 게시글 정보
+   * @param userIdentifier 사용자 식별자
+   * @return 디자인 에셋 상세 정보 목록
+   * */
   @Transactional(readOnly = true)
   public List<DesignBoardDetailDto> findBoardDetails(Pageable pageable, Long pinnedPostId,
       String userIdentifier) {
@@ -91,43 +97,63 @@ public class DesignBoardManagementFacade {
     Post pinnedPost = pinnedPostId == null ?
         null :
         postService.findByPostIdAndPostType(pinnedPostId, PostType.DESIGN_BOARD);
+    // 디자인 에셋 상세 정보 DTO Projection
     List<DesignBoardQuery.Detail> details = designBoardService.findDetailList(pageable, client,
         pinnedPost);
+    // post id 추출
     List<Long> postIds = details.stream()
         .map(Detail::getPostId)
         .toList();
+    // post id별 design board 목록 조회
+    Map<Long, List<DesignBoard>> designBoardMap = designBoardService.findWithDesignComponentsByPostIdIn(
+            postIds)
+        .stream()
+        .collect(Collectors.groupingBy(
+            designBoard -> designBoard.getPost().getPostId()
+        ));
+    // post id별 tag 목록 조회
     Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
-      return designBoardMapperSupport.toDesignBoardDetailDto(detail, boardManagementHelper, tags);
+      List<DesignBoard> designBoards = designBoardMap.getOrDefault(detail.getPostId(), List.of());
+      String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
+          detail.getPostPreviewImageName());
+      List<String> previewImageUrls = Stream.concat(
+          Stream.ofNullable(postPreviewImageUrl),
+          designBoards.stream()
+              .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+      ).toList();
+      return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls);
     }).toList();
   }
 
   /**
-   * 디자인 에셋 게시글 생성
+   * <p>디자인 에셋들에 대한 디자인 에셋 게시글을 생성한다</p>
+   * <p>디자인 에셋 생성은 별도 디자인 에셋 생성 API에서 처리한다 </p>
    * @param createDto 게시글 생성에 필요한 정보
-   * @param previewImage 게시글 대표 이미지, null=true
    * @param authorId 게시글 작성자 ID
    * @return 생성된 게시글 상세 정보
    * */
+  @Transactional
   public DesignBoardDetailDto createDesignBoard(DesignBoardCreateDto createDto,
       MultipartFile previewImage, String authorId) {
     // 이미지 저장
-    DesignComponent designComponent =
-        designComponentService.getEntityById(createDto.getDesignComponentId());
-    String previewImageName = uploadOrReusePreviewImage(previewImage, designComponent);
+    List<DesignComponent> designComponents = designComponentService.findByIdIn(
+        createDto.getDesignComponentIds());
+    String previewImageName = uploadOrReusePreviewImage(previewImage, designComponents.get(0));
     // DB 작업 수행
     User author = userEntityFinder.findUserEntity(authorId);
     try {
       Post savedPost = designBoardTransactionService.saveDesignBoardAndGetPost(
           createDto,
-          designComponent,
+          designComponents,
           author,
           previewImageName
       );
       return designBoardTransactionService.findDesignBoardDetail(savedPost.getPostId(), authorId);
     } catch (Exception e) {
       boardManagementHelper.deleteFileSilently(previewImageName, "디자인 게시글 생성 실패로 인한 저장된 파일 롤백");
+      log.error(e.getMessage(), e);
       throw new RuntimeException("디자인 에셋 게시글 생성 실패", e);
     }
   }

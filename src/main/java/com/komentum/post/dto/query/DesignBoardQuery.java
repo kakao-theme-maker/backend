@@ -14,11 +14,10 @@ public class DesignBoardQuery {
     private Long postId;
     private String title;
     private String content;
-    private Integer designComponentId;
+    private String postPreviewImageName;
     private String userEmail;
     private String userName;
     private LocalDateTime createdAt;
-    private String previewImageName;
     private Long prefers;
     private Long comments;
     private boolean liked;
@@ -30,11 +29,10 @@ public class DesignBoardQuery {
         Long postId,
         String title,
         String content,
-        Integer designComponentId,
+        String postPreviewImageName,
         String userEmail,
         String userName,
         LocalDateTime createdAt,
-        String previewImageName,
         Long prefers,
         Long comments,
         boolean liked,
@@ -43,11 +41,10 @@ public class DesignBoardQuery {
       this.postId = postId;
       this.title = title;
       this.content = content;
-      this.designComponentId = designComponentId;
+      this.postPreviewImageName = postPreviewImageName;
       this.userEmail = userEmail;
       this.userName = userName;
       this.createdAt = createdAt;
-      this.previewImageName = previewImageName;
       this.prefers = prefers;
       this.comments = comments;
       this.liked = liked;

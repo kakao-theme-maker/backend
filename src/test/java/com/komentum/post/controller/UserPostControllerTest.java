@@ -13,6 +13,7 @@ import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
 import com.komentum.test.data.scenario.PostScenarioSupport;
+import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
@@ -47,21 +48,27 @@ public class UserPostControllerTest {
   @Autowired
   TestDataRemover testDataRemover;
 
+
+  @Autowired
+  UserScenarioSupport userScenarioSupport;
+
   @Autowired
   PostScenarioSupport postScenarioSupport;
 
   int postPerUser = 5;
   int bookmarkedPostsPerUser;
   int prefersPerUser;
-  PostScenarioSupport.Result result;
+  PostScenarioSupport.Result postResult;
+  UserScenarioSupport.UserScenarioResult userResult;
 
   @BeforeEach
   void setUp() {
     int userCount = 3;
     int prefersPerPost = 3;
     // generate data
-    result = postScenarioSupport.builder()
-        .withUsers(userCount)
+    userResult = userScenarioSupport.builder()
+        .withUsers(userCount).build();
+    postResult = postScenarioSupport.builder(userResult.users())
         .withThemeBoardPerUser(postPerUser)
         .withPrefersPerPost(prefersPerPost)
         .withBookmarkRatio(1)
@@ -104,7 +111,7 @@ public class UserPostControllerTest {
   @DisplayName("유저가 작성한 게시글 목록 조회")
   void getUserPostTest() throws Exception {
     //given
-    User targetUser = result.getFirstUser();
+    User targetUser = userResult.getFirstUser();
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
     // stub
     given(fileManager.resolveFilePath(any()))
@@ -132,7 +139,7 @@ public class UserPostControllerTest {
   @DisplayName("사용자가 북마크에 저장한 게시글 목록 반환")
   void findSavedPostList_success() throws Exception {
     // given
-    User client = result.getFirstUser();
+    User client = userResult.getFirstUser();
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
     // stub
     given(fileManager.resolveFilePath(any()))
@@ -159,7 +166,7 @@ public class UserPostControllerTest {
   @DisplayName("사용자가 좋아요를 누른 게시글 목록 반환")
   void findPreferredPostList_success() throws Exception {
     // given
-    User client = result.getFirstUser();
+    User client = userResult.getFirstUser();
     String expectedPreviewImageUrl = String.format("http://mocked-url/%s", UUID.randomUUID());
     // stub
     given(fileManager.resolveFilePath(any()))
