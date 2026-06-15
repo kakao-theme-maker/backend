@@ -2,8 +2,8 @@ package com.komentum.test.data.scenario;
 
 import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.service.ColorStyleSeeder;
-import com.komentum.theme.component.service.ComponentTypeSeeder;
+import com.komentum.theme.component.service.seeder.ColorStyleSeeder;
+import com.komentum.theme.component.service.seeder.ComponentTypeSeeder;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.List;

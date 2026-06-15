@@ -1,4 +1,4 @@
-package com.komentum.theme.component.service;
+package com.komentum.theme.component.service.seeder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.komentum.theme.component.domain.ComponentType;
