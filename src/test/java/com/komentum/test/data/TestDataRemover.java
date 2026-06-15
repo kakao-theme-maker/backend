@@ -11,6 +11,8 @@ import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.component.repository.ColorStyleRepository;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
+import com.komentum.theme.component.repository.PlatformColorStyleRepository;
+import com.komentum.theme.component.repository.PlatformComponentTypeRepository;
 import com.komentum.theme.theme.repository.ThemeComponentRepository;
 import com.komentum.theme.theme.repository.ThemeImageRepository;
 import com.komentum.theme.theme.repository.ThemeStyleRepository;
@@ -38,10 +40,13 @@ public class TestDataRemover {
   private final CategoryPostRepository categoryPostRepository;
   private final CategoryRepository categoryRepository;
   private final DesignBoardRepository designBoardRepository;
+  private final PlatformComponentTypeRepository platformComponentTypeRepository;
+  private final PlatformColorStyleRepository platformColorStyleRepository;
 
   /**
    * 모든 테스트 코드에서 사용할 수 있는 데이터베이스 clean용 클래스
-   * */
+   *
+   */
   @Transactional
   public void deleteAll() {
     // delete prefer, comment, tags
@@ -61,6 +66,9 @@ public class TestDataRemover {
     themeComponentRepository.deleteAll();
     // delete design components
     designComponentRepository.deleteAll();
+    // delete platform component type and color style
+    platformColorStyleRepository.deleteAll();
+    platformComponentTypeRepository.deleteAll();
     // delete component type and color style
     componentTypeRepository.deleteAll();
     colorStyleRepository.deleteAll();
