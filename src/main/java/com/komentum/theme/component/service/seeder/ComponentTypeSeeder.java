@@ -21,7 +21,7 @@ public class ComponentTypeSeeder extends AbstractMapJsonSeeder<ComponentType> {
 
   private final EntityManager entityManager;
 
-  public static final String COMPONENT_TYPE_JSON_PATH = "theme-data/theme_spec.json";
+  public static final String COMPONENT_TYPE_JSON_PATH = "theme-data/theme_spec_v2.json";
 
   public ComponentTypeSeeder(JsonUtils jsonUtils, ComponentTypeRepository componentTypeRepository,
       EntityManager entityManager) {
