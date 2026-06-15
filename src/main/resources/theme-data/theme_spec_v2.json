@@ -1,0 +1,1143 @@
+{
+  "definitions": {
+    "sectionCodes": {
+      "tabBar": {
+        "name": "메인탭바"
+      },
+      "friendTab": {
+        "name": "친구탭"
+      },
+      "chatTab": {
+        "name": "채팅탭"
+      },
+      "chatRoom": {
+        "name": "채팅방"
+      },
+      "openChatTab": {
+        "name": "지금탭"
+      },
+      "passcode": {
+        "name": "잠금화면"
+      },
+      "moreTab": {
+        "name": "더보기탭"
+      },
+      "shoppingTab": {
+        "name": "쇼핑탭"
+      },
+      "messageNotificationBar": {
+        "name": "메시지 알림 배너"
+      },
+      "directShareBar": {
+        "name": "전달 완료 배너"
+      }
+    },
+    "typeCodes": {
+      "mainviewStylePrimaryBackgroundImage": {
+        "name": "메인뷰 배경 이미지",
+        "description": "메인뷰 배경 이미지",
+        "usage": {
+          "friendTab": {
+            "description": "친구탭 배경 이미지"
+          },
+          "chatTab": {
+            "description": "채팅탭 배경 이미지"
+          }
+        }
+      },
+      "tabbarStyleBackgroundImage": {
+        "name": "메인탭의 배경 이미지",
+        "description": "메인탭의 배경 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 배경 이미지"
+          }
+        }
+      },
+      "tabbarStyleFriendsNormalIconImage": {
+        "name": "메인탭의 친구탭 아이콘",
+        "description": "메인탭의 친구탭 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 친구탭 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleFriendsSelectedIconImage": {
+        "name": "메인탭의 친구탭 선택 아이콘",
+        "description": "메인탭의 친구탭 선택 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 친구탭 선택 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleChatsNormalIconImage": {
+        "name": "메인탭의 채팅탭 아이콘",
+        "description": "메인탭의 채팅탭 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 채팅탭 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleChatsSelectedIconImage": {
+        "name": "메인탭의 채팅탭 선택 아이콘",
+        "description": "메인탭의 채팅탭 선택 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 채팅탭 선택 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleOpenChatsNormalIconImage": {
+        "name": "메인탭의 지금탭 아이콘",
+        "description": "메인탭의 지금탭 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 지금탭 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleOpenChatsSelectedIconImage": {
+        "name": "메인탭의 지금탭 선택 아이콘",
+        "description": "메인탭의 지금탭 선택 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 지금탭 선택 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleShoppingNormalIconImage": {
+        "name": "메인탭의 쇼핑탭 아이콘",
+        "description": "메인탭의 쇼핑탭 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 쇼핑탭 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleShoppingSelectedIconImage": {
+        "name": "메인탭의 쇼핑탭 선택 아이콘",
+        "description": "메인탭의 쇼핑탭 선택 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 쇼핑탭 선택 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleMoreNormalIconImage": {
+        "name": "메인탭의 더보기탭 아이콘",
+        "description": "메인탭의 더보기탭 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 더보기탭 아이콘 이미지"
+          }
+        }
+      },
+      "tabbarStyleMoreSelectedIconImage": {
+        "name": "메인탭의 더보기탭 선택 아이콘",
+        "description": "메인탭의 더보기탭 선택 아이콘 이미지",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 더보기탭 선택 아이콘 이미지"
+          }
+        }
+      },
+      "passcodeBackgroundImage": {
+        "name": "잠금화면 배경 이미지",
+        "description": "잠금화면 배경 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 배경 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletFirstImage": {
+        "name": "잠금화면 첫번째 불릿 이미지",
+        "description": "잠금화면 첫번째 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 첫번째 불릿 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletSecondImage": {
+        "name": "잠금화면 두번째 불릿 이미지",
+        "description": "잠금화면 두번째 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 두번째 불릿 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletThirdImage": {
+        "name": "잠금화면 세번째 불릿 이미지",
+        "description": "잠금화면 세번째 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 세번째 불릿 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletFourthImage": {
+        "name": "잠금화면 네번째 불릿 이미지",
+        "description": "잠금화면 네번째 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 네번째 불릿 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletSelectedFirstImage": {
+        "name": "잠금화면 첫번째 선택된 불릿 이미지",
+        "description": "잠금화면 첫번째 선택된 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 첫 번째 선택된 불릿 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletSelectedSecondImage": {
+        "name": "잠금화면 두번째 선택된 불릿 이미지",
+        "description": "잠금화면 두번째 선택된 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 두번째 선택된 불릿 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletSelectedThirdImage": {
+        "name": "잠금화면 세번째 선택된 불릿 이미지",
+        "description": "잠금화면 세번째 선택된 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 세번째 선택된 불릿 이미지"
+          }
+        }
+      },
+      "passcodeStyleBulletSelectedFourthImage": {
+        "name": "잠금화면 네번째 선택된 불릿 이미지",
+        "description": "잠금화면 네번째 선택된 불릿 이미지",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 네번째 선택된 불릿 이미지"
+          }
+        }
+      },
+      "chatRoomBackgroundImage": {
+        "name": "채팅방 배경 이미지",
+        "description": "채팅방 배경 이미지",
+        "usage": {
+          "chatRoom": {
+            "description": "채팅방 배경 이미지"
+          }
+        }
+      },
+      "messageCellStyleSendBackgroundImage": {
+        "name": "보낸 메세지 첫 번째 말풍선",
+        "description": "보낸 메세지 첫 번째 말풍선 이미지",
+        "usage": {
+          "chatRoom": {
+            "description": "보낸 메세지 첫 번째 말풍선"
+          }
+        }
+      },
+      "messageCellStyleSendGroupBackgroundImage": {
+        "name": "보낸 메세지 두 번째 이상 말풍선",
+        "description": "보낸 메세지 두 번째 이상 말풍선 이미지",
+        "usage": {
+          "chatRoom": {
+            "description": "보낸 메세지 두 번째 말풍선 이상 이미지"
+          }
+        }
+      },
+      "messageCellStyleReceiveBackgroundImage": {
+        "name": "받은 메세지 첫 번째 말풍선",
+        "description": "받은 메세지 첫 번째 말풍선 이미지",
+        "usage": {
+          "chatRoom": {
+            "description": "받은 메세지 첫 번째 말풍선 이미지"
+          }
+        }
+      },
+      "messageCellStyleReceiveGroupBackgroundImage": {
+        "name": "받은 메세지 두 번째 이상 말풍선",
+        "description": "받은 메세지 두 번째 이상 말풍선 이미지",
+        "usage": {
+          "chatRoom": {
+            "description": "받은 메세지 두 번째 말풍선 이상 이미지"
+          }
+        }
+      },
+      "defaultProfileStyleProfileImage": {
+        "name": "기본 프로필 이미지",
+        "description": "프로필 이미지가 없는 경우 보이는 기본 프로필 이미지",
+        "usage": {
+          "profile": {
+            "description": "기본 프로필 이미지"
+          }
+        }
+      },
+      "buttonStyleAddFriendImage": {
+        "name": "친구 추가 버튼 이미지",
+        "description": "친구 추가 버튼 이미지",
+        "usage": {
+          "friendTab": {
+            "description": "친구 추가 버튼 이미지"
+          }
+        }
+      }
+    },
+    "styleCodes": {
+      "mainviewStyleBackgroundColor": {
+        "name": "메인뷰 배경 색상",
+        "description": "메인뷰 배경 색상",
+        "usage": {
+          "friendTab": {
+            "description": "친구탭 배경 색상"
+          },
+          "chatTab": {
+            "description": "채팅탭 배경 색상 / 선택중인 칩 텍스트 색상"
+          },
+          "moreTab": {
+            "description": "더보기탭 배경 색상 / 상단 칩 기본 배경색 / 선택된 칩 텍스트 색상"
+          }
+        }
+      },
+      "mainviewStyleTextColor": {
+        "name": "메인뷰 텍스트 색상",
+        "description": "메인뷰 텍스트 색상",
+        "usage": {
+          "friendTab": {
+            "description": "친구칩 및 소식칩 프로필·타이틀 색상 / 친구칩 선물하기 버튼 색상 / 소식칩 피드 요소 / 선택 안한 칩의 텍스트 색상, 선택중인 칩의 배경 색상"
+          },
+          "chatTab": {
+            "description": "채팅방 타이틀 색상 / 기본 칩 텍스트 및 아이콘 색상 / 선택된 칩 배경 색상"
+          },
+          "moreTab": {
+            "name": "더보기탭",
+            "description": "아이콘 및 라벨 텍스트, 페이지네이션, 게임플레이 영역 타이틀 및 정보, 카카오 나우, 날씨 정보 등에 적용됩니다."
+          }
+        }
+      },
+      "mainviewStyleHighlightedTextColor": {
+        "name": "메인뷰 텍스트 프레스 색상",
+        "description": "메인뷰 텍스트 프레스 색상",
+        "usage": {
+          "chatTab": {
+            "description": "채팅방 타이틀 프레스 색상"
+          }
+        }
+      },
+      "mainviewStyleDescriptionTextColor": {
+        "name": "메인뷰 설명 텍스트 색상",
+        "description": "메인뷰 설명 텍스트 색상",
+        "usage": {
+          "friendTab": {
+            "description": "친구칩 상태 메시지 색상 / AD 배지 색상 / 생일 섹션 색상 / 생일 더보기 버튼 색상 / 소식 더보기 아이콘 색상"
+          },
+          "moreTab": {
+            "description": "게임 슬롯 부가 정보 및 아이콘 색상 / 랭킹·쇼핑포인트 아웃링크 아이콘 색상 / 날씨 미세먼지 타이틀 색상"
+          }
+        }
+      },
+      "mainviewStyleDescriptionHighlightedTextColor": {
+        "name": "메인뷰 설명 텍스트 프레스 색상",
+        "description": "메인뷰 설명 텍스트 프레스 색상",
+        "usage": {
+          "friendTab": {
+            "description": "메인뷰 설명 텍스트 프레스 색상"
+          },
+          "moreTab": {
+            "description": "메인뷰 설명 텍스트 프레스 색상"
+          }
+        },
+        "devNote": "가이드에는 없으나 테마 파일 내부에 존재. 추후 문제 발생시 삭제 필요"
+      },
+      "mainviewStyleNormalBackgroundColor": {
+        "name": "메인뷰 배경 기본 색상",
+        "description": "메인뷰 배경 기본 색상",
+        "usage": {
+          "friendTab": {
+            "description": "친구칩 리스트 배경 색상"
+          },
+          "chatTab": {
+            "description": "채팅방 리스트 배경 색상"
+          }
+        },
+        "devNote": "가이드에는 없으나 테마 파일 내부에 존재. 추후 문제 발생시 삭제 필요"
+      },
+      "mainviewStyleSelectedBackgroundColor": {
+        "name": "메인뷰 배경 프레스 색상",
+        "description": "메인뷰 배경 프레스 색상",
+        "usage": {
+          "friendTab": {
+            "description": "친구칩 리스트 프레스 색상"
+          },
+          "chatTab": {
+            "description": "채팅방 리스트 배경 프레스 색상"
+          }
+        },
+        "devNote": "Android 가이드에는 없으나 테마 파일 내부에 존재. 추후 문제 발생시 삭제 필요"
+      },
+      "mainviewStyleParagraphTextColor": {
+        "name": "메인뷰 본문 색상",
+        "description": "메인뷰 본문 색상",
+        "usage": {
+          "chatTab": {
+            "description": "라스트 메시지 색상"
+          }
+        }
+      },
+      "mainviewStyleParagraphHighlightedTextColor": {
+        "name": "메인뷰 본문 프레스 색상",
+        "description": "메인뷰 본문 프레스 색상",
+        "usage": {
+          "chatTab": {
+            "description": "라스트 메시지 프레스 색상"
+          }
+        }
+      },
+      "featureStyleTextColor": {
+        "name": "서비스 버튼 컬러",
+        "description": "서비스 버튼 컬러",
+        "usage": {
+          "friendTab": {
+            "description": "서비스 버튼 색상"
+          }
+        }
+      },
+      "mainviewStyleSecondaryBackgroundColor": {
+        "name": "메인뷰 보조 배경 색상",
+        "description": "메인뷰 보조 배경 색상",
+        "usage": {
+          "openChatTab": {
+            "description": "지금탭 배경 색상"
+          },
+          "shoppingTab": {
+            "description": "쇼핑탭 배경 색상"
+          }
+        }
+      },
+      "headerStyleTextColor": {
+        "name": "헤더 타이틀 및 아이콘 색상",
+        "description": "헤더 타이틀 및 아이콘 색상",
+        "usage": {
+          "friendTab": {
+            "description": "헤더 타이틀 및 아이콘 색상"
+          }
+        }
+      },
+      "headerStyleTabTextColor": {
+        "name": "헤더 탭 텍스트 색상",
+        "description": "헤더 탭 텍스트 색상",
+        "usage": {
+          "moreTab": {
+            "description": "그리드 페이지네이션 디폴트 점 색상"
+          }
+        }
+      },
+      "sectionTitleStyleTextColor": {
+        "name": "섹션 타이틀 색상",
+        "description": "섹션 타이틀 색상",
+        "usage": {
+          "friendTab": {
+            "description": "섹션 타이틀 색상"
+          }
+        },
+        "devNote": "iOS에서는 색상과 알파값을 별도로 관리"
+      },
+      "sectionTitleStyleBorderColor": {
+        "name": "섹션 타이틀 구분선 색상",
+        "description": "섹션 타이틀 구분선 색상",
+        "usage": {
+          "friendTab": {
+            "description": "기본 리스트, 콘텐츠 영역 보더 색상"
+          },
+          "moreTab": {
+            "description": "게임플레이 컨텐츠 디바이드 보더 컬러"
+          }
+        },
+        "devNote": "iOS에서는 색상과 알파값을 별도로 관리"
+      },
+      "tabbarStyleBackgroundColor": {
+        "name": "메인 탭바 배경색",
+        "description": "메인 탭바 배경색",
+        "usage": {
+          "tabBar": {
+            "description": "메인탭바 배경 색상"
+          }
+        },
+        "devNote": "지금탭의 숏폽칩에서 탭바 배경 컬러는 #111113으로 변경됨"
+      },
+      "messageNotificationBarBackgroundColor": {
+        "name": "메시지 알림 배너 배경색",
+        "description": "메시지 알림 배너 배경색",
+        "usage": {
+          "messageNotificationBar": {
+            "description": "메시지 알림 배너 배경 색상"
+          }
+        }
+      },
+      "messageNotificationBarNameTextColor": {
+        "name": "메시지 알림 배너 이름 색상",
+        "description": "메시지 알림 배너 이름 색상",
+        "usage": {
+          "messageNotificationBar": {
+            "description": "메시지 알림 배너 이름 색상"
+          }
+        }
+      },
+      "messageNotificationBarMessageTextColor": {
+        "name": "메시지 알림 배너 텍스트 색상",
+        "description": "메시지 알림 배너 텍스트 색상",
+        "usage": {
+          "messageNotificationBar": {
+            "description": "메시지 알림 배너 메시지 색상"
+          }
+        }
+      },
+      "directShareBarBackgroundColor": {
+        "name": "전달 완료 배너 배경색",
+        "description": "전달 완료 배너 배경색",
+        "usage": {
+          "directShareBar": {
+            "description": "전달 완료 배너 배경 색상"
+          }
+        }
+      },
+      "directShareBarNameTextColor": {
+        "name": "전달 완료 배너 이름 색상",
+        "description": "전달 완료 배너 이름 색상",
+        "usage": {
+          "directShareBar": {
+            "description": "전달 완료 배너 이름 색상"
+          }
+        }
+      },
+      "directShareBarMessageTextColor": {
+        "name": "전달 완료 배너 텍스트 색상",
+        "description": "전달 완료 배너 텍스트 색상",
+        "usage": {
+          "directShareBar": {
+            "description": "전달 완료 배너 메시지 색상"
+          }
+        }
+      },
+      "passcodeBackgroundColor": {
+        "name": "잠금화면 배경 색상",
+        "description": "잠금화면 배경 색상",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 배경 색상"
+          }
+        }
+      },
+      "passcodeStyleKeypadBackgroundColor": {
+        "name": "잠금화면 키패드 배경 색상",
+        "description": "잠금화면 키패드 배경 색상",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 키패드 배경 색상"
+          }
+        }
+      },
+      "passcodeStyleKeypadTextNormalColor": {
+        "name": "잠금화면 키패드 숫자 텍스트 색상",
+        "description": "잠금화면 키패드 숫자 텍스트 색상",
+        "usage": {
+          "passcode": {
+            "description": "잠금화면 키패드 숫자 텍스트 색상"
+          }
+        }
+      },
+      "chatRoomBackgroundColor": {
+        "name": "채팅방 배경 색상",
+        "description": "채팅방 배경 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "채팅방 배경 색상"
+          }
+        }
+      },
+      "messageCellStyleSendTextColor": {
+        "name": "보낸 말풍선 텍스트 색상",
+        "description": "보낸 말풍선 텍스트 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "보낸 말풍선 텍스트 색상"
+          }
+        }
+      },
+      "messageCellStyleReceiveTextColor": {
+        "name": "받은 말풍선 텍스트 색상",
+        "description": "받은 말풍선 텍스트 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "받은 말풍선 텍스트 색상"
+          }
+        }
+      },
+      "messageCellStyleUnreadCountColor": {
+        "name": "읽음 숫자 텍스트 색상",
+        "description": "읽음 숫자 텍스트 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "읽음 숫자 텍스트 색상"
+          }
+        }
+      },
+      "inputBarStyleChatButtonTextColor": {
+        "name": "인풋바 텍스트 컬러",
+        "description": "인풋바 텍스트 컬러",
+        "usage": {
+          "chatRoom": {
+            "description": "인풋바 텍스트 컬러"
+          }
+        }
+      },
+      "inputBarStyleChatBackgroundColor": {
+        "name": "인풋바 배경 색상",
+        "description": "인풋바 배경 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "인풋바 배경 색상"
+          }
+        }
+      },
+      "inputBarStyleChatButtonNormalForegroundColor": {
+        "name": "인풋바 메뉴 아이콘 색상",
+        "description": "인풋바 메뉴 아이콘 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "인풋바 메뉴 아이콘 색상"
+          }
+        }
+      },
+      "inputBarStyleChatButtonNormalBackgroundColor": {
+        "name": "인풋바 메뉴 / 인풋바 배경 색상",
+        "description": "인풋바 메뉴 / 인풋바 배경 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "인풋바 메뉴 / 인풋바 배경 색상"
+          }
+        },
+        "devNote": "iOS에서는 색상과 알파값을 별도로 관리"
+      },
+      "inputBarStyleChatSendNormalBackgroundColor": {
+        "name": "인풋바 전송 버튼 배경 색상",
+        "description": "인풋바 전송 버튼 배경 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "인풋바 전송 버튼 배경 색상"
+          }
+        }
+      },
+      "inputBarStyleChatSendNormalForegroundColor": {
+        "name": "인풋바 전송 버튼 아이콘 색상",
+        "description": "인풋바 전송 버튼 아이콘 색상",
+        "usage": {
+          "chatRoom": {
+            "description": "인풋바 전송 버튼 아이콘 색상"
+          }
+        }
+      }
+    },
+    "sections": {
+      "tabBar": {
+        "styleCodes": [
+          "tabbarStyleBackgroundColor"
+        ],
+        "typeCodes": [
+          "tabbarStyleBackgroundImage",
+          "tabbarStyleFriendsNormalIconImage",
+          "tabbarStyleFriendsSelectedIconImage",
+          "tabbarStyleChatsNormalIconImage",
+          "tabbarStyleChatsSelectedIconImage",
+          "tabbarStyleOpenChatsNormalIconImage",
+          "tabbarStyleOpenChatsSelectedIconImage",
+          "tabbarStyleShoppingNormalIconImage",
+          "tabbarStyleShoppingSelectedIconImage",
+          "tabbarStyleMoreNormalIconImage",
+          "tabbarStyleMoreSelectedIconImage"
+        ]
+      },
+      "friendTab": {
+        "styleCodes": [
+          "mainviewStyleBackgroundColor",
+          "mainviewStyleTextColor",
+          "mainviewStyleDescriptionTextColor",
+          "mainviewStyleDescriptionHighlightedTextColor",
+          "mainviewStyleNormalBackgroundColor",
+          "mainviewStyleSelectedBackgroundColor",
+          "featureStyleTextColor",
+          "headerStyleTextColor",
+          "sectionTitleStyleTextColor",
+          "sectionTitleStyleBorderColor"
+        ],
+        "typeCodes": [
+          "mainviewStylePrimaryBackgroundImage",
+          "ButtonStyleAddFriendImage"
+        ]
+      },
+      "chatTab": {
+        "styleCodes": [
+          "mainviewStyleBackgroundColor",
+          "mainviewStyleTextColor",
+          "mainviewStyleHighlightedTextColor",
+          "mainviewStyleDescriptionTextColor",
+          "mainviewStyleDescriptionHighlightedTextColor",
+          "mainviewStyleNormalBackgroundColor",
+          "mainviewStyleSelectedBackgroundColor",
+          "mainviewStyleParagraphTextColor",
+          "mainviewStyleParagraphHighlightedTextColor",
+          "featureStyleTextColor"
+        ],
+        "typeCodes": [
+          "mainviewStylePrimaryBackgroundImage"
+        ]
+      },
+      "chatRoom": {
+        "styleCodes": [
+          "chatRoomBackgroundColor",
+          "messageCellStyleSendTextColor",
+          "messageCellStyleReceiveTextColor",
+          "messageCellStyleUnreadCountColor",
+          "inputBarStyleChatButtonTextColor",
+          "inputBarStyleChatBackgroundColor",
+          "inputBarStyleChatButtonNormalForegroundColor",
+          "inputBarStyleChatButtonNormalBackgroundColor",
+          "inputBarStyleChatSendNormalBackgroundColor",
+          "inputBarStyleChatSendNormalForegroundColor"
+        ],
+        "typeCodes": [
+          "chatRoomBackgroundImage",
+          "messageCellStyleSendBackgroundImage",
+          "messageCellStyleSendGroupBackgroundImage",
+          "messageCellStyleReceiveBackgroundImage",
+          "messageCellStyleReceiveGroupBackgroundImage"
+        ]
+      },
+      "openChatTab": {
+        "styleCodes": [
+          "mainviewStyleSecondaryBackgroundColor"
+        ],
+        "typeCodes": []
+      },
+      "passcode": {
+        "styleCodes": [
+          "passcodeBackgroundColor",
+          "passcodeStyleKeypadBackgroundColor",
+          "passcodeStyleKeypadTextNormalColor"
+        ],
+        "typeCodes": [
+          "passcodeBackgroundImage",
+          "passcodeStyleBulletFirstImage",
+          "passcodeStyleBulletSecondImage",
+          "passcodeStyleBulletThirdImage",
+          "passcodeStyleBulletFourthImage",
+          "passcodeStyleBulletSelectedFirstImage",
+          "passcodeStyleBulletSelectedSecondImage",
+          "passcodeStyleBulletSelectedThirdImage",
+          "passcodeStyleBulletSelectedFourthImage"
+        ]
+      },
+      "moreTab": {
+        "styleCodes": [
+          "mainviewStyleBackgroundColor",
+          "mainviewStyleTextColor",
+          "mainviewStyleDescriptionTextColor",
+          "headerStyleTextColor",
+          "headerStyleTabTextColor",
+          "sectionTitleStyleBorderColor"
+        ],
+        "typeCodes": []
+      },
+      "shoppingTab": {
+        "styleCodes": [
+          "mainviewStyleSecondaryBackgroundColor"
+        ],
+        "typeCodes": []
+      },
+      "messageNotificationBar": {
+        "styleCodes": [
+          "messageNotificationBarBackgroundColor",
+          "messageNotificationBarNameTextColor",
+          "messageNotificationBarMessageTextColor"
+        ],
+        "typeCodes": []
+      },
+      "directShareBar": {
+        "styleCodes": [
+          "directShareBarBackgroundColor",
+          "directShareBarNameTextColor",
+          "directShareBarMessageTextColor"
+        ],
+        "typeCodes": []
+      }
+    },
+    "platformMappings": {
+      "android": {
+        "typeCodes": {
+          "mainviewStylePrimaryBackgroundImage": [
+            {
+              "code": "mainviewStylePrimaryBackgroundImageSw600dp",
+              "path": "drawable-sw600dp/theme_background_image.png",
+              "width": 1440,
+              "height": 2880,
+              "fileExtension": "png"
+            },
+            {
+              "code": "mainviewStylePrimaryBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_background_image.png",
+              "width": 1440,
+              "height": 2880,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleBackgroundImage": [
+            {
+              "code": "tabbarStyleBackgroundImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_cell_image.9.png",
+              "width": 1440,
+              "height": 214,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_cell_image.9.png",
+              "width": 1440,
+              "height": 214,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleFriendsNormalIconImage": [
+            {
+              "code": "tabbarStyleFriendsNormalIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_friends_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleFriendsNormalIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_friends_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleFriendsSelectedIconImage": [
+            {
+              "code": "tabbarStyleFriendsSelectedIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_friends_focused_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleFriendsSelectedIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_friends_focused_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleChatsNormalIconImage": [
+            {
+              "code": "tabbarStyleChatsNormalIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_chats_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleChatsNormalIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_chats_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleChatsSelectedIconImage": [
+            {
+              "code": "tabbarStyleChatsSelectedIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_chats_focused_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleChatsSelectedIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_chats_focused_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleOpenChatsNormalIconImage": [
+            {
+              "code": "tabbarStyleOpenChatsNormalIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_now_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleOpenChatsNormalIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_now_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleOpenChatsSelectedIconImage": [
+            {
+              "code": "tabbarStyleOpenChatsSelectedIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_now_focused_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleOpenChatsSelectedIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_now_focused_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleShoppingNormalIconImage": [
+            {
+              "code": "tabbarStyleShoppingNormalIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_shopping_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleShoppingNormalIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_shopping_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleShoppingSelectedIconImage": [
+            {
+              "code": "tabbarStyleShoppingSelectedIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_shopping_focused_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleShoppingSelectedIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_shopping_focused_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleMoreNormalIconImage": [
+            {
+              "code": "tabbarStyleMoreNormalIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_more_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleMoreNormalIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_more_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleMoreSelectedIconImage": [
+            {
+              "code": "tabbarStyleMoreSelectedIconImageSw600dp",
+              "path": "drawable-sw600dp/theme_maintab_ico_more_focused_image.png",
+              "width": 152,
+              "height": 152,
+              "fileExtension": "png"
+            },
+            {
+              "code": "tabbarStyleMoreSelectedIconImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_maintab_ico_more_focused_image.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeBackgroundImage": [
+            {
+              "code": "passcodeBackgroundImageSw600dp",
+              "path": "drawable-sw600dp/theme_passcode_background_image.png",
+              "width": 1440,
+              "height": 1440,
+              "fileExtension": "png"
+            },
+            {
+              "code": "passcodeBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_background_image.png",
+              "width": 1440,
+              "height": 1440,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletFirstImage": [
+            {
+              "code": "passcodeStyleBulletFirstImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_01_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSecondImage": [
+            {
+              "code": "passcodeStyleBulletSecondImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_02_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletThirdImage": [
+            {
+              "code": "passcodeStyleBulletThirdImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_03_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletFourthImage": [
+            {
+              "code": "passcodeStyleBulletFourthImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_04_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedFirstImage": [
+            {
+              "code": "passcodeStyleBulletSelectedFirstImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_01_checked_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedSecondImage": [
+            {
+              "code": "passcodeStyleBulletSelectedSecondImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_02_checked_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedThirdImage": [
+            {
+              "code": "passcodeStyleBulletSelectedThirdImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_03_checked_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedFourthImage": [
+            {
+              "code": "passcodeStyleBulletSelectedFourthImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_passcode_04_checked_image.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "chatRoomBackgroundImage": [
+            {
+              "code": "chatRoomBackgroundImageSw600dp",
+              "path": "drawable-sw600dp/theme_chatroom_background_image.png",
+              "width": 1440,
+              "height": 2880,
+              "fileExtension": "png"
+            },
+            {
+              "code": "chatRoomBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_chatroom_background_image.png",
+              "width": 1440,
+              "height": 2880,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleSendBackgroundImage": [
+            {
+              "code": "messageCellStyleSendBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_chatroom_bubble_me_01_image.9.png",
+              "width": 124,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleSendGroupBackgroundImage": [
+            {
+              "code": "messageCellStyleSendGroupBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_chatroom_bubble_me_02_image.9.png",
+              "width": 124,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleReceiveBackgroundImage": [
+            {
+              "code": "messageCellStyleReceiveBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_chatroom_bubble_you_01_image.9.png",
+              "width": 124,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleReceiveGroupBackgroundImage": [
+            {
+              "code": "messageCellStyleReceiveGroupBackgroundImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_chatroom_bubble_you_02_image.9.png",
+              "width": 124,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "buttonStyleAddFriendImage": [
+            {
+              "code": "buttonStyleAddFriendImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_find_add_friend_button_image.png",
+              "width": 126,
+              "height": 102,
+              "fileExtension": "png"
+            }
+          ]
+        },
+        "styleCodes": {
+          "mainviewStyleBackgroundColor": [
+            {
+              "code": "androidMainviewStyleBackgroundColor",
+              "resourceGroup": "color",
+              "resourceName": "theme_background_color"
+            }
+          ]
+        }
+      },
+      "ios": {
+        "typeCodes": {},
+        "styleCodes": {}
+      }
+    }
+  }
+}
+
+
