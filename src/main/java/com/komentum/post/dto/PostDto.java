@@ -1,6 +1,5 @@
 package com.komentum.post.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.global.utils.DateUtils;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -51,15 +50,12 @@ public class PostDto {
   public static class UserPostListResponseDto {
 
     @Schema(description = "게시글 ID")
-    @JsonProperty("post_id")
     Long postId;
 
-    @Schema(description = "게시글 종류 ( THEME_BOARD | DESIGN_BOARD )")
-    @JsonProperty("post_type")
+    @Schema(description = "게시글 종류 ( THEME_BOARD | DESIGN_BOARD )", example = "THEME_BOARD | DESIGN_BOARD")
     PostType postType;
 
     @Schema(description = "테마/디자인 컴포넌트 ID (postType 에 따라 themeComponentId 또는 designComponentId)")
-    @JsonProperty("component_id")
     Integer componentId;
 
     @Schema(description = "게시글 제목")
@@ -72,23 +68,18 @@ public class PostDto {
     List<TagResponse> tags;
 
     @Schema(description = "게시글 대표 이미지 URL 목록", example = "[https://sample.com, ... ]")
-    @JsonProperty("preview_image_url")
     List<String> previewImageUrl;
 
     @Schema(description = "게시글 생성일")
-    @JsonProperty("created_at")
     String createdAt;
 
     @Schema(description = "게시글 갱신일")
-    @JsonProperty("updated_at")
     String updatedAt;
 
     @Schema(description = "게시글 작성자 이름")
-    @JsonProperty("user_name")
     String userName;
 
     @Schema(description = "게시글 작성자 프로필 이미지 URL")
-    @JsonProperty("profile_image")
     String profileImage;
 
     @Schema(description = "게시글 좋아요 수")

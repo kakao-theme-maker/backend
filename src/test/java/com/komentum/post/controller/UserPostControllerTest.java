@@ -176,27 +176,32 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("사용자 게시글 목록 응답은 통일된 snake_case 필드를 사용한다")
-  void userPostListResponse_usesUnifiedSnakeCaseFields() throws Exception {
+  @DisplayName("사용자 게시글 목록 응답은 camelCase 필드를 사용한다")
+  void userPostListResponse_usesCamelCaseFields() throws Exception {
     MvcResult result = performGet("/api/users/me/upload-posts", null);
     JsonNode first = objectMapper.readTree(result.getResponse().getContentAsString()).get(0);
 
-    assertThat(first.has("post_id")).isTrue();
-    assertThat(first.has("post_type")).isTrue();
-    assertThat(first.has("component_id")).isTrue();
-    assertThat(first.has("preview_image_url")).isTrue();
-    assertThat(first.has("created_at")).isTrue();
-    assertThat(first.has("updated_at")).isTrue();
-    assertThat(first.has("user_name")).isTrue();
-    assertThat(first.has("profile_image")).isTrue();
+    assertThat(first.has("postId")).isTrue();
+    assertThat(first.has("postType")).isTrue();
+    assertThat(first.has("componentId")).isTrue();
+    assertThat(first.has("previewImageUrl")).isTrue();
+    assertThat(first.has("createdAt")).isTrue();
+    assertThat(first.has("updatedAt")).isTrue();
+    assertThat(first.has("userName")).isTrue();
+    assertThat(first.has("profileImage")).isTrue();
     assertThat(first.has("liked")).isTrue();
     assertThat(first.has("bookmarked")).isTrue();
-    assertThat(first.get("created_at").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
-    assertThat(first.get("updated_at").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
+    assertThat(first.get("createdAt").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
+    assertThat(first.get("updatedAt").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
 
-    assertThat(first.has("authorName")).isFalse();
-    assertThat(first.has("authorProfileImageUrl")).isFalse();
-    assertThat(first.has("preferred")).isFalse();
+    assertThat(first.has("post_id")).isFalse();
+    assertThat(first.has("post_type")).isFalse();
+    assertThat(first.has("component_id")).isFalse();
+    assertThat(first.has("preview_image_url")).isFalse();
+    assertThat(first.has("created_at")).isFalse();
+    assertThat(first.has("updated_at")).isFalse();
+    assertThat(first.has("user_name")).isFalse();
+    assertThat(first.has("profile_image")).isFalse();
   }
 
   @Test
