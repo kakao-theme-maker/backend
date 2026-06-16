@@ -37,16 +37,16 @@ public class UserPostController {
   }
 
   /**
-   * 사용자가 카테고리에 저장한 테마 목록 반환
+   * 사용자가 북마크에 추가한 게시글 목록 반환
    */
   @GetMapping("/me/bookmarked-posts")
   @Operation(summary = "현재 인증된 사용자가 북마크에 추가한 게시글 목록을 조회한다")
-  public ResponseEntity<List<UserPostListResponseDto>> findSavedPostList(
+  public ResponseEntity<List<UserPostListResponseDto>> findBookmarkedPostList(
       @AuthenticationPrincipal CustomUserDetails userDetails,
       @RequestParam(name = "post_type", required = false) PostType postType,
       @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
-        postManagementFacade.findUserSavedPostsByCategory(userDetails.getUsername(), postType,
+        postManagementFacade.findBookmarkedPostsByUser(userDetails.getUsername(), postType,
             pageable));
   }
 

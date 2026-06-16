@@ -23,18 +23,18 @@ public class PostManagementFacade {
   private final PostMapperSupport postMapperSupport;
 
   /**
-   * 특정 사용자가 카테고리에 저장한 게시글 목록 반환
-   * @param clientId 카테고리에 게시글을 저장한 사용자 식별자
+   * 특정 사용자가 북마크에 추가한 게시글 목록 반환
+   * @param clientId 북마크에 게시글을 추가한 사용자 식별자
    * @param postType 조회할 게시글 종류 (null 이면 전체)
    * @return UserPostListResponseDto 목록
    */
   @Transactional
-  public List<UserPostListResponseDto> findUserSavedPostsByCategory(String clientId,
+  public List<UserPostListResponseDto> findBookmarkedPostsByUser(String clientId,
       PostType postType, Pageable pageable) {
     User client = userEntityFinder.findUserEntity(clientId);
-    List<PostQuery.UserPostListRow> savedPosts = postService.findUserSavedPosts(client, postType,
-        pageable);
-    return postMapperSupport.toUserPostListResponseDtoList(savedPosts);
+    List<PostQuery.UserPostListRow> bookmarkedPosts = postService.findBookmarkedPostsByUser(client,
+        postType, pageable);
+    return postMapperSupport.toUserPostListResponseDtoList(bookmarkedPosts);
   }
 
   @Transactional

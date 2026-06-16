@@ -155,7 +155,7 @@ public class UserPostControllerTest {
 
   @Test
   @DisplayName("북마크한 게시글 목록은 post_type으로 필터링하고 component_id를 매핑한다")
-  void findSavedPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
+  void findBookmarkedPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
     assertEndpointFilters(
         "/api/users/me/bookmarked-posts",
         expectedBookmarkedPostIds(null),
