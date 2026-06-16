@@ -33,7 +33,6 @@ import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.theme.theme.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,7 +94,6 @@ public class UserPostControllerTest {
   private Post customCategoryOnlyPost;
   private PostScenarioSupport.Result postResult;
   private Map<Long, Post> postById;
-  private Map<Long, Integer> componentIdByPostId;
   private Set<Long> bookmarkedPostIds;
   private Set<Long> preferredPostIds;
 
@@ -132,7 +130,6 @@ public class UserPostControllerTest {
         .build();
     postById = postResult.posts().stream()
         .collect(Collectors.toMap(Post::getPostId, Function.identity()));
-    componentIdByPostId = resolveExpectedComponentIdByPostId();
     preferredPostIds = resolvePreferredPostIds();
     bookmarkedPostIds = createBookmarkAndCustomCategory();
   }
@@ -143,8 +140,8 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("내가 작성한 게시글 목록은 post_type으로 필터링하고 component_id를 매핑한다")
-  void findUserPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
+  @DisplayName("내가 작성한 게시글 목록은 post_type으로 필터링한다")
+  void findUserPostList_filtersByPostType() throws Exception {
     assertEndpointFilters(
         "/api/users/me/upload-posts",
         expectedUploadedPostIds(null),
@@ -154,8 +151,8 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("북마크한 게시글 목록은 post_type으로 필터링하고 component_id를 매핑한다")
-  void findBookmarkedPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
+  @DisplayName("북마크한 게시글 목록은 post_type으로 필터링한다")
+  void findBookmarkedPostList_filtersByPostType() throws Exception {
     assertEndpointFilters(
         "/api/users/me/bookmarked-posts",
         expectedBookmarkedPostIds(null),
@@ -165,8 +162,8 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("좋아요한 게시글 목록은 post_type으로 필터링하고 component_id를 매핑한다")
-  void findPreferredPostList_filtersByPostTypeAndMapsComponentId() throws Exception {
+  @DisplayName("좋아요한 게시글 목록은 post_type으로 필터링한다")
+  void findPreferredPostList_filtersByPostType() throws Exception {
     assertEndpointFilters(
         "/api/users/me/preferred-posts",
         expectedPreferredPostIds(null),
@@ -183,7 +180,7 @@ public class UserPostControllerTest {
 
     assertThat(first.has("postId")).isTrue();
     assertThat(first.has("postType")).isTrue();
-    assertThat(first.has("componentId")).isTrue();
+    assertThat(first.has("componentId")).isFalse();
     assertThat(first.has("previewImageUrl")).isTrue();
     assertThat(first.has("createdAt")).isTrue();
     assertThat(first.has("updatedAt")).isTrue();
@@ -234,7 +231,6 @@ public class UserPostControllerTest {
       Post post = postById.get(dto.getPostId());
       assertThat(post).isNotNull();
       assertThat(dto.getPostType()).isEqualTo(post.getPostType());
-      assertThat(dto.getComponentId()).isEqualTo(componentIdByPostId.get(dto.getPostId()));
       assertThat(dto.getTitle()).isEqualTo(post.getTitle());
       assertThat(dto.getContent()).isEqualTo(post.getContent());
       assertThat(dto.getUserName()).isEqualTo(post.getUser().getName());
@@ -342,25 +338,6 @@ public class UserPostControllerTest {
         .build());
 
     return bookmarkedIds;
-  }
-
-  private Map<Long, Integer> resolveExpectedComponentIdByPostId() {
-    Map<Long, Integer> result = new HashMap<>();
-    postResult.themeBoards().forEach(themeBoard ->
-        result.put(themeBoard.getPost().getPostId(),
-            themeBoard.getThemeComponent().getThemeComponentId()));
-
-    postResult.designBoards().stream()
-        .collect(Collectors.groupingBy(designBoard -> designBoard.getPost().getPostId()))
-        .forEach((postId, designBoards) -> {
-          Integer componentId = designBoards.stream()
-              .min(Comparator.comparing(DesignBoard::getDesignBoardId))
-              .map(DesignBoard::getDesignComponent)
-              .map(DesignComponent::getDesignComponentId)
-              .orElseThrow();
-          result.put(postId, componentId);
-    });
-    return result;
   }
 
   private Set<Long> resolvePreferredPostIds() {

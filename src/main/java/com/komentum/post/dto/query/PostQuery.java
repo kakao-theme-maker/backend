@@ -13,7 +13,6 @@ public class PostQuery {
 
     private Long postId;
     private PostType postType;
-    private Integer componentId;
     private String title;
     private String content;
     private String previewImageName;

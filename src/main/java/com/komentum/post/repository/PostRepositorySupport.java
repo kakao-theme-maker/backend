@@ -4,17 +4,13 @@ import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QCategory;
 import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QComment;
-import com.komentum.post.domain.QDesignBoard;
 import com.komentum.post.domain.QPost;
 import com.komentum.post.domain.QPrefer;
-import com.komentum.post.domain.QThemeBoard;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.service.enums.CategoryType;
-import com.komentum.theme.component.domain.QDesignComponent;
 import com.komentum.theme.exception.ResourceNotFoundException;
-import com.komentum.theme.theme.domain.QThemeComponent;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.ConstructorExpression;
@@ -102,20 +98,11 @@ public class PostRepositorySupport {
     QCategory category = QCategory.category;
     QCategoryPost categoryPost = QCategoryPost.categoryPost;
     QUser user = QUser.user;
-    QThemeBoard themeBoard = QThemeBoard.themeBoard;
-    QThemeComponent themeComponent = QThemeComponent.themeComponent;
-    QDesignBoard designBoard = QDesignBoard.designBoard;
-    QDesignComponent designComponent = QDesignComponent.designComponent;
-    return queryFactory.select(userPostListProjection(post, user, themeComponent, designComponent,
-            client))
+    return queryFactory.select(userPostListProjection(post, user, client))
         .from(categoryPost)
         .join(categoryPost.post, post)
         .join(categoryPost.category, category)
         .join(post.user, user)
-        .leftJoin(themeBoard).on(themeBoard.post.eq(post))
-        .leftJoin(themeBoard.themeComponent, themeComponent)
-        .leftJoin(designBoard).on(representativeDesignBoardEq(post, designBoard))
-        .leftJoin(designBoard.designComponent, designComponent)
         .where(
             category.owner.eq(client),
             category.categoryType.eq(CategoryType.BOOKMARK),
@@ -135,19 +122,10 @@ public class PostRepositorySupport {
     QPost post = QPost.post;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
-    QThemeBoard themeBoard = QThemeBoard.themeBoard;
-    QThemeComponent themeComponent = QThemeComponent.themeComponent;
-    QDesignBoard designBoard = QDesignBoard.designBoard;
-    QDesignComponent designComponent = QDesignComponent.designComponent;
-    return queryFactory.select(userPostListProjection(post, user, themeComponent, designComponent,
-            client))
+    return queryFactory.select(userPostListProjection(post, user, client))
         .from(prefer)
         .join(prefer.post, post)
         .join(post.user, user)
-        .leftJoin(themeBoard).on(themeBoard.post.eq(post))
-        .leftJoin(themeBoard.themeComponent, themeComponent)
-        .leftJoin(designBoard).on(representativeDesignBoardEq(post, designBoard))
-        .leftJoin(designBoard.designComponent, designComponent)
         .where(
             prefer.user.eq(client),
             postTypeEq(post, postType)
@@ -165,18 +143,9 @@ public class PostRepositorySupport {
       Pageable pageable) {
     QPost post = QPost.post;
     QUser user = QUser.user;
-    QThemeBoard themeBoard = QThemeBoard.themeBoard;
-    QThemeComponent themeComponent = QThemeComponent.themeComponent;
-    QDesignBoard designBoard = QDesignBoard.designBoard;
-    QDesignComponent designComponent = QDesignComponent.designComponent;
-    return queryFactory.select(userPostListProjection(post, user, themeComponent, designComponent,
-            client))
+    return queryFactory.select(userPostListProjection(post, user, client))
         .from(post)
         .join(post.user, user)
-        .leftJoin(themeBoard).on(themeBoard.post.eq(post))
-        .leftJoin(themeBoard.themeComponent, themeComponent)
-        .leftJoin(designBoard).on(representativeDesignBoardEq(post, designBoard))
-        .leftJoin(designBoard.designComponent, designComponent)
         .where(
             post.user.eq(client),
             postTypeEq(post, postType)
@@ -188,12 +157,10 @@ public class PostRepositorySupport {
   }
 
   private ConstructorExpression<PostQuery.UserPostListRow> userPostListProjection(QPost post,
-      QUser user, QThemeComponent themeComponent, QDesignComponent designComponent, User client) {
+      QUser user, User client) {
     return Projections.constructor(PostQuery.UserPostListRow.class,
         post.postId,
         post.postType,
-        Expressions.numberTemplate(Integer.class, "coalesce({0}, {1})",
-            themeComponent.themeComponentId, designComponent.designComponentId),
         post.title,
         post.content,
         post.previewImageName,
@@ -206,17 +173,6 @@ public class PostRepositorySupport {
         isLiked(post, client),
         isBookmarked(post, client)
     );
-  }
-
-  private BooleanExpression representativeDesignBoardEq(QPost post, QDesignBoard designBoard) {
-    QDesignBoard representativeDesignBoard = new QDesignBoard("representativeDesignBoard");
-    return designBoard.post.eq(post)
-        .and(designBoard.designBoardId.eq(
-            JPAExpressions
-                .select(representativeDesignBoard.designBoardId.min())
-                .from(representativeDesignBoard)
-                .where(representativeDesignBoard.post.postId.eq(post.postId))
-        ));
   }
 
   private BooleanExpression postTypeEq(QPost post, PostType postType) {

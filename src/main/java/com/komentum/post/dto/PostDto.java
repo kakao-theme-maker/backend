@@ -55,9 +55,6 @@ public class PostDto {
     @Schema(description = "게시글 종류 ( THEME_BOARD | DESIGN_BOARD )", example = "THEME_BOARD | DESIGN_BOARD")
     PostType postType;
 
-    @Schema(description = "테마/디자인 컴포넌트 ID (postType 에 따라 themeComponentId 또는 designComponentId)")
-    Integer componentId;
-
     @Schema(description = "게시글 제목")
     String title;
 
@@ -104,7 +101,6 @@ public class PostDto {
       return UserPostListResponseDto.builder()
           .postId(row.getPostId())
           .postType(row.getPostType())
-          .componentId(row.getComponentId())
           .title(row.getTitle())
           .content(row.getContent())
           .tags(tagResponses)
