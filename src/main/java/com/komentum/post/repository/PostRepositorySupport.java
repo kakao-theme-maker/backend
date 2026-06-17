@@ -170,7 +170,7 @@ public class PostRepositorySupport {
         user.profileImgUrl,
         countPrefers(post),
         countComments(post),
-        isLiked(post, client),
+        isPreferred(post, client),
         isBookmarked(post, client)
     );
   }
@@ -179,7 +179,7 @@ public class PostRepositorySupport {
     return postType == null ? null : post.postType.eq(postType);
   }
 
-  public BooleanExpression isLiked(QPost post, User user) {
+  public BooleanExpression isPreferred(QPost post, User user) {
     QPrefer prefer = QPrefer.prefer;
     return JPAExpressions
         .selectOne()

@@ -184,9 +184,9 @@ public class UserPostControllerTest {
     assertThat(first.has("previewImageUrl")).isTrue();
     assertThat(first.has("createdAt")).isTrue();
     assertThat(first.has("updatedAt")).isTrue();
-    assertThat(first.has("userName")).isTrue();
-    assertThat(first.has("profileImage")).isTrue();
-    assertThat(first.has("liked")).isTrue();
+    assertThat(first.has("authorName")).isTrue();
+    assertThat(first.has("authorProfileImageUrl")).isTrue();
+    assertThat(first.has("preferred")).isTrue();
     assertThat(first.has("bookmarked")).isTrue();
     assertThat(first.get("createdAt").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
     assertThat(first.get("updatedAt").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
@@ -199,6 +199,9 @@ public class UserPostControllerTest {
     assertThat(first.has("updated_at")).isFalse();
     assertThat(first.has("user_name")).isFalse();
     assertThat(first.has("profile_image")).isFalse();
+    assertThat(first.has("userName")).isFalse();
+    assertThat(first.has("profileImage")).isFalse();
+    assertThat(first.has("liked")).isFalse();
   }
 
   @Test
@@ -233,15 +236,15 @@ public class UserPostControllerTest {
       assertThat(dto.getPostType()).isEqualTo(post.getPostType());
       assertThat(dto.getTitle()).isEqualTo(post.getTitle());
       assertThat(dto.getContent()).isEqualTo(post.getContent());
-      assertThat(dto.getUserName()).isEqualTo(post.getUser().getName());
-      assertThat(dto.getProfileImage()).isEqualTo(post.getUser().getProfileImgUrl());
+      assertThat(dto.getAuthorName()).isEqualTo(post.getUser().getName());
+      assertThat(dto.getAuthorProfileImageUrl()).isEqualTo(post.getUser().getProfileImgUrl());
       assertThat(dto.getCreatedAt()).isEqualTo(DateUtils.convertToDateString(post.getCreatedAt()));
       assertThat(dto.getUpdatedAt()).isEqualTo(DateUtils.convertToDateString(post.getUpdatedAt()));
       assertThat(dto.getPreviewImageUrl()).containsExactly(PREVIEW_IMAGE_URL);
       assertThat(dto.getTags()).isNotNull();
       assertThat(dto.getPrefers()).isEqualTo(1L);
       assertThat(dto.getComments()).isNotNull();
-      assertThat(dto.isLiked()).isEqualTo(preferredPostIds.contains(dto.getPostId()));
+      assertThat(dto.isPreferred()).isEqualTo(preferredPostIds.contains(dto.getPostId()));
       assertThat(dto.isBookmarked()).isEqualTo(bookmarkedPostIds.contains(dto.getPostId()));
     });
   }

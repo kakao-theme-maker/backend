@@ -74,10 +74,10 @@ public class PostDto {
     String updatedAt;
 
     @Schema(description = "게시글 작성자 이름")
-    String userName;
+    String authorName;
 
     @Schema(description = "게시글 작성자 프로필 이미지 URL")
-    String profileImage;
+    String authorProfileImageUrl;
 
     @Schema(description = "게시글 좋아요 수")
     Long prefers;
@@ -86,7 +86,7 @@ public class PostDto {
     Long comments;
 
     @Schema(description = "현재 사용자의 좋아요 여부")
-    boolean liked;
+    boolean preferred;
 
     @Schema(description = "현재 사용자의 북마크 여부")
     boolean bookmarked;
@@ -107,11 +107,11 @@ public class PostDto {
           .previewImageUrl(previewImageUrls)
           .createdAt(DateUtils.convertToDateString(row.getCreatedAt()))
           .updatedAt(DateUtils.convertToDateString(row.getUpdatedAt()))
-          .userName(row.getUserName())
-          .profileImage(row.getProfileImage())
+          .authorName(row.getUserName())
+          .authorProfileImageUrl(row.getProfileImage())
           .prefers(row.getPrefers())
           .comments(row.getComments())
-          .liked(row.isLiked())
+          .preferred(row.isPreferred())
           .bookmarked(row.isBookmarked())
           .build();
     }

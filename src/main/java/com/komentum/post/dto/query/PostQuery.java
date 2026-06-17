@@ -22,7 +22,7 @@ public class PostQuery {
     private String profileImage;
     private Long prefers;
     private Long comments;
-    private boolean liked;
+    private boolean preferred;
     private boolean bookmarked;
   }
 }
