@@ -107,6 +107,17 @@ public class DesignComponentController {
         designComponentService.getDesignComponentsByComponentTypeId(componentTypeId));
   }
 
+  @GetMapping("/uploaded")
+  @Operation(summary = "업로드한 design component 목록을 조회한다")
+  public ResponseEntity<List<DesignComponentDto>> findUploadedDesignComponents(
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    List<DesignComponentDto> res = designComponentFacade.findUploadedDesignComponents(
+        userDetails.getUsername()
+    );
+    return ResponseEntity.ok(res);
+  }
+
 
   /**
    * designComponent 수정
