@@ -114,7 +114,7 @@ public class ThemeBoardRepositorySupport {
             post.previewImageName,
             preferCount,
             commentCount,
-            postRepositorySupport.isLiked(post, client),
+            postRepositorySupport.isPreferred(post, client),
             postRepositorySupport.isBookmarked(post, client),
             user.profileImgUrl
         ))

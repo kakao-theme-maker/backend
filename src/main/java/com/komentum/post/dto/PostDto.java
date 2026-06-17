@@ -1,19 +1,19 @@
 package com.komentum.post.dto;
 
-import com.komentum.post.domain.Post;
+import com.komentum.global.utils.DateUtils;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.query.PostQuery;
 import com.komentum.post.facade.BoardManagementHelper;
-import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 public class PostDto {
 
@@ -40,8 +40,9 @@ public class PostDto {
     boolean publicFlag;
   }
 
-  // 사용자가 작성 / 업로드한 게시글 목록 조회
-  @Data
+  // 사용자가 작성 / 업로드 / 북마크 / 좋아요한 게시글 목록 조회 응답
+  @Getter
+  @Setter
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
@@ -50,57 +51,68 @@ public class PostDto {
 
     @Schema(description = "게시글 ID")
     Long postId;
-    @Schema(description = "게시글 제목")
-    String title;
-    @Schema(description = "게시글 내용")
-    String content;
-    @Schema(description = "태그 목록")
-    List<TagResponse> tags;
-    @Schema(description = "게시글 대표 이미지 URL 목록", example = "[https://sample.com, ... ]")
-    List<String> previewImageUrl;
-    @Schema(description = "게시글 생성일")
-    LocalDateTime createdAt;
-    @Schema(description = "게시글 갱신일")
-    LocalDateTime updatedAt;
+
     @Schema(description = "게시글 종류 ( THEME_BOARD | DESIGN_BOARD )", example = "THEME_BOARD | DESIGN_BOARD")
     PostType postType;
+
+    @Schema(description = "게시글 제목")
+    String title;
+
+    @Schema(description = "게시글 내용")
+    String content;
+
+    @Schema(description = "태그 목록")
+    List<TagResponse> tags;
+
+    @Schema(description = "게시글 대표 이미지 URL 목록", example = "[https://sample.com, ... ]")
+    List<String> previewImageUrl;
+
+    @Schema(description = "게시글 생성일")
+    String createdAt;
+
+    @Schema(description = "게시글 갱신일")
+    String updatedAt;
+
     @Schema(description = "게시글 작성자 이름")
     String authorName;
+
     @Schema(description = "게시글 작성자 프로필 이미지 URL")
     String authorProfileImageUrl;
+
     @Schema(description = "게시글 좋아요 수")
     Long prefers;
+
     @Schema(description = "게시글 댓글 수")
     Long comments;
-    @Schema(description = "현재 사용자의 북마크 여부")
-    Boolean bookmarked;
-    @Schema(description = "현재 사용자의 좋아요 여부")
-    Boolean preferred;
 
-    public static UserPostListResponseDto from(PostQuery.Detail postDetail, List<Tag> tags,
+    @Schema(description = "현재 사용자의 좋아요 여부")
+    boolean preferred;
+
+    @Schema(description = "현재 사용자의 북마크 여부")
+    boolean bookmarked;
+
+    public static UserPostListResponseDto from(PostQuery.UserPostListRow row, List<Tag> tags,
         BoardManagementHelper boardManagementHelper) {
       List<TagResponse> tagResponses = tags.stream().map(TagResponse::from).toList();
-      User author = postDetail.getPost().getUser();
-      Post post = postDetail.getPost();
       String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
-          post.getPreviewImageName());
+          row.getPreviewImageName());
       List<String> previewImageUrls =
           previewImageUrl == null ? List.of() : List.of(previewImageUrl);
       return UserPostListResponseDto.builder()
-          .postId(post.getPostId())
-          .title(post.getTitle())
-          .content(post.getContent())
+          .postId(row.getPostId())
+          .postType(row.getPostType())
+          .title(row.getTitle())
+          .content(row.getContent())
           .tags(tagResponses)
           .previewImageUrl(previewImageUrls)
-          .createdAt(post.getCreatedAt())
-          .updatedAt(post.getUpdatedAt())
-          .postType(post.getPostType())
-          .authorName(author.getName())
-          .authorProfileImageUrl(author.getProfileImgUrl())
-          .prefers(postDetail.getPrefers())
-          .comments(postDetail.getComments())
-          .preferred(postDetail.getPreferred())
-          .bookmarked(postDetail.getBookmarked())
+          .createdAt(DateUtils.convertToDateString(row.getCreatedAt()))
+          .updatedAt(DateUtils.convertToDateString(row.getUpdatedAt()))
+          .authorName(row.getUserName())
+          .authorProfileImageUrl(row.getProfileImage())
+          .prefers(row.getPrefers())
+          .comments(row.getComments())
+          .preferred(row.isPreferred())
+          .bookmarked(row.isBookmarked())
           .build();
     }
   }
