@@ -99,11 +99,6 @@ abstract class DesignComponentControllerTestSupport {
 
   @BeforeEach
   void setUpDesignComponentControllerTest() {
-//    designComponentRepository.deleteAll();
-//    componentTypeRepository.deleteAll();
-//    userDataGenerator.deleteAllUsers();
-//    reset(fileManager);
-
     testUser = userDataGenerator.generateTestUser("test@example.com");
     testClient = TestClientDto.fromEntity(testUser);
     componentTypeA = createComponentType("comp-a");
@@ -116,9 +111,6 @@ abstract class DesignComponentControllerTestSupport {
 
   @AfterEach
   void tearDownDesignComponentControllerTest() {
-    //    designComponentDataGenerator.deleteDesignComponents();
-    //    componentTypeRepository.deleteAll();
-    //    userDataGenerator.deleteAllUsers();
     SecurityContextHolder.clearContext();
     reset(fileManager);
   }
