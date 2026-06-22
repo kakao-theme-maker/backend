@@ -158,11 +158,16 @@ public class DesignComponentService {
   }
 
   @Transactional(readOnly = true)
-  public List<DesignComponent> findBookmarkedDesignComponents(User client) {
-    if (client == null) {
-      throw new IllegalArgumentException("invalid client info : client is null");
+  public List<DesignComponentDto> findBookmarkedDesignComponents(String publicUserId) {
+    if (publicUserId == null) {
+      throw new IllegalArgumentException(
+          "[DesignComponentService] invalid client info : publicUserId is null");
     }
-    return designComponentRepositorySupport.findBookmarkedDesignComponents(client);
+    List<DesignComponent> targetDesignComponents = designComponentRepositorySupport.findBookmarkedDesignComponents(
+        publicUserId);
+    return targetDesignComponents.stream()
+        .map(mapper::toDto)
+        .toList();
   }
 
   // UPDATE

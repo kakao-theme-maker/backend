@@ -112,7 +112,7 @@ public class DesignComponentController {
   public ResponseEntity<List<DesignComponentDto>> findBookmarkedDesignComponents(
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
-    List<DesignComponentDto> res = designComponentFacade.findBookmarkedDesignComponents(
+    List<DesignComponentDto> res = designComponentService.findBookmarkedDesignComponents(
         userDetails.getUsername()
     );
     return ResponseEntity.ok(res);

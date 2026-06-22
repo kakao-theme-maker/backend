@@ -6,7 +6,6 @@ import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.mapper.DesignComponentMapper;
 import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
-import com.komentum.user.service.UserEntityFinder;
 import com.komentum.user.service.UserService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ public class DesignComponentFacade {
 
   private final UserService userService;
   private final DesignComponentService designComponentService;
-  private final UserEntityFinder userEntityFinder;
   private final DesignComponentMapper designComponentMapper;
 
   // CREATE
@@ -44,14 +42,6 @@ public class DesignComponentFacade {
   @Transactional(readOnly = true)
   public DesignComponentDto getDesignComponentById(Integer id) {
     return designComponentService.getDesignComponentById(id);
-  }
-
-  @Transactional(readOnly = true)
-  public List<DesignComponentDto> findBookmarkedDesignComponents(String userIdentifier) {
-    User client = userEntityFinder.findUserEntity(userIdentifier);
-    return designComponentService.findBookmarkedDesignComponents(client)
-        .stream().map(designComponentMapper::toDto)
-        .toList();
   }
 
   @Transactional(readOnly = true)
