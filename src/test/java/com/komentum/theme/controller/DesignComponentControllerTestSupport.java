@@ -11,8 +11,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.security.UserRole;
 import com.komentum.global.utils.FileManager;
+import com.komentum.post.repository.CategoryPostRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.data.scenario.DesignComponentScenarioSupport;
+import com.komentum.test.data.scenario.PostScenarioSupport;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.fixture.component.DesignComponentDataGenerator;
@@ -23,6 +26,7 @@ import com.komentum.theme.component.enums.TypeCode;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
+import com.komentum.user.repository.UserRepository;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,31 +81,44 @@ abstract class DesignComponentControllerTestSupport {
   @Autowired
   protected DesignComponentMultipartFixture multipartFixture;
 
+  @Autowired
+  protected PostScenarioSupport postScenarioSupport;
+
+  @Autowired
+  protected DesignComponentScenarioSupport designComponentScenarioSupport;
+
+  @Autowired
+  protected CategoryPostRepository categoryPostRepository;
+
   protected User testUser;
   protected TestClientDto testClient;
   protected ComponentType componentTypeA;
   protected ComponentType componentTypeB;
+  @Autowired
+  private UserRepository userRepository;
 
   @BeforeEach
   void setUpDesignComponentControllerTest() {
-    designComponentRepository.deleteAll();
-    componentTypeRepository.deleteAll();
-    userDataGenerator.deleteAllUsers();
-    reset(fileManager);
+//    designComponentRepository.deleteAll();
+//    componentTypeRepository.deleteAll();
+//    userDataGenerator.deleteAllUsers();
+//    reset(fileManager);
 
     testUser = userDataGenerator.generateTestUser("test@example.com");
     testClient = TestClientDto.fromEntity(testUser);
     componentTypeA = createComponentType("comp-a");
     componentTypeB = createComponentType("comp-b");
+    componentTypeRepository.flush();
+    userRepository.flush();
 
     authenticateAs(testUser);
   }
 
   @AfterEach
   void tearDownDesignComponentControllerTest() {
-    designComponentDataGenerator.deleteDesignComponents();
-    componentTypeRepository.deleteAll();
-    userDataGenerator.deleteAllUsers();
+    //    designComponentDataGenerator.deleteDesignComponents();
+    //    componentTypeRepository.deleteAll();
+    //    userDataGenerator.deleteAllUsers();
     SecurityContextHolder.clearContext();
     reset(fileManager);
   }
