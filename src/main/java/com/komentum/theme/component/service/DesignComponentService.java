@@ -10,6 +10,7 @@ import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
 import com.komentum.theme.component.mapper.DesignComponentMapper;
 import com.komentum.theme.component.repository.ComponentTypeRepository;
 import com.komentum.theme.component.repository.DesignComponentRepository;
+import com.komentum.theme.component.repository.DesignComponentRepositorySupport;
 import com.komentum.theme.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
 import java.io.IOException;
@@ -45,6 +46,7 @@ public class DesignComponentService {
   private final DesignComponentPolicy designComponentPolicy;
   private final DesignComponentMapper mapper;
   private final FileManager fileManager;
+  private final DesignComponentRepositorySupport designComponentRepositorySupport;
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
@@ -153,6 +155,19 @@ public class DesignComponentService {
         .toList();
 
     return new PageImpl<>(content, pageable, designComponentIdPage.getTotalElements());
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignComponentDto> findBookmarkedDesignComponents(String publicUserId) {
+    if (publicUserId == null) {
+      throw new IllegalArgumentException(
+          "[DesignComponentService] invalid client info : publicUserId is null");
+    }
+    List<DesignComponent> targetDesignComponents = designComponentRepositorySupport.findBookmarkedDesignComponents(
+        publicUserId);
+    return targetDesignComponents.stream()
+        .map(mapper::toDto)
+        .toList();
   }
 
   // UPDATE

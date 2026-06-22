@@ -107,6 +107,16 @@ public class DesignComponentController {
         designComponentService.getDesignComponentsByComponentTypeId(componentTypeId));
   }
 
+  @GetMapping("/bookmarked")
+  @Operation(summary = "북마크한 게시글들의 design component 목록을 조회한다")
+  public ResponseEntity<List<DesignComponentDto>> findBookmarkedDesignComponents(
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    List<DesignComponentDto> res = designComponentService.findBookmarkedDesignComponents(
+        userDetails.getUsername()
+    );
+    return ResponseEntity.ok(res);
+  }
 
   /**
    * designComponent 수정

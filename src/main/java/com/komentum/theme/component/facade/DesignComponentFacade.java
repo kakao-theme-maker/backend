@@ -3,6 +3,7 @@ package com.komentum.theme.component.facade;
 import com.komentum.theme.component.dto.CreateDesignComponentRequest;
 import com.komentum.theme.component.dto.DesignComponentDto;
 import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
+import com.komentum.theme.component.mapper.DesignComponentMapper;
 import com.komentum.theme.component.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserService;
@@ -21,6 +22,7 @@ public class DesignComponentFacade {
 
   private final UserService userService;
   private final DesignComponentService designComponentService;
+  private final DesignComponentMapper designComponentMapper;
 
   // CREATE
   public DesignComponentDto createDesignComponent(CreateDesignComponentRequest request,
