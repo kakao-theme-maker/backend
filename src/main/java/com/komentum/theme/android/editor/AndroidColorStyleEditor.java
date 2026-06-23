@@ -2,8 +2,8 @@ package com.komentum.theme.android.editor;
 
 import com.komentum.global.utils.RegexValidator;
 import com.komentum.theme.android.dto.AndroidColorDto;
-import com.komentum.theme.utils.ThemePathManager;
-import com.komentum.theme.utils.XmlEditor;
+import com.komentum.theme.android.utils.ThemePathManager;
+import com.komentum.theme.android.utils.XmlEditor;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

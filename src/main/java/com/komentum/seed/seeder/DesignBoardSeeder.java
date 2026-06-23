@@ -5,7 +5,7 @@ import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.DesignBoardRepository;
-import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
