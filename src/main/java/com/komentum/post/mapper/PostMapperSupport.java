@@ -20,12 +20,16 @@ public class PostMapperSupport {
 
   @Transactional(readOnly = true)
   public List<UserPostListResponseDto> toUserPostListResponseDtoList(
-      List<PostQuery.Detail> details) {
-    List<Long> posts = details.stream().map(p -> p.getPost().getPostId()).toList();
-    Map<Long, List<Tag>> tags = tagService.getTagPerPosts(posts);
-    return details.stream().map(detail -> {
-      List<Tag> tagList = tags.getOrDefault(detail.getPost().getPostId(), List.of());
-      return UserPostListResponseDto.from(detail, tagList, helper);
+      List<PostQuery.UserPostListRow> rows) {
+    if (rows.isEmpty()) {
+      return List.of();
+    }
+    List<Long> postIds = rows.stream().map(PostQuery.UserPostListRow::getPostId).toList();
+    Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
+    return rows.stream().map(row -> {
+      Long postId = row.getPostId();
+      List<Tag> tagList = tagMap.getOrDefault(postId, List.of());
+      return UserPostListResponseDto.from(row, tagList, helper);
     }).toList();
   }
 }

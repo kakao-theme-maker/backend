@@ -6,6 +6,7 @@ import com.komentum.designcomponent.dto.UpdateDesignComponentRequest;
 import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,12 @@ public class DesignComponentFacade {
       String publicUserId) {
     User user = userService.findUserEntity(publicUserId);
     return designComponentService.createDesignComponent(request, image, user);
+  }
+
+  public List<DesignComponentDto> createDesignComponents(CreateDesignComponentRequest request,
+      List<MultipartFile> files, String publicUserId) {
+    User user = userService.findUserEntity(publicUserId);
+    return designComponentService.createDesignComponents(request, files, user);
   }
 
   // READ

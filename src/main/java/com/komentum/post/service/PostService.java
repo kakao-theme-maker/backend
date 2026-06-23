@@ -117,8 +117,9 @@ public class PostService {
    *
    */
   @Transactional(readOnly = true)
-  public List<PostQuery.Detail> findUserPostList(User user, Pageable pageable) {
-    return postRepositorySupport.findMyPostsByUser(user, pageable);
+  public List<PostQuery.UserPostListRow> findUserPostList(User user, PostType postType,
+      Pageable pageable) {
+    return postRepositorySupport.findMyPostsByUser(user, postType, pageable);
   }
 
   // 업로드 수 count 반환 메서드
@@ -127,14 +128,16 @@ public class PostService {
     return postRepository.countByUser_PublicUserId(publicUserId);
   }
 
-  // 사용자가 카테고리에 저장한 게시글 목록 조회
+  // 사용자가 북마크에 추가한 게시글 목록 조회
   @Transactional(readOnly = true)
-  public List<PostQuery.Detail> findUserSavedPosts(User user, Pageable pageable) {
-    return postRepositorySupport.findBookmarkedPostsByUser(user, pageable);
+  public List<PostQuery.UserPostListRow> findBookmarkedPostsByUser(User user, PostType postType,
+      Pageable pageable) {
+    return postRepositorySupport.findBookmarkedPostsByUser(user, postType, pageable);
   }
 
   @Transactional(readOnly = true)
-  public List<PostQuery.Detail> findUserPreferredPosts(User user, Pageable pageable) {
-    return postRepositorySupport.findUserPreferredPosts(user, pageable);
+  public List<PostQuery.UserPostListRow> findUserPreferredPosts(User user, PostType postType,
+      Pageable pageable) {
+    return postRepositorySupport.findUserPreferredPosts(user, postType, pageable);
   }
 }

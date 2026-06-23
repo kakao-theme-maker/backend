@@ -47,7 +47,7 @@ public class DesignBoardRepositorySupport {
                 post.createdAt,
                 preferCount,
                 commentCount,
-                postRepositorySupport.isLiked(post, client),
+                postRepositorySupport.isPreferred(post, client),
                 postRepositorySupport.isBookmarked(post, client),
                 user.profileImgUrl
             )

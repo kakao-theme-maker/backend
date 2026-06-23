@@ -53,6 +53,17 @@ public class DesignComponentController {
     return ResponseEntity.ok(saved);
   }
 
+  @PostMapping(value = "/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(summary = "현재 인증된 사용자가 DesignComponent를 다중 업로드한다.")
+  public ResponseEntity<List<DesignComponentDto>> createDesignComponents(
+      @Valid @RequestPart("request") CreateDesignComponentRequest request,
+      @RequestPart(value = "files", required = false) List<MultipartFile> files,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    List<DesignComponentDto> saved = designComponentFacade.createDesignComponents(request,
+        files, userDetails.getPublicUserId());
+    return ResponseEntity.ok(saved);
+  }
+
   /**
    * designComponentId 로 designComponent 단건 조회
    *
@@ -96,6 +107,16 @@ public class DesignComponentController {
         designComponentService.getDesignComponentsByComponentTypeId(componentTypeId));
   }
 
+  @GetMapping("/bookmarked")
+  @Operation(summary = "북마크한 게시글들의 design component 목록을 조회한다")
+  public ResponseEntity<List<DesignComponentDto>> findBookmarkedDesignComponents(
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    List<DesignComponentDto> res = designComponentService.findBookmarkedDesignComponents(
+        userDetails.getUsername()
+    );
+    return ResponseEntity.ok(res);
+  }
 
   /**
    * designComponent 수정
