@@ -1,10 +1,10 @@
 package com.komentum.test.data.scenario;
 
 import com.komentum.seed.seeder.ThemeComponentSeeder;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.service.ColorStyleSeeder;
-import com.komentum.theme.component.service.ComponentTypeSeeder;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.service.ColorStyleSeeder;
+import com.komentum.designcomponent.service.ComponentTypeSeeder;
+import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
