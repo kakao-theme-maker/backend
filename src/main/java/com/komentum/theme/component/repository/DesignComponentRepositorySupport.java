@@ -1,7 +1,9 @@
 package com.komentum.theme.component.repository;
 
 import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.theme.component.domain.QComponentType;
 import com.komentum.theme.component.domain.QDesignComponent;
+import com.komentum.theme.component.domain.QDesignComponentComponentType;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
@@ -18,10 +20,14 @@ public class DesignComponentRepositorySupport {
   @Transactional(readOnly = true)
   public List<DesignComponent> findUploadedDesignComponents(User client) {
     QDesignComponent designComponent = QDesignComponent.designComponent;
+    QDesignComponentComponentType designComponentComponentType =
+        QDesignComponentComponentType.designComponentComponentType;
+    QComponentType componentType = QComponentType.componentType;
 
     return queryFactory
-        .select(designComponent).distinct()
-        .from(designComponent)
+        .selectFrom(designComponent).distinct()
+        .leftJoin(designComponent.componentTypeMappings, designComponentComponentType).fetchJoin()
+        .leftJoin(designComponentComponentType.componentType, componentType).fetchJoin()
         .where(designComponent.user.eq(client))
         .orderBy(designComponent.createdAt.desc())
         .fetch();
