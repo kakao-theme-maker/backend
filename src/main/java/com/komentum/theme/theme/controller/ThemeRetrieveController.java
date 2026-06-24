@@ -2,6 +2,7 @@ package com.komentum.theme.theme.controller;
 
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.theme.theme.dto.ThemeComponentDto;
+import com.komentum.theme.theme.dto.ThemeDetailResponse;
 import com.komentum.theme.theme.dto.ThemePreviewDto;
 import com.komentum.theme.theme.service.ThemeRetrieveService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,12 +52,11 @@ public class ThemeRetrieveController {
         themeRetrieveService.getThemesByUserEmail(userEmail, pageable));
   }
 
-  @GetMapping("/{id}")
+  @GetMapping("/{themeComponentId}")
   @Operation(summary = "인증된 사용자가 ID로 특정 테마를 조회한다")
-  public ResponseEntity<ThemeComponentDto> getThemeById(
-      @Parameter(description = "조회할 테마의 ID", example = "1")
-      @PathVariable("id") Integer id) {
-    return ResponseEntity.ok(themeRetrieveService.getThemeById(id));
+  public ResponseEntity<ThemeDetailResponse> findThemeById(
+      @PathVariable @Parameter(description = "조회할 테마의 ID", example = "1") Integer themeComponentId) {
+    return ResponseEntity.ok(themeRetrieveService.findThemeDetail(themeComponentId));
   }
 
   @GetMapping("/completed")

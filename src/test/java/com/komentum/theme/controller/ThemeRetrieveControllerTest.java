@@ -123,7 +123,7 @@ class ThemeRetrieveControllerTest {
 
   @Test
   @DisplayName("")
-  void getThemeById_success() throws Exception {
+  void findThemeById_success() throws Exception {
     // given
     ThemeComponent toFind = themeDataGenerator.initialThemes.get(0);
     // when
