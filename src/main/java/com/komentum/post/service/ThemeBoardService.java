@@ -9,7 +9,7 @@ import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.post.repository.ThemeBoardRepositorySupport;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.komentum.test.data.scenario;
 
 import com.komentum.seed.seeder.DesignComponentSeeder;
-import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

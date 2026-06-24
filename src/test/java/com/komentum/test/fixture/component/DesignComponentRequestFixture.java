@@ -1,9 +1,9 @@
 package com.komentum.test.fixture.component;
 
 import com.komentum.test.data.MockMultipartFileUtils;
-import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.dto.CreateDesignComponentRequest;
-import com.komentum.theme.component.dto.UpdateDesignComponentRequest;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.dto.CreateDesignComponentRequest;
+import com.komentum.designcomponent.dto.UpdateDesignComponentRequest;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.mock.web.MockMultipartFile;

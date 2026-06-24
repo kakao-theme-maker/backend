@@ -1,5 +1,8 @@
 package com.komentum.seed;
 
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
+import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
 import com.komentum.seed.seeder.CommentSeeder;
 import com.komentum.seed.seeder.DesignBoardSeeder;
 import com.komentum.seed.seeder.DesignComponentSeeder;
@@ -7,10 +10,7 @@ import com.komentum.seed.seeder.PreferSeeder;
 import com.komentum.seed.seeder.ThemeBoardSeeder;
 import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.seed.seeder.UserSeeder;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.service.seeder.ColorStyleSeeder;
-import com.komentum.theme.component.service.seeder.ComponentTypeSeeder;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;

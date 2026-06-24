@@ -10,7 +10,7 @@ import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.dto.query.ThemeBoardQuery.Preview;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
-import com.komentum.theme.theme.domain.QThemeComponent;
+import com.komentum.theme.core.domain.QThemeComponent;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
@@ -114,7 +114,7 @@ public class ThemeBoardRepositorySupport {
             post.previewImageName,
             preferCount,
             commentCount,
-            postRepositorySupport.isLiked(post, client),
+            postRepositorySupport.isPreferred(post, client),
             postRepositorySupport.isBookmarked(post, client),
             user.profileImgUrl
         ))
