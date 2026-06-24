@@ -34,4 +34,13 @@ public class ThemeImageService {
   public String findThemePreviewImageUrl(Integer themeComponentId) {
     return findThemePreviewImages(List.of(themeComponentId)).get(themeComponentId);
   }
+
+  @Transactional(readOnly = true)
+  public List<ThemeImage> findWithComponentTypeByThemeComponentIds(
+      List<Integer> themeComponentIds) {
+    if (themeComponentIds == null || themeComponentIds.isEmpty()) {
+      return List.of();
+    }
+    return themeImageRepository.findWithComponentTypeByThemeComponentIds(themeComponentIds);
+  }
 }

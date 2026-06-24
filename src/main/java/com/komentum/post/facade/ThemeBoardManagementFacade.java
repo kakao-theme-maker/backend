@@ -1,9 +1,12 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
+import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
@@ -16,12 +19,15 @@ import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
 import com.komentum.post.service.transaction.ThemeBoardTransactionService;
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -90,10 +96,16 @@ public class ThemeBoardManagementFacade {
     List<Long> postIds = details.stream()
         .map(Detail::getPostId)
         .toList();
+    List<Integer> themeComponentIds = details.stream()
+        .map(Detail::getThemeComponentId)
+        .toList();
     Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
+    Map<Integer, List<BoardComponentTypeDto>> componentTypeMap =
+        findComponentTypesByThemeComponentId(themeComponentIds);
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
-      return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, boardManagementHelper);
+      return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, boardManagementHelper,
+          componentTypeMap.getOrDefault(detail.getThemeComponentId(), List.of()));
     }).toList();
   }
 
@@ -106,10 +118,15 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
+    return findThemeBoardPreviews(pageable, null, null);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable, String keyword,
+      TypeCode typeCode) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreview(
-        pageable);
-    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
-        boardManagementHelper);
+        pageable, keyword, typeCode);
+    return toThemeBoardPreviewDtos(themeBoardQueryPreviewList);
   }
 
   /**
@@ -122,8 +139,7 @@ public class ThemeBoardManagementFacade {
   public List<ThemeBoardPreviewDto> findPopularThemeBoardPreviews(Pageable pageable) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreviewOrderByPrefers(
         pageable, true);
-    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
-        boardManagementHelper);
+    return toThemeBoardPreviewDtos(themeBoardQueryPreviewList);
   }
 
   /**
@@ -138,8 +154,39 @@ public class ThemeBoardManagementFacade {
   public List<ThemeBoardPreviewDto> findRecommendedThemeBoardPreviews(Pageable pageable) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreviewOrderByPrefers(
         pageable, false);
-    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
-        boardManagementHelper);
+    return toThemeBoardPreviewDtos(themeBoardQueryPreviewList);
+  }
+
+  private List<ThemeBoardPreviewDto> toThemeBoardPreviewDtos(
+      List<ThemeBoardQuery.Preview> previewList) {
+    List<Integer> themeComponentIds = previewList.stream()
+        .map(ThemeBoardQuery.Preview::getThemeComponentId)
+        .toList();
+    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(previewList, boardManagementHelper,
+        findComponentTypesByThemeComponentId(themeComponentIds));
+  }
+
+  public Map<Integer, List<BoardComponentTypeDto>> findComponentTypesByThemeComponentId(
+      List<Integer> themeComponentIds) {
+    if (themeComponentIds == null || themeComponentIds.isEmpty()) {
+      return Map.of();
+    }
+    return themeImageService.findWithComponentTypeByThemeComponentIds(themeComponentIds)
+        .stream()
+        .collect(Collectors.groupingBy(
+            themeImage -> themeImage.getThemeComponent().getThemeComponentId(),
+            Collectors.collectingAndThen(Collectors.toList(), this::toComponentTypeDtos)
+        ));
+  }
+
+  public List<BoardComponentTypeDto> toComponentTypeDtos(List<ThemeImage> themeImages) {
+    Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
+    for (ThemeImage themeImage : themeImages) {
+      ComponentType componentType = themeImage.getComponentType();
+      componentTypeMap.putIfAbsent(componentType.getTypeCode(),
+          BoardComponentTypeDto.from(componentType));
+    }
+    return List.copyOf(componentTypeMap.values());
   }
 
   /**

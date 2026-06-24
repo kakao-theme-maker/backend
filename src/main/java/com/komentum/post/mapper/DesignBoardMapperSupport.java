@@ -2,6 +2,7 @@ package com.komentum.post.mapper;
 
 import com.komentum.global.utils.DateUtils;
 import com.komentum.post.domain.Tag;
+import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.TagDto.TagResponse;
@@ -15,7 +16,8 @@ public class DesignBoardMapperSupport {
 
   public DesignBoardPreviewDto toDesignBoardPreviewDto(
       DesignBoardQuery.Preview preview,
-      BoardManagementHelper helper
+      BoardManagementHelper helper,
+      List<BoardComponentTypeDto> componentTypes
   ) {
     return DesignBoardPreviewDto.builder()
         .postId(preview.getPostId())
@@ -25,13 +27,15 @@ public class DesignBoardMapperSupport {
         .userEmail(preview.getUserEmail())
         .createdAt(DateUtils.convertToDateString(preview.getCreatedAt()))
         .prefers(preview.getPrefers())
+        .componentTypes(componentTypes)
         .build();
   }
 
   public DesignBoardDetailDto toDesignBoardDetailDto(
       DesignBoardQuery.Detail detail,
       List<Tag> tags,
-      List<String> previewImageList
+      List<String> previewImageList,
+      List<BoardComponentTypeDto> componentTypes
   ) {
     return DesignBoardDetailDto.builder()
         .postId(detail.getPostId())
@@ -47,6 +51,7 @@ public class DesignBoardMapperSupport {
         .liked(detail.isLiked())
         .bookmarked(detail.isBookmarked())
         .profileImage(detail.getProfileImage())
+        .componentTypes(componentTypes)
         .build();
   }
 }

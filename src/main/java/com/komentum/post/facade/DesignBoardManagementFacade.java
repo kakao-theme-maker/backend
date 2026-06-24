@@ -1,10 +1,12 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
+import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
@@ -17,9 +19,11 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.transaction.DesignBoardTransactionService;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -76,11 +80,46 @@ public class DesignBoardManagementFacade {
    * */
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable) {
-    List<DesignBoardQuery.Preview> preview = designBoardService.findPreviewList(pageable);
+    return findBoardPreviews(pageable, null, null);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable, String keyword,
+      TypeCode typeCode) {
+    List<DesignBoardQuery.Preview> preview = designBoardService.findPreviewList(pageable, keyword,
+        typeCode);
+    List<Long> postIds = preview.stream()
+        .map(DesignBoardQuery.Preview::getPostId)
+        .toList();
+    Map<Long, List<BoardComponentTypeDto>> componentTypeMap = findComponentTypesByPostId(postIds);
     return preview.stream()
         .map(p ->
-            designBoardMapperSupport.toDesignBoardPreviewDto(p, boardManagementHelper))
+            designBoardMapperSupport.toDesignBoardPreviewDto(p, boardManagementHelper,
+                componentTypeMap.getOrDefault(p.getPostId(), List.of())))
         .toList();
+  }
+
+  public Map<Long, List<BoardComponentTypeDto>> findComponentTypesByPostId(List<Long> postIds) {
+    if (postIds == null || postIds.isEmpty()) {
+      return Map.of();
+    }
+    return designBoardService.findWithDesignComponentsByPostIdIn(postIds)
+        .stream()
+        .collect(Collectors.groupingBy(
+            designBoard -> designBoard.getPost().getPostId(),
+            Collectors.collectingAndThen(Collectors.toList(), this::toComponentTypeDtos)
+        ));
+  }
+
+  public List<BoardComponentTypeDto> toComponentTypeDtos(List<DesignBoard> designBoards) {
+    Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
+    for (DesignBoard designBoard : designBoards) {
+      for (ComponentType componentType : designBoard.getDesignComponent().getComponentTypes()) {
+        componentTypeMap.putIfAbsent(componentType.getTypeCode(),
+            BoardComponentTypeDto.from(componentType));
+      }
+    }
+    return List.copyOf(componentTypeMap.values());
   }
 
   /**
@@ -116,15 +155,21 @@ public class DesignBoardManagementFacade {
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
       List<DesignBoard> designBoards = designBoardMap.getOrDefault(detail.getPostId(), List.of());
-      String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
-          detail.getPostPreviewImageName());
-      List<String> previewImageUrls = Stream.concat(
-          Stream.ofNullable(postPreviewImageUrl),
-          designBoards.stream()
-              .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
-      ).toList();
-      return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls);
+      List<String> previewImageUrls = createPreviewImageUrls(detail, designBoards);
+      return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls,
+          toComponentTypeDtos(designBoards));
     }).toList();
+  }
+
+  private List<String> createPreviewImageUrls(DesignBoardQuery.Detail detail,
+      List<DesignBoard> designBoards) {
+    String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
+        detail.getPostPreviewImageName());
+    return Stream.concat(
+        Stream.ofNullable(postPreviewImageUrl),
+        designBoards.stream()
+            .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+    ).toList();
   }
 
   /**

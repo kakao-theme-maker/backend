@@ -1,8 +1,14 @@
 package com.komentum.post.service.transaction;
 
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.designcomponent.service.DesignComponentService;
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
+import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
@@ -17,12 +23,12 @@ import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
-import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -57,8 +63,8 @@ public class DesignBoardTransactionService {
     Post targetPost = postService.getPostByPostId(postId);
     String previewImageUrl =
         helper.findPreviewImageUrl(targetPost.getPreviewImageName());
-    List<String> designImageUrls = designBoardService.findWithDesignComponentsByPostId(postId)
-        .stream()
+    List<DesignBoard> designBoards = designBoardService.findWithDesignComponentsByPostId(postId);
+    List<String> designImageUrls = designBoards.stream()
         .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
         .toList();
     List<String> previewImageUrls = Stream.concat(
@@ -71,7 +77,19 @@ public class DesignBoardTransactionService {
     return designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
         tags,
-        previewImageUrls);
+        previewImageUrls,
+        toComponentTypeDtos(designBoards));
+  }
+
+  private List<BoardComponentTypeDto> toComponentTypeDtos(List<DesignBoard> designBoards) {
+    Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
+    for (DesignBoard designBoard : designBoards) {
+      for (ComponentType componentType : designBoard.getDesignComponent().getComponentTypes()) {
+        componentTypeMap.putIfAbsent(componentType.getTypeCode(),
+            BoardComponentTypeDto.from(componentType));
+      }
+    }
+    return List.copyOf(componentTypeMap.values());
   }
 
   @Transactional

@@ -30,4 +30,12 @@ public interface ThemeImageRepository extends JpaRepository<ThemeImage, ThemeIma
       + "AND ti.componentType.typeCode = :typeCode")
   List<ThemeImage> fetchJoinByThemeComponentAndTypeCode(
       List<Integer> themeComponentIds, TypeCode typeCode);
+
+  @Query("SELECT ti FROM ThemeImage ti "
+      + "JOIN FETCH ti.themeComponent tc "
+      + "JOIN FETCH ti.componentType ct "
+      + "JOIN FETCH ti.designComponent dc "
+      + "WHERE tc.themeComponentId IN :themeComponentIds")
+  List<ThemeImage> findWithComponentTypeByThemeComponentIds(
+      List<Integer> themeComponentIds);
 }
