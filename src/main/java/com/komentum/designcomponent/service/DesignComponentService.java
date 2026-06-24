@@ -156,6 +156,14 @@ public class DesignComponentService {
   }
 
   @Transactional(readOnly = true)
+  public List<DesignComponent> findUploadedDesignComponents(User client) {
+    if (client == null) {
+      throw new IllegalArgumentException("invalid client info : client is null");
+    }
+    return designComponentRepositorySupport.findUploadedDesignComponents(client);
+  }
+
+  @Transactional(readOnly = true)
   public List<DesignComponentDto> findBookmarkedDesignComponents(String publicUserId) {
     if (publicUserId == null) {
       throw new IllegalArgumentException(

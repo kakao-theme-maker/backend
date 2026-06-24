@@ -1,12 +1,15 @@
 package com.komentum.designcomponent.repository;
 
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.domain.QComponentType;
 import com.komentum.designcomponent.domain.QDesignComponent;
+import com.komentum.designcomponent.domain.QDesignComponentComponentType;
 import com.komentum.post.domain.QCategory;
 import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QDesignBoard;
 import com.komentum.post.domain.QPost;
 import com.komentum.post.service.enums.CategoryType;
+import com.komentum.user.domain.User;
 import com.komentum.user.domain.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
@@ -19,6 +22,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class DesignComponentRepositorySupport {
 
   private final JPAQueryFactory queryFactory;
+
+  @Transactional(readOnly = true)
+  public List<DesignComponent> findUploadedDesignComponents(User client) {
+    QDesignComponent designComponent = QDesignComponent.designComponent;
+    QDesignComponentComponentType designComponentComponentType =
+        QDesignComponentComponentType.designComponentComponentType;
+    QComponentType componentType = QComponentType.componentType;
+
+    return queryFactory
+        .selectFrom(designComponent).distinct()
+        .leftJoin(designComponent.componentTypeMappings, designComponentComponentType).fetchJoin()
+        .leftJoin(designComponentComponentType.componentType, componentType).fetchJoin()
+        .where(designComponent.user.eq(client))
+        .orderBy(designComponent.createdAt.desc())
+        .fetch();
+  }
 
   @Transactional(readOnly = true)
   public List<DesignComponent> findBookmarkedDesignComponents(String publicUserId) {
