@@ -86,7 +86,12 @@ public class ThemeComponentSeeder {
     List<ThemeComponent> themeComponents = new ArrayList<>();
     for (User author : authors) {
       for (int i = 0; i < size; i++) {
-        themeComponents.add(seedOne(author, designComponents));
+        ThemeType themeType = ThemeType.USER;
+        if (i % 2 == 0) {
+          themeType = ThemeType.DEFAULT;
+        }
+        themeComponents.add(
+            seedOne(author, designComponents, themeType, UUID.randomUUID().toString()));
       }
     }
     return themeComponents;
@@ -94,7 +99,7 @@ public class ThemeComponentSeeder {
 
   @Transactional
   public ThemeComponent seedOne(User author, List<DesignComponent> designComponents) {
-    return seedOne(author, designComponents, ThemeType.DEFAULT, UUID.randomUUID().toString());
+    return seedOne(author, designComponents, ThemeType.USER, UUID.randomUUID().toString());
   }
 
   @Transactional
