@@ -1125,16 +1125,842 @@
         "styleCodes": {
           "mainviewStyleBackgroundColor": [
             {
-              "code": "androidMainviewStyleBackgroundColor",
               "resourceGroup": "color",
-              "resourceName": "theme_background_color"
+              "resourceName": "theme_background_color",
+              "code": "androidMainviewStyleBackgroundColor"
+            }
+          ],
+          "mainviewStyleTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_title_color",
+              "code": "androidMainviewStyleTextColor"
+            }
+          ],
+          "mainviewStyleHighlightedTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_title_pressed_color",
+              "code": "androidMainviewStyleHighlightedTextColor"
+            }
+          ],
+          "mainviewStyleDescriptionTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_description_color",
+              "code": "androidMainviewStyleDescriptionTextColor"
+            }
+          ],
+          "mainviewStyleDescriptionHighlightedTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_description_pressed_color",
+              "code": "androidMainviewStyleDescriptionHighlightedTextColor"
+            }
+          ],
+          "mainviewStyleNormalBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_body_cell_color",
+              "code": "androidMainviewStyleNormalBackgroundColor"
+            }
+          ],
+          "mainviewStyleSelectedBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_body_cell_pressed_color",
+              "code": "androidMainviewStyleSelectedBackgroundColor"
+            }
+          ],
+          "mainviewStyleParagraphTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_paragraph_color",
+              "code": "androidMainviewStyleParagraphTextColor"
+            }
+          ],
+          "mainviewStyleParagraphHighlightedTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_paragraph_pressed_color",
+              "code": "androidMainviewStyleParagraphHighlightedTextColor"
+            }
+          ],
+          "featureStyleTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_feature_primary_color",
+              "code": "androidFeatureStyleTextColor"
+            }
+          ],
+          "mainviewStyleSecondaryBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_body_secondary_cell_color",
+              "code": "androidMainviewStyleSecondaryBackgroundColor"
+            }
+          ],
+          "headerStyleTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_header_color",
+              "code": "androidHeaderStyleTextColor"
+            }
+          ],
+          "headerStyleTabTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_feature_browse_tab_color",
+              "code": "androidHeaderStyleTabTextColor"
+            }
+          ],
+          "sectionTitleStyleTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_section_title_color",
+              "code": "androidSectionTitleStyleTextColor"
+            }
+          ],
+          "sectionTitleStyleBorderColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_body_cell_border_color",
+              "code": "androidSectionTitleStyleBorderColor"
+            }
+          ],
+          "tabbarStyleBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_maintab_cell_color",
+              "code": "androidTabbarStyleBackgroundColor"
+            }
+          ],
+          "messageNotificationBarBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_notification_background_color",
+              "code": "androidMessageNotificationBarBackgroundColor"
+            }
+          ],
+          "messageNotificationBarNameTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_notification_color",
+              "code": "androidMessageNotificationBarNameTextColor"
+            }
+          ],
+          "directShareBarBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_direct_share_background_color",
+              "code": "androidDirectShareBarBackgroundColor"
+            }
+          ],
+          "directShareBarNameTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_direct_share_color",
+              "code": "androidDirectShareBarNameTextColor"
+            }
+          ],
+          "passcodeBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_passcode_background_color",
+              "code": "androidPasscodeBackgroundColor"
+            }
+          ],
+          "passcodeStyleKeypadBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_passcode_keypad_background_color",
+              "code": "androidPasscodeStyleKeypadBackgroundColor"
+            }
+          ],
+          "passcodeStyleKeypadTextNormalColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_passcode_keypad_color",
+              "code": "androidPasscodeStyleKeypadTextNormalColor"
+            }
+          ],
+          "chatRoomBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_background_color",
+              "code": "androidChatRoomBackgroundColor"
+            }
+          ],
+          "messageCellStyleSendTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_bubble_me_color",
+              "code": "androidMessageCellStyleSendTextColor"
+            }
+          ],
+          "messageCellStyleReceiveTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_bubble_you_color",
+              "code": "androidMessageCellStyleReceiveTextColor"
+            }
+          ],
+          "messageCellStyleUnreadCountColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_unread_count_color",
+              "code": "androidMessageCellStyleUnreadCountColor"
+            }
+          ],
+          "inputBarStyleChatButtonTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_input_bar_color",
+              "code": "androidInputBarStyleChatButtonTextColor"
+            }
+          ],
+          "inputBarStyleChatBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_input_bar_background_color",
+              "code": "androidInputBarStyleChatBackgroundColor"
+            }
+          ],
+          "inputBarStyleChatButtonNormalForegroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_input_bar_menu_icon_color",
+              "code": "androidInputBarStyleChatButtonNormalForegroundColor"
+            }
+          ],
+          "inputBarStyleChatButtonNormalBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_input_bar_menu_button_color",
+              "code": "androidInputBarStyleChatButtonNormalBackgroundColor"
+            }
+          ],
+          "inputBarStyleChatSendNormalBackgroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_input_bar_send_button_color",
+              "code": "androidInputBarStyleChatSendNormalBackgroundColor"
+            }
+          ],
+          "inputBarStyleChatSendNormalForegroundColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_chatroom_input_bar_send_icon_color",
+              "code": "androidInputBarStyleChatSendNormalForegroundColor"
             }
           ]
         }
       },
       "ios": {
-        "typeCodes": {},
-        "styleCodes": {}
+        "typeCodes": {
+          "mainviewStylePrimaryBackgroundImage": [
+            {
+              "code": "iOSMainviewStylePrimaryBackgroundImage3x",
+              "path": "mainBgImage@3x.png",
+              "width": 1125,
+              "height": 2250,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleBackgroundImage": [
+            {
+              "code": "iOSTabbarStyleBackgroundImage2x",
+              "path": "maintabBgImage@2x.png",
+              "width": 940,
+              "height": 98,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleBackgroundImage3x",
+              "path": "maintabBgImage@3x.png",
+              "width": 1410,
+              "height": 147,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleFriendsNormalIconImage": [
+            {
+              "code": "iOSTabbarStyleFriendsNormalIconImage2x",
+              "path": "maintabIcoFriends@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleFriendsNormalIconImage3x",
+              "path": "maintabIcoFriends@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleFriendsSelectedIconImage": [
+            {
+              "code": "iOSTabbarStyleFriendsSelectedIconImage2x",
+              "path": "maintabIcoFriendsSelected@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleFriendsSelectedIconImage3x",
+              "path": "maintabIcoFriendsSelected@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleChatsNormalIconImage": [
+            {
+              "code": "iOSTabbarStyleChatsNormalIconImage2x",
+              "path": "maintabIcoChats@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleChatsNormalIconImage3x",
+              "path": "maintabIcoChats@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleChatsSelectedIconImage": [
+            {
+              "code": "iOSTabbarStyleChatsSelectedIconImage2x",
+              "path": "maintabIcoChatsSelected@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleChatsSelectedIconImage3x",
+              "path": "maintabIcoChatsSelected@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleOpenChatsNormalIconImage": [
+            {
+              "code": "iOSTabbarStyleOpenChatsNormalIconImage2x",
+              "path": "maintabIcoNow@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleOpenChatsNormalIconImage3x",
+              "path": "maintabIcoNow@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleOpenChatsSelectedIconImage": [
+            {
+              "code": "iOSTabbarStyleOpenChatsSelectedIconImage2x",
+              "path": "maintabIcoNowSelected@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleOpenChatsSelectedIconImage3x",
+              "path": "maintabIcoNowSelected@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleShoppingNormalIconImage": [
+            {
+              "code": "iOSTabbarStyleShoppingNormalIconImage2x",
+              "path": "maintabIcoShopping@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleShoppingNormalIconImage3x",
+              "path": "maintabIcoShopping@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleShoppingSelectedIconImage": [
+            {
+              "code": "iOSTabbarStyleShoppingSelectedIconImage2x",
+              "path": "maintabIcoShoppingSelected@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleShoppingSelectedIconImage3x",
+              "path": "maintabIcoShoppingSelected@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleMoreNormalIconImage": [
+            {
+              "code": "iOSTabbarStyleMoreNormalIconImage2x",
+              "path": "maintabIcoMore@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleMoreNormalIconImage3x",
+              "path": "maintabIcoMore@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "tabbarStyleMoreSelectedIconImage": [
+            {
+              "code": "iOSTabbarStyleMoreSelectedIconImage2x",
+              "path": "maintabIcoMoreSelected@2x.png",
+              "width": 76,
+              "height": 76,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSTabbarStyleMoreSelectedIconImage3x",
+              "path": "maintabIcoMoreSelected@3x.png",
+              "width": 114,
+              "height": 114,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeBackgroundImage": [
+            {
+              "code": "iOSPasscodeBackgroundImage3x",
+              "path": "passcodeBgImage@3x.png",
+              "width": 1200,
+              "height": 1200,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletFirstImage": [
+            {
+              "code": "iOSPasscodeStyleBulletFirstImage3x",
+              "path": "passcodeImgCode01@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSecondImage": [
+            {
+              "code": "iOSPasscodeStyleBulletSecondImage3x",
+              "path": "passcodeImgCode02@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletThirdImage": [
+            {
+              "code": "iOSPasscodeStyleBulletThirdImage3x",
+              "path": "passcodeImgCode03@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletFourthImage": [
+            {
+              "code": "iOSPasscodeStyleBulletFourthImage3x",
+              "path": "passcodeImgCode04@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedFirstImage": [
+            {
+              "code": "iOSPasscodeStyleBulletSelectedFirstImage3x",
+              "path": "passcodeImgCode01Selected@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedSecondImage": [
+            {
+              "code": "iOSPasscodeStyleBulletSelectedSecondImage3x",
+              "path": "passcodeImgCode02Selected@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedThirdImage": [
+            {
+              "code": "iOSPasscodeStyleBulletSelectedThirdImage3x",
+              "path": "passcodeImgCode03Selected@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "passcodeStyleBulletSelectedFourthImage": [
+            {
+              "code": "iOSPasscodeStyleBulletSelectedFourthImage3x",
+              "path": "passcodeImgCode04Selected@3x.png",
+              "width": 132,
+              "height": 132,
+              "fileExtension": "png"
+            }
+          ],
+          "chatRoomBackgroundImage": [
+            {
+              "code": "iOSChatRoomBackgroundImage3x",
+              "path": "chatroomBgImage@3x.png",
+              "width": 1125,
+              "height": 2250,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleSendBackgroundImage": [
+            {
+              "code": "iOSMessageCellStyleSendBackgroundImage2x",
+              "path": "chatroomBubbleSend01@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendBackgroundImage3x",
+              "path": "chatroomBubbleSend01@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleSendGroupBackgroundImage": [
+            {
+              "code": "iOSMessageCellStyleSendGroupBackgroundImage2x",
+              "path": "chatroomBubbleSend02@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendGroupBackgroundImage3x",
+              "path": "chatroomBubbleSend02@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleReceiveBackgroundImage": [
+            {
+              "code": "iOSMessageCellStyleReceiveBackgroundImage2x",
+              "path": "chatroomBubbleReceive01@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveBackgroundImage3x",
+              "path": "chatroomBubbleReceive01@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            }
+          ],
+          "messageCellStyleReceiveGroupBackgroundImage": [
+            {
+              "code": "iOSMessageCellStyleReceiveGroupBackgroundImage2x",
+              "path": "chatroomBubbleReceive02@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveGroupBackgroundImage3x",
+              "path": "chatroomBubbleReceive02@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            }
+          ],
+          "defaultProfileStyleProfileImage": [
+            {
+              "code": "iOSDefaultProfileStyleProfileImage3x",
+              "path": "profileImg01@3x.png",
+              "width": 360,
+              "height": 360,
+              "fileExtension": "png"
+            }
+          ],
+          "buttonStyleAddFriendImage": [
+            {
+              "code": "iOSButtonStyleAddFriendImage2x",
+              "path": "findBtnAddFriend@2x.png",
+              "width": 84,
+              "height": 68,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSButtonStyleAddFriendImage3x",
+              "path": "findBtnAddFriend@3x.png",
+              "width": 126,
+              "height": 102,
+              "fileExtension": "png"
+            }
+          ]
+        },
+        "styleCodes": {
+          "mainviewStyleBackgroundColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "background-color",
+              "code": "iOSMainviewStyleBackgroundColor"
+            }
+          ],
+          "mainviewStyleTextColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMainviewStyleTextColor"
+            }
+          ],
+          "mainviewStyleHighlightedTextColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-highlighted-text-color",
+              "code": "iOSMainviewStyleHighlightedTextColor"
+            }
+          ],
+          "mainviewStyleDescriptionTextColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-description-text-color",
+              "code": "iOSMainviewStyleDescriptionTextColor"
+            }
+          ],
+          "mainviewStyleDescriptionHighlightedTextColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-description-highlighted-text-color",
+              "code": "iOSMainviewStyleDescriptionHighlightedTextColor"
+            }
+          ],
+          "mainviewStyleNormalBackgroundColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-normal-background-color",
+              "code": "iOSMainviewStyleNormalBackgroundColor"
+            }
+          ],
+          "mainviewStyleSelectedBackgroundColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-selected-background-color",
+              "code": "iOSMainviewStyleSelectedBackgroundColor"
+            }
+          ],
+          "mainviewStyleParagraphTextColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-paragraph-text-color",
+              "code": "iOSMainviewStyleParagraphTextColor"
+            }
+          ],
+          "mainviewStyleParagraphHighlightedTextColor": [
+            {
+              "resourceGroup": "MainViewStyle-Primary",
+              "resourceName": "-ios-paragraph-highlighted-text-color",
+              "code": "iOSMainviewStyleParagraphHighlightedTextColor"
+            }
+          ],
+          "featureStyleTextColor": [
+            {
+              "resourceGroup": "FeatureStyle-Primary",
+              "resourceName": "-ios-text-color",
+              "code": "iOSFeatureStyleTextColor"
+            }
+          ],
+          "mainviewStyleSecondaryBackgroundColor": [
+            {
+              "resourceGroup": "MainViewStyle-Secondary",
+              "resourceName": "background-color",
+              "code": "iOSMainviewStyleSecondaryBackgroundColor"
+            }
+          ],
+          "headerStyleTextColor": [
+            {
+              "resourceGroup": "HeaderStyle-Main",
+              "resourceName": "-ios-text-color",
+              "code": "iOSHeaderStyleTextColor"
+            }
+          ],
+          "headerStyleTabTextColor": [
+            {
+              "resourceGroup": "HeaderStyle-Main",
+              "resourceName": "-ios-tab-text-color",
+              "code": "iOSHeaderStyleTabTextColor"
+            }
+          ],
+          "sectionTitleStyleTextColor": [
+            {
+              "resourceGroup": "SectionTitleStyle-Main",
+              "resourceName": "-ios-text-color",
+              "code": "iOSSectionTitleStyleTextColor"
+            }
+          ],
+          "sectionTitleStyleBorderColor": [
+            {
+              "resourceGroup": "SectionTitleStyle-Main",
+              "resourceName": "border-color",
+              "code": "iOSSectionTitleStyleBorderColor"
+            }
+          ],
+          "tabbarStyleBackgroundColor": [
+            {
+              "resourceGroup": "TabBarStyle-Main",
+              "resourceName": "background-color",
+              "code": "iOSTabbarStyleBackgroundColor"
+            }
+          ],
+          "messageNotificationBarBackgroundColor": [
+            {
+              "resourceGroup": "BackgroundStyle-MessageNotificationBar",
+              "resourceName": "background-color",
+              "code": "iOSMessageNotificationBarBackgroundColor"
+            }
+          ],
+          "messageNotificationBarNameTextColor": [
+            {
+              "resourceGroup": "LabelStyle-MessageNotificationBarName",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMessageNotificationBarNameTextColor"
+            }
+          ],
+          "directShareBarBackgroundColor": [
+            {
+              "resourceGroup": "BackgroundStyle-DirectShareBar",
+              "resourceName": "background-color",
+              "code": "iOSDirectShareBarBackgroundColor"
+            }
+          ],
+          "directShareBarNameTextColor": [
+            {
+              "resourceGroup": "LabelStyle-DirectShareBarName",
+              "resourceName": "-ios-text-color",
+              "code": "iOSDirectShareBarNameTextColor"
+            }
+          ],
+          "passcodeBackgroundColor": [
+            {
+              "resourceGroup": "BackgroundStyle-Passcode",
+              "resourceName": "background-color",
+              "code": "iOSPasscodeBackgroundColor"
+            }
+          ],
+          "passcodeStyleKeypadBackgroundColor": [
+            {
+              "resourceGroup": "PasscodeStyle",
+              "resourceName": "-ios-keypad-background-color",
+              "code": "iOSPasscodeStyleKeypadBackgroundColor"
+            }
+          ],
+          "passcodeStyleKeypadTextNormalColor": [
+            {
+              "resourceGroup": "PasscodeStyle",
+              "resourceName": "-ios-keypad-text-normal-color",
+              "code": "iOSPasscodeStyleKeypadTextNormalColor"
+            }
+          ],
+          "chatRoomBackgroundColor": [
+            {
+              "resourceGroup": "BackgroundStyle-ChatRoom",
+              "resourceName": "background-color",
+              "code": "iOSChatRoomBackgroundColor"
+            }
+          ],
+          "messageCellStyleSendTextColor": [
+            {
+              "resourceGroup": "MessageCellStyle-Send",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMessageCellStyleSendTextColor"
+            }
+          ],
+          "messageCellStyleReceiveTextColor": [
+            {
+              "resourceGroup": "MessageCellStyle-Receive",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMessageCellStyleReceiveTextColor"
+            }
+          ],
+          "messageCellStyleUnreadCountColor": [
+            {
+              "resourceGroup": "MessageCellStyle-Send",
+              "resourceName": "-ios-unread-text-color",
+              "code": "iOSMessageCellStyleSendUnreadCountColor"
+            },
+            {
+              "resourceGroup": "MessageCellStyle-Receive",
+              "resourceName": "-ios-unread-text-color",
+              "code": "iOSMessageCellStyleReceiveUnreadCountColor"
+            }
+          ],
+          "inputBarStyleChatButtonTextColor": [
+            {
+              "resourceGroup": "InputBarStyle-Chat",
+              "resourceName": "-ios-button-text-color",
+              "code": "iOSInputBarStyleChatButtonTextColor"
+            }
+          ],
+          "inputBarStyleChatBackgroundColor": [
+            {
+              "resourceGroup": "InputBarStyle-Chat",
+              "resourceName": "background-color",
+              "code": "iOSInputBarStyleChatBackgroundColor"
+            }
+          ],
+          "inputBarStyleChatButtonNormalForegroundColor": [
+            {
+              "resourceGroup": "InputBarStyle-Chat",
+              "resourceName": "-ios-button-normal-foreground-color",
+              "code": "iOSInputBarStyleChatButtonNormalForegroundColor"
+            }
+          ],
+          "inputBarStyleChatButtonNormalBackgroundColor": [
+            {
+              "resourceGroup": "InputBarStyle-Chat",
+              "resourceName": "-ios-button-normal-background-color",
+              "code": "iOSInputBarStyleChatButtonNormalBackgroundColor"
+            }
+          ],
+          "inputBarStyleChatSendNormalBackgroundColor": [
+            {
+              "resourceGroup": "InputBarStyle-Chat",
+              "resourceName": "-ios-send-normal-background-color",
+              "code": "iOSInputBarStyleChatSendNormalBackgroundColor"
+            }
+          ],
+          "inputBarStyleChatSendNormalForegroundColor": [
+            {
+              "resourceGroup": "InputBarStyle-Chat",
+              "resourceName": "-ios-send-normal-foreground-color",
+              "code": "iOSInputBarStyleChatSendNormalForegroundColor"
+            }
+          ]
+        }
       }
     }
   }

@@ -28,20 +28,20 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PlatformComponentTypeSeeder {
 
+  public static final String SEED_FILE_PATH = "theme-data/theme_spec_v2.json";
   private final JsonUtils jsonUtils;
   private final ComponentTypeRepository componentTypeRepository;
   private final PlatformComponentTypeRepository platformComponentTypeRepository;
 
-
-  public static final String SEED_FILE_PATH = "theme-data/theme_spec_v2.json";
-
   /**
    * seed를 플랫폼별로 읽는다
-   * @param root SEED_FILE_PATH를 통해 읽은 json 파일 데이터
-   * @param platform 대상 플랫폼
+   *
+   * @param root             SEED_FILE_PATH를 통해 읽은 json 파일 데이터
+   * @param platform         대상 플랫폼
    * @param componentTypeMap typeCode : componentType 맵
    * @return platformComponentType에 대한 시드 목록
-   * */
+   *
+   */
   private List<PlatformComponentType> readSeedByPlatform(JsonNode root, Platform platform,
       Map<TypeCode, ComponentType> componentTypeMap) {
     JsonNode platformTypeCodeNodes = root.path("definitions")
@@ -81,9 +81,11 @@ public class PlatformComponentTypeSeeder {
   /**
    * <p>seed를 기반으로 데이터를 갱신하고, 그 결과를 반환한다</p>
    * <p>이 메서드는 성능과 정상적인 동작을 위해 transaction 내에서 실행되어야 한다</p>
+   *
    * @param transientSeeds 비영속 상태의 seed 데이터
    * @return 데이터 갱신 / 생성 횟수
-   * */
+   *
+   */
   private SeedResult persistTransientSeeds(List<PlatformComponentType> transientSeeds) {
     int updated = 0, created = 0;
     // 영속 상태 엔티티 조회
@@ -127,7 +129,9 @@ public class PlatformComponentTypeSeeder {
           ));
       List<PlatformComponentType> transientSeeds = new ArrayList<>();
       for (Platform platform : targetPlatforms) {
-        transientSeeds.addAll(readSeedByPlatform(root, platform, componentTypeMap));
+        List<PlatformComponentType> platformSeedList = readSeedByPlatform(root, platform,
+            componentTypeMap);
+        transientSeeds.addAll(platformSeedList);
       }
       return persistTransientSeeds(transientSeeds);
     } catch (Exception e) {

@@ -1,5 +1,10 @@
 package com.komentum.test.data;
 
+import com.komentum.designcomponent.repository.ColorStyleRepository;
+import com.komentum.designcomponent.repository.ComponentTypeRepository;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
+import com.komentum.designcomponent.repository.PlatformColorStyleRepository;
+import com.komentum.designcomponent.repository.PlatformComponentTypeRepository;
 import com.komentum.post.repository.CategoryPostRepository;
 import com.komentum.post.repository.CategoryRepository;
 import com.komentum.post.repository.CommentRepository;
@@ -8,9 +13,6 @@ import com.komentum.post.repository.PostRepository;
 import com.komentum.post.repository.PreferRepository;
 import com.komentum.post.repository.TagRepository;
 import com.komentum.post.repository.ThemeBoardRepository;
-import com.komentum.designcomponent.repository.ColorStyleRepository;
-import com.komentum.designcomponent.repository.ComponentTypeRepository;
-import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
@@ -38,10 +40,13 @@ public class TestDataRemover {
   private final CategoryPostRepository categoryPostRepository;
   private final CategoryRepository categoryRepository;
   private final DesignBoardRepository designBoardRepository;
+  private final PlatformComponentTypeRepository platformComponentTypeRepository;
+  private final PlatformColorStyleRepository platformColorStyleRepository;
 
   /**
    * 모든 테스트 코드에서 사용할 수 있는 데이터베이스 clean용 클래스
-   * */
+   *
+   */
   @Transactional
   public void deleteAll() {
     // delete prefer, comment, tags
@@ -61,6 +66,9 @@ public class TestDataRemover {
     themeComponentRepository.deleteAll();
     // delete design components
     designComponentRepository.deleteAll();
+    // delete platform component type and color style
+    platformColorStyleRepository.deleteAll();
+    platformComponentTypeRepository.deleteAll();
     // delete component type and color style
     componentTypeRepository.deleteAll();
     colorStyleRepository.deleteAll();

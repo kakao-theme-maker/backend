@@ -60,7 +60,7 @@ class DesignComponentServiceTest {
 
     user = userDataGenerator.generateTestUser("service-test@example.com");
     componentType = componentTypeRepository.save(ComponentType.builder()
-        .typeCode(TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE)
+        .typeCode(TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE)
         .name("service test component type")
         .explain("service test component type explain")
         .build());

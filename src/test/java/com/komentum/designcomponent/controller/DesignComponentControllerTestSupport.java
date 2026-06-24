@@ -103,8 +103,6 @@ abstract class DesignComponentControllerTestSupport {
     testClient = TestClientDto.fromEntity(testUser);
     componentTypeA = createComponentType("comp-a");
     componentTypeB = createComponentType("comp-b");
-    componentTypeRepository.flush();
-    userRepository.flush();
 
     authenticateAs(testUser);
   }
@@ -188,9 +186,9 @@ abstract class DesignComponentControllerTestSupport {
 
   private TypeCode typeCodeFor(String suffix) {
     return switch (suffix) {
-      case "comp-a" -> TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE;
-      case "comp-b" -> TypeCode.DEFAULT_PROFILE_STYLE_PROFILE_IMAGE;
-      default -> TypeCode.BUTTON_STYLE_ADD_FRIEND_IMAGE;
+      case "comp-a" -> TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE;
+      case "comp-b" -> TypeCode.TABBAR_STYLE_FRIENDS_NORMAL_ICON_IMAGE;
+      default -> TypeCode.DEFAULT_PROFILE_STYLE_PROFILE_IMAGE;
     };
   }
 }

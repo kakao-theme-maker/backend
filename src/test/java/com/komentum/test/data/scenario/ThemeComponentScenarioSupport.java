@@ -18,15 +18,15 @@ public class ThemeComponentScenarioSupport {
   private final ComponentTypeSeeder componentTypeSeeder;
   private final ColorStyleSeeder colorStyleSeeder;
 
+  public ThemeComponentScenarioBuilder builder(List<User> users,
+      List<DesignComponent> designComponents) {
+    return new ThemeComponentScenarioBuilder().builder(users, designComponents);
+  }
+
   public record ThemeComponentScenarioResult(
       List<ThemeComponent> themeComponents
   ) {
 
-  }
-
-  public ThemeComponentScenarioBuilder builder(List<User> users,
-      List<DesignComponent> designComponents) {
-    return new ThemeComponentScenarioBuilder().builder(users, designComponents);
   }
 
   public class ThemeComponentScenarioBuilder {
