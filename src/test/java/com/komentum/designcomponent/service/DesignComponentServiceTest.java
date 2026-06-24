@@ -8,14 +8,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
-import com.komentum.global.utils.FileManager;
-import com.komentum.test.data.UserDataGenerator;
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.dto.CreateDesignComponentRequest;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
-import com.komentum.designcomponent.service.DesignComponentService;
+import com.komentum.global.utils.FileManager;
+import com.komentum.test.data.UserDataGenerator;
 import com.komentum.user.domain.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +60,7 @@ class DesignComponentServiceTest {
 
     user = userDataGenerator.generateTestUser("service-test@example.com");
     componentType = componentTypeRepository.save(ComponentType.builder()
-        .typeCode(TypeCode.MAIN_TAB_BG_IMAGE)
+        .typeCode(TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE)
         .name("service test component type")
         .explain("service test component type explain")
         .build());

@@ -1,4 +1,4 @@
-package com.komentum.designcomponent.service;
+package com.komentum.designcomponent.service.seeder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.komentum.designcomponent.domain.ColorStyle;
@@ -22,7 +22,7 @@ public class ColorStyleSeeder extends AbstractMapJsonSeeder<ColorStyle> {
 
   private final EntityManager entityManager;
 
-  public static final String COLOR_STYLE_JSON_PATH = "theme-data/theme_spec.json";
+  public static final String COLOR_STYLE_JSON_PATH = "theme-data/theme_spec_v2.json";
 
   public ColorStyleSeeder(JsonUtils jsonUtils, ColorStyleRepository colorStyleRepository,
       EntityManager entityManager) {

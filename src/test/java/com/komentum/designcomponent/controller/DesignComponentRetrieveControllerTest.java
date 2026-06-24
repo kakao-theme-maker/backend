@@ -6,10 +6,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.test.dto.MockMvcRequestDto;
-import com.komentum.test.dto.TestClientDto;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.dto.DesignComponentDto;
+import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
@@ -154,6 +154,52 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
             "http://example.com/image3.png"
         );
     assertThat(components).allMatch(
+        dto -> dto.getPublicUserId().equals(testUser.getPublicUserId()));
+  }
+
+  @Test
+  @DisplayName("when send request, retrieve uploaded design components")
+  public void findUploadedDesignComponent_success() throws Exception {
+    // given
+    User otherUser = createOtherUser("other@test.com");
+
+    testUserComponent("http://example.com/image1.png", true, componentTypeA);
+    testUserComponent("http://example.com/image2.png", true, componentTypeA);
+    testUserComponent("http://example.com/image3.png", true, componentTypeB);
+
+    designComponentDataGenerator.generateDesignComponent(otherUser,
+        "http://example.com/other1.png", true, List.of(componentTypeA));
+    designComponentDataGenerator.generateDesignComponent(otherUser,
+        "http://example.com/other2.png", true, List.of(componentTypeB));
+
+    // when
+    List<DesignComponentDto> res = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignComponentDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-components/uploaded")
+            .clientDto(TestClientDto.fromEntity(testUser))
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+
+    // then
+    assertThat(res).hasSize(3);
+    assertThat(res)
+        .extracting(DesignComponentDto::getImageUrl)
+        .containsExactlyInAnyOrder(
+            "http://example.com/image1.png",
+            "http://example.com/image2.png",
+            "http://example.com/image3.png"
+        );
+    assertThat(res)
+        .extracting(DesignComponentDto::getImageUrl)
+        .doesNotContain(
+            "http://example.com/other1.png",
+            "http://example.com/other2.png"
+        );
+    assertThat(res).allMatch(
         dto -> dto.getPublicUserId().equals(testUser.getPublicUserId()));
   }
 

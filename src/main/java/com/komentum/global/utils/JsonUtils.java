@@ -32,4 +32,8 @@ public class JsonUtils {
       return objectMapper.readTree(is);
     }
   }
+
+  public boolean isInvalidNode(JsonNode targetNode) {
+    return targetNode == null || targetNode.isMissingNode() || !targetNode.isObject();
+  }
 }
