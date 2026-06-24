@@ -94,17 +94,19 @@ public class PlatformComponentTypeSeeder {
             Functions.identity()
         ));
     // 영속 데이터 유무에 따라 데이터 생성 혹은 갱신
+    List<PlatformComponentType> persistList = new ArrayList<>();
     for (PlatformComponentType transientSeed : transientSeeds) {
       String uniqueSeedCode = transientSeed.getCode();
       PlatformComponentType persistEntity = persistEntityMap.get(uniqueSeedCode);
       if (persistEntity == null) { // DB에 없다면 저장
-        platformComponentTypeRepository.save(transientSeed);
+        persistList.add(transientSeed);
         created++;
       } else { // DB에 있다면 갱신
         persistEntity.replace(transientSeed);
         updated++;
       }
     }
+    platformComponentTypeRepository.saveAll(persistList);
     return SeedResult.builder()
         .created(created)
         .updated(updated)
