@@ -9,6 +9,7 @@ import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
@@ -36,7 +37,17 @@ public class DesignBoardService {
 
   @Transactional(readOnly = true)
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
-    return designBoardRepositorySupport.findPreviewList(pageable);
+    return findPreviewList(pageable, null, null);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable, String keyword,
+      TypeCode typeCode) {
+    PostSearchCondition condition = new PostSearchCondition()
+        .withKeyword(keyword)
+        .withTypeCode(typeCode);
+    return designBoardRepositorySupport.findPreviewList(pageable, condition,
+        List.of(PostSortType.DEFAULT));
   }
 
   @Transactional(readOnly = true)

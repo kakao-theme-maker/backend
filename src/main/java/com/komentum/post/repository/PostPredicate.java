@@ -11,4 +11,13 @@ public class PostPredicate {
     }
     return post.user.publicUserId.eq(publicUserId);
   }
+
+  public static BooleanExpression keywordContains(QPost post, String keyword) {
+    if (keyword == null || keyword.isBlank()) {
+      return null;
+    }
+    String trimmedKeyword = keyword.trim();
+    return post.title.containsIgnoreCase(trimmedKeyword)
+        .or(post.content.containsIgnoreCase(trimmedKeyword));
+  }
 }

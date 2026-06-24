@@ -9,6 +9,7 @@ import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.post.repository.ThemeBoardRepositorySupport;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
@@ -34,8 +35,16 @@ public class ThemeBoardService {
    * @return ThemeBoardQuery.Preview 테마 게시글 페이징 DTO 생성을 위한 중간 계층 DTO 반환
    * */
   public List<ThemeBoardQuery.Preview> findThemeBoardQueryPreview(Pageable pageable) {
-    return themeBoardRepositorySupport.findThemeBoardQueryPreviewList(pageable, List.of(
-        PostSortType.DEFAULT));
+    return findThemeBoardQueryPreview(pageable, null, null);
+  }
+
+  public List<ThemeBoardQuery.Preview> findThemeBoardQueryPreview(Pageable pageable, String keyword,
+      TypeCode typeCode) {
+    PostSearchCondition condition = new PostSearchCondition()
+        .withKeyword(keyword)
+        .withTypeCode(typeCode);
+    return themeBoardRepositorySupport.findThemeBoardQueryPreviewList(pageable, condition,
+        List.of(PostSortType.DEFAULT));
   }
 
   /**
