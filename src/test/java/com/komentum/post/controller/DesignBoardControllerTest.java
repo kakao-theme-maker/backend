@@ -5,6 +5,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.designcomponent.repository.ComponentTypeRepository;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
+import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
@@ -29,7 +35,6 @@ import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
-import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +66,15 @@ public class DesignBoardControllerTest {
 
   @Autowired
   private DesignBoardRepository designBoardRepository;
+
+  @Autowired
+  private DesignComponentRepository designComponentRepository;
+
+  @Autowired
+  private ComponentTypeRepository componentTypeRepository;
+
+  @Autowired
+  private ComponentTypeSeeder componentTypeSeeder;
 
   @Autowired
   private MockMvcUtils mockMvcUtils;
@@ -140,6 +154,41 @@ public class DesignBoardControllerTest {
         .thenReturn(expectedImageUrl);
   }
 
+  private List<DesignBoardDetailDto> requestDesignBoardDetails(
+      MultiValueMap<String, String> params, User client) throws Exception {
+    return mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignBoardDetailDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards/details")
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
+  }
+
+  private List<DesignBoardPreviewDto> requestDesignBoardPreviews(
+      MultiValueMap<String, String> params, User client) throws Exception {
+    return mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards")
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
+  }
+
+  private ComponentType getComponentType(TypeCode typeCode) {
+    componentTypeSeeder.upsertComponentType();
+    return componentTypeRepository.findAllByTypeCodeIn(List.of(typeCode)).get(0);
+  }
+
   @Test
   @DisplayName("when send request, retrieve list of design board infos")
   public void whenSendRequest_retrieveListOfDesignBoards() throws Exception {
@@ -214,6 +263,84 @@ public class DesignBoardControllerTest {
     for (DesignBoardDetailDto dto : response) {
       assertDesignBoard(dto);
     }
+  }
+
+  @Test
+  @DisplayName("keyword 검색 조건에 매칭되는 디자인 게시글 목록 정보를 최상단에 반환한다.")
+  void findDesignBoards_keywordMatchedPostFirst() throws Exception {
+    // given
+    String keyword = "design-keyword-" + UUID.randomUUID();
+    Post targetPost = postResult.posts().get(postResult.posts().size() - 1);
+    targetPost.setTitle(keyword);
+    postRepository.save(targetPost);
+    MultiValueMap<String, String> params = TestParams.withPaging(0,
+        postResult.designBoards().size());
+    params.add("keyword", keyword);
+    User client = userResult.getFirstUser();
+    // when
+    List<DesignBoardPreviewDto> response = requestDesignBoardPreviews(params, client);
+    // then
+    assertThat(response).hasSize(postResult.designBoards().size());
+    assertThat(response.get(0).getPostId()).isEqualTo(targetPost.getPostId());
+    assertThat(response)
+        .extracting(DesignBoardPreviewDto::getPostId)
+        .contains(postResult.posts().get(0).getPostId());
+  }
+
+  @Test
+  @DisplayName("type_code 검색 조건에 매칭되는 디자인 게시글 목록 정보를 최상단에 반환한다.")
+  void findDesignBoards_typeCodeMatchedPostFirst() throws Exception {
+    // given
+    TypeCode typeCode = TypeCode.CHAT_ROOM_BACKGROUND_IMAGE;
+    ComponentType componentType = getComponentType(typeCode);
+    DesignComponent targetComponent = designComponentResult.designComponents().get(0);
+    String matchedImageUrl = "https://test.com/matched-design-image.png";
+    targetComponent.update(matchedImageUrl, true);
+    targetComponent.replaceComponentTypes(List.of(componentType));
+    designComponentRepository.save(targetComponent);
+    List<Long> matchedPostIds = postResult.designBoards().stream()
+        .filter(designBoard -> designBoard.getDesignComponent().getDesignComponentId()
+            .equals(targetComponent.getDesignComponentId()))
+        .map(designBoard -> designBoard.getPost().getPostId())
+        .distinct()
+        .toList();
+    MultiValueMap<String, String> params = TestParams.withPaging(0,
+        postResult.designBoards().size());
+    params.add("type_code", typeCode.getTypeCode());
+    User client = userResult.getFirstUser();
+    // when
+    List<DesignBoardPreviewDto> response = requestDesignBoardPreviews(params, client);
+    // then
+    assertThat(response).hasSize(postResult.designBoards().size());
+    assertThat(response.get(0).getPostId()).isIn(matchedPostIds);
+    assertThat(response.get(0).getComponentTypes())
+        .extracting(componentTypeDto -> componentTypeDto.getTypeCode().getTypeCode())
+        .contains(typeCode.getTypeCode());
+    assertThat(response)
+        .extracting(DesignBoardPreviewDto::getPostId)
+        .contains(postResult.posts().get(postResult.posts().size() - 1).getPostId());
+  }
+
+  @Test
+  @DisplayName("지원하지 않는 type_code 요청 시 400을 반환한다.")
+  void findDesignBoards_invalidTypeCode() throws Exception {
+    // given
+    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
+    params.add("type_code", "invalidTypeCode");
+    User client = userResult.getFirstUser();
+    // when & then
+    mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, Void>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards")
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(400)
+            .build()
+    );
   }
 
   @Test
