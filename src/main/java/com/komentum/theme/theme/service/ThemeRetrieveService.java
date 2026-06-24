@@ -156,4 +156,14 @@ public class ThemeRetrieveService {
         .styleCodes(styleCodes)
         .build();
   }
+
+  @Transactional(readOnly = true)
+  public ThemeComponent findDefaultTheme() {
+    List<ThemeComponent> defaultThemeComponents = themeComponentRepository.findByThemeType(
+        ThemeType.DEFAULT);
+    if (defaultThemeComponents.isEmpty()) {
+      throw new EntityNotFoundException("[ThemeRetriveService] default theme not found");
+    }
+    return defaultThemeComponents.get(0);
+  }
 }

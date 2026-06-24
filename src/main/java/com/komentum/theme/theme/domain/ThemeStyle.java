@@ -19,8 +19,8 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "theme_style", uniqueConstraints = {
-        @UniqueConstraint(name = "THEME_COMPONENT_COLOR_STYLE_UNIQUE", columnNames = {
-                "theme_component_id", "color_style_id"})})
+    @UniqueConstraint(name = "THEME_COMPONENT_COLOR_STYLE_UNIQUE", columnNames = {
+        "theme_component_id", "color_style_id"})})
 @Getter
 @Setter
 @Builder
@@ -42,4 +42,12 @@ public class ThemeStyle {
 
   @Column(name = "color")
   private String color;
+
+  public static ThemeStyle copyOf(ThemeComponent targetTheme, ThemeStyle sourceStyle) {
+    return ThemeStyle.builder()
+        .themeComponent(targetTheme)
+        .colorStyle(sourceStyle.getColorStyle())
+        .color(sourceStyle.getColor())
+        .build();
+  }
 }

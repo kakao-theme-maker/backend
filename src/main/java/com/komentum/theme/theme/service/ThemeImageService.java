@@ -72,4 +72,47 @@ public class ThemeImageService {
     return themeImageRepository.fetchJoinAllByThemeComponentId(themeComponentId);
   }
 
+  @Transactional
+  public void copyThemeImages(ThemeComponent targetTheme,
+      ThemeComponent sourceTheme) {
+    List<ThemeImage> targetThemeImages = new ArrayList<>();
+    Set<ThemeImage> sourceThemeImages = sourceTheme.getThemeImages();
+    for (ThemeImage sourceThemeImage : sourceThemeImages) {
+      ThemeImage targetThemeImage = ThemeImage.copyOf(targetTheme, sourceThemeImage);
+      targetThemeImages.add(targetThemeImage);
+      targetTheme.addThemeImage(targetThemeImage);
+    }
+    themeImageRepository.saveAll(targetThemeImages);
+  }
+
+  @Transactional
+  public void updateThemeImages(
+      Integer themeComponentId,
+      ThemeUpdateRequest request
+  ) {
+    // 요청으로 받은 TypeCode : ThemeImage 정보 맵 추출
+    Map<TypeCode, ThemeImageUpdateRequest> typeCodes = request.getTypeCodes();
+    // 요청으로 받은 design component 목록 조회
+    Map<Integer, DesignComponent> requestedImageMap = designComponentService.findMapByIdIn(
+        typeCodes.values()
+            .stream()
+            .map(ThemeImageUpdateRequest::getDesignComponentId)
+            .toList()
+    );
+    // 기존 theme image 목록 조회
+    Map<TypeCode, ThemeImage> themeImages = fetchJoinThemeImagesByThemeComponentId(
+        themeComponentId).stream()
+        .collect(Collectors.toMap(
+            ti -> ti.getComponentType().getTypeCode(),
+            Functions.identity()
+        ));
+    // 요청 데이터 기반으로 기존 theme image 수정
+    typeCodes.forEach((typeCode, updateRequest) -> {
+      ThemeImage themeImage = themeImages.get(typeCode);
+      DesignComponent requestedImage = requestedImageMap.get(updateRequest.getDesignComponentId());
+      if (themeImage != null && requestedImage != null) {
+        themeImage.setDesignComponent(requestedImage);
+      }
+    });
+  }
 }

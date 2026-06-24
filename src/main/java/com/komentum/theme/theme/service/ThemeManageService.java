@@ -17,9 +17,12 @@ import com.komentum.theme.theme.mapper.ThemeStyleMapper;
 import com.komentum.theme.theme.repository.ThemeComponentRepository;
 import com.komentum.theme.theme.repository.ThemeImageRepository;
 import com.komentum.theme.theme.repository.ThemeStyleRepository;
+import com.komentum.user.domain.User;
+import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,7 @@ public class ThemeManageService {
   private final ThemeComponentMapper themeComponentMapper;
   private final ThemeStyleMapper themeStyleMapper;
   private final ThemeImageMapper themeImageMapper;
+  private final UserEntityFinder userEntityFinder;
 
   @Transactional
   void applyThemeImageAndStyle(ThemeComponent themeComponent, CreateThemeRequest request) {
@@ -69,13 +73,18 @@ public class ThemeManageService {
   }
 
   @Transactional
-  public ThemeComponentDto createTheme(CreateThemeRequest request) {
-    // 테마 컴포넌트 생성
-    ThemeComponent themeComponent = themeComponentMapper.convertToTransientEntity(request, "1");
-    // 테마 스타일 및 이미지 추가
-    applyThemeImageAndStyle(themeComponent, request);
-    // 테마 컴포넌트 저장
-    return themeComponentMapper.convertToDto(themeComponentRepository.save(themeComponent));
+  public ThemeComponent createNewTheme(User targetUser) {
+    String randomThemeName = "theme_" + UUID.randomUUID();
+    return themeComponentRepository.save(
+        ThemeComponent.builder()
+            .themeName(randomThemeName)
+            .userEmail(targetUser.getUserEmail())
+            .versionName(randomThemeName + ".0.0.1")
+            .versionNumber("0")
+            .isPublic(true)
+            .isDone(false)
+            .build()
+    );
   }
 
   @Transactional

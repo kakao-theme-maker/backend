@@ -57,7 +57,7 @@ class ThemeManageControllerTest {
 
   @Test
   @DisplayName("")
-  public void createTheme_success() throws Exception {
+  public void createNewTheme_success() throws Exception {
     // given
     CreateThemeRequest createThemeRequest = CreateThemeRequest.builder()
         .themeName("themeName")

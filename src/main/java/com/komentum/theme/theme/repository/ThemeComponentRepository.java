@@ -1,6 +1,7 @@
 package com.komentum.theme.theme.repository;
 
 import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.theme.enums.ThemeType;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +19,8 @@ public interface ThemeComponentRepository extends JpaRepository<ThemeComponent, 
   List<ThemeComponent> findByIsDoneTrueAndUserEmail(String userEmail, Pageable pageable);
 
   List<ThemeComponent> findByUserEmailIn(List<String> userEmail);
+
+  boolean existsByThemeCode(String themeCode);
+
+  List<ThemeComponent> findByThemeType(ThemeType themeType);
 }

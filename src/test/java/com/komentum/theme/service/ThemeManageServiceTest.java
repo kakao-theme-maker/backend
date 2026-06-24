@@ -65,7 +65,7 @@ class ThemeManageServiceTest {
         .userEmail("test@test.com")
         .build();
     // when
-    ThemeComponentDto res = themeManageService.createTheme(createThemeRequest);
+    ThemeComponentDto res = themeManageService.createTheme("must change");
     // then
     Optional<ThemeComponent> saved = themeComponentRepository.findById(res.getThemeComponentId());
     assertThat(saved.isPresent()).isTrue();
