@@ -4,12 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.javafaker.Faker;
-import com.komentum.test.MockMvcUtils;
-import com.komentum.test.config.EnableTestProfile;
-import com.komentum.test.data.TestDataRemover;
-import com.komentum.test.data.scenario.UserScenarioSupport;
-import com.komentum.test.dto.MockMvcRequestDto;
-import com.komentum.test.dto.TestClientDto;
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.dto.ComponentTypeCreateRequest;
 import com.komentum.designcomponent.dto.ComponentTypeDto;
@@ -17,7 +11,13 @@ import com.komentum.designcomponent.dto.ComponentTypeUpdateRequest;
 import com.komentum.designcomponent.dto.SeedResult;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
-import com.komentum.designcomponent.service.ComponentTypeSeeder;
+import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
+import com.komentum.test.MockMvcUtils;
+import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.TestDataRemover;
+import com.komentum.test.data.scenario.UserScenarioSupport;
+import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +105,7 @@ public class ComponentTypeControllerTest {
     ComponentTypeCreateRequest request = ComponentTypeCreateRequest.builder()
         .explain("아이콘")
         .name("icon")
-        .typeCode(TypeCode.COMMON_ICO_THEME)
+        .typeCode(TypeCode.CHAT_ROOM_BACKGROUND_IMAGE)
         .build();
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(
@@ -139,7 +139,7 @@ public class ComponentTypeControllerTest {
   @DisplayName("ComponentType 조회 테스트")
   void getComponentType_success() throws Exception {
     // Given
-    ComponentType savedComponentType = createTestComponentType(TypeCode.COMMON_ICO_THEME);
+    ComponentType savedComponentType = createTestComponentType(TypeCode.CHAT_ROOM_BACKGROUND_IMAGE);
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(
         MockMvcRequestDto.<Void, ComponentTypeDto>builder()
@@ -160,7 +160,8 @@ public class ComponentTypeControllerTest {
   @DisplayName("ComponentType 전체 조회 테스트")
   void getAllComponentTypes() throws Exception {
     // Given
-    List<TypeCode> typeCodes = List.of(TypeCode.COMMON_ICO_THEME, TypeCode.BACKGROUND_IMAGE);
+    List<TypeCode> typeCodes = List.of(TypeCode.CHAT_ROOM_BACKGROUND_IMAGE,
+        TypeCode.PASSCODE_BACKGROUND_IMAGE);
     Map<Integer, ComponentType> expectedMap = typeCodes.stream().map(this::createTestComponentType)
         .collect(Collectors.toMap(ComponentType::getComponentTypeId, Function.identity()));
     // When
@@ -188,11 +189,11 @@ public class ComponentTypeControllerTest {
   @DisplayName("ComponentType 수정 테스트")
   void updateComponentType() throws Exception {
     // Given
-    ComponentType savedComponent = createTestComponentType(TypeCode.COMMON_ICO_THEME);
+    ComponentType savedComponent = createTestComponentType(TypeCode.PASSCODE_BACKGROUND_IMAGE);
     ComponentTypeUpdateRequest updateRequest = ComponentTypeUpdateRequest.builder()
         .explain("수정된 컴포넌트")
         .name("updated icon")
-        .typeCode(TypeCode.COMMON_ICO_THEME)
+        .typeCode(TypeCode.PASSCODE_BACKGROUND_IMAGE)
         .build();
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(

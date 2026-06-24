@@ -8,6 +8,11 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.designcomponent.repository.ComponentTypeRepository;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.security.UserRole;
 import com.komentum.global.utils.FileManager;
@@ -20,11 +25,6 @@ import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.fixture.component.DesignComponentDataGenerator;
 import com.komentum.test.fixture.component.DesignComponentMultipartFixture;
-import com.komentum.designcomponent.domain.ComponentType;
-import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.enums.TypeCode;
-import com.komentum.designcomponent.repository.ComponentTypeRepository;
-import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import java.util.List;
@@ -103,8 +103,6 @@ abstract class DesignComponentControllerTestSupport {
     testClient = TestClientDto.fromEntity(testUser);
     componentTypeA = createComponentType("comp-a");
     componentTypeB = createComponentType("comp-b");
-    componentTypeRepository.flush();
-    userRepository.flush();
 
     authenticateAs(testUser);
   }
@@ -188,9 +186,9 @@ abstract class DesignComponentControllerTestSupport {
 
   private TypeCode typeCodeFor(String suffix) {
     return switch (suffix) {
-      case "comp-a" -> TypeCode.MAIN_TAB_BG_IMAGE;
-      case "comp-b" -> TypeCode.MAIN_TAB_ICO_FRIENDS;
-      default -> TypeCode.COMMON_ICO_THEME;
+      case "comp-a" -> TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE;
+      case "comp-b" -> TypeCode.TABBAR_STYLE_FRIENDS_NORMAL_ICON_IMAGE;
+      default -> TypeCode.DEFAULT_PROFILE_STYLE_PROFILE_IMAGE;
     };
   }
 }

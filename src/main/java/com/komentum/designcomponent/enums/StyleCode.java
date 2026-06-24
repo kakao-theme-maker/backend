@@ -6,57 +6,53 @@ import lombok.Getter;
 
 @Getter
 public enum StyleCode {
-  // main tab colors
-  MAIN_TAB_BG_COLOR("maintabBgColor"),
-  // main view colors
-  HEADER_TITLE_ICON_COLOR("headerTitleIconColor"),
-  BACKGROUND_COLOR("backgroundColor"),
-  NAME_TITLE_COLOR("nameTitleColor"),
-  NAME_TITLE_COLOR_SELECTED("nameTitleColorSelected"),
-  STATUS_MESSAGE_COLOR("statusMessageColor"),
-  STATUS_MESSAGE_COLOR_SELECTED("statusMessageColorSelected"),
-  LAST_MESSAGE_COLOR("lastMessageColor"),
-  LAST_MESSAGE_COLOR_SELECTED("lastMessageColorSelected"),
-  LIST_BACKGROUND_COLOR("listBackgroundColor"),
-  LIST_BACKGROUND_COLOR_SELECTED("listBackgroundColorSelected"),
-  BORDER_COLOR("borderColor"),
-  SECTION_HEADER_COLOR("sectionHeaderColor"),
-  SERVICE_BUTTON_COLOR("serviceButtonColor"),
-  // openchat / shopping tab colors
-  BACKGROUND_COLOR_SECONDARY("backgroundColorSecondary"),
-  // chatroom colors
-  CHATROOM_BACKGROUND_COLOR("chatRoomBackgroundColor"),
-  INPUT_BAR_BACKGROUND_COLOR("inputBarBackgroundColor"),
-  INPUT_BAR_TEXT_COLOR("inputBarTextColor"),
-  SEND_BUTTON_BACKGROUND_COLOR("sendButtonBackgroundColor"),
-  SEND_BUTTON_BACKGROUND_COLOR_SELECTED("sendButtonBackgroundColorSelected"),
-  SEND_BUTTON_ICON_COLOR("sendButtonIconColor"),
-  SEND_BUTTON_ICON_COLOR_SELECTED("sendButtonIconColorSelected"),
-  CHAT_ROOM_MENU_ICON_COLOR("chatRoomMenuIconColor"),
-  CHAT_ROOM_MENU_ICON_COLOR_SELECTED("chatRoomMenuIconColorSelected"),
-  CHAT_ROOM_MENU_INPUT_BAR_BACKGROUND_COLOR("chatRoomMenuInputBarBackgroundColor"),
-  SENDER_BUBBLE_TEXT_COLOR("senderBubbleTextColor"),
-  SENDER_BUBBLE_TEXT_COLOR_SELECTED("senderBubbleTextColorSelected"),
-  SENDER_UNREAD_COUNT_TEXT_COLOR("senderUnreadCountTextColor"),
-  RECEIVER_BUBBLE_TEXT_COLOR("receiverBubbleTextColor"),
-  RECEIVER_BUBBLE_TEXT_COLOR_SELECTED("receiverBubbleTextColorSelected"),
-  RECEIVER_UNREAD_COUNT_TEXT_COLOR("receiverUnreadCountTextColor"),
-  // pass code page colors
-  PASS_CODE_BACKGROUND_COLOR("passCodeBackgroundColor"),
-  PASS_CODE_TITLE_COLOR("passCodeTitleColor"),
-  PASS_CODE_KEYPAD_BACKGROUND_COLOR("passCodeKeypadBackgroundColor"),
-  PASS_CODE_KEYPAD_TEXT_COLOR("passCodeKeypadTextColor"),
-  PASS_CODE_KEYPAD_TEXT_COLOR_SELECTED("passCodeKeypadTextColorSelected"),
-  PASS_CODE_KEYPAD_PRESS_COLOR("passCodeKeypadPressColor"),
-  // banner colors
-  MESSAGE_NOTIFICATION_BACKGROUND_COLOR("messageNotificationBackgroundColor"),
-  MESSAGE_NOTIFICATION_TITLE_COLOR("messageNotificationTitleColor"),
-  MESSAGE_NOTIFICATION_MESSAGE_COLOR("messageNotificationMessageColor"),
-  MESSAGE_DIRECT_SHARE_BACKGROUND_COLOR("messageDirectShareBackgroundColor"),
-  MESSAGE_DIRECT_SHARE_TITLE_COLOR("messageDirectShareTitleColor"),
-  MESSAGE_DIRECT_SHARE_MESSAGE_COLOR("messageDirectShareMessageColor"),
-  TAB_BOTTOM_BANNER_COLOR("tabBottomBannerColor"),
-  ;
+  // main view style
+  MAINVIEW_STYLE_BACKGROUND_COLOR("mainviewStyleBackgroundColor"),
+  MAINVIEW_STYLE_TEXT_COLOR("mainviewStyleTextColor"),
+  MAINVIEW_STYLE_HIGHLIGHTED_TEXT_COLOR("mainviewStyleHighlightedTextColor"),
+  MAINVIEW_STYLE_DESCRIPTION_TEXT_COLOR("mainviewStyleDescriptionTextColor"),
+  MAINVIEW_STYLE_DESCRIPTION_HIGHLIGHTED_TEXT_COLOR("mainviewStyleDescriptionHighlightedTextColor"),
+  MAINVIEW_STYLE_NORMAL_BACKGROUND_COLOR("mainviewStyleNormalBackgroundColor"),
+  MAINVIEW_STYLE_SELECTED_BACKGROUND_COLOR("mainviewStyleSelectedBackgroundColor"),
+  MAINVIEW_STYLE_PARAGRAPH_TEXT_COLOR("mainviewStyleParagraphTextColor"),
+  MAINVIEW_STYLE_PARAGRAPH_HIGHLIGHTED_TEXT_COLOR("mainviewStyleParagraphHighlightedTextColor"),
+  // feature button style
+  FEATURE_STYLE_TEXT_COLOR("featureStyleTextColor"),
+  // main view style - secondary
+  MAINVIEW_STYLE_SECONDARY_BACKGROUND_COLOR("mainviewStyleSecondaryBackgroundColor"),
+  // header style
+  HEADER_STYLE_TEXT_COLOR("headerStyleTextColor"),
+  HEADER_STYLE_TAB_TEXT_COLOR("headerStyleTabTextColor"),
+  // section style
+  SECTION_TITLE_STYLE_TEXT_COLOR("sectionTitleStyleTextColor"),
+  SECTION_TITLE_STYLE_BORDER_COLOR("sectionTitleStyleBorderColor"),
+  // tabbar style
+  TABBAR_STYLE_BACKGROUND_COLOR("tabbarStyleBackgroundColor"),
+  // message notification bar style
+  MESSAGE_NOTIFICATION_BAR_BACKGROUND_COLOR("messageNotificationBarBackgroundColor"),
+  MESSAGE_NOTIFICATION_BAR_NAME_TEXT_COLOR("messageNotificationBarNameTextColor"),
+  MESSAGE_NOTIFICATION_BAR_MESSAGE_TEXT_COLOR("messageNotificationBarMessageTextColor"),
+  // direct share bar style
+  DIRECT_SHARE_BAR_BACKGROUND_COLOR("directShareBarBackgroundColor"),
+  DIRECT_SHARE_BAR_NAME_TEXT_COLOR("directShareBarNameTextColor"),
+  DIRECT_SHARE_BAR_MESSAGE_TEXT_COLOR("directShareBarMessageTextColor"),
+  // passcode page style
+  PASSCODE_BACKGROUND_COLOR("passcodeBackgroundColor"),
+  PASSCODE_STYLE_KEYPAD_BACKGROUND_COLOR("passcodeStyleKeypadBackgroundColor"),
+  PASSCODE_STYLE_KEYPAD_TEXT_NORMAL_COLOR("passcodeStyleKeypadTextNormalColor"),
+  // chat room style
+  CHAT_ROOM_BACKGROUND_COLOR("chatRoomBackgroundColor"),
+  MESSAGE_CELL_STYLE_SEND_TEXT_COLOR("messageCellStyleSendTextColor"),
+  MESSAGE_CELL_STYLE_RECEIVE_TEXT_COLOR("messageCellStyleReceiveTextColor"),
+  MESSAGE_CELL_STYLE_UNREAD_COUNT_COLOR("messageCellStyleUnreadCountColor"),
+  INPUT_BAR_STYLE_CHAT_BUTTON_TEXT_COLOR("inputBarStyleChatButtonTextColor"),
+  INPUT_BAR_STYLE_CHAT_BACKGROUND_COLOR("inputBarStyleChatBackgroundColor"),
+  INPUT_BAR_STYLE_CHAT_BUTTON_NORMAL_FOREGROUND_COLOR(
+      "inputBarStyleChatButtonNormalForegroundColor"),
+  INPUT_BAR_STYLE_CHAT_BUTTON_NORMAL_BACKGROUND_COLOR(
+      "inputBarStyleChatButtonNormalBackgroundColor"),
+  INPUT_BAR_STYLE_CHAT_SEND_NORMAL_BACKGROUND_COLOR("inputBarStyleChatSendNormalBackgroundColor"),
+  INPUT_BAR_STYLE_CHAT_SEND_NORMAL_FOREGROUND_COLOR("inputBarStyleChatSendNormalForegroundColor");
 
   private final String styleCode;
 

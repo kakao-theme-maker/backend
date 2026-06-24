@@ -66,7 +66,8 @@ class AndroidThemeMakerTest {
   void setUp() {
     themeDataGenerator.deleteTestData();
     List<ComponentType> backgroundImages = themeDataGenerator.generateComponentTypes().stream()
-        .filter(v -> v.getTypeCode().equals(TypeCode.BACKGROUND_IMAGE)).toList();
+        .filter(v -> v.getTypeCode().equals(TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE))
+        .toList();
     List<ColorStyle> colorStyles = themeDataGenerator.generateColorStyles();
     List<DesignComponent> designComponents = themeDataGenerator.generateDesignComponents(
         backgroundImages.size());

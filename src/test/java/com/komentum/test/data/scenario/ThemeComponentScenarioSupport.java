@@ -1,9 +1,9 @@
 package com.komentum.test.data.scenario;
 
-import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.service.ColorStyleSeeder;
-import com.komentum.designcomponent.service.ComponentTypeSeeder;
+import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
+import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
+import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
@@ -18,15 +18,15 @@ public class ThemeComponentScenarioSupport {
   private final ComponentTypeSeeder componentTypeSeeder;
   private final ColorStyleSeeder colorStyleSeeder;
 
+  public ThemeComponentScenarioBuilder builder(List<User> users,
+      List<DesignComponent> designComponents) {
+    return new ThemeComponentScenarioBuilder().builder(users, designComponents);
+  }
+
   public record ThemeComponentScenarioResult(
       List<ThemeComponent> themeComponents
   ) {
 
-  }
-
-  public ThemeComponentScenarioBuilder builder(List<User> users,
-      List<DesignComponent> designComponents) {
-    return new ThemeComponentScenarioBuilder().builder(users, designComponents);
   }
 
   public class ThemeComponentScenarioBuilder {

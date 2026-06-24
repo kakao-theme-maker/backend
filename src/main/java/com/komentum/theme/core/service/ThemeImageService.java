@@ -20,7 +20,7 @@ public class ThemeImageService {
   public Map<Integer, String> findThemePreviewImages(List<Integer> themeComponentIds) {
     List<ThemeImage> themeImageList = themeImageRepository.fetchJoinByThemeComponentAndTypeCode(
         themeComponentIds,
-        TypeCode.COMMON_ICO_THEME
+        TypeCode.PASSCODE_BACKGROUND_IMAGE
     );
     return themeImageList.stream()
         .collect(Collectors.toMap(
