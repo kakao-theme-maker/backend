@@ -29,7 +29,7 @@ import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
-import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;

@@ -2,7 +2,7 @@ package com.komentum.post.repository;
 
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
-import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.designcomponent.domain.DesignComponent;
 import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -17,7 +17,7 @@ import com.komentum.post.repository.ThemeBoardRepositorySupport;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
-import com.komentum.theme.theme.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;

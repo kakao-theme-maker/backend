@@ -4,7 +4,7 @@ import com.komentum.catalog.dto.ComponentCatalogResponse;
 import com.komentum.catalog.dto.ComponentSummary;
 import com.komentum.catalog.dto.ComponentType;
 import com.komentum.catalog.repository.ComponentCatalogRepository;
-import com.komentum.theme.theme.service.ThemeImageService;
+import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;

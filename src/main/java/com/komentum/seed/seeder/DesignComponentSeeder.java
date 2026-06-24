@@ -2,8 +2,8 @@ package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
 import com.komentum.global.utils.FileManager;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.repository.DesignComponentRepository;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
 import java.io.IOException;
 import java.io.InputStream;

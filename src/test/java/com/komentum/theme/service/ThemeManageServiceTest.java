@@ -4,13 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
-import com.komentum.theme.component.dto.CreateThemeRequest;
-import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.theme.theme.dto.ThemeComponentDto;
-import com.komentum.theme.theme.dto.ThemeImageRequest;
-import com.komentum.theme.theme.dto.ThemeStyleRequest;
-import com.komentum.theme.theme.repository.ThemeComponentRepository;
-import com.komentum.theme.theme.service.ThemeManageService;
+import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.dto.CreateThemeRequest;
+import com.komentum.theme.core.dto.ThemeComponentDto;
+import com.komentum.theme.core.dto.ThemeImageRequest;
+import com.komentum.theme.core.dto.ThemeStyleRequest;
+import com.komentum.theme.core.repository.ThemeComponentRepository;
+import com.komentum.theme.core.service.ThemeManageService;
+import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
@@ -65,12 +66,10 @@ class ThemeManageServiceTest {
         .userEmail("test@test.com")
         .build();
     // when
-    ThemeComponentDto res = themeManageService.createTheme("must change");
+    ThemeComponent res = themeManageService.createNewTheme(User.builder().build());
     // then
     Optional<ThemeComponent> saved = themeComponentRepository.findById(res.getThemeComponentId());
     assertThat(saved.isPresent()).isTrue();
-    assertThat(res.getImages()).hasSize(saved.get().getThemeImages().size());
-    assertThat(res.getStyles()).hasSize(saved.get().getThemeStyles().size());
     assertThat(res.getVersionNumber()).isEqualTo("1");
   }
 

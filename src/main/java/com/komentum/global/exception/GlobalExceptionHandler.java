@@ -1,6 +1,5 @@
 package com.komentum.global.exception;
 
-import com.komentum.theme.exception.ResourceNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;

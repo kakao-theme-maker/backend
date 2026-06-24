@@ -1,10 +1,10 @@
 package com.komentum.test.fixture.component;
 
 import com.github.javafaker.Faker;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.test.data.UserDataGenerator;
-import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.komentum.theme.android.editor;
 
-import com.komentum.theme.utils.DockerProcessRunner;
-import com.komentum.theme.utils.ThemePathManager;
+import com.komentum.theme.android.utils.DockerProcessRunner;
+import com.komentum.theme.android.utils.ThemePathManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
