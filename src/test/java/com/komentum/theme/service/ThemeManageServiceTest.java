@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
+import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.dto.CreateThemeRequest;
 import com.komentum.theme.core.dto.ThemeComponentDto;
@@ -35,6 +36,9 @@ class ThemeManageServiceTest {
   @Autowired
   private ThemeComponentRepository themeComponentRepository;
 
+  @Autowired
+  private UserScenarioSupport userScenarioSupport;
+
   private final int initialThemeCounts = 10;
   private int initialStylePerTheme;
   private int initialImagePerTheme;
@@ -57,20 +61,13 @@ class ThemeManageServiceTest {
   @DisplayName("success test of creating new theme")
   public void createTheme_success() {
     // given
-    CreateThemeRequest createThemeRequest = CreateThemeRequest.builder()
-        .themeName("themeName")
-        .images(themeDataGenerator.getImageRequests())
-        .styles(themeDataGenerator.getStyleRequests())
-        .isPublic(true)
-        .versionName("versionName")
-        .userEmail("test@test.com")
-        .build();
+    User client = userScenarioSupport.builder().withUsers(1).build().getFirstUser();
     // when
-    ThemeComponent res = themeManageService.createNewTheme(User.builder().build());
+    ThemeComponent res = themeManageService.createNewTheme(client);
     // then
     Optional<ThemeComponent> saved = themeComponentRepository.findById(res.getThemeComponentId());
     assertThat(saved.isPresent()).isTrue();
-    assertThat(res.getVersionNumber()).isEqualTo("1");
+    assertThat(res.getVersionNumber()).isEqualTo("0");
   }
 
   @Test
