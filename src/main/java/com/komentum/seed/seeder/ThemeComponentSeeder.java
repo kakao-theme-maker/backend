@@ -67,6 +67,7 @@ public class ThemeComponentSeeder {
     for (ColorStyle colorStyle : colorStyles) {
       themeStyles.add(ThemeStyle.builder()
           .colorStyle(colorStyle)
+          .themeComponent(themeComponent)
           .color(faker.color().name())
           .build());
     }
