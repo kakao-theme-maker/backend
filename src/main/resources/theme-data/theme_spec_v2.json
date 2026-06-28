@@ -802,14 +802,14 @@
               "path": "drawable-sw600dp/theme_maintab_cell_image.9.png",
               "width": 1440,
               "height": 214,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             },
             {
               "code": "tabbarStyleBackgroundImageXxhdpi",
               "path": "drawable-xxhdpi/theme_maintab_cell_image.9.png",
               "width": 1440,
               "height": 214,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "tabbarStyleFriendsNormalIconImage": [
@@ -1082,7 +1082,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_me_01_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "messageCellStyleSendGroupBackgroundImage": [
@@ -1091,7 +1091,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_me_02_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "messageCellStyleReceiveBackgroundImage": [
@@ -1100,7 +1100,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_you_01_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "messageCellStyleReceiveGroupBackgroundImage": [
@@ -1109,7 +1109,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_you_02_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "buttonStyleAddFriendImage": [
@@ -1118,6 +1118,15 @@
               "path": "drawable-xxhdpi/theme_find_add_friend_button_image.png",
               "width": 126,
               "height": 102,
+              "fileExtension": "png"
+            }
+          ],
+          "defaultProfileStyleProfileImage": [
+            {
+              "code": "defaultProfileStyleProfileImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_profile_01_image.png",
+              "width": 240,
+              "height": 240,
               "fileExtension": "png"
             }
           ]

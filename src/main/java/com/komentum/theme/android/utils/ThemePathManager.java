@@ -1,8 +1,8 @@
 package com.komentum.theme.android.utils;
 
 import com.komentum.theme.android.dto.AndroidComponentDto;
+import com.komentum.theme.android.service.AndroidThemeGenerator;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,22 +24,26 @@ public class ThemePathManager {
    * get a specific theme's directory
    */
   public static Path getThemeDir(String themeId) {
-    Path basePath = Path.of(getBasePath());
-    return Paths.get(basePath.toAbsolutePath().toString(), "theme", "android", themeId);
+    return Path.of(getBasePath())
+        .resolve("theme")
+        .resolve("android")
+        .resolve(themeId);
   }
 
   /**
    * get a specific theme's sample source apk directory
    */
   public static Path getThemeSourceDir(String themeId) {
-    return Paths.get(getThemeDir(themeId).toString(), "source");
+    return getThemeDir(themeId)
+        .resolve("source");
   }
 
-  /**
-   * get a specific theme's depacked theme directory
-   */
-  public static Path getThemeDepackedDir(String themeId) {
-    return Paths.get(getThemeDir(themeId).toString(), "depack");
+  public static Path getAndroidThemeImagePath(String themeId, AndroidComponentDto component) {
+    return getThemeSourceDir(themeId)
+        .resolve("src")
+        .resolve("main")
+        .resolve("theme")
+        .resolve(component.getImageFilePath());
   }
 
   /**
