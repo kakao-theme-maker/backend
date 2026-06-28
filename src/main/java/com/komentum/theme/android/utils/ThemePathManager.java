@@ -46,11 +46,13 @@ public class ThemePathManager {
         .resolve(component.getImageFilePath());
   }
 
-  /**
-   * get a specific theme's repackaged theme directory
-   */
-  public static Path getThemeRepackedDir(String themeId) {
-    return Paths.get(getThemeDir(themeId).toString(), "repack");
+  public static Path getAndroidColorSheetPath(String themeId) {
+    return getThemeSourceDir(themeId)
+        .resolve("src")
+        .resolve("main")
+        .resolve("theme")
+        .resolve("values")
+        .resolve("colors.xml");
   }
 
   /**

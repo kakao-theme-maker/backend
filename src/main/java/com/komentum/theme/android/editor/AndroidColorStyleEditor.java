@@ -47,7 +47,7 @@ public class AndroidColorStyleEditor {
    * @param colorDtoList information list about theme's color
    */
   public void editColors(String themeId, List<AndroidColorDto> colorDtoList) {
-    Path colorSheetPath = ThemePathManager.getColorSheetPath(themeId);
+    Path colorSheetPath = ThemePathManager.getAndroidColorSheetPath(themeId);
     Document document = xmlEditor.loadDocument(colorSheetPath.toString());
     NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
     for (AndroidColorDto colorDto : colorDtoList) {
