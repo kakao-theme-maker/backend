@@ -98,7 +98,9 @@ public class ThemeComponent {
   }
 
   public void update(ThemeUpdateRequest updateRequest) {
-    this.themeName = updateRequest.getThemeName();
+    if (updateRequest.getThemeName() != null && !updateRequest.getThemeName().isBlank()) {
+      this.themeName = updateRequest.getThemeName();
+    }
   }
 
   public void addThemeImage(ThemeImage themeImage) {

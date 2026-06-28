@@ -44,7 +44,7 @@ public class ThemeManageController {
 
   @PutMapping("/{themeComponentId}")
   @Operation(summary = "인증된 사용자가 ID로 특정 테마를 수정한다")
-  public ResponseEntity<String> updateTheme(
+  public ResponseEntity<Void> updateTheme(
       @PathVariable @Parameter(description = "수정할 테마의 ID", example = "1") Integer themeComponentId,
       @Valid @RequestBody ThemeUpdateRequest request) {
     themeManagementFacade.updateTheme(themeComponentId, request);
