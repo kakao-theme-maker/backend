@@ -55,21 +55,23 @@ public class ThemePathManager {
         .resolve("colors.xml");
   }
 
-  /**
-   * get a specific theme's depacked image path
-   */
-  public static Path getImagePath(String themeId, AndroidComponentDto component) {
-    return Paths.get(getThemeDepackedDir(themeId).toString(), component.getAndroidComponentPath());
+  public static Path getAndroidResourcePath(String themeId) {
+    return getThemeSourceDir(themeId)
+        .resolve("src")
+        .resolve("main")
+        .resolve("theme");
   }
 
   /**
-   * get a specific theme's depacked color sheet path
-   */
-  public static Path getColorSheetPath(String themeId) {
-    return Paths.get(getThemeDepackedDir(themeId).toString(), "res", "values", "colors.xml");
-  }
-
-  public static Path getThemeResourcePath(String themeId) {
-    return Paths.get(getThemeDepackedDir(themeId).toString(), "res");
+   * <p>테마 폴더의 빌드 결과물에 있는 빌드 결과물 경로를 반환한다.</p>
+   * <p>빌드 결과물의 이름은 docker 내 테마 폴더 이름을 따라간다.</p>
+   * */
+  public static Path getAndroidThemeOutputPath(String themeId) {
+    return getThemeSourceDir(themeId)
+        .resolve("build")
+        .resolve("outputs")
+        .resolve("apk")
+        .resolve("release")
+        .resolve(AndroidThemeGenerator.DOCKER_THEME_DIRECTORY_NAME + "-release.apk");
   }
 }

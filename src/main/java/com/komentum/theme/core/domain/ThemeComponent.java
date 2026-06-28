@@ -8,10 +8,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,6 +48,9 @@ public class ThemeComponent {
   @Column(name = "theme_name", nullable = false)
   private String themeName;
 
+  @Column(name = "theme_code", nullable = false, unique = true)
+  private String themeCode;
+
   @Column(name = "version_number", nullable = false)
   private String versionNumber;
 
@@ -75,6 +80,13 @@ public class ThemeComponent {
   @BatchSize(size = 100)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeStyle> themeStyles = new HashSet<>();
+
+  @PrePersist
+  void prePersist() {
+    if (this.themeCode == null) {
+      this.themeCode = "theme" + UUID.randomUUID().toString().replace("-", "");
+    }
+  }
 
   public void addThemeImage(ThemeImage themeImage) {
     boolean alreadyExists = this.themeImages.stream()
