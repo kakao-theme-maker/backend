@@ -64,8 +64,11 @@ public class ThemeStyleService {
 
   @Transactional
   public void updateThemeStyles(
-      Integer themeComponentId,
+      int themeComponentId,
       Map<StyleCode, ThemeStyleUpdateRequest> updateRequestMap) {
+    if (updateRequestMap == null || updateRequestMap.isEmpty()) {
+      return;
+    }
     Map<StyleCode, ThemeStyle> themeStyleMap = themeStyleRepository
         .fetchJoinAllByThemeComponentId(themeComponentId)
         .stream().collect(Collectors.toMap(

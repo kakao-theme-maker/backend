@@ -87,11 +87,14 @@ public class ThemeImageService {
 
   @Transactional
   public void updateThemeImages(
-      Integer themeComponentId,
+      int themeComponentId,
       ThemeUpdateRequest request
   ) {
     // 요청으로 받은 TypeCode : ThemeImage 정보 맵 추출
     Map<TypeCode, ThemeImageUpdateRequest> typeCodes = request.getTypeCodes();
+    if (typeCodes == null || typeCodes.isEmpty()) {
+      return;
+    }
     // 요청으로 받은 design component 목록 조회
     Map<Integer, DesignComponent> requestedImageMap = designComponentService.findMapByIdIn(
         typeCodes.values()
