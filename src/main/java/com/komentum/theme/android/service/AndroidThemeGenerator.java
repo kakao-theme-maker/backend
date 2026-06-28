@@ -15,6 +15,7 @@ import com.komentum.theme.android.dto.AndroidComponentDto;
 import com.komentum.theme.android.editor.AndroidColorStyleEditor;
 import com.komentum.theme.android.editor.AndroidMetaDataEditor;
 import com.komentum.theme.android.editor.AndroidThemeImageEditor;
+import com.komentum.theme.android.properties.AndroidDockerImageProperties;
 import com.komentum.theme.android.properties.AndroidSigningProperties;
 import com.komentum.theme.android.utils.DockerProcessRunner;
 import com.komentum.theme.android.utils.ThemePathManager;
@@ -42,7 +43,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@EnableConfigurationProperties(AndroidSigningProperties.class)
+@EnableConfigurationProperties({AndroidSigningProperties.class, AndroidDockerImageProperties.class})
 public class AndroidThemeGenerator {
 
   private final ThemeImageRepository themeImageRepository;
@@ -50,6 +51,7 @@ public class AndroidThemeGenerator {
   private final PlatformColorStyleRepository platformColorStyleRepository;
   private final ThemeStyleRepository themeStyleRepository;
   private final AndroidSigningProperties signingProperties;
+  private final AndroidDockerImageProperties dockerImageProperties;
   private final DockerProcessRunner dockerProcessRunner;
   private final AndroidThemeImageEditor androidThemeImageEditor;
   private final AndroidColorStyleEditor androidColorStyleEditor;
@@ -177,6 +179,8 @@ public class AndroidThemeGenerator {
    * @return Docker 실행 명령어
    */
   private String[] createDockerCommandForApkBuild(Path sourceThemePath, String themeIdentifier) {
+    String dockerImageFullName =
+        dockerImageProperties.getImage() + ":" + dockerImageProperties.getTag();
     List<String> command = List.of(
         "docker", "run", "--rm",
         "-v", sourceThemePath.toAbsolutePath() + ":/" + DOCKER_THEME_DIRECTORY_NAME,
@@ -185,7 +189,7 @@ public class AndroidThemeGenerator {
         "-e", "KEYSTORE_PASSWORD=" + signingProperties.getKeystorePassword(),
         "-e", "KEY_ALIAS=" + signingProperties.getKeyAlias(),
         "-e", "KEY_PASSWORD=" + signingProperties.getKeyPassword(),
-        "android:test",
+        dockerImageFullName,
         "assembleRelease",
         "-PandroidApplicationId=" + "com.kakao.talk.theme." + themeIdentifier,
         "-x", "lint",
