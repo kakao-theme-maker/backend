@@ -3,6 +3,8 @@ package com.komentum.test.data.scenario;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
 import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
+import com.komentum.designcomponent.service.seeder.PlatformColorStyleSeeder;
+import com.komentum.designcomponent.service.seeder.PlatformComponentTypeSeeder;
 import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
@@ -17,6 +19,8 @@ public class ThemeComponentScenarioSupport {
   private final ThemeComponentSeeder themeComponentSeeder;
   private final ComponentTypeSeeder componentTypeSeeder;
   private final ColorStyleSeeder colorStyleSeeder;
+  private final PlatformComponentTypeSeeder platformComponentTypeSeeder;
+  private final PlatformColorStyleSeeder platformColorStyleSeeder;
 
   public ThemeComponentScenarioBuilder builder(List<User> users,
       List<DesignComponent> designComponents) {
@@ -51,6 +55,8 @@ public class ThemeComponentScenarioSupport {
       // generate color style & component type
       componentTypeSeeder.upsertComponentType();
       colorStyleSeeder.upsertColorStyleSeed();
+      platformComponentTypeSeeder.upsertPlatformComponentType();
+      platformColorStyleSeeder.upsertPlatformColorStyle();
       // generate theme components
       if (countPerUser <= 0) {
         throw new IllegalArgumentException("countPerUser must be bigger than 0");
