@@ -1,5 +1,6 @@
 package com.komentum.global.utils;
 
+import java.io.InputStream;
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -107,5 +108,14 @@ public class S3FileManager implements FileManager {
         .build();
     ResponseBytes<GetObjectResponse> responseBytes = s3Client.getObjectAsBytes(getObjectRequest);
     return responseBytes.asByteArray();
+  }
+
+  @Override
+  public InputStream download(String fileName) {
+    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+        .bucket(bucketName)
+        .key(fileName)
+        .build();
+    return s3Client.getObject(getObjectRequest);
   }
 }
