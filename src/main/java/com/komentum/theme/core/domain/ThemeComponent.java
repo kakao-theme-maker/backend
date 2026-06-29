@@ -1,17 +1,23 @@
 package com.komentum.theme.core.domain;
 
+import com.komentum.theme.core.dto.ThemeUpdateRequest;
+import com.komentum.theme.core.enums.ThemeType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,6 +48,14 @@ public class ThemeComponent {
 
   @Column(name = "userEmail", nullable = false)
   private String userEmail;
+
+  @Column(name = "themeCode", nullable = false, unique = true)
+  private String themeCode;
+
+  @Builder.Default
+  @Column(name = "themeType", nullable = false)
+  @Enumerated(EnumType.STRING)
+  private ThemeType themeType = ThemeType.USER;
 
   @Column(name = "theme_name", nullable = false)
   private String themeName;
@@ -75,6 +89,19 @@ public class ThemeComponent {
   @BatchSize(size = 100)
   @OneToMany(mappedBy = "themeComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ThemeStyle> themeStyles = new HashSet<>();
+
+  @PrePersist
+  void prePersist() {
+    if (themeCode == null) {
+      themeCode = UUID.randomUUID().toString();
+    }
+  }
+
+  public void update(ThemeUpdateRequest updateRequest) {
+    if (updateRequest.getThemeName() != null && !updateRequest.getThemeName().isBlank()) {
+      this.themeName = updateRequest.getThemeName();
+    }
+  }
 
   public void addThemeImage(ThemeImage themeImage) {
     boolean alreadyExists = this.themeImages.stream()

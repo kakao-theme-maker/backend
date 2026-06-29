@@ -43,4 +43,12 @@ public class ThemeImage {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "component_type_id")
   private ComponentType componentType;
+
+  public static ThemeImage copyOf(ThemeComponent targetTheme, ThemeImage sourceImage) {
+    return ThemeImage.builder()
+        .themeComponent(targetTheme)
+        .designComponent(sourceImage.getDesignComponent())
+        .componentType(sourceImage.getComponentType())
+        .build();
+  }
 }

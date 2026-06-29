@@ -13,10 +13,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ThemeImageRepository extends JpaRepository<ThemeImage, ThemeImageId> {
 
-  @Query("SELECT ti FROM ThemeImage ti WHERE ti.themeComponent.themeComponentId = :themeComponentId")
-  List<ThemeImage> findByThemeComponentId(
-      @Param("themeComponentId") Integer themeComponentId); //theme Image 객체 리스트 반환
-
   @Modifying
   @Query("DELETE FROM ThemeImage ti WHERE ti.themeComponent.themeComponentId = :themeComponentId")
   void deleteByThemeComponentId(
@@ -30,4 +26,12 @@ public interface ThemeImageRepository extends JpaRepository<ThemeImage, ThemeIma
       + "AND ti.componentType.typeCode = :typeCode")
   List<ThemeImage> fetchJoinByThemeComponentAndTypeCode(
       List<Integer> themeComponentIds, TypeCode typeCode);
+
+  @Query("SELECT ti "
+      + "FROM ThemeImage ti "
+      + "JOIN FETCH ti.themeComponent tc "
+      + "JOIN FETCH ti.designComponent dc "
+      + "JOIN FETCH ti.componentType ct "
+      + "WHERE tc.themeComponentId = :themeComponentId")
+  List<ThemeImage> fetchJoinAllByThemeComponentId(Integer themeComponentId);
 }

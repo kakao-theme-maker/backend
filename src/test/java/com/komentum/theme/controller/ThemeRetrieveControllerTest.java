@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.test.MockMvcUtils;
@@ -17,11 +18,11 @@ import com.komentum.test.data.scenario.PostScenarioSupport;
 import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
+import com.komentum.test.dto.MockMvcRequestDto.ExecutionContext;
 import com.komentum.test.dto.TestClientDto;
-import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.dto.ThemeDetailResponse;
 import com.komentum.theme.core.dto.ThemePreviewDto;
-import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -61,9 +63,6 @@ class ThemeRetrieveControllerTest {
   private MockMvcUtils mockMvcUtils;
 
   @Autowired
-  private ThemeImageService themeImageService;
-
-  @Autowired
   private ThemeComponentScenarioSupport themeComponentScenarioSupport;
 
   @Autowired
@@ -79,6 +78,7 @@ class ThemeRetrieveControllerTest {
   private FileManager fileManager;
 
   private TestClientDto testClient;
+  private User testUser;
 
   private void assertThemePreviewDto(ThemePreviewDto themePreviewDto) {
     assertThat(themePreviewDto.getThemeComponentId()).isNotNull();
@@ -92,7 +92,7 @@ class ThemeRetrieveControllerTest {
   void setUp() {
     themeDataGenerator.deleteTestData();
     themeDataGenerator.generateTestData(10);
-    User testUser = userDataGenerator.generateTestUser(themeDataGenerator.userEmail);
+    testUser = userDataGenerator.generateTestUser(themeDataGenerator.userEmail);
     testClient = TestClientDto.fromEntity(testUser);
   }
 
@@ -123,21 +123,32 @@ class ThemeRetrieveControllerTest {
 
   @Test
   @DisplayName("")
-  void getThemeById_success() throws Exception {
+  void findThemeById_success() throws Exception {
     // given
-    ThemeComponent toFind = themeDataGenerator.initialThemes.get(0);
+    List<DesignComponent> designComponents = designComponentScenarioSupport.builder(
+            List.of(testUser))
+        .withCountPerUser(5)
+        .build().designComponents();
+    ThemeComponent toFind = themeComponentScenarioSupport
+        .builder(List.of(testUser), designComponents)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
     // when
     MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/themes/{id}",
         toFind.getThemeComponentId());
-    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
-        testClient);
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(requestBuilder,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .clientDto(testClient)
+            .build());
     // then
-    mockMvc.perform(requestBuilder)
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.themeComponentId").value(toFind.getThemeComponentId()))
-        .andExpect(jsonPath("$.createdAt").exists())
-        .andExpect(jsonPath("$.previewImageUrl").value(
-            themeImageService.findThemePreviewImageUrl(toFind.getThemeComponentId())));
+    resultActions.andExpect(status().isOk());
+    ThemeDetailResponse response = mockMvcUtils.parseResponse(resultActions, new TypeReference<>() {
+    });
+    assertThat(response.getThemeComponentId()).isEqualTo(toFind.getThemeComponentId());
+    assertThat(response.getThemeName()).isEqualTo(toFind.getThemeName());
+    assertThat(response.getTypeCodes()).isNotEmpty();
+    assertThat(response.getStyleCodes()).isNotEmpty();
   }
 
   @Test
