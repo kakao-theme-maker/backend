@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/theme-boards")
@@ -36,17 +34,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class ThemeBoardController {
 
   private final ThemeBoardManagementFacade themeBoardManagementFacade;
-
-  private TypeCode parseTypeCode(String typeCode) {
-    if (typeCode == null || typeCode.isBlank()) {
-      return null;
-    }
-    try {
-      return TypeCode.from(typeCode);
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-    }
-  }
 
   /**
    * 테마 게시글 목록을 페이지 기반으로 조회
@@ -60,11 +47,10 @@ public class ThemeBoardController {
       @Parameter(description = "게시글 제목/내용 검색어")
       @RequestParam(value = "keyword", required = false) String keyword,
       @Parameter(description = "component type code")
-      @RequestParam(value = "type_code", required = false) String typeCode,
+      @RequestParam(value = "type_code", required = false) TypeCode typeCode,
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword,
-            parseTypeCode(typeCode)));
+        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword, typeCode));
   }
 
   /**

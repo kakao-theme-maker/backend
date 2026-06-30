@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
@@ -48,6 +49,14 @@ public class GlobalExceptionHandler {
     Map<String, String> errors = new HashMap<>();
     errors.put("message", ex.getReason());
     return new ResponseEntity<>(errors, ex.getStatusCode());
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<Map<String, String>> handleMethodArgumentTypeMismatchException(
+      MethodArgumentTypeMismatchException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", ex.getMostSpecificCause().getMessage());
+    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(Exception.class)
