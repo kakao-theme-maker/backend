@@ -3,11 +3,11 @@ package com.komentum.post.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.designcomponent.domain.ComponentType;
-import com.komentum.designcomponent.enums.TypeCode;
-import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
@@ -29,8 +29,6 @@ import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
 import com.komentum.theme.core.domain.ThemeComponent;
-import com.komentum.theme.core.domain.ThemeImage;
-import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -55,12 +53,6 @@ class ThemeBoardControllerTest {
 
   @Autowired
   private PostRepository postRepository;
-
-  @Autowired
-  private ComponentTypeRepository componentTypeRepository;
-
-  @Autowired
-  private ThemeImageRepository themeImageRepository;
 
   @Autowired
   private MockMvc mockMvc;
@@ -146,24 +138,6 @@ class ThemeBoardControllerTest {
             })
             .build()
     );
-  }
-
-  private ComponentType getComponentType(TypeCode typeCode) {
-    return componentTypeRepository.findAllByTypeCodeIn(List.of(typeCode)).get(0);
-  }
-
-  private void leaveTypeCodeOnTargetThemeOnly(TypeCode typeCode, ThemeBoard targetThemeBoard) {
-    List<Integer> themeComponentIds = boardDetailDataGenerator.getThemeBoards()
-        .stream()
-        .map(themeBoard -> themeBoard.getThemeComponent().getThemeComponentId())
-        .toList();
-    List<ThemeImage> imagesToDelete = themeImageRepository
-        .fetchJoinByThemeComponentAndTypeCode(themeComponentIds, typeCode)
-        .stream()
-        .filter(themeImage -> !themeImage.getThemeComponent().getThemeComponentId()
-            .equals(targetThemeBoard.getThemeComponent().getThemeComponentId()))
-        .toList();
-    themeImageRepository.deleteAll(imagesToDelete);
   }
 
   @Test
@@ -344,50 +318,34 @@ class ThemeBoardControllerTest {
   }
 
   @Test
-  @DisplayName("type_code 검색 조건에 매칭되는 테마 게시글 목록 정보를 최상단에 반환한다.")
-  void findThemeBoards_typeCodeMatchedPostFirst() throws Exception {
+  @DisplayName("테마 게시글 목록 응답에 component_types를 포함하지 않는다.")
+  void findThemeBoards_excludesComponentTypes() throws Exception {
     // given
     User client = boardDetailDataGenerator.getUsers().get(0);
-    TypeCode typeCode = TypeCode.CHAT_ROOM_BACKGROUND_IMAGE;
-    ComponentType componentType = getComponentType(typeCode);
-    ThemeBoard targetThemeBoard = boardDetailDataGenerator.getThemeBoards().get(
-        boardDetailDataGenerator.getThemeBoards().size() - 1);
-    leaveTypeCodeOnTargetThemeOnly(componentType.getTypeCode(), targetThemeBoard);
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
-    MultiValueMap<String, String> params = TestParams.withPaging(0,
-        boardDetailDataGenerator.getThemeBoards().size());
-    params.add("type_code", componentType.getTypeCode().getTypeCode());
-    // when
-    List<ThemeBoardPreviewDto> response = requestThemeBoardPreviews(params, client);
-    // then
-    assertThat(response).hasSize(boardDetailDataGenerator.getThemeBoards().size());
-    assertThat(response.get(0).getPostId()).isEqualTo(targetThemeBoard.getPost().getPostId());
-    assertThat(response.get(0).getComponentTypes())
-        .extracting(componentTypeDto -> componentTypeDto.getTypeCode().getTypeCode())
-        .contains(typeCode.getTypeCode());
+    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
+    // when & then
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/api/theme-boards").params(params), TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].component_types").doesNotExist());
   }
 
   @Test
-  @DisplayName("지원하지 않는 type_code 요청 시 400을 반환한다.")
-  void findThemeBoards_invalidTypeCode() throws Exception {
+  @DisplayName("테마 게시글 상세 응답에 component_types를 포함하지 않는다.")
+  void findThemeBoardByPostId_excludesComponentTypes() throws Exception {
     // given
+    ThemeBoard targetThemeBoard = boardDetailDataGenerator.getThemeBoards().get(0);
     User client = boardDetailDataGenerator.getUsers().get(0);
-    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
-    params.add("type_code", "invalidTypeCode");
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
     // when & then
-    mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, Void>builder()
-            .mockMvc(mockMvc)
-            .path("/api/theme-boards")
-            .params(params)
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(client))
-            .statusCode(400)
-            .responseType(new TypeReference<>() {
-            })
-            .build()
-    );
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/api/theme-boards/{post_id}", targetThemeBoard.getPost().getPostId()),
+            TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.component_types").doesNotExist());
   }
 
   @Test
