@@ -69,10 +69,6 @@ public class ThemeBoardDto {
     @Schema(description = "사용자 프로필 이미지")
     @JsonProperty("profile_image")
     private String profileImage;
-
-    @Schema(description = "게시글에 연결된 component type 목록")
-    @JsonProperty("component_types")
-    private List<BoardComponentTypeDto> componentTypes;
   }
 
   @Data
@@ -107,10 +103,6 @@ public class ThemeBoardDto {
 
     @Schema(description = "게시글 좋아요 수")
     private Long prefers;
-
-    @Schema(description = "게시글에 연결된 component type 목록")
-    @JsonProperty("component_types")
-    private List<BoardComponentTypeDto> componentTypes;
   }
 
   @Data

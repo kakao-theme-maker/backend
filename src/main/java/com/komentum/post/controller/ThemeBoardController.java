@@ -1,7 +1,6 @@
 package com.komentum.post.controller;
 
 import com.komentum.global.dto.CustomUserDetails;
-import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
@@ -46,11 +45,9 @@ public class ThemeBoardController {
   public ResponseEntity<List<ThemeBoardPreviewDto>> findThemeBoards(
       @Parameter(description = "게시글 제목/내용 검색어")
       @RequestParam(value = "keyword", required = false) String keyword,
-      @Parameter(description = "component type code")
-      @RequestParam(value = "type_code", required = false) TypeCode typeCode,
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword, typeCode));
+        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword));
   }
 
   /**

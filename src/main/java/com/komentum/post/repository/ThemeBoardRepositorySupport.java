@@ -10,9 +10,7 @@ import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.dto.query.ThemeBoardQuery.Preview;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
-import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.theme.core.domain.QThemeComponent;
-import com.komentum.theme.core.domain.QThemeImage;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
@@ -164,32 +162,7 @@ public class ThemeBoardRepositorySupport {
   }
 
   private BooleanExpression createSearchMatched(QPost post, PostSearchCondition condition) {
-    BooleanExpression keywordMatched = PostPredicate.keywordContains(post, condition.getKeyword());
-    BooleanExpression typeCodeMatched = themeComponentTypeCodeExists(post,
-        condition.getTypeCode());
-    if (keywordMatched == null) {
-      return typeCodeMatched;
-    }
-    if (typeCodeMatched == null) {
-      return keywordMatched;
-    }
-    return keywordMatched.and(typeCodeMatched);
-  }
-
-  private BooleanExpression themeComponentTypeCodeExists(QPost post, TypeCode typeCode) {
-    if (typeCode == null) {
-      return null;
-    }
-    QThemeBoard searchThemeBoard = new QThemeBoard("searchThemeBoard");
-    QThemeImage searchThemeImage = new QThemeImage("searchThemeImage");
-    return JPAExpressions.selectOne()
-        .from(searchThemeBoard)
-        .join(searchThemeBoard.themeComponent.themeImages, searchThemeImage)
-        .where(
-            searchThemeBoard.post.eq(post),
-            searchThemeImage.componentType.typeCode.eq(typeCode)
-        )
-        .exists();
+    return PostPredicate.keywordContains(post, condition.getKeyword());
   }
 
 }

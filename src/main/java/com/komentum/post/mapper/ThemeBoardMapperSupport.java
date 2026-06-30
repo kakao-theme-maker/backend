@@ -2,14 +2,12 @@ package com.komentum.post.mapper;
 
 import com.komentum.global.utils.DateUtils;
 import com.komentum.post.domain.Tag;
-import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.facade.BoardManagementHelper;
 import java.util.List;
-import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,8 +21,7 @@ public class ThemeBoardMapperSupport {
    * */
   public List<ThemeBoardPreviewDto> toThemeBoardPreviewDtoList(
       List<ThemeBoardQuery.Preview> previewList,
-      BoardManagementHelper boardManagementHelper,
-      Map<Integer, List<BoardComponentTypeDto>> componentTypeMap) {
+      BoardManagementHelper boardManagementHelper) {
     return previewList.stream()
         .map(preview -> ThemeBoardPreviewDto.builder()
             .postId(preview.getPostId())
@@ -35,8 +32,6 @@ public class ThemeBoardMapperSupport {
             .userEmail(preview.getUserEmail())
             .createdAt(DateUtils.convertToDateString(preview.getCreatedAt()))
             .prefers(preview.getPrefers())
-            .componentTypes(componentTypeMap.getOrDefault(preview.getThemeComponentId(),
-                List.of()))
             .build())
         .toList();
   }
@@ -45,7 +40,7 @@ public class ThemeBoardMapperSupport {
    * 파라미터 기반으로 ThemeBoardDetailDto 매핑
    * */
   public ThemeBoardDetailDto toThemeBoardDetailDto(ThemeBoardQuery.Detail detail, List<Tag> tags,
-      BoardManagementHelper helper, List<BoardComponentTypeDto> componentTypes) {
+      BoardManagementHelper helper) {
     String previewImageUrl = helper.findPreviewImageUrl(detail.getPreviewImageName());
     List<String> previewImageList = previewImageUrl == null ? List.of() : List.of(previewImageUrl);
     return ThemeBoardDetailDto.builder()
@@ -63,7 +58,6 @@ public class ThemeBoardMapperSupport {
         .liked(detail.isLiked())
         .bookmarked(detail.isBookmarked())
         .profileImage(detail.getProfileImage())
-        .componentTypes(componentTypes)
         .build();
   }
 }

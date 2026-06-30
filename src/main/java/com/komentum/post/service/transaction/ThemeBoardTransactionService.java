@@ -1,11 +1,8 @@
 package com.komentum.post.service.transaction;
 
-import com.komentum.designcomponent.domain.ComponentType;
-import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
-import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.PostDto.PostCreateDto;
 import com.komentum.post.dto.PostDto.PostUpdateDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardCreateDto;
@@ -21,14 +18,10 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
 import com.komentum.theme.core.domain.ThemeComponent;
-import com.komentum.theme.core.domain.ThemeImage;
-import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +39,6 @@ public class ThemeBoardTransactionService {
   private final UserEntityFinder userEntityFinder;
   private final ThemeBoardRepositorySupport themeBoardRepositorySupport;
   private final ThemeBoardRepository themeBoardRepository;
-  private final ThemeImageService themeImageService;
 
   @Transactional(readOnly = true)
   public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier) {
@@ -56,20 +48,7 @@ public class ThemeBoardTransactionService {
     ThemeBoardQuery.Detail detail = themeBoardRepositorySupport
         .findThemeBoardQueryDetail(postId, userEntityFinder.findUserEntity(userIdentifier));
     List<Tag> tags = tagService.findAllByPostId(postId);
-    List<ThemeImage> themeImages = themeImageService.findWithComponentTypeByThemeComponentIds(
-        List.of(detail.getThemeComponentId()));
-    return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, helper,
-        toComponentTypeDtos(themeImages));
-  }
-
-  private List<BoardComponentTypeDto> toComponentTypeDtos(List<ThemeImage> themeImages) {
-    Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
-    for (ThemeImage themeImage : themeImages) {
-      ComponentType componentType = themeImage.getComponentType();
-      componentTypeMap.putIfAbsent(componentType.getTypeCode(),
-          BoardComponentTypeDto.from(componentType));
-    }
-    return List.copyOf(componentTypeMap.values());
+    return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, helper);
   }
 
   @Transactional
