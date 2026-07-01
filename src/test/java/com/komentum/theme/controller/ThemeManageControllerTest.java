@@ -218,10 +218,8 @@ class ThemeManageControllerTest {
     assertThat(themeComponents).hasSize(1);
     assertThat(themeComponents.get(0).getThemeCode())
         .isEqualTo("apeach_5031cb08-7ae9-40a7-a57c-2d24bd93f2d5");
-    assertThat(themeImageRepository.findAll()).hasSizeGreaterThanOrEqualTo(
-        TypeCode.values().length);
-    assertThat(themeStyleRepository.findAll()).hasSizeGreaterThanOrEqualTo(
-        StyleCode.values().length);
+    assertThat(themeImageRepository.count()).isEqualTo(TypeCode.values().length);
+    assertThat(themeStyleRepository.count()).isEqualTo(StyleCode.values().length);
     resultActions.andExpect(status().isOk());
   }
 }

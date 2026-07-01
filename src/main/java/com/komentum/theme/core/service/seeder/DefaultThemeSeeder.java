@@ -242,6 +242,7 @@ public class DefaultThemeSeeder {
         themeImages.add(ThemeImage.builder()
             .themeComponent(theme)
             .designComponent(dc)
+            .componentType(componentType)
             .build());
       }
     }
@@ -255,16 +256,15 @@ public class DefaultThemeSeeder {
       ComponentType componentType, List<PlatformComponentType> platformComponentTypes)
       throws IOException {
     List<DesignComponent> designComponents = new ArrayList<>();
-    for (PlatformComponentType pct : platformComponentTypes) {
-      Path imagePath = themeRootPath.resolve(Path.of(pct.getPath()));
-      String imageUrl = fileManager.uploadFile(Files.readAllBytes(imagePath),
-          UUID.randomUUID().toString());
-      designComponents.add(DesignComponent.builder()
-          .imageUrl(imageUrl)
-          .user(user)
-          .isPublic(true)
-          .build());
-    }
+    PlatformComponentType pct = platformComponentTypes.get(0);
+    Path imagePath = themeRootPath.resolve(Path.of(pct.getPath()));
+    String imageUrl = fileManager.uploadFile(Files.readAllBytes(imagePath),
+        UUID.randomUUID().toString());
+    designComponents.add(DesignComponent.builder()
+        .imageUrl(imageUrl)
+        .user(user)
+        .isPublic(true)
+        .build());
     List<DesignComponent> savedDesignComponents = designComponentRepository.saveAll(
         designComponents);
     for (DesignComponent dc : designComponents) {
@@ -290,15 +290,15 @@ public class DefaultThemeSeeder {
         throw new EntityNotFoundException(
             "platformColorStyle with styleCode " + styleCode.getStyleCode() + " not exists");
       }
-      for (PlatformColorStyle pcs : platformColorStyles) {
-        themeStyles.addAll(colorResourceInfoList.stream()
-            .filter(dci -> dci.resourceName.equals(pcs.getResourceName()))
-            .map(dci -> ThemeStyle.builder()
-                .themeComponent(theme)
-                .colorStyle(colorStyle)
-                .color(dci.color)
-                .build()).toList());
-      }
+      PlatformColorStyle pcs = platformColorStyles.get(0);
+      themeStyles.addAll(colorResourceInfoList.stream()
+          .filter(dci -> dci.resourceName.equals(pcs.getResourceName()))
+          .map(dci -> ThemeStyle.builder()
+              .themeComponent(theme)
+              .colorStyle(colorStyle)
+              .color(dci.color)
+              .build()).toList());
+
     }
     themeStyleRepository.saveAll(themeStyles);
   }
