@@ -204,13 +204,14 @@ class ThemeManageControllerTest {
   @DisplayName("루트 유저가 디폴트 테마를 생성한다")
   public void seedDefaultTheme_success() throws Exception {
     // given
+    User rootUser = userScenarioSupport.builder().withRootUser().build().rootUser();
     themeMetaDataScenarioSupport.builder().withAll().build();
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/themes/default/seed");
     ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
         ExecutionContext.builder()
             .mockMvc(mockMvc)
-            .clientDto(TestClientDto.fromEntity(testUser))
+            .clientDto(TestClientDto.fromEntity(rootUser))
             .build());
     // then
     List<ThemeComponent> themeComponents = themeComponentRepository.findAll();
