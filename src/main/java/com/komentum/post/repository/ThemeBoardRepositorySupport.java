@@ -8,6 +8,8 @@ import com.komentum.post.dto.query.QThemeBoardQuery_Detail;
 import com.komentum.post.dto.query.QThemeBoardQuery_Preview;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.dto.query.ThemeBoardQuery.Preview;
+import com.komentum.post.repository.order.PostOrder;
+import com.komentum.post.repository.predicate.PostPredicate;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.core.domain.QThemeComponent;

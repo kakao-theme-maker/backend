@@ -6,17 +6,16 @@ import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.dto.query.QDesignBoardQuery_Detail;
 import com.komentum.post.dto.query.QDesignBoardQuery_Preview;
+import com.komentum.post.repository.order.PostOrder;
+import com.komentum.post.repository.predicate.PostPredicate;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.designcomponent.domain.QDesignComponent;
-import com.komentum.designcomponent.domain.QDesignComponentComponentType;
-import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -93,7 +92,7 @@ public class DesignBoardRepositorySupport {
 
   private BooleanExpression createSearchMatched(QPost post, PostSearchCondition condition) {
     BooleanExpression keywordMatched = PostPredicate.keywordContains(post, condition.getKeyword());
-    BooleanExpression typeCodeMatched = designComponentTypeCodeExists(post,
+    BooleanExpression typeCodeMatched = PostPredicate.designComponentTypeCodeExists(post,
         condition.getTypeCode());
     if (keywordMatched == null) {
       return typeCodeMatched;
@@ -102,23 +101,6 @@ public class DesignBoardRepositorySupport {
       return keywordMatched;
     }
     return keywordMatched.and(typeCodeMatched);
-  }
-
-  private BooleanExpression designComponentTypeCodeExists(QPost post, TypeCode typeCode) {
-    if (typeCode == null) {
-      return null;
-    }
-    QDesignBoard searchDesignBoard = new QDesignBoard("searchDesignBoard");
-    QDesignComponentComponentType componentTypeMapping =
-        new QDesignComponentComponentType("searchComponentTypeMapping");
-    return JPAExpressions.selectOne()
-        .from(searchDesignBoard)
-        .join(searchDesignBoard.designComponent.componentTypeMappings, componentTypeMapping)
-        .where(
-            searchDesignBoard.post.eq(post),
-            componentTypeMapping.componentType.typeCode.eq(typeCode)
-        )
-        .exists();
   }
 
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
