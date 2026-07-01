@@ -21,6 +21,7 @@ import com.komentum.theme.android.utils.XmlEditor;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.domain.ThemeStyle;
+import com.komentum.theme.core.enums.ThemeType;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
@@ -128,6 +129,7 @@ public class DefaultThemeSeeder {
               .userEmail(rootUser.getUserEmail())
               .versionName(defaultThemeSheetInfo.themeCode + ".0.0.1")
               .versionNumber("0")
+              .themeType(ThemeType.DEFAULT)
               .isPublic(true)
               .isDone(true)
               .build()
