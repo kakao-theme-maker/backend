@@ -1120,6 +1120,15 @@
               "height": 102,
               "fileExtension": "png"
             }
+          ],
+          "defaultProfileStyleProfileImage": [
+            {
+              "code": "defaultProfileStyleProfileImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_profile_01_image.png",
+              "width": 126,
+              "height": 102,
+              "fileExtension": "png"
+            }
           ]
         },
         "styleCodes": {
@@ -1249,6 +1258,13 @@
               "code": "androidMessageNotificationBarNameTextColor"
             }
           ],
+          "messageNotificationBarMessageTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_notification_color",
+              "code": "androidMessageNotificationBarMessageTextColor"
+            }
+          ],
           "directShareBarBackgroundColor": [
             {
               "resourceGroup": "color",
@@ -1261,6 +1277,13 @@
               "resourceGroup": "color",
               "resourceName": "theme_direct_share_color",
               "code": "androidDirectShareBarNameTextColor"
+            }
+          ],
+          "directShareBarMessageTextColor": [
+            {
+              "resourceGroup": "color",
+              "resourceName": "theme_direct_share_color",
+              "code": "androidDirectShareBarMessageTextColor"
             }
           ],
           "passcodeBackgroundColor": [
@@ -1850,6 +1873,13 @@
               "code": "iOSMessageNotificationBarNameTextColor"
             }
           ],
+          "messageNotificationBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-MessageNotificationBarName",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMessageNotificationBarMessageTextColor"
+            }
+          ],
           "directShareBarBackgroundColor": [
             {
               "resourceGroup": "BackgroundStyle-DirectShareBar",
@@ -1862,6 +1892,13 @@
               "resourceGroup": "LabelStyle-DirectShareBarName",
               "resourceName": "-ios-text-color",
               "code": "iOSDirectShareBarNameTextColor"
+            }
+          ],
+          "directShareBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-DirectShareBarName",
+              "resourceName": "-ios-text-color",
+              "code": "iOSDirectShareBarMessageTextColor"
             }
           ],
           "passcodeBackgroundColor": [
