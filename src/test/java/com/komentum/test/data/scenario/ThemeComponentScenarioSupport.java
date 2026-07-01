@@ -1,8 +1,6 @@
 package com.komentum.test.data.scenario;
 
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
-import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
 import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.enums.ThemeType;
@@ -17,8 +15,7 @@ import org.springframework.stereotype.Component;
 public class ThemeComponentScenarioSupport {
 
   private final ThemeComponentSeeder themeComponentSeeder;
-  private final ComponentTypeSeeder componentTypeSeeder;
-  private final ColorStyleSeeder colorStyleSeeder;
+  private final ThemeMetaDataScenarioSupport themeMetaDataScenarioSupport;
 
   public record ThemeComponentScenarioResult(
       List<ThemeComponent> themeComponents,
@@ -57,9 +54,10 @@ public class ThemeComponentScenarioSupport {
     }
 
     public ThemeComponentScenarioResult build() {
-      // generate color style & component type
-      componentTypeSeeder.upsertComponentType();
-      colorStyleSeeder.upsertColorStyleSeed();
+      // generate theme metadata
+      themeMetaDataScenarioSupport.builder()
+          .withAll()
+          .build();
       // generate theme components
       if (countPerUser <= 0) {
         throw new IllegalArgumentException("countPerUser must be bigger than 0");
