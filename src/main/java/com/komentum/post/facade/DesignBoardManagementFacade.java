@@ -126,13 +126,13 @@ public class DesignBoardManagementFacade {
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
       List<DesignBoard> designBoards = designBoardMap.getOrDefault(detail.getPostId(), List.of());
-      List<String> previewImageUrls = createPreviewImageUrls(detail, designBoards);
+      List<String> previewImageUrls = resolvePreviewImageUrls(detail, designBoards);
       return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls,
           designBoardMapperSupport.toComponentTypeDtos(designBoards));
     }).toList();
   }
 
-  private List<String> createPreviewImageUrls(DesignBoardQuery.Detail detail,
+  private List<String> resolvePreviewImageUrls(DesignBoardQuery.Detail detail,
       List<DesignBoard> designBoards) {
     String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
         detail.getPostPreviewImageName());
