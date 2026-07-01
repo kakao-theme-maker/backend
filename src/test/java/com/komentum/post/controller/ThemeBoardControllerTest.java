@@ -124,22 +124,6 @@ class ThemeBoardControllerTest {
     );
   }
 
-  private List<ThemeBoardPreviewDto> requestThemeBoardPreviews(
-      MultiValueMap<String, String> params, User client) throws Exception {
-    return mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
-            .mockMvc(mockMvc)
-            .path("/api/theme-boards")
-            .params(params)
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(client))
-            .statusCode(200)
-            .responseType(new TypeReference<>() {
-            })
-            .build()
-    );
-  }
-
   @Test
   @DisplayName("페이지 기반 테마 게시글 목록 조회 성공 테스트")
   void getPosts_success() throws Exception {
@@ -308,7 +292,18 @@ class ThemeBoardControllerTest {
         boardDetailDataGenerator.getThemeBoards().size());
     params.add("keyword", keyword);
     // when
-    List<ThemeBoardPreviewDto> response = requestThemeBoardPreviews(params, client);
+    List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/theme-boards")
+            .params(params)
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
     // then
     assertThat(response).hasSize(boardDetailDataGenerator.getThemeBoards().size());
     assertThat(response.get(0).getPostId()).isEqualTo(targetPost.getPostId());

@@ -169,21 +169,6 @@ public class DesignBoardControllerTest {
     );
   }
 
-  private List<DesignBoardPreviewDto> requestDesignBoardPreviews(
-      MultiValueMap<String, String> params, User client) throws Exception {
-    return mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
-            .mockMvc(mockMvc)
-            .httpMethod(HttpMethod.GET)
-            .path("/api/design-boards")
-            .params(params)
-            .responseType(new TypeReference<>() {
-            })
-            .clientDto(TestClientDto.fromEntity(client))
-            .build()
-    );
-  }
-
   private ComponentType getComponentType(TypeCode typeCode) {
     componentTypeSeeder.upsertComponentType();
     return componentTypeRepository.findAllByTypeCodeIn(List.of(typeCode)).get(0);
@@ -278,7 +263,17 @@ public class DesignBoardControllerTest {
     params.add("keyword", keyword);
     User client = userResult.getFirstUser();
     // when
-    List<DesignBoardPreviewDto> response = requestDesignBoardPreviews(params, client);
+    List<DesignBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards")
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
     // then
     assertThat(response).hasSize(postResult.designBoards().size());
     assertThat(response.get(0).getPostId()).isEqualTo(targetPost.getPostId());
@@ -309,7 +304,17 @@ public class DesignBoardControllerTest {
     params.add("type_code", typeCode.getTypeCode());
     User client = userResult.getFirstUser();
     // when
-    List<DesignBoardPreviewDto> response = requestDesignBoardPreviews(params, client);
+    List<DesignBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards")
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
     // then
     assertThat(response).hasSize(postResult.designBoards().size());
     assertThat(response.get(0).getPostId()).isIn(matchedPostIds);
