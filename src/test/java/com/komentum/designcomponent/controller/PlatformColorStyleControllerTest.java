@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class PlatformColorStyleControllerTest {
 
-  private final int PLATFORM_COLOR_STYLE_COUNT = 67;
+  private final int PLATFORM_COLOR_STYLE_COUNT = 71;
   @Autowired
   private MockMvc mockMvc;
   @Autowired
