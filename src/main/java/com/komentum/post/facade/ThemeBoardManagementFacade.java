@@ -113,7 +113,8 @@ public class ThemeBoardManagementFacade {
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable, String keyword) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreview(
         pageable, keyword);
-    return toThemeBoardPreviewDtos(themeBoardQueryPreviewList);
+    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
+        boardManagementHelper);
   }
 
   /**
@@ -126,7 +127,8 @@ public class ThemeBoardManagementFacade {
   public List<ThemeBoardPreviewDto> findPopularThemeBoardPreviews(Pageable pageable) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreviewOrderByPrefers(
         pageable, true);
-    return toThemeBoardPreviewDtos(themeBoardQueryPreviewList);
+    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
+        boardManagementHelper);
   }
 
   /**
@@ -141,12 +143,8 @@ public class ThemeBoardManagementFacade {
   public List<ThemeBoardPreviewDto> findRecommendedThemeBoardPreviews(Pageable pageable) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreviewOrderByPrefers(
         pageable, false);
-    return toThemeBoardPreviewDtos(themeBoardQueryPreviewList);
-  }
-
-  private List<ThemeBoardPreviewDto> toThemeBoardPreviewDtos(
-      List<ThemeBoardQuery.Preview> previewList) {
-    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(previewList, boardManagementHelper);
+    return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
+        boardManagementHelper);
   }
 
   /**
