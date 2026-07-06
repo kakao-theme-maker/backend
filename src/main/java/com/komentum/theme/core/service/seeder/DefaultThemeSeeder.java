@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.AllArgsConstructor;
@@ -223,11 +225,13 @@ public class DefaultThemeSeeder {
 
   /**
    * 4. themeImage, designComponent를 생성한다.
+   * 하나의 themeImage는 하나의 typeCode와 매핑되고, typeCode 중복은 없다 ( 하나의 요소에 서로 다른 이미지 존재 불가 )
    * */
   private void seedDefaultThemeImages(ThemeComponent theme, User user, Path themeRootPath,
       DefaultThemeContext context) throws IOException {
     TypeCode[] typeCodes = TypeCode.values();
     List<ThemeImage> themeImages = new ArrayList<>();
+    List<DesignComponent> designComponentsToSave = new ArrayList<>();
     for (TypeCode typeCode : typeCodes) {
       ComponentType componentType = context.componentTypeMap.get(typeCode);
       List<PlatformComponentType> platformComponentTypes = context.platformComponentTypeMap.get(
@@ -236,51 +240,52 @@ public class DefaultThemeSeeder {
         throw new EntityNotFoundException(
             "platformComponentType with typeCode" + typeCode.getTypeCode() + "not exists");
       }
-      List<DesignComponent> designComponents = seedDefaultDesignComponents(user, themeRootPath,
+      DesignComponent designComponent = createDefaultDesignComponent(user, themeRootPath,
           componentType, platformComponentTypes);
-      for (DesignComponent dc : designComponents) {
-        themeImages.add(ThemeImage.builder()
-            .themeComponent(theme)
-            .designComponent(dc)
-            .componentType(componentType)
-            .build());
-      }
+      designComponentsToSave.add(designComponent);
+      themeImages.add(ThemeImage.builder()
+          .themeComponent(theme)
+          .designComponent(designComponent)
+          .componentType(componentType)
+          .build());
     }
+    designComponentRepository.saveAll(designComponentsToSave);
     themeImageRepository.saveAll(themeImages);
   }
 
   /**
    * design component를 생성한다.
    * */
-  private List<DesignComponent> seedDefaultDesignComponents(User user, Path themeRootPath,
+  private DesignComponent createDefaultDesignComponent(User user, Path themeRootPath,
       ComponentType componentType, List<PlatformComponentType> platformComponentTypes)
       throws IOException {
-    List<DesignComponent> designComponents = new ArrayList<>();
     PlatformComponentType pct = platformComponentTypes.get(0);
     Path imagePath = themeRootPath.resolve(Path.of(pct.getPath()));
     String imageUrl = fileManager.uploadFile(Files.readAllBytes(imagePath),
         UUID.randomUUID().toString());
-    designComponents.add(DesignComponent.builder()
+    DesignComponent dc = DesignComponent.builder()
         .imageUrl(imageUrl)
         .user(user)
         .isPublic(true)
-        .build());
-    List<DesignComponent> savedDesignComponents = designComponentRepository.saveAll(
-        designComponents);
-    for (DesignComponent dc : designComponents) {
-      dc.replaceComponentTypes(List.of(componentType));
-    }
-    return savedDesignComponents;
+        .build();
+    dc.replaceComponentTypes(List.of(componentType));
+    return dc;
   }
 
   /**
-   * 5. ThemeImage를 생성한다.
+   * 5. ThemeStyle을 생성한다.
+   * 하나의 themeStyle은 하나의 styleCode와 매핑되고, styleCode 중복은 없다 ( 하나의 스타일에 서로 다른 색상이 존재할 수 없음 )
    * */
   private void seedDefaultThemeStyles(ThemeComponent theme, Path themeRootPath,
       DefaultThemeContext context) {
     StyleCode[] styleCodes = StyleCode.values();
     Path colorSheetPath = themeRootPath.resolve("values").resolve("colors.xml");
-    List<ColorResourceInfo> colorResourceInfoList = readColorSheet(colorSheetPath);
+    // android는 resourceGroup이 color로 동일, resourceName은 고유값을 갖는다
+    Map<String, ColorResourceInfo> colorResourceInfoMap = readColorSheet(colorSheetPath).stream()
+        .collect(Collectors.toMap(
+            ColorResourceInfo::getResourceName,
+            Function.identity()
+        ));
     List<ThemeStyle> themeStyles = new ArrayList<>();
     for (StyleCode styleCode : styleCodes) {
       ColorStyle colorStyle = context.colorStyleMap.get(styleCode);
@@ -291,14 +296,17 @@ public class DefaultThemeSeeder {
             "platformColorStyle with styleCode " + styleCode.getStyleCode() + " not exists");
       }
       PlatformColorStyle pcs = platformColorStyles.get(0);
-      themeStyles.addAll(colorResourceInfoList.stream()
-          .filter(dci -> dci.resourceName.equals(pcs.getResourceName()))
-          .map(dci -> ThemeStyle.builder()
-              .themeComponent(theme)
-              .colorStyle(colorStyle)
-              .color(dci.color)
-              .build()).toList());
-
+      ColorResourceInfo colorResourceInfo = colorResourceInfoMap.get(pcs.getResourceName());
+      if (colorResourceInfo == null) {
+        throw new RuntimeException(
+            "[DefaultThemeSeeder] color resource with resourceName " + pcs.getResourceName()
+                + " not exists");
+      }
+      themeStyles.add(ThemeStyle.builder()
+          .themeComponent(theme)
+          .colorStyle(colorStyle)
+          .color(colorResourceInfo.color)
+          .build());
     }
     themeStyleRepository.saveAll(themeStyles);
   }
