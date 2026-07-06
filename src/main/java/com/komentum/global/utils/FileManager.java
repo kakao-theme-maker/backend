@@ -19,6 +19,8 @@ public interface FileManager {
    * */
   String uploadFile(byte[] fileBytes, String fileName);
 
+  String uploadFile(InputStream is, long contentLength, String fileName);
+
   /**
    * 파일명을 기반으로 특정 파일을 삭제한다
    * */

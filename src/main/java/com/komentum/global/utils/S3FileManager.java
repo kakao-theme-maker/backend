@@ -2,6 +2,7 @@ package com.komentum.global.utils;
 
 import java.io.InputStream;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -17,6 +18,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+@Slf4j
 @Component
 @Profile("!test")
 @ConditionalOnProperty(name = "file.storage", havingValue = "s3")
@@ -78,6 +80,16 @@ public class S3FileManager implements FileManager {
         .contentLength((long) fileBytes.length)
         .build();
     s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes));
+    return resolveFilePath(fileName);
+  }
+
+  @Override
+  public String uploadFile(InputStream is, long contentLength, String fileName) {
+    PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+        .bucket(bucketName)
+        .key(fileName)
+        .build();
+    s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(is, contentLength));
     return resolveFilePath(fileName);
   }
 
