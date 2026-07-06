@@ -56,7 +56,7 @@ public class AndroidColorStyleEditor {
         throw new IllegalArgumentException("cannot find color element on colors.xml");
       }
       if (!RegexValidator.isValidHexColor(colorDto.getColor())) {
-        throw new IllegalArgumentException("invalid hex color");
+        throw new IllegalArgumentException("invalid hex color: " + colorDto.getColor());
       }
       colorElement.setTextContent(colorDto.getColor());
     }
