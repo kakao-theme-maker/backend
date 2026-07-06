@@ -1,17 +1,24 @@
 package com.komentum.theme.core.service;
 
+import com.komentum.designcomponent.enums.StyleCode;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.dto.ThemeComponentDto;
+import com.komentum.theme.core.dto.ThemeDetailResponse;
+import com.komentum.theme.core.dto.ThemeDetailResponse.StyleCodeInfo;
+import com.komentum.theme.core.dto.ThemeDetailResponse.TypeCodeInfo;
 import com.komentum.theme.core.dto.ThemePreviewDto;
 import com.komentum.theme.core.enums.ThemeSortType;
+import com.komentum.theme.core.enums.ThemeType;
 import com.komentum.theme.core.mapper.ThemeComponentMapper;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeComponentRepositorySupport;
 import com.komentum.theme.core.service.condition.ThemeSearchCondition;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,6 +34,7 @@ public class ThemeRetrieveService {
   private final ThemeComponentRepository themeComponentRepository;
   private final ThemeComponentMapper themeComponentMapper;
   private final ThemeImageService themeImageService;
+  private final ThemeStyleService themeStyleService;
   private final UserEntityFinder userEntityFinder;
   private final ThemeComponentRepositorySupport themeComponentRepositorySupport;
 
@@ -130,5 +138,32 @@ public class ThemeRetrieveService {
       String previewImageUrl = themeImageMap.get(tc.getThemeComponentId());
       return ThemePreviewDto.from(tc, previewImageUrl);
     }).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public ThemeDetailResponse findThemeDetail(Integer themeComponentId) {
+    ThemeComponent themeComponent = getThemeEntityById(themeComponentId);
+    Map<TypeCode, TypeCodeInfo> typeCodes = themeImageService.findTypeCodeMapByThemeComponentId(
+        themeComponentId
+    );
+    Map<StyleCode, StyleCodeInfo> styleCodes = themeStyleService.findStyleCodeMapByThemeComponentId(
+        themeComponentId
+    );
+    return ThemeDetailResponse.builder()
+        .themeComponentId(themeComponent.getThemeComponentId())
+        .themeName(themeComponent.getThemeName())
+        .typeCodes(typeCodes)
+        .styleCodes(styleCodes)
+        .build();
+  }
+
+  @Transactional(readOnly = true)
+  public ThemeComponent findDefaultTheme() {
+    List<ThemeComponent> defaultThemeComponents = themeComponentRepository.findByThemeType(
+        ThemeType.DEFAULT);
+    if (defaultThemeComponents.isEmpty()) {
+      throw new EntityNotFoundException("[ThemeRetriveService] default theme not found");
+    }
+    return defaultThemeComponents.get(0);
   }
 }

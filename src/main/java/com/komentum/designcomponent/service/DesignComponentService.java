@@ -115,6 +115,16 @@ public class DesignComponentService {
   }
 
   @Transactional(readOnly = true)
+  public Map<Integer, DesignComponent> findMapByIdIn(List<Integer> ids) {
+    List<DesignComponent> designComponents = findByIdIn(ids);
+    return designComponents.stream()
+        .collect(Collectors.toMap(
+            DesignComponent::getDesignComponentId,
+            Function.identity())
+        );
+  }
+
+  @Transactional(readOnly = true)
   public List<DesignComponentDto> getByPublicUserId(String publicUserId) {
     return designComponentRepository.findByUser_PublicUserId(publicUserId).stream()
         .map(mapper::toDto).toList();

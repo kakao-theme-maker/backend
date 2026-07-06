@@ -1,7 +1,10 @@
 package com.komentum.theme.core.controller;
 
-import com.komentum.theme.core.dto.CreateThemeRequest;
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.theme.core.dto.ThemeComponentDto;
+import com.komentum.theme.core.dto.ThemeDetailResponse;
+import com.komentum.theme.core.dto.ThemeUpdateRequest;
+import com.komentum.theme.core.facade.ThemeManagementFacade;
 import com.komentum.theme.core.service.ThemeManageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,21 +29,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class ThemeManageController {
 
   private final ThemeManageService themeManageService;
+  private final ThemeManagementFacade themeManagementFacade;
 
   @PostMapping
   @Operation(summary = "인증된 사용자가 새로운 테마를 생성한다")
-  public ResponseEntity<ThemeComponentDto> createTheme(
-      @Valid @RequestBody CreateThemeRequest request) {
-    return new ResponseEntity<>(themeManageService.createTheme(request), HttpStatus.CREATED);
+  public ResponseEntity<ThemeDetailResponse> createNewTheme(
+      @AuthenticationPrincipal CustomUserDetails userDetails
+  ) {
+    return new ResponseEntity<>(
+        themeManagementFacade.createThemeFromDefault(userDetails.getPublicUserId()),
+        HttpStatus.CREATED
+    );
   }
 
-  @PutMapping("/{id}")
+  @PutMapping("/{themeComponentId}")
   @Operation(summary = "인증된 사용자가 ID로 특정 테마를 수정한다")
-  public ResponseEntity<ThemeComponentDto> updateTheme(
-      @Parameter(description = "수정할 테마의 ID", example = "1")
-      @PathVariable("id") Integer id,
-      @Valid @RequestBody CreateThemeRequest request) {
-    return ResponseEntity.ok(themeManageService.updateTheme(id, request));
+  public ResponseEntity<Void> updateTheme(
+      @PathVariable @Parameter(description = "수정할 테마의 ID", example = "1") Integer themeComponentId,
+      @Valid @RequestBody ThemeUpdateRequest request) {
+    themeManagementFacade.updateTheme(themeComponentId, request);
+    return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/{id}")

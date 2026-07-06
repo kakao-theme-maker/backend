@@ -11,18 +11,21 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ThemeStyleRepository extends JpaRepository<ThemeStyle, Integer> {
 
-  @Query("select ts from ThemeStyle ts join fetch ThemeComponent tc where tc.themeComponentId = :themeComponentId")
+  @Query("select ts "
+      + "from ThemeStyle ts "
+      + "join fetch ts.themeComponent tc "
+      + "where tc.themeComponentId = :themeComponentId")
   List<ThemeStyle> findByThemeComponentId(
       @Param("themeComponentId") Integer themeComponentId); // component 리스트 반환
 
   @Modifying
   @Query("DELETE FROM ThemeStyle ts WHERE ts.themeComponent.themeComponentId = :themeComponentId")
   void deleteByThemeComponentId(
-      @Param("themeComponentId") Integer themeComponentId); // component 삭제
+      @Param("themeComponentId") Integer themeComponentId); // component 삭제s
 
   @Query("SELECT ts FROM ThemeStyle ts "
       + "JOIN FETCH ts.themeComponent tc "
       + "JOIN FETCH ts.colorStyle cs "
       + "WHERE tc.themeComponentId = :themeComponentId")
-  List<ThemeStyle> fetchJoinByThemeComponentId(Integer themeComponentId);
+  List<ThemeStyle> fetchJoinAllByThemeComponentId(Integer themeComponentId);
 }
