@@ -74,6 +74,10 @@ public class AndroidThemeGenerator {
    * @return 업로드된 APK의 URL
    */
   public String createAndSaveTheme(ThemeComponent themeComponent) {
+    if (themeComponent == null || themeComponent.getThemeComponentId() == null) {
+      throw new IllegalArgumentException(
+          "[AndroidThemeGenerator] ThemeComponent or ID cannot be null");
+    }
     Integer themeId = themeComponent.getThemeComponentId();
     try {
       // 1. 임시 테마를 임시 디렉토리에 만든다
