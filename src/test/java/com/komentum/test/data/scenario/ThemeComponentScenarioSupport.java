@@ -7,8 +7,10 @@ import com.komentum.designcomponent.service.seeder.PlatformColorStyleSeeder;
 import com.komentum.designcomponent.service.seeder.PlatformComponentTypeSeeder;
 import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.enums.ThemeType;
 import com.komentum.user.domain.User;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,15 +24,16 @@ public class ThemeComponentScenarioSupport {
   private final PlatformComponentTypeSeeder platformComponentTypeSeeder;
   private final PlatformColorStyleSeeder platformColorStyleSeeder;
 
+  public record ThemeComponentScenarioResult(
+      List<ThemeComponent> themeComponents,
+      ThemeComponent defaultTheme
+  ) {
+
+  }
+
   public ThemeComponentScenarioBuilder builder(List<User> users,
       List<DesignComponent> designComponents) {
     return new ThemeComponentScenarioBuilder().builder(users, designComponents);
-  }
-
-  public record ThemeComponentScenarioResult(
-      List<ThemeComponent> themeComponents
-  ) {
-
   }
 
   public class ThemeComponentScenarioBuilder {
@@ -38,6 +41,7 @@ public class ThemeComponentScenarioSupport {
     private List<User> users;
     private int countPerUser;
     private List<DesignComponent> designComponents;
+    private boolean shouldCreateDefaultTheme = false;
 
     public ThemeComponentScenarioBuilder builder(List<User> users,
         List<DesignComponent> designComponents) {
@@ -48,6 +52,11 @@ public class ThemeComponentScenarioSupport {
 
     public ThemeComponentScenarioBuilder withCountPerUser(int countPerUser) {
       this.countPerUser = countPerUser;
+      return this;
+    }
+
+    public ThemeComponentScenarioBuilder withDefaultTheme() {
+      shouldCreateDefaultTheme = true;
       return this;
     }
 
@@ -63,8 +72,16 @@ public class ThemeComponentScenarioSupport {
       }
       List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(countPerUser, users,
           designComponents);
+      // generate default theme
+      ThemeComponent defaultTheme = null;
+      if (shouldCreateDefaultTheme) {
+        defaultTheme = themeComponentSeeder.seedOne(users.get(0), designComponents,
+            ThemeType.DEFAULT,
+            UUID.randomUUID().toString());
+        themeComponents.add(defaultTheme);
+      }
       // convert data to result
-      return new ThemeComponentScenarioResult(themeComponents);
+      return new ThemeComponentScenarioResult(themeComponents, defaultTheme);
     }
   }
 }

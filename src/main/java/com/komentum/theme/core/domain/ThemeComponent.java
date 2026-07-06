@@ -1,9 +1,13 @@
 package com.komentum.theme.core.domain;
 
+import com.komentum.theme.core.dto.ThemeUpdateRequest;
+import com.komentum.theme.core.enums.ThemeType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -45,11 +49,16 @@ public class ThemeComponent {
   @Column(name = "userEmail", nullable = false)
   private String userEmail;
 
-  @Column(name = "theme_name", nullable = false)
-  private String themeName;
-
   @Column(name = "theme_code", nullable = false, unique = true)
   private String themeCode;
+
+  @Builder.Default
+  @Column(name = "theme_type", nullable = false)
+  @Enumerated(EnumType.STRING)
+  private ThemeType themeType = ThemeType.USER;
+
+  @Column(name = "theme_name", nullable = false)
+  private String themeName;
 
   @Column(name = "version_number", nullable = false)
   private String versionNumber;
@@ -85,6 +94,12 @@ public class ThemeComponent {
   void prePersist() {
     if (this.themeCode == null) {
       this.themeCode = "theme" + UUID.randomUUID().toString().replace("-", "");
+    }
+  }
+
+  public void update(ThemeUpdateRequest updateRequest) {
+    if (updateRequest.getThemeName() != null && !updateRequest.getThemeName().isBlank()) {
+      this.themeName = updateRequest.getThemeName();
     }
   }
 
