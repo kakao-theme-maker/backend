@@ -54,7 +54,7 @@ public class ThemeBoardRepositorySupport {
     QUser user = QUser.user;
     QThemeComponent themeComponent = QThemeComponent.themeComponent;
     NumberExpression<Long> preferCount = prefer.countDistinct();
-    BooleanExpression searchMatched = createSearchMatched(post, condition);
+    BooleanExpression searchMatched = PostPredicate.keywordContains(post, condition.getKeyword());
     OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypeList, post,
         preferCount, searchMatched);
     // generate JPQL
@@ -150,7 +150,7 @@ public class ThemeBoardRepositorySupport {
   public List<ThemeBoardQuery.Detail> findThemeBoardQueryDetails(Pageable pageable, User client,
       PostSearchCondition condition, List<PostSortType> sortTypes) {
     QPost post = QPost.post;
-    BooleanExpression searchMatched = createSearchMatched(post, condition);
+    BooleanExpression searchMatched = PostPredicate.keywordContains(post, condition.getKeyword());
     OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null,
         searchMatched);
     return getThemeBoardDetailBaseQuery(client)
@@ -161,10 +161,6 @@ public class ThemeBoardRepositorySupport {
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
-  }
-
-  private BooleanExpression createSearchMatched(QPost post, PostSearchCondition condition) {
-    return PostPredicate.keywordContains(post, condition.getKeyword());
   }
 
 }
