@@ -8,7 +8,6 @@ import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.PlatformColorStyleRepository;
 import com.komentum.designcomponent.repository.PlatformComponentTypeRepository;
 import com.komentum.global.utils.CompressUtils;
-import com.komentum.global.utils.CustomFileUtils;
 import com.komentum.global.utils.FileManager;
 import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.android.dto.AndroidComponentDto;
@@ -39,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 
 @Slf4j
 @Service
@@ -207,7 +207,8 @@ public class AndroidThemeGenerator {
   private String uploadTheme(Integer themeId) {
     Path outputApk = ThemePathManager.getAndroidThemeOutputPath(themeId.toString());
     try {
-      String themeUrl = fileManager.uploadFile(Files.readAllBytes(outputApk),
+      long contentLength = Files.size(outputApk);
+      String themeUrl = fileManager.uploadFile(Files.newInputStream(outputApk), contentLength,
           UUID.randomUUID() + ".apk");
       if (themeUrl == null || themeUrl.isBlank()) {
         throw new RuntimeException("uploaded themeUrl is null");
