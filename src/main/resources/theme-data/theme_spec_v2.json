@@ -1850,6 +1850,13 @@
               "code": "iOSMessageNotificationBarNameTextColor"
             }
           ],
+          "messageNotificationBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-MessageNotificationBarMessage",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMessageNotificationBarMessageTextColor"
+            }
+          ],
           "directShareBarBackgroundColor": [
             {
               "resourceGroup": "BackgroundStyle-DirectShareBar",
@@ -1862,6 +1869,13 @@
               "resourceGroup": "LabelStyle-DirectShareBarName",
               "resourceName": "-ios-text-color",
               "code": "iOSDirectShareBarNameTextColor"
+            }
+          ],
+          "directShareBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-DirectShareBarMessage",
+              "resourceName": "-ios-text-color",
+              "code": "iOSDirectShareBarMessageTextColor"
             }
           ],
           "passcodeBackgroundColor": [
