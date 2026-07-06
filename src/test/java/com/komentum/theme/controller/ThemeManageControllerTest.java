@@ -1,11 +1,17 @@
 package com.komentum.theme.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.service.seeder.PlatformColorStyleSeeder;
+import com.komentum.designcomponent.service.seeder.PlatformComponentTypeSeeder;
+import com.komentum.global.utils.FileManager;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.test.MockMvcUtils;
@@ -27,7 +33,10 @@ import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeStyleUpdateRequest;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
+import com.komentum.theme.ios.dto.IosThemePackageResponse;
 import com.komentum.user.domain.User;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -75,6 +84,12 @@ class ThemeManageControllerTest {
   private ThemeStyleRepository themeStyleRepository;
   @Autowired
   private ThemeComponentRepository themeComponentRepository;
+  @Autowired
+  private PlatformComponentTypeSeeder platformComponentTypeSeeder;
+  @Autowired
+  private PlatformColorStyleSeeder platformColorStyleSeeder;
+  @Autowired
+  private FileManager fileManager;
 
   private User testUser;
   private List<DesignComponent> designComponentList;
@@ -174,6 +189,93 @@ class ThemeManageControllerTest {
   }
 
   @Test
+  @DisplayName("테마 소유자는 iOS ktheme 패키지를 생성할 수 있다")
+  public void makeIosThemePackage_owner_success() throws Exception {
+    // given
+    ThemeComponent targetTheme = createThemeAndSeedPlatformMappings();
+    String expectedUrl = "https://cdn.example.com/theme.ktheme";
+    byte[] sampleImageBytes = Files.readAllBytes(
+        Paths.get("src/test/resources/sample-images/test.png"));
+    when(fileManager.convertUrlToFileName(anyString())).thenReturn("source.png");
+    when(fileManager.downloadFile("source.png")).thenReturn(sampleImageBytes);
+    when(fileManager.uploadFile(any(byte[].class), anyString())).thenReturn(expectedUrl);
+
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(
+        "/api/themes/{id}/packages/ios", targetTheme.getThemeComponentId());
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .clientDto(TestClientDto.fromEntity(testUser))
+            .build());
+
+    // then
+    resultActions.andExpect(status().isOk());
+    IosThemePackageResponse response = mockMvcUtils.parseResponse(resultActions,
+        new TypeReference<>() {
+        });
+    assertThat(response.getThemeComponentId()).isEqualTo(targetTheme.getThemeComponentId());
+    assertThat(response.getFileName()).startsWith("ios-theme-").endsWith(".ktheme");
+    assertThat(response.getThemeUrl()).isEqualTo(expectedUrl);
+  }
+
+  @Test
+  @DisplayName("관리자는 다른 사용자의 테마도 iOS ktheme 패키지로 생성할 수 있다")
+  public void makeIosThemePackage_admin_success() throws Exception {
+    // given
+    ThemeComponent targetTheme = createThemeAndSeedPlatformMappings();
+    User rootUser = userScenarioSupport.builder()
+        .withRootUser()
+        .build()
+        .rootUser();
+    String expectedUrl = "https://cdn.example.com/admin-theme.ktheme";
+    byte[] sampleImageBytes = Files.readAllBytes(
+        Paths.get("src/test/resources/sample-images/test.png"));
+    when(fileManager.convertUrlToFileName(anyString())).thenReturn("source.png");
+    when(fileManager.downloadFile("source.png")).thenReturn(sampleImageBytes);
+    when(fileManager.uploadFile(any(byte[].class), anyString())).thenReturn(expectedUrl);
+
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(
+        "/api/themes/{id}/packages/ios", targetTheme.getThemeComponentId());
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .clientDto(TestClientDto.fromEntity(rootUser))
+            .build());
+
+    // then
+    resultActions.andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("테마 소유자가 아닌 사용자는 iOS ktheme 패키지를 생성할 수 없다")
+  public void makeIosThemePackage_forbidden() throws Exception {
+    // given
+    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
+            designComponentList)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
+    User otherUser = userScenarioSupport.builder()
+        .withUsers(2)
+        .build()
+        .users()
+        .stream()
+        .filter(user -> !user.getPublicUserId().equals(testUser.getPublicUserId()))
+        .findFirst()
+        .orElseThrow();
+
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(
+        "/api/themes/{id}/packages/ios", targetTheme.getThemeComponentId());
+    request = mockMvcUtils.addAuthentication(request, TestClientDto.fromEntity(otherUser));
+
+    // then
+    mockMvc.perform(request)
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
   @DisplayName("")
   public void markThemeAsDone_success() throws Exception {
     // given
@@ -205,5 +307,15 @@ class ThemeManageControllerTest {
     // then
     mockMvc.perform(request)
         .andExpect(status().isNoContent());
+  }
+
+  private ThemeComponent createThemeAndSeedPlatformMappings() {
+    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
+            designComponentList)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
+    platformComponentTypeSeeder.upsertPlatformComponentType();
+    platformColorStyleSeeder.upsertPlatformColorStyle();
+    return targetTheme;
   }
 }
