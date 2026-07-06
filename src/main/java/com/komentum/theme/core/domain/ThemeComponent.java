@@ -46,7 +46,7 @@ public class ThemeComponent {
   @Column(name = "theme_component_id")
   private Integer themeComponentId;
 
-  @Column(name = "userEmail", nullable = false)
+  @Column(name = "user_email", nullable = false)
   private String userEmail;
 
   @Column(name = "theme_code", nullable = false, unique = true)
