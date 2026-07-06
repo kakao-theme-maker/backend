@@ -480,15 +480,6 @@
           }
         }
       },
-      "messageNotificationBarNameTextColor": {
-        "name": "메시지 알림 배너 이름 색상",
-        "description": "메시지 알림 배너 이름 색상",
-        "usage": {
-          "messageNotificationBar": {
-            "description": "메시지 알림 배너 이름 색상"
-          }
-        }
-      },
       "messageNotificationBarMessageTextColor": {
         "name": "메시지 알림 배너 텍스트 색상",
         "description": "메시지 알림 배너 텍스트 색상",
@@ -496,7 +487,8 @@
           "messageNotificationBar": {
             "description": "메시지 알림 배너 메시지 색상"
           }
-        }
+        },
+        "devNote": "android에는 없음"
       },
       "directShareBarBackgroundColor": {
         "name": "전달 완료 배너 배경색",
@@ -504,15 +496,6 @@
         "usage": {
           "directShareBar": {
             "description": "전달 완료 배너 배경 색상"
-          }
-        }
-      },
-      "directShareBarNameTextColor": {
-        "name": "전달 완료 배너 이름 색상",
-        "description": "전달 완료 배너 이름 색상",
-        "usage": {
-          "directShareBar": {
-            "description": "전달 완료 배너 이름 색상"
           }
         }
       },
@@ -1251,11 +1234,11 @@
               "code": "androidMessageNotificationBarBackgroundColor"
             }
           ],
-          "messageNotificationBarNameTextColor": [
+          "messageNotificationBarMessageTextColor": [
             {
               "resourceGroup": "color",
               "resourceName": "theme_notification_color",
-              "code": "androidMessageNotificationBarNameTextColor"
+              "code": "androidMessageNotificationBarMessageTextColor"
             }
           ],
           "directShareBarBackgroundColor": [
@@ -1265,11 +1248,11 @@
               "code": "androidDirectShareBarBackgroundColor"
             }
           ],
-          "directShareBarNameTextColor": [
+          "directShareBarMessageTextColor": [
             {
               "resourceGroup": "color",
               "resourceName": "theme_direct_share_color",
-              "code": "androidDirectShareBarNameTextColor"
+              "code": "androidDirectShareBarMessageTextColor"
             }
           ],
           "passcodeBackgroundColor": [
@@ -1852,11 +1835,11 @@
               "code": "iOSMessageNotificationBarBackgroundColor"
             }
           ],
-          "messageNotificationBarNameTextColor": [
+          "messageNotificationBarMessageTextColor": [
             {
-              "resourceGroup": "LabelStyle-MessageNotificationBarName",
+              "resourceGroup": "LabelStyle-MessageNotificationBarMessage",
               "resourceName": "-ios-text-color",
-              "code": "iOSMessageNotificationBarNameTextColor"
+              "code": "iOSMessageNotificationBarMessageTextColor"
             }
           ],
           "directShareBarBackgroundColor": [
@@ -1866,11 +1849,11 @@
               "code": "iOSDirectShareBarBackgroundColor"
             }
           ],
-          "directShareBarNameTextColor": [
+          "directShareBarMessageTextColor": [
             {
-              "resourceGroup": "LabelStyle-DirectShareBarName",
+              "resourceGroup": "LabelStyle-DirectShareBarMessage",
               "resourceName": "-ios-text-color",
-              "code": "iOSDirectShareBarNameTextColor"
+              "code": "iOSDirectShareBarMessageTextColor"
             }
           ],
           "passcodeBackgroundColor": [
