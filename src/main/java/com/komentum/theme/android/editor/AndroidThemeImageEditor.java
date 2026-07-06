@@ -4,6 +4,7 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.global.utils.NinePatchConverter;
 import com.komentum.theme.android.dto.AndroidComponentDto;
 import com.komentum.theme.android.utils.ThemePathManager;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,7 +28,14 @@ public class AndroidThemeImageEditor {
 
   private final FileManager fileManager;
 
-  private static final int IMAGE_EDITOR_THREAD_POOL_SIZE = 4;
+  private static final int IMAGE_EDITOR_THREAD_POOL_SIZE = 8;
+  private final ExecutorService executorService = Executors.newFixedThreadPool(
+      IMAGE_EDITOR_THREAD_POOL_SIZE);
+
+  @PreDestroy
+  public void shutdown() {
+    executorService.shutdown();
+  }
 
   /**
    * edit an image on the specific theme path
@@ -66,24 +74,19 @@ public class AndroidThemeImageEditor {
    * @param components theme's component info list
    */
   public void editImages(String themeId, List<AndroidComponentDto> components) {
-    ExecutorService executorService = Executors.newFixedThreadPool(IMAGE_EDITOR_THREAD_POOL_SIZE);
-    try {
-      List<CompletableFuture<Void>> futures = components.stream()
-          .map(component -> CompletableFuture.runAsync(() -> {
-            try {
-              editImage(themeId, component);
-            } catch (IOException e) {
-              log.error(
-                  "[AndroidThemeImageEditor] Failed to save image on theme: {}",
-                  component.getImageFilePath(),
-                  e
-              );
-              throw new UncheckedIOException(e);
-            }
-          }, executorService)).toList();
-      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-    } finally {
-      executorService.shutdown();
-    }
+    List<CompletableFuture<Void>> futures = components.stream()
+        .map(component -> CompletableFuture.runAsync(() -> {
+          try {
+            editImage(themeId, component);
+          } catch (IOException e) {
+            log.error(
+                "[AndroidThemeImageEditor] Failed to save image on theme: {}",
+                component.getImageFilePath(),
+                e
+            );
+            throw new UncheckedIOException(e);
+          }
+        }, executorService)).toList();
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }
 }
