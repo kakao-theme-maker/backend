@@ -32,20 +32,20 @@ public class DockerProcessRunner {
   /**
    * run the docker command and log standard output and error
    *
-   * @param command docker command
+   * @param processBuilder process builder with docker command
    */
-  public void runDockerProcess(String[] command) {
+  public void runDockerProcess(ProcessBuilder processBuilder) {
     try {
-      ProcessBuilder processBuilder = new ProcessBuilder(command);
       processBuilder.redirectErrorStream(true);
       Process process = processBuilder.start();
       consumeStream(process.getInputStream());
-      process.waitFor();
-      if (process.exitValue() != 0) {
+      int exitCode = process.waitFor();
+      if (exitCode != 0) {
         String errorMessage =
-            "Process exit value is not 0 (command: " + String.join(" ", command) + ")";
+            "Process exit value is not 0 (command: " + String.join(" ", processBuilder.command())
+                + ")";
         log.error(errorMessage);
-        throw new Exception(errorMessage);
+        throw new IllegalStateException(errorMessage);
       }
     } catch (Exception e) {
       throw new RuntimeException(e);

@@ -61,6 +61,11 @@ public class AndroidThemeGenerator {
   private static final String SAMPLE_THEME_PATH = "themeSample/android/sampleTheme.zip";
   public static final String DOCKER_THEME_DIRECTORY_NAME = "source";
 
+  // keystore const
+  private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
+  private static final String ENV_KEY_ALIAS = "KEY_ALIAS";
+  private static final String ENV_KEY_PASSWORD = "KEY_PASSWORD";
+
   /**
    * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 URL을 반환한다.
    * 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
@@ -80,13 +85,13 @@ public class AndroidThemeGenerator {
       // 3. 임시 테마 메타 데이터 수정
       androidMetaDataEditor.editThemeName(themeId.toString(), themeComponent.getThemeName());
       // 3. 리소스가 수정된 임시 테마를 Docker 호스트 볼륨 마운트를 통해 빌드한다
-      String[] command = createDockerCommandForApkBuild(sourceThemePath,
+      ProcessBuilder pb = createProcessBuilderForApkBuild(sourceThemePath,
           themeComponent.getThemeCode());
-      dockerProcessRunner.runDockerProcess(command);
+      dockerProcessRunner.runDockerProcess(pb);
       // 4. Docker 호스트 볼륨 마운트를 통해 빌드한 결과물을 FileManager로 업로드 및 반환한다
       return uploadTheme(themeId);
     } finally {
-      CustomFileUtils.deleteDirectorySilently(ThemePathManager.getThemeDir(themeId.toString()));
+      FileSystemUtils.deleteRecursively(ThemePathManager.getThemeDir(themeId.toString()).toFile());
     }
   }
 
@@ -178,7 +183,8 @@ public class AndroidThemeGenerator {
    * @param sourceThemePath 빌드 대상 테마 디렉토리
    * @return Docker 실행 명령어
    */
-  private String[] createDockerCommandForApkBuild(Path sourceThemePath, String themeIdentifier) {
+  private ProcessBuilder createProcessBuilderForApkBuild(Path sourceThemePath,
+      String themeIdentifier) {
     String dockerImageFullName =
         dockerImageProperties.getImage() + ":" + dockerImageProperties.getTag();
     List<String> command = List.of(
@@ -186,16 +192,20 @@ public class AndroidThemeGenerator {
         "-v", sourceThemePath.toAbsolutePath() + ":/" + DOCKER_THEME_DIRECTORY_NAME,
         "-v", "gradle-cache:/root/.gradle",
         "-v", signingProperties.getKeystoreHostPath() + ":/secrets",
-        "-e", "KEYSTORE_PASSWORD=" + signingProperties.getKeystorePassword(),
-        "-e", "KEY_ALIAS=" + signingProperties.getKeyAlias(),
-        "-e", "KEY_PASSWORD=" + signingProperties.getKeyPassword(),
+        "-e", ENV_KEYSTORE_PASSWORD,
+        "-e", ENV_KEY_ALIAS,
+        "-e", ENV_KEY_PASSWORD,
         dockerImageFullName,
         "assembleRelease",
         "-PandroidApplicationId=" + "com.kakao.talk.theme." + themeIdentifier,
         "-x", "lint",
         "-x", "test"
     );
-    return command.toArray(String[]::new);
+    ProcessBuilder pb = new ProcessBuilder(command.toArray(String[]::new));
+    pb.environment().put(ENV_KEY_PASSWORD, signingProperties.getKeyPassword());
+    pb.environment().put(ENV_KEY_ALIAS, signingProperties.getKeyAlias());
+    pb.environment().put(ENV_KEYSTORE_PASSWORD, signingProperties.getKeystorePassword());
+    return pb;
   }
 
   /**
