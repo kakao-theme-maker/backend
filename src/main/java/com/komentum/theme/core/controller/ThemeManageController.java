@@ -6,6 +6,8 @@ import com.komentum.theme.core.dto.ThemeDetailResponse;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
 import com.komentum.theme.core.facade.ThemeManagementFacade;
 import com.komentum.theme.core.service.ThemeManageService;
+import com.komentum.theme.ios.dto.IosThemePackageResponse;
+import com.komentum.theme.ios.editor.IosThemeMaker;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +32,7 @@ public class ThemeManageController {
 
   private final ThemeManageService themeManageService;
   private final ThemeManagementFacade themeManagementFacade;
+  private final IosThemeMaker iosThemeMaker;
 
   @PostMapping
   @Operation(summary = "인증된 사용자가 새로운 테마를 생성한다")
@@ -49,6 +52,14 @@ public class ThemeManageController {
       @Valid @RequestBody ThemeUpdateRequest request) {
     themeManagementFacade.updateTheme(themeComponentId, request);
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/{themeComponentId}/packages/ios")
+  @Operation(summary = "인증된 사용자가 ID로 특정 테마의 iOS ktheme 패키지를 생성한다")
+  public ResponseEntity<IosThemePackageResponse> makeIosThemePackage(
+      @PathVariable @Parameter(description = "패키징할 테마의 ID", example = "1") Integer themeComponentId,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    return ResponseEntity.ok(iosThemeMaker.makeTheme(themeComponentId, userDetails));
   }
 
   @DeleteMapping("/{id}")
