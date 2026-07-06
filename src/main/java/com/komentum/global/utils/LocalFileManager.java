@@ -74,7 +74,19 @@ public class LocalFileManager implements FileManager {
       Files.copy(inputStream, Paths.get(fileLocation));
     } catch (IOException e) {
       log.error("failed to upload file : {}", fileLocation, e);
-      throw new RuntimeException("failed to upload file : " + fileLocation, e);
+      throw new UncheckedIOException("failed to upload file : " + fileLocation, e);
+    }
+    return resolveFilePath(fileName);
+  }
+
+  @Override
+  public String uploadFile(InputStream is, long contentLength, String fileName) {
+    String fileLocation = resolveFileLocation(fileName);
+    try (is) {
+      Files.copy(is, Paths.get(fileLocation));
+    } catch (IOException e) {
+      log.error("failed to upload file : {}", fileLocation, e);
+      throw new UncheckedIOException("failed to upload file : " + fileLocation, e);
     }
     return resolveFilePath(fileName);
   }
