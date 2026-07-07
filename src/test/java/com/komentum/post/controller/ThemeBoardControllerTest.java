@@ -3,6 +3,9 @@ package com.komentum.post.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.global.utils.FileManager;
@@ -27,6 +30,7 @@ import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +44,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.MultiValueMap;
 
 @SpringBootTest
 @EnableTestProfile
@@ -101,6 +106,22 @@ class ThemeBoardControllerTest {
     assertThat(detailDto.getPrefers()).isGreaterThanOrEqualTo(0);
     assertThat(detailDto.getComments()).isGreaterThanOrEqualTo(0);
     assertThat(detailDto.getUserName()).isNotNull();
+  }
+
+  private List<ThemeBoardDetailDto> requestThemeBoardDetails(
+      MultiValueMap<String, String> params, User client) throws Exception {
+    return mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardDetailDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/theme-boards/details")
+            .params(params)
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
   }
 
   @Test
@@ -246,6 +267,80 @@ class ThemeBoardControllerTest {
     for (ThemeBoardDetailDto dto : response) {
       assertThemeBoardDetail(dto);
     }
+  }
+
+  @Test
+  @DisplayName("keyword 검색 조건에 매칭되는 테마 게시글 목록 정보를 최상단에 반환한다.")
+  void findThemeBoards_keywordMatchedPostFirst() throws Exception {
+    // given
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    ThemeBoard targetThemeBoard = boardDetailDataGenerator.getThemeBoards().get(0);
+    ThemeBoard contentMatchedThemeBoard = boardDetailDataGenerator.getThemeBoards().get(
+        boardDetailDataGenerator.getThemeBoards().size() - 1);
+    Post targetPost = targetThemeBoard.getPost();
+    Post contentMatchedPost = contentMatchedThemeBoard.getPost();
+    String keyword = "theme-keyword-" + UUID.randomUUID();
+    targetPost.setTitle(keyword);
+    targetPost.setCreatedAt(LocalDateTime.now().minusDays(1));
+    contentMatchedPost.setTitle("content-match-only-" + UUID.randomUUID());
+    contentMatchedPost.setContent(keyword);
+    contentMatchedPost.setCreatedAt(LocalDateTime.now());
+    postRepository.saveAll(List.of(targetPost, contentMatchedPost));
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    MultiValueMap<String, String> params = TestParams.withPaging(0,
+        boardDetailDataGenerator.getThemeBoards().size());
+    params.add("keyword", keyword);
+    // when
+    List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/theme-boards")
+            .params(params)
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response).hasSize(boardDetailDataGenerator.getThemeBoards().size());
+    assertThat(response.get(0).getPostId()).isEqualTo(targetPost.getPostId());
+    assertThat(response)
+        .extracting(ThemeBoardPreviewDto::getPostId)
+        .contains(contentMatchedPost.getPostId());
+  }
+
+  @Test
+  @DisplayName("테마 게시글 목록 응답에 component_types를 포함하지 않는다.")
+  void findThemeBoards_excludesComponentTypes() throws Exception {
+    // given
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
+    // when & then
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/api/theme-boards").params(params), TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].component_types").doesNotExist());
+  }
+
+  @Test
+  @DisplayName("테마 게시글 상세 응답에 component_types를 포함하지 않는다.")
+  void findThemeBoardByPostId_excludesComponentTypes() throws Exception {
+    // given
+    ThemeBoard targetThemeBoard = boardDetailDataGenerator.getThemeBoards().get(0);
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when & then
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/api/theme-boards/{post_id}", targetThemeBoard.getPost().getPostId()),
+            TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.component_types").doesNotExist());
   }
 
   @Test

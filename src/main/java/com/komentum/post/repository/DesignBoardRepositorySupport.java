@@ -6,12 +6,15 @@ import com.komentum.post.domain.QPrefer;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.dto.query.QDesignBoardQuery_Detail;
 import com.komentum.post.dto.query.QDesignBoardQuery_Preview;
+import com.komentum.post.repository.order.PostOrder;
+import com.komentum.post.repository.predicate.PostPredicate;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.designcomponent.domain.QDesignComponent;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -73,7 +76,9 @@ public class DesignBoardRepositorySupport {
       List<PostSortType> sortTypes
   ) {
     QPost post = QPost.post;
-    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null);
+    BooleanExpression searchMatched = createSearchMatched(post, condition);
+    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null,
+        searchMatched);
     return getDesignBoardDetailBaseQuery(client)
         .where(
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
@@ -85,13 +90,34 @@ public class DesignBoardRepositorySupport {
         .fetch();
   }
 
+  private BooleanExpression createSearchMatched(QPost post, PostSearchCondition condition) {
+    BooleanExpression keywordMatched = PostPredicate.keywordContains(post, condition.getKeyword());
+    BooleanExpression typeCodeMatched = PostPredicate.designComponentTypeCodeExists(post,
+        condition.getTypeCode());
+    if (keywordMatched == null) {
+      return typeCodeMatched;
+    }
+    if (typeCodeMatched == null) {
+      return keywordMatched;
+    }
+    return keywordMatched.and(typeCodeMatched);
+  }
+
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
+    return findPreviewList(pageable, new PostSearchCondition(), List.of(PostSortType.DEFAULT));
+  }
+
+  public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable,
+      PostSearchCondition condition, List<PostSortType> sortTypes) {
     QPost post = QPost.post;
     QDesignBoard designBoard = QDesignBoard.designBoard;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
     QDesignComponent designComponent = QDesignComponent.designComponent;
     NumberExpression<Long> preferCount = prefer.countDistinct();
+    BooleanExpression searchMatched = createSearchMatched(post, condition);
+    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, preferCount,
+        searchMatched);
     return queryFactory.select(
             new QDesignBoardQuery_Preview(
                 post.postId,
@@ -108,11 +134,15 @@ public class DesignBoardRepositorySupport {
         .join(designBoard.post, post)
         .join(post.user, user)
         .leftJoin(prefer).on(prefer.post.eq(post))
+        .where(
+            PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
+        )
         .groupBy(
             post.postId,
             designComponent.designComponentId,
             designBoard.designBoardId
         )
+        .orderBy(orderSpecifiers)
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();

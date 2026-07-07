@@ -43,9 +43,11 @@ public class ThemeBoardController {
   @GetMapping
   @Operation(summary = "인증된 사용자가 테마 게시글 목록을 조회한다")
   public ResponseEntity<List<ThemeBoardPreviewDto>> findThemeBoards(
+      @Parameter(description = "게시글 제목/내용 검색어")
+      @RequestParam(value = "keyword", required = false) String keyword,
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.findThemeBoardPreviews(pageable));
+        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword));
   }
 
   /**
