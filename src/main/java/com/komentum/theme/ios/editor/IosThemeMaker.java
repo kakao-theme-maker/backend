@@ -37,7 +37,7 @@ public class IosThemeMaker {
   private final PlatformComponentTypeRepository platformComponentTypeRepository;
   private final PlatformColorStyleRepository platformColorStyleRepository;
   private final UserEntityFinder userEntityFinder;
-  private final IosThemeTemplateCopier iosThemeTemplateCopier;
+  private final IosThemeTemplateExtractor iosThemeTemplateExtractor;
   private final IosThemeCssEditor iosThemeCssEditor;
   private final IosThemeImageEditor iosThemeImageEditor;
   private final IosThemeSaver iosThemeSaver;
@@ -58,7 +58,7 @@ public class IosThemeMaker {
           platformColorStyleRepository.findAllByPlatform(Platform.IOS);
 
       workDir = IosThemePathManager.createThemeWorkDir(themeComponentId);
-      iosThemeTemplateCopier.copyTemplate(workDir);
+      iosThemeTemplateExtractor.extractTemplate(workDir);
       iosThemeCssEditor.editCss(workDir, themeComponent, themeStyles, platformColorStyles);
       iosThemeImageEditor.editImages(workDir, themeImages, platformComponentTypes);
       return iosThemeSaver.save(themeComponentId, workDir);
