@@ -107,6 +107,7 @@ tasks.register('copyConfig', Copy) {
 tasks.register("copyTestConfig", Copy) {
     from("${rootProject.projectDir}/backend_config/dev/monolithic") {
         include 'application-test.yml'
+        include 'keystore/test/release.jks'
     }
     into './src/test/resources/'
 }

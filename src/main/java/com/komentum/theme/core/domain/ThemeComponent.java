@@ -46,14 +46,14 @@ public class ThemeComponent {
   @Column(name = "theme_component_id")
   private Integer themeComponentId;
 
-  @Column(name = "userEmail", nullable = false)
+  @Column(name = "user_email", nullable = false)
   private String userEmail;
 
-  @Column(name = "themeCode", nullable = false, unique = true)
+  @Column(name = "theme_code", nullable = false, unique = true)
   private String themeCode;
 
   @Builder.Default
-  @Column(name = "themeType", nullable = false)
+  @Column(name = "theme_type", nullable = false)
   @Enumerated(EnumType.STRING)
   private ThemeType themeType = ThemeType.USER;
 
@@ -92,8 +92,8 @@ public class ThemeComponent {
 
   @PrePersist
   void prePersist() {
-    if (themeCode == null) {
-      themeCode = UUID.randomUUID().toString();
+    if (this.themeCode == null) {
+      this.themeCode = "theme" + UUID.randomUUID().toString().replace("-", "");
     }
   }
 

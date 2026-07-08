@@ -1,8 +1,8 @@
 package com.komentum.theme.android.utils;
 
 import com.komentum.theme.android.dto.AndroidComponentDto;
+import com.komentum.theme.android.service.AndroidThemeGenerator;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,46 +24,54 @@ public class ThemePathManager {
    * get a specific theme's directory
    */
   public static Path getThemeDir(String themeId) {
-    Path basePath = Path.of(getBasePath());
-    return Paths.get(basePath.toAbsolutePath().toString(), "theme", "android", themeId);
+    return Path.of(getBasePath())
+        .resolve("theme")
+        .resolve("android")
+        .resolve(themeId);
   }
 
   /**
    * get a specific theme's sample source apk directory
    */
   public static Path getThemeSourceDir(String themeId) {
-    return Paths.get(getThemeDir(themeId).toString(), "source");
+    return getThemeDir(themeId)
+        .resolve("source");
+  }
+
+  public static Path getAndroidThemeImagePath(String themeId, AndroidComponentDto component) {
+    return getThemeSourceDir(themeId)
+        .resolve("src")
+        .resolve("main")
+        .resolve("theme")
+        .resolve(component.getImageFilePath());
+  }
+
+  public static Path getAndroidColorSheetPath(String themeId) {
+    return getThemeSourceDir(themeId)
+        .resolve("src")
+        .resolve("main")
+        .resolve("theme")
+        .resolve("values")
+        .resolve("colors.xml");
+  }
+
+  public static Path getAndroidResourcePath(String themeId) {
+    return getThemeSourceDir(themeId)
+        .resolve("src")
+        .resolve("main")
+        .resolve("theme");
   }
 
   /**
-   * get a specific theme's depacked theme directory
-   */
-  public static Path getThemeDepackedDir(String themeId) {
-    return Paths.get(getThemeDir(themeId).toString(), "depack");
-  }
-
-  /**
-   * get a specific theme's repackaged theme directory
-   */
-  public static Path getThemeRepackedDir(String themeId) {
-    return Paths.get(getThemeDir(themeId).toString(), "repack");
-  }
-
-  /**
-   * get a specific theme's depacked image path
-   */
-  public static Path getImagePath(String themeId, AndroidComponentDto component) {
-    return Paths.get(getThemeDepackedDir(themeId).toString(), component.getAndroidComponentPath());
-  }
-
-  /**
-   * get a specific theme's depacked color sheet path
-   */
-  public static Path getColorSheetPath(String themeId) {
-    return Paths.get(getThemeDepackedDir(themeId).toString(), "res", "values", "colors.xml");
-  }
-
-  public static Path getThemeResourcePath(String themeId) {
-    return Paths.get(getThemeDepackedDir(themeId).toString(), "res");
+   * <p>테마 폴더의 빌드 결과물에 있는 빌드 결과물 경로를 반환한다.</p>
+   * <p>빌드 결과물의 이름은 docker 내 테마 폴더 이름을 따라간다.</p>
+   * */
+  public static Path getAndroidThemeOutputPath(String themeId) {
+    return getThemeSourceDir(themeId)
+        .resolve("build")
+        .resolve("outputs")
+        .resolve("apk")
+        .resolve("release")
+        .resolve(AndroidThemeGenerator.DOCKER_THEME_DIRECTORY_NAME + "-release.apk");
   }
 }
