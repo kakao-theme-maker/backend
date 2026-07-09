@@ -16,8 +16,4 @@ public interface PlatformComponentTypeRepository extends
           where pc.platform = :platform
       """)
   List<PlatformComponentType> fetchJoinAllByPlatform(Platform platform);
-  List<PlatformComponentType> findAllByPlatform(Platform platform);
-
-  @Query("select pc from PlatformComponentType pc join fetch pc.componentType where pc.platform=:platform")
-  List<PlatformComponentType> fetchJoinAllByPlatform(Platform platform);
 }
