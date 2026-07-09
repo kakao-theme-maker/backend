@@ -44,14 +44,17 @@ public class DevDataGenerator {
   public void init() {
     List<User> users = new ArrayList<>(userSeeder.seedData(10));
     users.add(userSeeder.createOrRetrieveRootUser()); // 11
+    // seed component type, color style, platform component type, platform color style
     componentTypeSeeder.upsertComponentType();
     colorStyleSeeder.upsertColorStyleSeed();
     platformComponentTypeSeeder.upsertPlatformComponentType();
     platformColorStyleSeeder.upsertPlatformColorStyle();
+    // seed design component, theme component
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
         users); // 110
     List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users,
         designComponents); // 110
+    // seed theme board, design board, comment, prefer
     themeBoardSeeder.seedData(themeComponents.subList(0, 90)); //
     designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
     commentSeeder.seedPerPost(5, users); // 550

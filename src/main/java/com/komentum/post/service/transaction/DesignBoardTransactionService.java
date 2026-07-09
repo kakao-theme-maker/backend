@@ -1,5 +1,8 @@
 package com.komentum.post.service.transaction;
 
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.service.DesignComponentService;
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -17,8 +20,6 @@ import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
-import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
@@ -57,8 +58,8 @@ public class DesignBoardTransactionService {
     Post targetPost = postService.getPostByPostId(postId);
     String previewImageUrl =
         helper.findPreviewImageUrl(targetPost.getPreviewImageName());
-    List<String> designImageUrls = designBoardService.findWithDesignComponentsByPostId(postId)
-        .stream()
+    List<DesignBoard> designBoards = designBoardService.findWithDesignComponentsByPostId(postId);
+    List<String> designImageUrls = designBoards.stream()
         .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
         .toList();
     List<String> previewImageUrls = Stream.concat(
@@ -71,7 +72,8 @@ public class DesignBoardTransactionService {
     return designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
         tags,
-        previewImageUrls);
+        previewImageUrls,
+        designBoardMapperSupport.toComponentTypeDtos(designBoards));
   }
 
   @Transactional

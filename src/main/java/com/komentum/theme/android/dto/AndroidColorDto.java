@@ -1,6 +1,6 @@
 package com.komentum.theme.android.dto;
 
-import com.komentum.designcomponent.domain.ColorStyle;
+import com.komentum.designcomponent.domain.PlatformColorStyle;
 import com.komentum.theme.core.domain.ThemeStyle;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,20 +13,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AndroidColorDto {
 
-  String sheetPath;
   String color;
   String attrName;
 
-  /**
-   * TODO: 추후 별도 커밋에서 개선할 예정
-   * */
-  @Deprecated
-  public static AndroidColorDto fromEntity(ThemeStyle themeStyle) {
-    ColorStyle colorStyle = themeStyle.getColorStyle();
+  public static AndroidColorDto fromEntity(ThemeStyle themeStyle,
+      PlatformColorStyle platformColorStyle) {
     return AndroidColorDto.builder()
         .color(themeStyle.getColor())
-//        .attrName(colorStyle.getStylePropsName())
-//        .sheetPath(colorStyle.getStyleSheetPath())
+        .attrName(platformColorStyle.getResourceName())
         .build();
   }
 }

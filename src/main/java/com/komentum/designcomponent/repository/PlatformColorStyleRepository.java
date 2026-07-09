@@ -10,6 +10,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PlatformColorStyleRepository extends JpaRepository<PlatformColorStyle, Long> {
 
-  @Query("select pcs from PlatformColorStyle pcs join fetch pcs.colorStyle where pcs.platform=:platform")
+  @Query("""
+          select ps
+          from PlatformColorStyle ps
+          join fetch ps.colorStyle
+          where ps.platform = :platform
+      """)
   List<PlatformColorStyle> fetchJoinAllByPlatform(Platform platform);
 }

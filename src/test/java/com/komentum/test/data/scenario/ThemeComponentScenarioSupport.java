@@ -6,7 +6,6 @@ import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.enums.ThemeType;
 import com.komentum.user.domain.User;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -68,8 +67,7 @@ public class ThemeComponentScenarioSupport {
       ThemeComponent defaultTheme = null;
       if (shouldCreateDefaultTheme) {
         defaultTheme = themeComponentSeeder.seedOne(users.get(0), designComponents,
-            ThemeType.DEFAULT,
-            UUID.randomUUID().toString());
+            ThemeType.DEFAULT);
         themeComponents.add(defaultTheme);
       }
       // convert data to result
