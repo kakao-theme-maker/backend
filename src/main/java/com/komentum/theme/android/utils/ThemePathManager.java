@@ -20,6 +20,13 @@ public class ThemePathManager {
     }
   }
 
+  public static Path getDefaultThemeDir(Integer themeComponentId) {
+    return Path.of(getBasePath())
+        .resolve("theme")
+        .resolve("default")
+        .resolve(themeComponentId.toString());
+  }
+
   /**
    * get a specific theme's directory
    */

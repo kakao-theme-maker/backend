@@ -86,9 +86,6 @@ public class ThemeComponentSeeder {
     for (User author : authors) {
       for (int i = 0; i < size; i++) {
         ThemeType themeType = ThemeType.USER;
-        if (i % 2 == 0) {
-          themeType = ThemeType.DEFAULT;
-        }
         themeComponents.add(
             seedOne(author, designComponents, themeType));
       }
