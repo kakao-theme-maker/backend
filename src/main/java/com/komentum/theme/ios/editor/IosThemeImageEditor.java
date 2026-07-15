@@ -6,7 +6,6 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.ios.utils.IosThemePathManager;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -110,8 +109,7 @@ public class IosThemeImageEditor {
     BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
     Graphics2D graphics = output.createGraphics();
     applyRenderingHints(graphics);
-    graphics.drawImage(source.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH),
-        x, y, null);
+    graphics.drawImage(source, x, y, scaledWidth, scaledHeight, null);
     graphics.dispose();
     return output;
   }
@@ -125,8 +123,7 @@ public class IosThemeImageEditor {
     BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
     Graphics2D graphics = output.createGraphics();
     applyRenderingHints(graphics);
-    graphics.drawImage(source.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH),
-        x, y, null);
+    graphics.drawImage(source, x, y, scaledWidth, scaledHeight, null);
     graphics.dispose();
     return output;
   }

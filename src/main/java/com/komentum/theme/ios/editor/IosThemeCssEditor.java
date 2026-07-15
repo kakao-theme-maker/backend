@@ -86,6 +86,7 @@ public class IosThemeCssEditor {
   }
 
   private String replaceCssProperty(String css, String selector, String property, String value) {
+    // Match only the target selector property, allowing a block comment before the opening brace.
     Pattern pattern = Pattern.compile(
         "(" + Pattern.quote(selector) + "(?:\\s|/\\*.*?\\*/)*\\{[^}]*?"
             + Pattern.quote(property)
@@ -117,6 +118,9 @@ public class IosThemeCssEditor {
     String normalized = color.trim();
     if (normalized.matches("[0-9a-fA-F]{6}")) {
       return "#" + normalized;
+    }
+    if (normalized.matches("[0-9a-fA-F]{8}")) {
+      return "#" + normalized.substring(0, 6);
     }
     if (normalized.matches("#[0-9a-fA-F]{8}")) {
       return normalized.substring(0, 7);

@@ -78,6 +78,55 @@ class IosThemeCssEditorTest {
   }
 
   @Test
+  void editCss_replacesMappedEightDigitColorWithoutHash() throws Exception {
+    // given
+    String css = """
+        ManifestStyle
+        {
+            -kakaotalk-theme-name: 'Apeach';
+            -kakaotalk-theme-version: '25.8.0';
+            -kakaotalk-author-name: 'Kakao Corp.';
+            -kakaotalk-theme-id: 'com.kakao.talk.theme.apeachios';
+        }
+        MainViewStyle-Primary
+        {
+            background-color: #FFDEDE;
+        }
+        """;
+    Files.writeString(tempDir.resolve("KakaoTalkTheme.css"), css, StandardCharsets.UTF_8);
+    ThemeComponent themeComponent = ThemeComponent.builder()
+        .themeComponentId(7)
+        .themeName("My Theme")
+        .userEmail("owner@test.com")
+        .versionName("1.2.3")
+        .versionNumber("12")
+        .build();
+    ColorStyle colorStyle = ColorStyle.builder()
+        .colorStyleId(1)
+        .styleCode(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR)
+        .name("background")
+        .build();
+    ThemeStyle themeStyle = ThemeStyle.builder()
+        .colorStyle(colorStyle)
+        .color("112233FF")
+        .build();
+    PlatformColorStyle platformColorStyle = PlatformColorStyle.builder()
+        .platform(Platform.IOS)
+        .colorStyle(colorStyle)
+        .resourceGroup("MainViewStyle-Primary")
+        .resourceName("background-color")
+        .code("test")
+        .build();
+
+    // when
+    editor.editCss(tempDir, themeComponent, List.of(themeStyle), List.of(platformColorStyle));
+
+    // then
+    String result = Files.readString(tempDir.resolve("KakaoTalkTheme.css"), StandardCharsets.UTF_8);
+    assertThat(result).contains("background-color: #112233;");
+  }
+
+  @Test
   void editCss_replacesMappedColorWhenSelectorHasCommentBeforeBrace() throws Exception {
     // given
     String css = """

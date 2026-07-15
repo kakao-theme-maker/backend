@@ -83,6 +83,53 @@ class IosThemeImageEditorTest {
     assertThat(twoXImage.getHeight()).isEqualTo(76);
     assertThat(threeXImage.getWidth()).isEqualTo(114);
     assertThat(threeXImage.getHeight()).isEqualTo(114);
+    assertThat(new Color(twoXImage.getRGB(38, 0), true).getAlpha()).isZero();
+    assertThat(new Color(twoXImage.getRGB(38, 38), true).getAlpha()).isEqualTo(255);
+    assertThat(new Color(twoXImage.getRGB(38, 75), true).getAlpha()).isZero();
+  }
+
+  @Test
+  void editImages_centerCropFillsTargetWithoutTransparentPadding() throws Exception {
+    // given
+    Files.createDirectories(tempDir.resolve("Images"));
+    FileManager fileManager = Mockito.mock(FileManager.class);
+    IosThemeImageEditor editor = new IosThemeImageEditor(fileManager);
+    byte[] imageBytes = createImageBytes(20, 10);
+    when(fileManager.convertUrlToFileName("https://cdn.example.com/source.png"))
+        .thenReturn("source.png");
+    when(fileManager.downloadFile("source.png")).thenReturn(imageBytes);
+
+    ComponentType componentType = ComponentType.builder()
+        .componentTypeId(1)
+        .typeCode(TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE)
+        .name("main background")
+        .build();
+    ThemeImage themeImage = ThemeImage.builder()
+        .componentType(componentType)
+        .designComponent(DesignComponent.builder()
+            .designComponentId(1)
+            .imageUrl("https://cdn.example.com/source.png")
+            .build())
+        .build();
+    PlatformComponentType platformComponentType = PlatformComponentType.builder()
+        .platform(Platform.IOS)
+        .componentType(componentType)
+        .path("mainBgImage@3x.png")
+        .width(76)
+        .height(76)
+        .fileExtension(FileExtension.PNG)
+        .code("iosMainBackground3x")
+        .build();
+
+    // when
+    editor.editImages(tempDir, List.of(themeImage), List.of(platformComponentType));
+
+    // then
+    BufferedImage result = ImageIO.read(tempDir.resolve("Images/mainBgImage@3x.png").toFile());
+    assertThat(result.getWidth()).isEqualTo(76);
+    assertThat(result.getHeight()).isEqualTo(76);
+    assertThat(new Color(result.getRGB(0, 0), true).getAlpha()).isEqualTo(255);
+    assertThat(new Color(result.getRGB(75, 75), true).getAlpha()).isEqualTo(255);
   }
 
   @Test
