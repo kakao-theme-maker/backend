@@ -87,7 +87,8 @@ public class IosThemeCssEditor {
 
   private String replaceCssProperty(String css, String selector, String property, String value) {
     Pattern pattern = Pattern.compile(
-        "(" + Pattern.quote(selector) + "\\s*\\{[^}]*?" + Pattern.quote(property)
+        "(" + Pattern.quote(selector) + "(?:\\s|/\\*.*?\\*/)*\\{[^}]*?"
+            + Pattern.quote(property)
             + "\\s*:\\s*)[^;]*(;)",
         Pattern.DOTALL
     );
