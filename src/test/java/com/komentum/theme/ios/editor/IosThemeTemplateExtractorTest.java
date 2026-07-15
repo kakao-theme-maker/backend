@@ -44,6 +44,54 @@ class IosThemeTemplateExtractorTest {
   }
 
   @Test
+  void extractTemplate_extractsBundledTemplateWithAllCssImageReferences() throws Exception {
+    // given
+    IosThemeTemplateExtractor extractor = new IosThemeTemplateExtractor();
+    Path workDir = tempDir.resolve("work");
+
+    // when
+    extractor.extractTemplate(workDir);
+
+    // then
+    assertThat(workDir.resolve("KakaoTalkTheme.css")).isRegularFile();
+    assertThat(workDir.resolve("Images/maintabIcoPiccoma@2x.png")).isRegularFile();
+    assertThat(workDir.resolve("Images/maintabIcoPiccomaSelected@3x.png")).isRegularFile();
+  }
+
+  @Test
+  void extractTemplate_allowsScaledImageForCssReference() throws Exception {
+    // given
+    Path templatePath = createTemplate(Map.of(
+        "KakaoTalkTheme.css", "-ios-image: 'foo.png';".getBytes(StandardCharsets.UTF_8),
+        "Images/foo@2x.png", new byte[]{1, 2, 3}
+    ));
+    IosThemeTemplateExtractor extractor = new IosThemeTemplateExtractor(
+        new FileSystemResource(templatePath));
+
+    // when
+    extractor.extractTemplate(tempDir.resolve("work"));
+
+    // then
+    assertThat(tempDir.resolve("work/Images/foo@2x.png")).isRegularFile();
+  }
+
+  @Test
+  void extractTemplate_throwsWhenCssReferencesMissingImage() throws Exception {
+    // given
+    Path templatePath = createTemplate(Map.of(
+        "KakaoTalkTheme.css", "-ios-image: 'missing.png';".getBytes(StandardCharsets.UTF_8),
+        "Images/sample.png", new byte[]{1, 2, 3}
+    ));
+    IosThemeTemplateExtractor extractor = new IosThemeTemplateExtractor(
+        new FileSystemResource(templatePath));
+
+    // when & then
+    assertThatThrownBy(() -> extractor.extractTemplate(tempDir.resolve("work")))
+        .isInstanceOf(IOException.class)
+        .hasMessageContaining("missing.png");
+  }
+
+  @Test
   void extractTemplate_throwsWhenEntryEscapesWorkDir() throws Exception {
     // given
     Path templatePath = createTemplate(Map.of(

@@ -78,6 +78,55 @@ class IosThemeCssEditorTest {
   }
 
   @Test
+  void editCss_replacesMappedColorWhenSelectorHasCommentBeforeBrace() throws Exception {
+    // given
+    String css = """
+        ManifestStyle
+        {
+            -kakaotalk-theme-name: 'Apeach';
+            -kakaotalk-theme-version: '25.8.0';
+            -kakaotalk-author-name: 'Kakao Corp.';
+            -kakaotalk-theme-id: 'com.kakao.talk.theme.apeachios';
+        }
+        FeatureStyle-Primary                                       /* Primary : 버튼 텍스트 */
+        {
+            -ios-text-color: #805959;
+        }
+        """;
+    Files.writeString(tempDir.resolve("KakaoTalkTheme.css"), css, StandardCharsets.UTF_8);
+    ThemeComponent themeComponent = ThemeComponent.builder()
+        .themeComponentId(7)
+        .themeName("My Theme")
+        .userEmail("owner@test.com")
+        .versionName("1.2.3")
+        .versionNumber("12")
+        .build();
+    ColorStyle colorStyle = ColorStyle.builder()
+        .colorStyleId(1)
+        .styleCode(StyleCode.FEATURE_STYLE_TEXT_COLOR)
+        .name("feature")
+        .build();
+    ThemeStyle themeStyle = ThemeStyle.builder()
+        .colorStyle(colorStyle)
+        .color("#123456")
+        .build();
+    PlatformColorStyle platformColorStyle = PlatformColorStyle.builder()
+        .platform(Platform.IOS)
+        .colorStyle(colorStyle)
+        .resourceGroup("FeatureStyle-Primary")
+        .resourceName("-ios-text-color")
+        .code("test")
+        .build();
+
+    // when
+    editor.editCss(tempDir, themeComponent, List.of(themeStyle), List.of(platformColorStyle));
+
+    // then
+    String result = Files.readString(tempDir.resolve("KakaoTalkTheme.css"), StandardCharsets.UTF_8);
+    assertThat(result).contains("-ios-text-color: #123456;");
+  }
+
+  @Test
   void editCss_keepsSampleValueWhenMappedColorIsBlank() throws Exception {
     // given
     String css = """

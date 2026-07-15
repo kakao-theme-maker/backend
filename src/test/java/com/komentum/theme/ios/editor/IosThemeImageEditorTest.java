@@ -86,6 +86,62 @@ class IosThemeImageEditorTest {
   }
 
   @Test
+  void editImages_createsNormalAndSelectedVariantsForSameTypeCode() throws Exception {
+    // given
+    Files.createDirectories(tempDir.resolve("Images"));
+    FileManager fileManager = Mockito.mock(FileManager.class);
+    IosThemeImageEditor editor = new IosThemeImageEditor(fileManager);
+    byte[] imageBytes = createImageBytes(20, 10);
+    when(fileManager.convertUrlToFileName("https://cdn.example.com/source.png"))
+        .thenReturn("source.png");
+    when(fileManager.downloadFile("source.png")).thenReturn(imageBytes);
+
+    ComponentType componentType = ComponentType.builder()
+        .componentTypeId(1)
+        .typeCode(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
+        .name("send bubble")
+        .build();
+    ThemeImage themeImage = ThemeImage.builder()
+        .componentType(componentType)
+        .designComponent(DesignComponent.builder()
+            .designComponentId(1)
+            .imageUrl("https://cdn.example.com/source.png")
+            .build())
+        .build();
+    PlatformComponentType normal = PlatformComponentType.builder()
+        .platform(Platform.IOS)
+        .componentType(componentType)
+        .path("chatroomBubbleSend01@2x.png")
+        .width(80)
+        .height(70)
+        .fileExtension(FileExtension.PNG)
+        .code("iosBubbleNormal2x")
+        .build();
+    PlatformComponentType selected = PlatformComponentType.builder()
+        .platform(Platform.IOS)
+        .componentType(componentType)
+        .path("chatroomBubbleSend01Selected@2x.png")
+        .width(80)
+        .height(70)
+        .fileExtension(FileExtension.PNG)
+        .code("iosBubbleSelected2x")
+        .build();
+
+    // when
+    editor.editImages(tempDir, List.of(themeImage), List.of(normal, selected));
+
+    // then
+    BufferedImage normalImage = ImageIO.read(
+        tempDir.resolve("Images/chatroomBubbleSend01@2x.png").toFile());
+    BufferedImage selectedImage = ImageIO.read(
+        tempDir.resolve("Images/chatroomBubbleSend01Selected@2x.png").toFile());
+    assertThat(normalImage.getWidth()).isEqualTo(80);
+    assertThat(normalImage.getHeight()).isEqualTo(70);
+    assertThat(selectedImage.getWidth()).isEqualTo(80);
+    assertThat(selectedImage.getHeight()).isEqualTo(70);
+  }
+
+  @Test
   void editImages_keepsTemplateImageWhenThemeImageUrlIsMissing() throws Exception {
     // given
     Files.createDirectories(tempDir.resolve("Images"));
