@@ -3,17 +3,21 @@ package com.komentum.theme.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.StyleCode;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.seeder.PlatformColorStyleSeeder;
 import com.komentum.designcomponent.service.seeder.PlatformComponentTypeSeeder;
 import com.komentum.global.utils.FileManager;
-import com.komentum.designcomponent.enums.StyleCode;
-import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
@@ -35,15 +39,21 @@ import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
 import com.komentum.theme.ios.dto.IosThemePackageResponse;
 import com.komentum.user.domain.User;
+import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -53,7 +63,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.jpa.open-in-view=false")
 @EnableTestProfile
 @AutoConfigureMockMvc
 class ThemeManageControllerTest {
@@ -199,6 +209,7 @@ class ThemeManageControllerTest {
     when(fileManager.convertUrlToFileName(anyString())).thenReturn("source.png");
     when(fileManager.downloadFile("source.png")).thenReturn(sampleImageBytes);
     when(fileManager.uploadFile(any(byte[].class), anyString())).thenReturn(expectedUrl);
+    clearInvocations(fileManager);
 
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(
@@ -217,6 +228,16 @@ class ThemeManageControllerTest {
     assertThat(response.getThemeComponentId()).isEqualTo(targetTheme.getThemeComponentId());
     assertThat(response.getFileName()).startsWith("ios-theme-").endsWith(".ktheme");
     assertThat(response.getThemeUrl()).isEqualTo(expectedUrl);
+    ArgumentCaptor<byte[]> packageCaptor = ArgumentCaptor.forClass(byte[].class);
+    verify(fileManager).uploadFile(packageCaptor.capture(), anyString());
+    assertThat(readZipEntryNames(packageCaptor.getValue()))
+        .contains(
+            "KakaoTalkTheme.css",
+            "Images/maintabIcoPiccoma@2x.png",
+            "Images/maintabIcoPiccomaSelected@3x.png",
+            "Images/chatroomBubbleSend01Selected@2x.png",
+            "Images/chatroomBubbleReceive02Selected@3x.png"
+        );
   }
 
   @Test
@@ -276,6 +297,29 @@ class ThemeManageControllerTest {
   }
 
   @Test
+  @DisplayName("존재하지 않는 테마의 iOS ktheme 패키지 생성 요청은 404를 반환한다")
+  public void makeIosThemePackage_notFound() throws Exception {
+    // given
+    int missingThemeId = Integer.MAX_VALUE;
+    clearInvocations(fileManager);
+
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(
+        "/api/themes/{id}/packages/ios", missingThemeId);
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .clientDto(TestClientDto.fromEntity(testUser))
+            .build());
+
+    // then
+    resultActions
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Theme not found with id: " + missingThemeId));
+    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+  }
+
+  @Test
   @DisplayName("")
   public void markThemeAsDone_success() throws Exception {
     // given
@@ -317,5 +361,18 @@ class ThemeManageControllerTest {
     platformComponentTypeSeeder.upsertPlatformComponentType();
     platformColorStyleSeeder.upsertPlatformColorStyle();
     return targetTheme;
+  }
+
+  private Set<String> readZipEntryNames(byte[] zipBytes) throws Exception {
+    Set<String> entryNames = new LinkedHashSet<>();
+    try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+      ZipEntry entry = zipInputStream.getNextEntry();
+      while (entry != null) {
+        entryNames.add(entry.getName());
+        zipInputStream.closeEntry();
+        entry = zipInputStream.getNextEntry();
+      }
+    }
+    return entryNames;
   }
 }

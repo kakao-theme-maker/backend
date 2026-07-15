@@ -6,6 +6,8 @@ import com.komentum.designcomponent.enums.Platform;
 import com.komentum.designcomponent.repository.PlatformColorStyleRepository;
 import com.komentum.designcomponent.repository.PlatformComponentTypeRepository;
 import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.exception.CustomEntityNotFoundException;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.global.security.UserRole;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
@@ -24,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -42,7 +43,6 @@ public class IosThemeMaker {
   private final IosThemeImageEditor iosThemeImageEditor;
   private final IosThemeSaver iosThemeSaver;
 
-  @Transactional(readOnly = true)
   public IosThemePackageResponse makeTheme(Integer themeComponentId, CustomUserDetails userDetails) {
     Path workDir = null;
     try {
@@ -64,6 +64,8 @@ public class IosThemeMaker {
       return iosThemeSaver.save(themeComponentId, workDir);
     } catch (AccessDeniedException e) {
       throw e;
+    } catch (CustomEntityNotFoundException e) {
+      throw new ResourceNotFoundException("Theme not found with id: " + themeComponentId);
     } catch (Exception e) {
       log.error("failed to make iOS theme package. themeComponentId={}", themeComponentId, e);
       throw new RuntimeException("failed to make iOS theme package", e);
