@@ -21,6 +21,8 @@ import org.springframework.stereotype.Component;
 public class IosThemeTemplateExtractor {
 
   private static final String TEMPLATE_PATH = "theme/ios/templates/kakao-ios-sample.ktheme";
+  // CSS에서 따옴표로 감싼 PNG 참조를 추출해 패키징 전에 대응 이미지가
+  // 모두 존재하는지 검증한다.
   private static final Pattern IMAGE_REFERENCE_PATTERN =
       Pattern.compile("['\"]([^'\"]+\\.png)['\"]");
 
@@ -56,6 +58,8 @@ public class IosThemeTemplateExtractor {
     }
     Path normalizedWorkDir = workDir.toAbsolutePath().normalize();
     Path outputPath = normalizedWorkDir.resolve(entryName).normalize();
+    // ZIP 엔트리 경로를 정규화한 뒤 작업 디렉터리 내부인지 확인해,
+    // ../ 등으로 압축 해제 위치를 벗어나는 Zip Slip 공격을 차단한다.
     if (!outputPath.startsWith(normalizedWorkDir)) {
       throw new IOException("invalid iOS theme template entry: " + entryName);
     }
@@ -121,6 +125,8 @@ public class IosThemeTemplateExtractor {
     if (Files.isRegularFile(imagesDir.resolve(imageName))) {
       return true;
     }
+    // CSS가 기본 파일명을 참조해도 실제 패키지에는 @2x/@3x 파일만 존재할 수 있다.
+    // iOS가 해상도별 배율 파일을 선택하므로 배율 이미지만 있어도 유효한 참조로 본다.
     String imageBaseName = imageName.substring(0, imageName.length() - ".png".length());
     return Files.isRegularFile(imagesDir.resolve(imageBaseName + "@2x.png"))
         || Files.isRegularFile(imagesDir.resolve(imageBaseName + "@3x.png"));

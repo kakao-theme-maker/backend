@@ -65,6 +65,8 @@ public class IosThemeCssEditor {
             (left, right) -> left
         ));
     String result = css;
+    // iOS 시드의 resourceGroup과 resourceName을 각각 CSS 선택자와 속성으로 사용한다.
+    // 대응하는 테마 색상이 없거나 유효하지 않으면 템플릿 기본 색상을 유지한다.
     for (PlatformColorStyle platformColorStyle : platformColorStyles) {
       ThemeStyle themeStyle = themeStyleMap.get(
           platformColorStyle.getColorStyle().getColorStyleId());
@@ -86,7 +88,9 @@ public class IosThemeCssEditor {
   }
 
   private String replaceCssProperty(String css, String selector, String property, String value) {
-    // Match only the target selector property, allowing a block comment before the opening brace.
+    // 전달받은 선택자 블록 안에서 지정한 속성의 값만 정규식으로 교체한다.
+    // 치환 그룹으로 속성 앞부분과 세미콜론을 보존하며,
+    // 선택자와 여는 중괄호 사이의 블록 주석도 허용한다.
     Pattern pattern = Pattern.compile(
         "(" + Pattern.quote(selector) + "(?:\\s|/\\*.*?\\*/)*\\{[^}]*?"
             + Pattern.quote(property)
@@ -101,6 +105,8 @@ public class IosThemeCssEditor {
   }
 
   private String quote(String value) {
+    // 매니페스트 값은 작은따옴표로 감싸므로 입력값의 작은따옴표를 제거해
+    // CSS 문자열 선언이 중간에서 끊어지지 않도록 한다.
     return "'" + (value == null ? "" : value.replace("'", "")) + "'";
   }
 
@@ -119,6 +125,8 @@ public class IosThemeCssEditor {
     if (normalized.matches("[0-9a-fA-F]{6}")) {
       return "#" + normalized;
     }
+    // 공통 테마의 8자리 색상은 RRGGBBAA 형식이다.
+    // 현재 iOS CSS에는 알파를 반영하지 않으므로 뒤의 AA를 제외한 #RRGGBB만 기록한다.
     if (normalized.matches("[0-9a-fA-F]{8}")) {
       return "#" + normalized.substring(0, 6);
     }

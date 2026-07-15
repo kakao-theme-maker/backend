@@ -54,6 +54,8 @@ public class IosThemeSaver {
     if (fileName.equals(".DS_Store") || path.toString().contains("__MACOSX")) {
       return false;
     }
+    // 카카오톡 .ktheme 규격에 맞춰 루트의 KakaoTalkTheme.css와 Images/ 하위 파일만 포함한다.
+    // 그 밖의 작업 파일과 macOS 메타데이터는 패키지에서 제외한다.
     if (relativePath.getNameCount() == 1) {
       return fileName.equals("KakaoTalkTheme.css");
     }
@@ -62,6 +64,7 @@ public class IosThemeSaver {
   }
 
   private void addZipEntry(Path workDir, Path filePath, ZipOutputStream zipOutputStream) {
+    // ZIP 엔트리 이름은 운영체제와 관계없이 표준 경로 구분자인 슬래시(/)로 통일한다.
     String entryName = workDir.relativize(filePath).toString().replace('\\', '/');
     try {
       zipOutputStream.putNextEntry(new ZipEntry(entryName));

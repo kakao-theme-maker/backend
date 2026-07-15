@@ -24,6 +24,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class IosThemeImageEditor {
 
+  // 대상 영역 전체를 채워야 하는 배경 이미지는 투명 여백이 생기지 않도록 중앙 크롭한다.
+  // 나머지 아이콘과 장식 이미지는 원본 비율을 유지한 채 투명 여백으로 크기를 맞춘다.
   private static final EnumSet<TypeCode> CENTER_CROP_TYPES = EnumSet.of(
       TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE,
       TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE,
@@ -50,6 +52,9 @@ public class IosThemeImageEditor {
     Map<TypeCode, List<PlatformComponentType>> platformTypeMap = platformComponentTypes.stream()
         .collect(Collectors.groupingBy(pct -> pct.getComponentType().getTypeCode()));
 
+    // 하나의 ThemeImage로 같은 TypeCode에 매핑된 @2x/@3x 및 상태별 iOS 파일을
+    // 모두 생성한다. 사용자 이미지 매핑이나 다운로드 데이터가 없으면 파일을
+    // 덮어쓰지 않아 템플릿 기본 이미지를 유지한다.
     for (Map.Entry<TypeCode, List<PlatformComponentType>> entry : platformTypeMap.entrySet()) {
       ThemeImage themeImage = themeImageMap.get(entry.getKey());
       if (themeImage == null || themeImage.getDesignComponent() == null) {
