@@ -3,6 +3,7 @@ package com.komentum.theme.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -62,6 +63,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
 @EnableTestProfile
@@ -207,8 +209,14 @@ class ThemeManageControllerTest {
     byte[] sampleImageBytes = Files.readAllBytes(
         Paths.get("src/test/resources/sample-images/test.png"));
     when(fileManager.convertUrlToFileName(anyString())).thenReturn("source.png");
-    when(fileManager.downloadFile("source.png")).thenReturn(sampleImageBytes);
-    when(fileManager.uploadFile(any(byte[].class), anyString())).thenReturn(expectedUrl);
+    when(fileManager.downloadFile("source.png")).thenAnswer(invocation -> {
+      assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+      return sampleImageBytes;
+    });
+    when(fileManager.uploadFile(any(byte[].class), endsWith(".ktheme"))).thenAnswer(invocation -> {
+      assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+      return expectedUrl;
+    });
     clearInvocations(fileManager);
 
     // when
