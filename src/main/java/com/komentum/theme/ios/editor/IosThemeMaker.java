@@ -5,10 +5,9 @@ import com.komentum.designcomponent.domain.PlatformComponentType;
 import com.komentum.designcomponent.enums.Platform;
 import com.komentum.designcomponent.repository.PlatformColorStyleRepository;
 import com.komentum.designcomponent.repository.PlatformComponentTypeRepository;
-import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.domain.policy.OwnerAdminPolicy;
 import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.global.exception.ResourceNotFoundException;
-import com.komentum.global.security.UserRole;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.domain.ThemeStyle;
@@ -21,7 +20,6 @@ import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -38,16 +36,17 @@ public class IosThemeMaker {
   private final PlatformComponentTypeRepository platformComponentTypeRepository;
   private final PlatformColorStyleRepository platformColorStyleRepository;
   private final UserEntityFinder userEntityFinder;
+  private final OwnerAdminPolicy ownerAdminPolicy;
   private final IosThemeTemplateExtractor iosThemeTemplateExtractor;
   private final IosThemeCssEditor iosThemeCssEditor;
   private final IosThemeImageEditor iosThemeImageEditor;
   private final IosThemeSaver iosThemeSaver;
 
-  public IosThemePackageResponse makeTheme(Integer themeComponentId, CustomUserDetails userDetails) {
+  public IosThemePackageResponse makeTheme(Integer themeComponentId) {
     Path workDir = null;
     try {
       ThemeComponent themeComponent = themeRetrieveService.getThemeEntityById(themeComponentId);
-      validateAccess(themeComponent, userDetails);
+      validateAccess(themeComponent);
       List<ThemeImage> themeImages =
           themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId);
       List<ThemeStyle> themeStyles =
@@ -74,15 +73,9 @@ public class IosThemeMaker {
     }
   }
 
-  private void validateAccess(ThemeComponent themeComponent, CustomUserDetails userDetails) {
-    if (userDetails == null) {
-      throw new AccessDeniedException("authentication is required");
-    }
-    if (userDetails.getUserRole() == UserRole.ADMIN) {
-      return;
-    }
-    User currentUser = userEntityFinder.findUserEntity(userDetails.getPublicUserId());
-    if (!Objects.equals(themeComponent.getUserEmail(), currentUser.getUserEmail())) {
+  private void validateAccess(ThemeComponent themeComponent) {
+    User themeOwner = userEntityFinder.findUserEntityByEmail(themeComponent.getUserEmail());
+    if (!ownerAdminPolicy.validate(themeOwner)) {
       throw new AccessDeniedException("failed to make iOS theme package : invalid user or role");
     }
   }

@@ -55,6 +55,11 @@ public class UserService implements UserEntityFinder {
         .orElseThrow(() -> new RuntimeException("user not found"));
   }
 
+  public User findUserEntityByEmail(String userEmail) {
+    return userRepository.findByUserEmail(userEmail)
+        .orElseThrow(() -> new RuntimeException("user not found"));
+  }
+
   public User findUserEntityByPublicId(String PublicUserId) {
     return userRepository.findByPublicUserId(PublicUserId)
         .orElseThrow(() -> new RuntimeException("user not found"));

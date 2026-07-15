@@ -57,9 +57,8 @@ public class ThemeManageController {
   @PostMapping("/{themeComponentId}/packages/ios")
   @Operation(summary = "인증된 사용자가 ID로 특정 테마의 iOS ktheme 패키지를 생성한다")
   public ResponseEntity<IosThemePackageResponse> makeIosThemePackage(
-      @PathVariable @Parameter(description = "패키징할 테마의 ID", example = "1") Integer themeComponentId,
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
-    return ResponseEntity.ok(iosThemeMaker.makeTheme(themeComponentId, userDetails));
+      @PathVariable @Parameter(description = "패키징할 테마의 ID", example = "1") Integer themeComponentId) {
+    return ResponseEntity.ok(iosThemeMaker.makeTheme(themeComponentId));
   }
 
   @DeleteMapping("/{id}")
