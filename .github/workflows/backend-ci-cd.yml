@@ -42,6 +42,21 @@ jobs:
         with:
           submodules: false
 
+      - name: Verify GitHub Actions workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          actionlint_archive="$RUNNER_TEMP/actionlint_1.7.12_linux_amd64.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$actionlint_archive" \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          printf '%s  %s\n' \
+            '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' \
+            "$actionlint_archive" \
+            | sha256sum --check
+          tar -xzf "$actionlint_archive" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" .github/workflows/backend-ci-cd.yml
+
       - name: Verify deployment files
         shell: bash
         run: |
@@ -50,11 +65,39 @@ jobs:
           bash docker/test/deploy-backend-test.sh
 
           compose_test_dir="$RUNNER_TEMP/compose-config"
+          compose_config="$compose_test_dir/rendered.json"
           mkdir -p "$compose_test_dir"
           cp docker/docker-compose.yml "$compose_test_dir/docker-compose.yml"
           cp docker/backend.env.example "$compose_test_dir/backend.env"
-          BACKEND_IMAGE="ghcr.io/kakao-theme-maker/backend@sha256:$(printf '0%.0s' {1..64})" \
-            docker compose -f "$compose_test_dir/docker-compose.yml" config --quiet
+          printf '\nCI_BACKEND_ENV_SENTINEL=loaded-from-backend-env\n' \
+            >> "$compose_test_dir/backend.env"
+
+          export BACKEND_IMAGE="ghcr.io/kakao-theme-maker/backend@sha256:$(printf '0%.0s' {1..64})"
+          docker compose \
+            --env-file "$compose_test_dir/backend.env" \
+            -f "$compose_test_dir/docker-compose.yml" \
+            config --quiet
+          docker compose \
+            --env-file "$compose_test_dir/backend.env" \
+            -f "$compose_test_dir/docker-compose.yml" \
+            config --format json > "$compose_config"
+
+          jq --exit-status '
+            (.services.database.environment | keys | sort) ==
+              ["MYSQL_DATABASE", "MYSQL_ROOT_HOST", "MYSQL_ROOT_PASSWORD"] and
+            ([.services.database.environment | keys[] |
+              select(test("JWT|KAKAO|TEST_USER"))] | length == 0) and
+            (.services.database | has("env_file") | not) and
+            (.services.database | has("ports") | not) and
+            (.services.database.environment |
+              has("CI_BACKEND_ENV_SENTINEL") | not) and
+            (.services.backend.environment.CI_BACKEND_ENV_SENTINEL ==
+              "loaded-from-backend-env") and
+            (.services.backend.environment | has("JWT_SECRET")) and
+            (.services.backend.environment |
+              has("SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET")) and
+            (.services.backend.environment | has("TEST_USER_PASSWORD"))
+          ' "$compose_config" > /dev/null
 
       - name: Set up Java 17
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
