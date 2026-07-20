@@ -72,7 +72,8 @@ jobs:
           printf '\nCI_BACKEND_ENV_SENTINEL=loaded-from-backend-env\n' \
             >> "$compose_test_dir/backend.env"
 
-          export BACKEND_IMAGE="ghcr.io/kakao-theme-maker/backend@sha256:$(printf '0%.0s' {1..64})"
+          BACKEND_IMAGE="ghcr.io/kakao-theme-maker/backend@sha256:$(printf '0%.0s' {1..64})"
+          export BACKEND_IMAGE
           docker compose \
             --env-file "$compose_test_dir/backend.env" \
             -f "$compose_test_dir/docker-compose.yml" \
@@ -339,9 +340,13 @@ jobs:
           printf -v quoted_image_ref '%q' "$IMAGE_REF"
           printf -v quoted_deploy_sequence '%q' "$DEPLOY_SEQUENCE"
 
+          # Remote arguments are intentionally expanded locally after printf %q escaping.
+          # shellcheck disable=SC2029
           tar -C docker -cf - deploy-backend.sh docker-compose.yml \
             | ssh "${ssh_options[@]}" "$ssh_target" \
                 "mkdir -p -- $quoted_deploy_path && tar -C $quoted_deploy_path -xf -"
 
+          # Remote arguments are intentionally expanded locally after printf %q escaping.
+          # shellcheck disable=SC2029
           ssh "${ssh_options[@]}" "$ssh_target" \
             "cd $quoted_deploy_path && chmod 700 ./deploy-backend.sh && DEPLOY_SEQUENCE=$quoted_deploy_sequence ./deploy-backend.sh $quoted_image_ref"
