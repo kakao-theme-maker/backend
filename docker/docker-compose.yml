@@ -1,37 +1,31 @@
-x-common-variables: &common-variables
-  SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/${MYSQL_DATABASE}
-  SPRING_DATASOURCE_USERNAME: root
-  SPRING_DATA_REDIS_HOST: redis
-  SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-  FILE_BASE_URL: http://localhost:28080
-  SECURITY_ALLOWED_ORIGIN_LIST: http://localhost:8080,http://localhost:28080,http://localhost:3000,"react 도메인 추가"
-
 services:
   backend:
-    image: louie8821/kakao-theme-maker:v1-dev
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE must be an immutable image digest}
+    platform: linux/arm64
     container_name: backend
     restart: unless-stopped
     env_file:
-      - .env
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp
+      - backend.env
     ports:
       - "28080:8080"
-    environment:
-      <<: *common-variables
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+
   database:
     image: mysql:8.0
     container_name: database
     restart: unless-stopped
     env_file:
-      - .env
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_ROOT_HOST: ${MYSQL_ROOT_HOST}
+      - backend.env
     ports:
       - "23306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
   redis:
     image: redis:6.2.6-alpine
     command: redis-server /usr/local/etc/redis/redis.conf
@@ -39,3 +33,6 @@ services:
     volumes:
       - ./docker_redis/data:/data
       - ./docker_redis/config:/usr/local/etc/redis/redis.conf
+
+volumes:
+  mysql_data:
