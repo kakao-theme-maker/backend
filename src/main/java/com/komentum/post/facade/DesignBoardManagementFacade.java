@@ -17,12 +17,12 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.transaction.DesignBoardTransactionService;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,10 +76,24 @@ public class DesignBoardManagementFacade {
    * */
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable) {
-    List<DesignBoardQuery.Preview> preview = designBoardService.findPreviewList(pageable);
+    return findBoardPreviews(pageable, null, null);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable, String keyword,
+      TypeCode typeCode) {
+    List<DesignBoardQuery.Preview> preview = designBoardService.findPreviewList(pageable, keyword,
+        typeCode);
+    List<Long> postIds = preview.stream()
+        .map(DesignBoardQuery.Preview::getPostId)
+        .toList();
+    Map<Long, List<DesignBoard>> designBoardMap =
+        designBoardService.findWithDesignComponentsByPostIdMap(postIds);
     return preview.stream()
         .map(p ->
-            designBoardMapperSupport.toDesignBoardPreviewDto(p, boardManagementHelper))
+            designBoardMapperSupport.toDesignBoardPreviewDto(p, boardManagementHelper,
+                designBoardMapperSupport.toComponentTypeDtos(
+                    designBoardMap.getOrDefault(p.getPostId(), List.of()))))
         .toList();
   }
 
@@ -105,26 +119,28 @@ public class DesignBoardManagementFacade {
         .map(Detail::getPostId)
         .toList();
     // post id별 design board 목록 조회
-    Map<Long, List<DesignBoard>> designBoardMap = designBoardService.findWithDesignComponentsByPostIdIn(
-            postIds)
-        .stream()
-        .collect(Collectors.groupingBy(
-            designBoard -> designBoard.getPost().getPostId()
-        ));
+    Map<Long, List<DesignBoard>> designBoardMap =
+        designBoardService.findWithDesignComponentsByPostIdMap(postIds);
     // post id별 tag 목록 조회
     Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
       List<DesignBoard> designBoards = designBoardMap.getOrDefault(detail.getPostId(), List.of());
-      String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
-          detail.getPostPreviewImageName());
-      List<String> previewImageUrls = Stream.concat(
-          Stream.ofNullable(postPreviewImageUrl),
-          designBoards.stream()
-              .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
-      ).toList();
-      return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls);
+      List<String> previewImageUrls = resolvePreviewImageUrls(detail, designBoards);
+      return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls,
+          designBoardMapperSupport.toComponentTypeDtos(designBoards));
     }).toList();
+  }
+
+  private List<String> resolvePreviewImageUrls(DesignBoardQuery.Detail detail,
+      List<DesignBoard> designBoards) {
+    String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
+        detail.getPostPreviewImageName());
+    return Stream.concat(
+        Stream.ofNullable(postPreviewImageUrl),
+        designBoards.stream()
+            .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+    ).toList();
   }
 
   /**

@@ -106,8 +106,13 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
+    return findThemeBoardPreviews(pageable, null);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable, String keyword) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreview(
-        pageable);
+        pageable, keyword);
     return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
         boardManagementHelper);
   }

@@ -5,7 +5,8 @@ import lombok.Getter;
 
 @Getter
 public enum FileExtension {
-  PNG("png");
+  PNG("png"),
+  NINE_PATCH_PNG("9png");
 
   private final String extension;
 

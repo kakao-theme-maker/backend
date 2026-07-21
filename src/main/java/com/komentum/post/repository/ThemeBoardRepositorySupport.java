@@ -8,19 +8,21 @@ import com.komentum.post.dto.query.QThemeBoardQuery_Detail;
 import com.komentum.post.dto.query.QThemeBoardQuery_Preview;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.dto.query.ThemeBoardQuery.Preview;
+import com.komentum.post.repository.order.PostOrder;
+import com.komentum.post.repository.predicate.PostPredicate;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.theme.core.domain.QThemeComponent;
 import com.komentum.user.domain.QUser;
 import com.komentum.user.domain.User;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -41,15 +43,20 @@ public class ThemeBoardRepositorySupport {
    * */
   public List<Preview> findThemeBoardQueryPreviewList(Pageable pageable,
       List<PostSortType> sortTypeList) {
+    return findThemeBoardQueryPreviewList(pageable, new PostSearchCondition(), sortTypeList);
+  }
+
+  public List<Preview> findThemeBoardQueryPreviewList(Pageable pageable,
+      PostSearchCondition condition, List<PostSortType> sortTypeList) {
     QPost post = QPost.post;
     QThemeBoard themeBoard = QThemeBoard.themeBoard;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
     QThemeComponent themeComponent = QThemeComponent.themeComponent;
     NumberExpression<Long> preferCount = prefer.countDistinct();
-    // sort type
-    List<? extends OrderSpecifier<?>> orderSpecifiers = getOrderSpecifiers(sortTypeList, post,
-        preferCount);
+    BooleanExpression searchMatched = PostPredicate.keywordContains(post, condition.getKeyword());
+    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypeList, post,
+        preferCount, searchMatched);
     // generate JPQL
     return queryFactory.select(
             new QThemeBoardQuery_Preview(
@@ -67,13 +74,16 @@ public class ThemeBoardRepositorySupport {
         .join(themeBoard.post, post)
         .join(post.user, user)
         .leftJoin(prefer).on(prefer.post.eq(post))
+        .where(
+            PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
+        )
         .groupBy(
             post.postId,
             themeBoard.themeBoardId,
             themeComponent.themeComponentId,
             user.userId
         )
-        .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+        .orderBy(orderSpecifiers)
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
@@ -140,7 +150,9 @@ public class ThemeBoardRepositorySupport {
   public List<ThemeBoardQuery.Detail> findThemeBoardQueryDetails(Pageable pageable, User client,
       PostSearchCondition condition, List<PostSortType> sortTypes) {
     QPost post = QPost.post;
-    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null);
+    BooleanExpression searchMatched = PostPredicate.keywordContains(post, condition.getKeyword());
+    OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, null,
+        searchMatched);
     return getThemeBoardDetailBaseQuery(client)
         .where(
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
@@ -151,18 +163,4 @@ public class ThemeBoardRepositorySupport {
         .fetch();
   }
 
-  /**
-   * 테마 게시글 정렬 기준 생성
-   * */
-  private List<? extends OrderSpecifier<?>> getOrderSpecifiers(
-      List<PostSortType> sortTypeList, QPost post,
-      NumberExpression<Long> preferCount) {
-    return sortTypeList.stream()
-        .flatMap(sortType -> switch (sortType) {
-          case DEFAULT -> Stream.of(post.createdAt.desc());
-          case PREFER_ASC -> Stream.of(preferCount.asc());
-          case PREFER_DESC -> Stream.of(preferCount.desc());
-        })
-        .toList();
-  }
 }
