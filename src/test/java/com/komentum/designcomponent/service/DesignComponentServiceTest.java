@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
@@ -20,9 +21,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
@@ -31,6 +35,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class DesignComponentServiceTest {
 
   @Autowired
@@ -109,5 +114,46 @@ class DesignComponentServiceTest {
 
     assertThat(designComponentRepository.count()).isZero();
     verify(fileManager).deleteFile("first-upload.png");
+  }
+
+  @Test
+  @DisplayName("롤백 파일 정리 실패 로그에 PAR URL과 토큰을 남기지 않는다")
+  void createDesignComponents_cleanupFailure_doesNotLogParUrl(CapturedOutput output) {
+    String parToken = "secret-par-token";
+    String parUrl = "https://objectstorage.example.com/p/" + parToken
+        + "/n/test-namespace/b/test-bucket/o/first-upload.png";
+    CreateDesignComponentRequest request = CreateDesignComponentRequest.builder()
+        .isPublic(true)
+        .componentTypeIds(java.util.List.of(componentType.getComponentTypeId()))
+        .build();
+    MockMultipartFile firstFile = new MockMultipartFile(
+        "files",
+        "first.png",
+        MediaType.IMAGE_PNG_VALUE,
+        "first-file".getBytes()
+    );
+    MockMultipartFile secondFile = new MockMultipartFile(
+        "files",
+        "second.png",
+        MediaType.IMAGE_PNG_VALUE,
+        "second-file".getBytes()
+    );
+
+    given(fileManager.uploadFile(any(byte[].class), anyString()))
+        .willReturn(parUrl)
+        .willThrow(new RuntimeException("forced upload failure"));
+    given(fileManager.convertUrlToFileName(parUrl)).willReturn("first-upload.png");
+    willThrow(new RuntimeException("forced cleanup failure"))
+        .given(fileManager).deleteFile("first-upload.png");
+
+    assertThatThrownBy(
+        () -> designComponentService.createDesignComponents(request, java.util.List.of(firstFile,
+            secondFile), user))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("forced upload failure");
+
+    assertThat(output)
+        .contains("failed to cleanup uploaded image after rollback")
+        .doesNotContain(parUrl, parToken);
   }
 }
