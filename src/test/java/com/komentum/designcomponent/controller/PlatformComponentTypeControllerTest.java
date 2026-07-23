@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 public class PlatformComponentTypeControllerTest {
 
-  private final int PLATFORM_COMPONENT_TYPE_COUNT = 93;
+  private final int PLATFORM_COMPONENT_TYPE_COUNT = 94;
   User rootUser;
 
   @Autowired
@@ -75,7 +75,7 @@ public class PlatformComponentTypeControllerTest {
     // then
     assertThat(result.getCreated()).isEqualTo(PLATFORM_COMPONENT_TYPE_COUNT);
     assertThat(result.getUpdated()).isEqualTo(0);
-    assertThat(platformComponentTypeRepository.findAllByPlatform(Platform.IOS))
+    assertThat(platformComponentTypeRepository.fetchJoinAllByPlatform(Platform.IOS))
         .extracting(platformComponentType -> platformComponentType.getPath())
         .contains(
             "chatroomBubbleSend01Selected@2x.png",

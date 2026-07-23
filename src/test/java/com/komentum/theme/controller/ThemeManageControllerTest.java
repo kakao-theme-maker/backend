@@ -12,19 +12,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.enums.TypeCode;
-import com.komentum.designcomponent.service.seeder.PlatformColorStyleSeeder;
-import com.komentum.designcomponent.service.seeder.PlatformComponentTypeSeeder;
 import com.komentum.global.utils.FileManager;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
-import com.komentum.test.data.ThemeDataGenerator;
 import com.komentum.test.data.scenario.DesignComponentScenarioSupport;
 import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
+import com.komentum.test.data.scenario.ThemeMetaDataScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto.ExecutionContext;
 import com.komentum.test.dto.TestClientDto;
@@ -72,34 +69,24 @@ class ThemeManageControllerTest {
 
   @Autowired
   private MockMvc mockMvc;
-
   @Autowired
   private MockMvcUtils mockMvcUtils;
-
-  @Autowired
-  private ObjectMapper objectMapper;
-
   @Autowired
   private TestDataRemover testDataRemover;
-
   @Autowired
   private UserScenarioSupport userScenarioSupport;
   @Autowired
   private ThemeComponentScenarioSupport themeComponentScenarioSupport;
   @Autowired
+  private ThemeMetaDataScenarioSupport themeMetaDataScenarioSupport;
+  @Autowired
   private DesignComponentScenarioSupport designComponentScenarioSupport;
   @Autowired
-  private ThemeDataGenerator themeDataGenerator;
+  private ThemeComponentRepository themeComponentRepository;
   @Autowired
   private ThemeImageRepository themeImageRepository;
   @Autowired
   private ThemeStyleRepository themeStyleRepository;
-  @Autowired
-  private ThemeComponentRepository themeComponentRepository;
-  @Autowired
-  private PlatformComponentTypeSeeder platformComponentTypeSeeder;
-  @Autowired
-  private PlatformColorStyleSeeder platformColorStyleSeeder;
   @Autowired
   private FileManager fileManager;
 
@@ -125,7 +112,7 @@ class ThemeManageControllerTest {
   @DisplayName("새로운 테마 생성 시, 디폴트 테마를 복사해서 제공한다")
   public void createNewTheme_success() throws Exception {
     // given
-    var themeResult = themeComponentScenarioSupport.builder(List.of(testUser), designComponentList)
+    themeComponentScenarioSupport.builder(List.of(testUser), designComponentList)
         .withCountPerUser(1)
         .withDefaultTheme()
         .build();
@@ -204,7 +191,10 @@ class ThemeManageControllerTest {
   @DisplayName("테마 소유자는 iOS ktheme 패키지를 생성할 수 있다")
   public void makeIosThemePackage_owner_success() throws Exception {
     // given
-    ThemeComponent targetTheme = createThemeAndSeedPlatformMappings();
+    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
+            designComponentList)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
     String expectedUrl = "https://cdn.example.com/theme.ktheme";
     byte[] sampleImageBytes = Files.readAllBytes(
         Paths.get("src/test/resources/sample-images/test.png"));
@@ -252,7 +242,10 @@ class ThemeManageControllerTest {
   @DisplayName("관리자는 다른 사용자의 테마도 iOS ktheme 패키지로 생성할 수 있다")
   public void makeIosThemePackage_admin_success() throws Exception {
     // given
-    ThemeComponent targetTheme = createThemeAndSeedPlatformMappings();
+    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
+            designComponentList)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
     User rootUser = userScenarioSupport.builder()
         .withRootUser()
         .build()
@@ -338,7 +331,7 @@ class ThemeManageControllerTest {
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put("/api/themes/{id}/done",
         target.getThemeComponentId());
-    request = mockMvcUtils.addAuthentication(request, testUser.getPublicUserId());
+    request = mockMvcUtils.addAuthentication(request, TestClientDto.fromEntity(testUser));
     // then
     mockMvc.perform(request)
         .andExpect(status().isOk());
@@ -355,20 +348,33 @@ class ThemeManageControllerTest {
     // when
     MockHttpServletRequestBuilder request = MockMvcRequestBuilders.delete("/api/themes/{id}",
         target.getThemeComponentId());
-    request = mockMvcUtils.addAuthentication(request, testUser.getPublicUserId());
+    request = mockMvcUtils.addAuthentication(request, TestClientDto.fromEntity(testUser));
     // then
     mockMvc.perform(request)
         .andExpect(status().isNoContent());
   }
 
-  private ThemeComponent createThemeAndSeedPlatformMappings() {
-    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
-            designComponentList)
-        .withCountPerUser(1)
-        .build().themeComponents().get(0);
-    platformComponentTypeSeeder.upsertPlatformComponentType();
-    platformColorStyleSeeder.upsertPlatformColorStyle();
-    return targetTheme;
+  @Test
+  @DisplayName("루트 유저가 디폴트 테마를 생성한다")
+  public void seedDefaultTheme_success() throws Exception {
+    // given
+    User rootUser = userScenarioSupport.builder().withRootUser().build().rootUser();
+    themeMetaDataScenarioSupport.builder().withAll().build();
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/themes/default/seed");
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .clientDto(TestClientDto.fromEntity(rootUser))
+            .build());
+    // then
+    List<ThemeComponent> themeComponents = themeComponentRepository.findAll();
+    assertThat(themeComponents).hasSize(1);
+    assertThat(themeComponents.get(0).getThemeCode())
+        .isEqualTo("apeach_5031cb08-7ae9-40a7-a57c-2d24bd93f2d5");
+    assertThat(themeImageRepository.count()).isEqualTo(TypeCode.values().length);
+    assertThat(themeStyleRepository.count()).isEqualTo(StyleCode.values().length);
+    resultActions.andExpect(status().isOk());
   }
 
   private Set<String> readZipEntryNames(byte[] zipBytes) throws Exception {

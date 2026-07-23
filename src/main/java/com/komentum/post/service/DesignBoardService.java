@@ -9,10 +9,13 @@ import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,7 +39,17 @@ public class DesignBoardService {
 
   @Transactional(readOnly = true)
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
-    return designBoardRepositorySupport.findPreviewList(pageable);
+    return findPreviewList(pageable, null, null);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable, String keyword,
+      TypeCode typeCode) {
+    PostSearchCondition condition = new PostSearchCondition()
+        .withKeyword(keyword)
+        .withTypeCode(typeCode);
+    return designBoardRepositorySupport.findPreviewList(pageable, condition,
+        List.of(PostSortType.DEFAULT));
   }
 
   @Transactional(readOnly = true)
@@ -47,6 +60,16 @@ public class DesignBoardService {
   @Transactional(readOnly = true)
   public List<DesignBoard> findWithDesignComponentsByPostIdIn(List<Long> postIds) {
     return designBoardRepository.findWithDesignComponentByPost_PostIdIn(postIds);
+  }
+
+  @Transactional(readOnly = true)
+  public Map<Long, List<DesignBoard>> findWithDesignComponentsByPostIdMap(List<Long> postIds) {
+    if (postIds == null || postIds.isEmpty()) {
+      return Map.of();
+    }
+    return findWithDesignComponentsByPostIdIn(postIds)
+        .stream()
+        .collect(Collectors.groupingBy(designBoard -> designBoard.getPost().getPostId()));
   }
 
   @Transactional(readOnly = true)

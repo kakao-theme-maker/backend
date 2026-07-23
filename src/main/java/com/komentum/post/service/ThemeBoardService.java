@@ -34,8 +34,15 @@ public class ThemeBoardService {
    * @return ThemeBoardQuery.Preview 테마 게시글 페이징 DTO 생성을 위한 중간 계층 DTO 반환
    * */
   public List<ThemeBoardQuery.Preview> findThemeBoardQueryPreview(Pageable pageable) {
-    return themeBoardRepositorySupport.findThemeBoardQueryPreviewList(pageable, List.of(
-        PostSortType.DEFAULT));
+    return findThemeBoardQueryPreview(pageable, null);
+  }
+
+  public List<ThemeBoardQuery.Preview> findThemeBoardQueryPreview(Pageable pageable,
+      String keyword) {
+    PostSearchCondition condition = new PostSearchCondition()
+        .withKeyword(keyword);
+    return themeBoardRepositorySupport.findThemeBoardQueryPreviewList(pageable, condition,
+        List.of(PostSortType.DEFAULT));
   }
 
   /**

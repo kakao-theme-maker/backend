@@ -1,6 +1,7 @@
 package com.komentum.post.controller;
 
 import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
@@ -40,9 +41,13 @@ public class DesignBoardController {
   @GetMapping
   @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글 목록을 조회힌다")
   public ResponseEntity<List<DesignBoardPreviewDto>> findDesignBoards(
+      @Parameter(description = "게시글 제목/내용 검색어")
+      @RequestParam(value = "keyword", required = false) String keyword,
+      @Parameter(description = "component type code")
+      @RequestParam(value = "type_code", required = false) TypeCode typeCode,
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(
-        designBoardManagementFacade.findBoardPreviews(pageable));
+        designBoardManagementFacade.findBoardPreviews(pageable, keyword, typeCode));
   }
 
   /**

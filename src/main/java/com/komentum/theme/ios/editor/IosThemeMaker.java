@@ -47,16 +47,16 @@ public class IosThemeMaker {
     try {
       ThemeComponent themeComponent = themeRetrieveService.getThemeEntityById(themeComponentId);
       validateAccess(themeComponent);
-      // 연관 엔티티를 fetch join과 entity graph로 먼저 조회한 뒤,
+      // 연관 엔티티를 fetch join으로 먼저 조회한 뒤,
       // 이미지 다운로드·파일 처리·업로드는 DB 트랜잭션 밖에서 수행한다.
       List<ThemeImage> themeImages =
           themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId);
       List<ThemeStyle> themeStyles =
           themeStyleService.fetchJoinThemeStylesByThemeComponentId(themeComponentId);
       List<PlatformComponentType> platformComponentTypes =
-          platformComponentTypeRepository.findAllByPlatform(Platform.IOS);
+          platformComponentTypeRepository.fetchJoinAllByPlatform(Platform.IOS);
       List<PlatformColorStyle> platformColorStyles =
-          platformColorStyleRepository.findAllByPlatform(Platform.IOS);
+          platformColorStyleRepository.fetchJoinAllByPlatform(Platform.IOS);
 
       workDir = IosThemePathManager.createThemeWorkDir(themeComponentId);
       iosThemeTemplateExtractor.extractTemplate(workDir);
