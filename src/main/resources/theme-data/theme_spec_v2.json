@@ -1461,20 +1461,6 @@
               "width": 114,
               "height": 114,
               "fileExtension": "png"
-            },
-            {
-              "code": "iOSTabbarStylePiccomaNormalIconImage2x",
-              "path": "maintabIcoPiccoma@2x.png",
-              "width": 76,
-              "height": 76,
-              "fileExtension": "png"
-            },
-            {
-              "code": "iOSTabbarStylePiccomaNormalIconImage3x",
-              "path": "maintabIcoPiccoma@3x.png",
-              "width": 114,
-              "height": 114,
-              "fileExtension": "png"
             }
           ],
           "tabbarStyleOpenChatsSelectedIconImage": [
@@ -1488,20 +1474,6 @@
             {
               "code": "iOSTabbarStyleOpenChatsSelectedIconImage3x",
               "path": "maintabIcoNowSelected@3x.png",
-              "width": 114,
-              "height": 114,
-              "fileExtension": "png"
-            },
-            {
-              "code": "iOSTabbarStylePiccomaSelectedIconImage2x",
-              "path": "maintabIcoPiccomaSelected@2x.png",
-              "width": 76,
-              "height": 76,
-              "fileExtension": "png"
-            },
-            {
-              "code": "iOSTabbarStylePiccomaSelectedIconImage3x",
-              "path": "maintabIcoPiccomaSelected@3x.png",
               "width": 114,
               "height": 114,
               "fileExtension": "png"
