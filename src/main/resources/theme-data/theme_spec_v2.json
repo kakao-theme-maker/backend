@@ -1639,6 +1639,20 @@
               "width": 120,
               "height": 105,
               "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendSelectedBackgroundImage2x",
+              "path": "chatroomBubbleSend01Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendSelectedBackgroundImage3x",
+              "path": "chatroomBubbleSend01Selected@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
             }
           ],
           "messageCellStyleSendGroupBackgroundImage": [
@@ -1652,6 +1666,20 @@
             {
               "code": "iOSMessageCellStyleSendGroupBackgroundImage3x",
               "path": "chatroomBubbleSend02@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendGroupSelectedBackgroundImage2x",
+              "path": "chatroomBubbleSend02Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendGroupSelectedBackgroundImage3x",
+              "path": "chatroomBubbleSend02Selected@3x.png",
               "width": 120,
               "height": 105,
               "fileExtension": "png"
@@ -1671,6 +1699,20 @@
               "width": 120,
               "height": 105,
               "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveSelectedBackgroundImage2x",
+              "path": "chatroomBubbleReceive01Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveSelectedBackgroundImage3x",
+              "path": "chatroomBubbleReceive01Selected@3x.png",
+              "width": 121,
+              "height": 105,
+              "fileExtension": "png"
             }
           ],
           "messageCellStyleReceiveGroupBackgroundImage": [
@@ -1685,6 +1727,20 @@
               "code": "iOSMessageCellStyleReceiveGroupBackgroundImage3x",
               "path": "chatroomBubbleReceive02@3x.png",
               "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveGroupSelectedBackgroundImage2x",
+              "path": "chatroomBubbleReceive02Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveGroupSelectedBackgroundImage3x",
+              "path": "chatroomBubbleReceive02Selected@3x.png",
+              "width": 121,
               "height": 105,
               "fileExtension": "png"
             }
@@ -1842,11 +1898,25 @@
               "code": "iOSMessageNotificationBarMessageTextColor"
             }
           ],
+          "messageNotificationBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-MessageNotificationBarMessage",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMessageNotificationBarMessageTextColor"
+            }
+          ],
           "directShareBarBackgroundColor": [
             {
               "resourceGroup": "BackgroundStyle-DirectShareBar",
               "resourceName": "background-color",
               "code": "iOSDirectShareBarBackgroundColor"
+            }
+          ],
+          "directShareBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-DirectShareBarMessage",
+              "resourceName": "-ios-text-color",
+              "code": "iOSDirectShareBarMessageTextColor"
             }
           ],
           "directShareBarMessageTextColor": [
@@ -1957,5 +2027,4 @@
     }
   }
 }
-
 

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.designcomponent.dto.SeedResult;
+import com.komentum.designcomponent.enums.Platform;
+import com.komentum.designcomponent.repository.PlatformComponentTypeRepository;
 import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
@@ -27,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 public class PlatformComponentTypeControllerTest {
 
-  private final int PLATFORM_COMPONENT_TYPE_COUNT = 86;
+  private final int PLATFORM_COMPONENT_TYPE_COUNT = 94;
   User rootUser;
 
   @Autowired
@@ -38,6 +40,8 @@ public class PlatformComponentTypeControllerTest {
   private UserScenarioSupport userScenarioSupport;
   @Autowired
   private ComponentTypeSeeder componentTypeSeeder;
+  @Autowired
+  private PlatformComponentTypeRepository platformComponentTypeRepository;
   @Autowired
   private TestDataRemover testDataRemover;
 
@@ -71,6 +75,12 @@ public class PlatformComponentTypeControllerTest {
     // then
     assertThat(result.getCreated()).isEqualTo(PLATFORM_COMPONENT_TYPE_COUNT);
     assertThat(result.getUpdated()).isEqualTo(0);
+    assertThat(platformComponentTypeRepository.fetchJoinAllByPlatform(Platform.IOS))
+        .extracting(platformComponentType -> platformComponentType.getPath())
+        .contains(
+            "chatroomBubbleSend01Selected@2x.png",
+            "chatroomBubbleReceive02Selected@3x.png"
+        );
   }
 
   @Test

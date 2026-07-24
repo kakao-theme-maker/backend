@@ -50,6 +50,11 @@ public class ThemeStyleService {
     return themeStyleRepository.findByThemeComponentId(themeComponentId);
   }
 
+  @Transactional(readOnly = true)
+  public List<ThemeStyle> fetchJoinThemeStylesByThemeComponentId(Integer themeComponentId) {
+    return themeStyleRepository.fetchJoinAllByThemeComponentId(themeComponentId);
+  }
+
   @Transactional
   public void copyThemeStyles(ThemeComponent targetTheme, ThemeComponent sourceTheme) {
     List<ThemeStyle> targetThemeStyles = new ArrayList<>();
