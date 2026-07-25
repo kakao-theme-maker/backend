@@ -30,15 +30,19 @@ class ThemeBuildExecutionServiceTest {
   @Mock
   private ThemePackageBuildHandler androidHandler;
 
+  @Mock
+  private ThemePackageBuildHandler iosHandler;
+
   private ThemeBuildExecutionService themeBuildExecutionService;
 
   @BeforeEach
   void setUp() {
     given(androidHandler.platform()).willReturn(Platform.ANDROID);
+    given(iosHandler.platform()).willReturn(Platform.IOS);
     themeBuildExecutionService = new ThemeBuildExecutionService(
         Runnable::run,
         themeBuildStateService,
-        List.of(androidHandler)
+        List.of(androidHandler, iosHandler)
     );
   }
 
@@ -58,6 +62,30 @@ class ThemeBuildExecutionServiceTest {
     themeBuildExecutionService.dispatch(BUILD_ID);
 
     verify(androidHandler).build(THEME_COMPONENT_ID);
+    verify(themeBuildStateService).markSuccess(
+        eq(BUILD_ID),
+        eq(packageUrl),
+        any(LocalDateTime.class)
+    );
+  }
+
+  @Test
+  @DisplayName("iOS 제작 작업은 iOS handler가 반환한 URL로 성공 상태를 저장한다")
+  void dispatch_iosSuccess() {
+    String packageUrl = "https://files.example.com/theme.ktheme";
+    given(themeBuildStateService.loadRunningBuild(BUILD_ID))
+        .willReturn(runningBuild(THEME_COMPONENT_ID, Platform.IOS));
+    given(iosHandler.build(THEME_COMPONENT_ID)).willReturn(packageUrl);
+    given(themeBuildStateService.markSuccess(
+        eq(BUILD_ID),
+        eq(packageUrl),
+        any(LocalDateTime.class)
+    )).willReturn(true);
+
+    themeBuildExecutionService.dispatch(BUILD_ID);
+
+    verify(iosHandler).build(THEME_COMPONENT_ID);
+    verify(androidHandler, never()).build(THEME_COMPONENT_ID);
     verify(themeBuildStateService).markSuccess(
         eq(BUILD_ID),
         eq(packageUrl),
@@ -135,6 +163,11 @@ class ThemeBuildExecutionServiceTest {
   @Test
   @DisplayName("플랫폼 handler가 없으면 작업을 실패 처리한다")
   void dispatch_missingHandler_marksFailed() {
+    themeBuildExecutionService = new ThemeBuildExecutionService(
+        Runnable::run,
+        themeBuildStateService,
+        List.of(androidHandler)
+    );
     given(themeBuildStateService.loadRunningBuild(BUILD_ID))
         .willReturn(runningBuild(THEME_COMPONENT_ID, Platform.IOS));
 
