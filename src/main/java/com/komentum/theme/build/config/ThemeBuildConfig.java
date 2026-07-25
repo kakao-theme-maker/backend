@@ -4,6 +4,7 @@ import java.util.concurrent.Executor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 
 @Configuration
 public class ThemeBuildConfig {
@@ -17,6 +18,7 @@ public class ThemeBuildConfig {
     executor.setMaxPoolSize(2);
     executor.setQueueCapacity(20);
     executor.setThreadNamePrefix("theme-build-");
+    executor.setTaskDecorator(DelegatingSecurityContextRunnable::new);
     return executor;
   }
 }
