@@ -33,10 +33,15 @@ import com.komentum.user.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -66,12 +71,20 @@ class ThemeBoardControllerTest {
   @Autowired
   private FileManager fileManager;
 
-  private final int maxPreferPerPost = 5;
+  private final int maxPreferPerPost = 3;
 
   @BeforeEach
   void setUp() {
     boardDetailDataGenerator.deleteThemeBoards();
     boardDetailDataGenerator.generateThemeBoards(5, 2, 2, maxPreferPerPost);
+    LocalDateTime baseTime = LocalDateTime.of(2025, 1, 1, 0, 0);
+    List<Post> posts = boardDetailDataGenerator.getThemeBoards().stream()
+        .map(ThemeBoard::getPost)
+        .toList();
+    for (int i = 0; i < posts.size(); i++) {
+      posts.get(i).setCreatedAt(baseTime.plusDays(Math.min(i, 3)));
+    }
+    postRepository.saveAll(posts);
   }
 
   @AfterEach
@@ -122,6 +135,121 @@ class ThemeBoardControllerTest {
             })
             .build()
     );
+  }
+
+  private List<ThemeBoardPreviewDto> requestThemeBoardPreviews(
+      MultiValueMap<String, String> params, User client) throws Exception {
+    return mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/theme-boards")
+            .params(params)
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(client))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+  }
+
+  static Stream<Arguments> themeBoardSortCases() {
+    return Stream.of(
+        Arguments.of("CREATED_ASC", List.of(0, 1, 2, 4, 3)),
+        Arguments.of("CREATED_DESC", List.of(4, 3, 2, 1, 0)),
+        Arguments.of("PREFER_ASC", List.of(4, 3, 2, 1, 0)),
+        Arguments.of("PREFER_DESC", List.of(0, 1, 2, 4, 3))
+    );
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("themeBoardSortCases")
+  @DisplayName("테마 게시글 목록을 생성 시간 또는 좋아요 수로 정렬한다.")
+  void findThemeBoards_sort(String sortType, List<Integer> expectedIndexes) throws Exception {
+    // given
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
+    params.add("sort_type", sortType);
+    List<Long> expectedPostIds = expectedIndexes.stream()
+        .map(index -> boardDetailDataGenerator.getThemeBoards().get(index).getPost().getPostId())
+        .toList();
+    // when
+    List<ThemeBoardPreviewDto> response = requestThemeBoardPreviews(params, client);
+    // then
+    assertThat(response)
+        .extracting(ThemeBoardPreviewDto::getPostId)
+        .containsExactlyElementsOf(expectedPostIds);
+  }
+
+  @Test
+  @DisplayName("테마 게시글 정렬값을 생략하면 생성 시간 내림차순으로 정렬한다.")
+  void findThemeBoards_defaultSort() throws Exception {
+    // given
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    MultiValueMap<String, String> defaultParams = TestParams.withPaging(0, 5);
+    MultiValueMap<String, String> blankParams = TestParams.withPaging(0, 5);
+    blankParams.add("sort_type", "");
+    MultiValueMap<String, String> createdDescParams = TestParams.withPaging(0, 5);
+    createdDescParams.add("sort_type", "CREATED_DESC");
+    // when
+    List<ThemeBoardPreviewDto> defaultResponse = requestThemeBoardPreviews(defaultParams, client);
+    List<ThemeBoardPreviewDto> blankResponse = requestThemeBoardPreviews(blankParams, client);
+    List<ThemeBoardPreviewDto> createdDescResponse = requestThemeBoardPreviews(createdDescParams,
+        client);
+    // then
+    List<Long> expectedPostIds = createdDescResponse.stream()
+        .map(ThemeBoardPreviewDto::getPostId)
+        .toList();
+    assertThat(defaultResponse)
+        .extracting(ThemeBoardPreviewDto::getPostId)
+        .containsExactlyElementsOf(expectedPostIds);
+    assertThat(blankResponse)
+        .extracting(ThemeBoardPreviewDto::getPostId)
+        .containsExactlyElementsOf(expectedPostIds);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"DEFAULT", "created_desc"})
+  @DisplayName("지원하지 않는 테마 게시글 정렬값은 400을 반환한다.")
+  void findThemeBoards_invalidSort(String sortType) throws Exception {
+    // given
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
+    params.add("sort_type", sortType);
+    // when & then
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/api/theme-boards").params(params), TestClientDto.fromEntity(client)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").isNotEmpty());
+  }
+
+  @Test
+  @DisplayName("게시글 목록 API 문서에는 sort_type만 정렬 조건으로 노출한다.")
+  void postBoardListOpenApi_excludesPageableSort() throws Exception {
+    User client = boardDetailDataGenerator.getUsers().get(0);
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/v3/api-docs"), TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath(
+            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'page')]").isNotEmpty())
+        .andExpect(jsonPath(
+            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'size')]").isNotEmpty())
+        .andExpect(jsonPath(
+            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'sort_type')]").isNotEmpty())
+        .andExpect(jsonPath(
+            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'sort')]").isEmpty())
+        .andExpect(jsonPath(
+            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'page')]").isNotEmpty())
+        .andExpect(jsonPath(
+            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'size')]").isNotEmpty())
+        .andExpect(jsonPath(
+            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'sort_type')]").isNotEmpty())
+        .andExpect(jsonPath(
+            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'sort')]").isEmpty());
   }
 
   @Test
@@ -274,42 +402,34 @@ class ThemeBoardControllerTest {
   void findThemeBoards_keywordMatchedPostFirst() throws Exception {
     // given
     User client = boardDetailDataGenerator.getUsers().get(0);
-    ThemeBoard targetThemeBoard = boardDetailDataGenerator.getThemeBoards().get(0);
+    ThemeBoard targetThemeBoard = boardDetailDataGenerator.getThemeBoards().get(3);
     ThemeBoard contentMatchedThemeBoard = boardDetailDataGenerator.getThemeBoards().get(
         boardDetailDataGenerator.getThemeBoards().size() - 1);
     Post targetPost = targetThemeBoard.getPost();
     Post contentMatchedPost = contentMatchedThemeBoard.getPost();
     String keyword = "theme-keyword-" + UUID.randomUUID();
     targetPost.setTitle(keyword);
-    targetPost.setCreatedAt(LocalDateTime.now().minusDays(1));
     contentMatchedPost.setTitle("content-match-only-" + UUID.randomUUID());
     contentMatchedPost.setContent(keyword);
-    contentMatchedPost.setCreatedAt(LocalDateTime.now());
     postRepository.saveAll(List.of(targetPost, contentMatchedPost));
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
-    MultiValueMap<String, String> params = TestParams.withPaging(0,
-        boardDetailDataGenerator.getThemeBoards().size());
-    params.add("keyword", keyword);
+    MultiValueMap<String, String> firstPageParams = TestParams.withPaging(0, 1);
+    firstPageParams.add("keyword", keyword);
+    firstPageParams.add("sort_type", "PREFER_ASC");
+    MultiValueMap<String, String> secondPageParams = TestParams.withPaging(1, 1);
+    secondPageParams.add("keyword", keyword);
+    secondPageParams.add("sort_type", "PREFER_ASC");
     // when
-    List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<ThemeBoardPreviewDto>>builder()
-            .mockMvc(mockMvc)
-            .path("/api/theme-boards")
-            .params(params)
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(client))
-            .statusCode(200)
-            .responseType(new TypeReference<>() {
-            })
-            .build()
-    );
+    List<ThemeBoardPreviewDto> firstPage = requestThemeBoardPreviews(firstPageParams, client);
+    List<ThemeBoardPreviewDto> secondPage = requestThemeBoardPreviews(secondPageParams, client);
     // then
-    assertThat(response).hasSize(boardDetailDataGenerator.getThemeBoards().size());
-    assertThat(response.get(0).getPostId()).isEqualTo(targetPost.getPostId());
-    assertThat(response)
+    assertThat(firstPage)
         .extracting(ThemeBoardPreviewDto::getPostId)
-        .contains(contentMatchedPost.getPostId());
+        .containsExactly(targetPost.getPostId());
+    assertThat(secondPage)
+        .extracting(ThemeBoardPreviewDto::getPostId)
+        .containsExactly(contentMatchedPost.getPostId());
   }
 
   @Test
