@@ -34,15 +34,20 @@ public class ThemeBoardService {
    * @return ThemeBoardQuery.Preview 테마 게시글 페이징 DTO 생성을 위한 중간 계층 DTO 반환
    * */
   public List<ThemeBoardQuery.Preview> findThemeBoardQueryPreview(Pageable pageable) {
-    return findThemeBoardQueryPreview(pageable, null);
+    return findThemeBoardQueryPreview(pageable, null, PostSortType.CREATED_DESC);
   }
 
   public List<ThemeBoardQuery.Preview> findThemeBoardQueryPreview(Pageable pageable,
       String keyword) {
+    return findThemeBoardQueryPreview(pageable, keyword, PostSortType.CREATED_DESC);
+  }
+
+  public List<ThemeBoardQuery.Preview> findThemeBoardQueryPreview(Pageable pageable,
+      String keyword, PostSortType sortType) {
     PostSearchCondition condition = new PostSearchCondition()
         .withKeyword(keyword);
     return themeBoardRepositorySupport.findThemeBoardQueryPreviewList(pageable, condition,
-        List.of(PostSortType.DEFAULT));
+        List.of(sortType));
   }
 
   /**
@@ -79,7 +84,7 @@ public class ThemeBoardService {
             pageable,
             client,
             condition,
-            List.of(PostSortType.DEFAULT)
+            List.of(PostSortType.CREATED_DESC)
         )
     );
   }

@@ -14,6 +14,7 @@ import com.komentum.post.mapper.ThemeBoardMapperSupport;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
+import com.komentum.post.service.enums.PostSortType;
 import com.komentum.post.service.transaction.ThemeBoardTransactionService;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.service.ThemeImageService;
@@ -106,13 +107,19 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
-    return findThemeBoardPreviews(pageable, null);
+    return findThemeBoardPreviews(pageable, null, PostSortType.CREATED_DESC);
   }
 
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable, String keyword) {
+    return findThemeBoardPreviews(pageable, keyword, PostSortType.CREATED_DESC);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable, String keyword,
+      PostSortType sortType) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreview(
-        pageable, keyword);
+        pageable, keyword, sortType);
     return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
         boardManagementHelper);
   }
