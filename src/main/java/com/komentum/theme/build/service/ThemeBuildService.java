@@ -13,13 +13,11 @@ import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -37,13 +35,6 @@ public class ThemeBuildService {
         .orElseThrow(() -> new ResourceNotFoundException(
             "Theme not found with id: " + themeComponentId));
     validateThemeAccess(themeComponent, "No permission to build theme package");
-    if (!themeBuildExecutionService.supports(platform)) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Unsupported theme build platform: " + platform
-      );
-    }
-
     ThemeBuildJob runningJob = themeBuildJobRepository
         .findFirstByThemeComponent_ThemeComponentIdAndPlatformAndStatusOrderByCreatedAtDesc(
             themeComponentId,

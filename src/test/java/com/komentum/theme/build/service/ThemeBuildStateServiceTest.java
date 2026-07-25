@@ -71,10 +71,9 @@ class ThemeBuildStateServiceTest {
     ThemeBuildJob job = saveRunningJob();
     LocalDateTime updatedAt = LocalDateTime.now();
 
-    boolean updated = themeBuildStateService.markFailed(job.getBuildId(), updatedAt);
+    themeBuildStateService.markFailed(job.getBuildId(), updatedAt);
 
     ThemeBuildJob result = themeBuildJobRepository.findById(job.getBuildId()).orElseThrow();
-    assertThat(updated).isTrue();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.FAILED);
     assertThat(result.getPackageUrl()).isNull();
     assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
@@ -85,7 +84,7 @@ class ThemeBuildStateServiceTest {
   void terminalState_isNotOverwritten() {
     ThemeBuildJob job = saveRunningJob();
     LocalDateTime failedAt = LocalDateTime.now();
-    assertThat(themeBuildStateService.markFailed(job.getBuildId(), failedAt)).isTrue();
+    themeBuildStateService.markFailed(job.getBuildId(), failedAt);
 
     boolean updated = themeBuildStateService.markSuccess(
         job.getBuildId(),

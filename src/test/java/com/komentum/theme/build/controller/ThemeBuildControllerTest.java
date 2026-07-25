@@ -66,7 +66,6 @@ class ThemeBuildControllerTest {
 
   @BeforeEach
   void setUp() {
-    when(themeBuildExecutionService.supports(Platform.ANDROID)).thenReturn(true);
     owner = saveUser("theme-build-owner@test.com", UserRole.USER);
     theme = saveTheme(owner);
   }
@@ -96,6 +95,27 @@ class ThemeBuildControllerTest {
   }
 
   @Test
+  @DisplayName("iOS 테마 제작을 시작하면 202와 RUNNING build 정보를 반환한다")
+  void startThemeBuild_iosSuccess() throws Exception {
+    ResultActions result = performStart(theme, owner, Platform.IOS);
+
+    result.andExpect(status().isAccepted())
+        .andExpect(jsonPath("$.buildId").isNumber())
+        .andExpect(jsonPath("$.themeComponentId").value(theme.getThemeComponentId()))
+        .andExpect(jsonPath("$.platform").value("IOS"))
+        .andExpect(jsonPath("$.status").value("RUNNING"));
+
+    JsonNode body = readBody(result);
+    assertThat(body.size()).isEqualTo(4);
+    assertThat(themeBuildJobRepository.count()).isOne();
+    assertThat(themeBuildJobRepository.findById(body.get("buildId").asLong()))
+        .get()
+        .extracting(job -> job.getPlatform())
+        .isEqualTo(Platform.IOS);
+    verify(themeBuildExecutionService).dispatch(body.get("buildId").asLong());
+  }
+
+  @Test
   @DisplayName("polling 응답은 RUNNING, SUCCESS, FAILED 상태와 downloadUrl을 제공한다")
   void findThemeBuild_returnsAllTerminalStates() throws Exception {
     Long runningBuildId = startAndReadBuildId(theme, owner);
@@ -111,19 +131,21 @@ class ThemeBuildControllerTest {
     assertStatusResponse(performFind(runningBuildId, owner), "SUCCESS", packageUrl);
 
     Long failedBuildId = startAndReadBuildId(theme, owner);
-    assertThat(themeBuildStateService.markFailed(
+    themeBuildStateService.markFailed(
         failedBuildId,
         LocalDateTime.now()
-    )).isTrue();
+    );
     assertStatusResponse(performFind(failedBuildId, owner), "FAILED", null);
   }
 
   @Test
-  @DisplayName("지원하지 않는 iOS 제작 요청은 job을 만들지 않고 400을 반환한다")
-  void startThemeBuild_unsupportedPlatform() throws Exception {
-    when(themeBuildExecutionService.supports(Platform.IOS)).thenReturn(false);
-
-    performStart(theme, owner, Platform.IOS)
+  @DisplayName("잘못된 플랫폼은 job을 만들지 않고 400을 반환한다")
+  void startThemeBuild_invalidPlatform() throws Exception {
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            post("/api/themes/{themeComponentId}/builds", theme.getThemeComponentId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"platform\":\"WINDOWS\"}"),
+            TestClientDto.fromEntity(owner)))
         .andExpect(status().isBadRequest());
 
     assertThat(themeBuildJobRepository.count()).isZero();

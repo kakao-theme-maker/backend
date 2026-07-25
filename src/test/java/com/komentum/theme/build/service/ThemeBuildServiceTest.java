@@ -1,7 +1,6 @@
 package com.komentum.theme.build.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -35,7 +34,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
@@ -44,7 +42,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -73,7 +70,6 @@ class ThemeBuildServiceTest {
 
   @BeforeEach
   void setUp() {
-    when(themeBuildExecutionService.supports(Platform.ANDROID)).thenReturn(true);
     owner = saveUser("theme-build-service-owner@test.com", UserRole.USER);
     theme = saveTheme(owner);
     authenticate(owner);
@@ -146,6 +142,22 @@ class ThemeBuildServiceTest {
   }
 
   @Test
+  @DisplayName("같은 테마의 Android와 iOS 제작 작업은 독립적으로 생성한다")
+  void startBuild_createsIndependentJobsByPlatform() {
+    ThemeBuildStartResponse android = themeBuildService.startBuild(
+        theme.getThemeComponentId(), Platform.ANDROID);
+    ThemeBuildStartResponse ios = themeBuildService.startBuild(
+        theme.getThemeComponentId(), Platform.IOS);
+
+    assertThat(ios.buildId()).isNotEqualTo(android.buildId());
+    assertThat(themeBuildJobRepository.findAll())
+        .extracting(ThemeBuildJob::getPlatform)
+        .containsExactlyInAnyOrder(Platform.ANDROID, Platform.IOS);
+    verify(themeBuildExecutionService).dispatch(android.buildId());
+    verify(themeBuildExecutionService).dispatch(ios.buildId());
+  }
+
+  @Test
   @DisplayName("동시 제작 요청도 하나의 RUNNING job만 생성한다")
   void startBuild_concurrentRequestsReuseOneJob() throws Exception {
     ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -168,19 +180,6 @@ class ThemeBuildServiceTest {
     } finally {
       executor.shutdownNow();
     }
-  }
-
-  @Test
-  @DisplayName("지원하지 않는 플랫폼이면 job을 만들지 않는다")
-  void startBuild_rejectsUnsupportedPlatform() {
-    when(themeBuildExecutionService.supports(Platform.IOS)).thenReturn(false);
-
-    assertThatThrownBy(
-        () -> themeBuildService.startBuild(theme.getThemeComponentId(), Platform.IOS))
-        .isInstanceOfSatisfying(ResponseStatusException.class,
-            exception -> assertThat(exception.getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST));
-    assertThat(themeBuildJobRepository.count()).isZero();
   }
 
   @Test

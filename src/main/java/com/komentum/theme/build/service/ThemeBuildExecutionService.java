@@ -39,10 +39,6 @@ public class ThemeBuildExecutionService {
     this.handlers = Map.copyOf(handlerMap);
   }
 
-  public boolean supports(Platform platform) {
-    return handlers.containsKey(platform);
-  }
-
   public void dispatch(Long buildId) {
     try {
       themeBuildExecutor.execute(() -> runBuild(buildId));

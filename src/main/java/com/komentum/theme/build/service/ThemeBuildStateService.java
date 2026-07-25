@@ -28,13 +28,13 @@ public class ThemeBuildStateService {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public boolean markFailed(Long buildId, LocalDateTime updatedAt) {
-    return themeBuildJobRepository.markFailedIfRunning(
+  public void markFailed(Long buildId, LocalDateTime updatedAt) {
+    themeBuildJobRepository.markFailedIfRunning(
         buildId,
         updatedAt,
         ThemeBuildStatus.RUNNING,
         ThemeBuildStatus.FAILED
-    ) == 1;
+    );
   }
 
   @Transactional(readOnly = true)
