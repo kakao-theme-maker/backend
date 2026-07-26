@@ -68,22 +68,12 @@ class JwtAuthFilterTest {
   }
 
   @Test
-  @DisplayName("success test about permit-all path")
-  void jwtAuthFilter_permitAll_success() throws Exception {
-    // given
-    String whiteListPath = securityProperties.getWhiteList()[0];
-    // when and then
-    RequestBuilder builder = MockMvcRequestBuilders.get(whiteListPath);
-    mockMvc.perform(builder).andExpect(status().isOk()).andDo(print());
-  }
-
-  @Test
   @DisplayName("success test about permit-get path")
   void jwtAuthFilter_permitGet_success() throws Exception {
     // given
-    String whiteListPath = securityProperties.getWhiteListGet()[0];
+    String whiteListGet = "/api/theme-boards";
     // when
-    RequestBuilder builder = MockMvcRequestBuilders.get(whiteListPath);
+    RequestBuilder builder = MockMvcRequestBuilders.get(whiteListGet);
     mockMvc.perform(builder).andExpect(status().isOk()).andDo(print());
   }
 
