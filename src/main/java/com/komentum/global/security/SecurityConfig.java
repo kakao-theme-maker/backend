@@ -8,6 +8,7 @@ import com.komentum.global.properties.SecurityProperties.SecurityRule;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,6 +25,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -59,9 +61,10 @@ public class SecurityConfig {
         // 요청 인증 / 인가 설정
         .authorizeHttpRequests(auth -> {
           // white list request matchers 추가
-          auth.requestMatchers(securityProperties.getWhiteList()).permitAll();
+          auth.requestMatchers(createRequestMatchers(securityProperties.getPermitAll()))
+              .permitAll();
           // admin only request matchers 추가
-          auth.requestMatchers(createAdminOnlyRequestMatchers())
+          auth.requestMatchers(createRequestMatchers(securityProperties.getAdminOnly()))
               .hasRole(UserRole.ADMIN.name());
           // 로컬 스토리지를 사용하는 경우 업로드된 파일을 정적 리소스로 직접 서빙하므로 업로드 경로에 대한 GET 요청을 허용
           if (fileStorageProperty.getStorage() == Storage.LOCAL) {
@@ -105,11 +108,23 @@ public class SecurityConfig {
     return new BCryptPasswordEncoder();
   }
 
-  private RequestMatcher[] createAdminOnlyRequestMatchers() {
+  private RequestMatcher[] createRequestMatchers(
+      Map<HttpMethod, List<SecurityRule>> securityRules) {
     List<RequestMatcher> matchers = new ArrayList<>();
-    for (SecurityRule rule : securityProperties.getAdminOnly()) {
-      for (HttpMethod httpMethod : rule.getMethods()) {
-        matchers.add(new AntPathRequestMatcher(rule.getPath(), httpMethod.name()));
+    for (Map.Entry<HttpMethod, List<SecurityRule>> entry : securityRules.entrySet()) {
+      HttpMethod httpMethod = entry.getKey();
+      for (SecurityRule rule : entry.getValue()) {
+        RequestMatcher matcher = switch (rule.getMatcher()) {
+          case ANT -> new AntPathRequestMatcher(
+              rule.getPattern(),
+              httpMethod.name()
+          );
+          case REGEX -> new RegexRequestMatcher(
+              rule.getPattern(),
+              httpMethod.name()
+          );
+        };
+        matchers.add(matcher);
       }
     }
     return matchers.toArray(RequestMatcher[]::new);

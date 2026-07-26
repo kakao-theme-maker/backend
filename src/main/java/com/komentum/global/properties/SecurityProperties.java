@@ -1,7 +1,7 @@
 package com.komentum.global.properties;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -14,17 +14,22 @@ import org.springframework.http.HttpMethod;
 @ConfigurationProperties(prefix = "security")
 public class SecurityProperties {
 
-  private final String[] whiteList;
-  private final SecurityRule[] adminOnly;
+  private final Map<HttpMethod, List<SecurityRule>> permitAll;
+  private final Map<HttpMethod, List<SecurityRule>> adminOnly;
   private final String[] allowedOriginList;
+
+  public enum MatcherType {
+    ANT,
+    REGEX
+  }
 
   @Getter
   @Setter
   @NoArgsConstructor
   public static class SecurityRule {
 
-    private String path;
-    private List<HttpMethod> methods = new ArrayList<>();
+    private String pattern;
+    private MatcherType matcher = MatcherType.ANT;
   }
 
 }
