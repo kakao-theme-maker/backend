@@ -101,6 +101,8 @@ dependencies {
 tasks.register('copyConfig', Copy) {
     from("${rootProject.projectDir}/backend_config/dev/monolithic") {
         include 'application.yml'
+        include 'application-prod.yml'
+        include 'application-dev.yml'
     }
     into './src/main/resources/'
 }
