@@ -211,6 +211,8 @@ Docker 이미지 빌드 시 Gradle이 `backend_config`의 설정 파일을 복�
 | `POST` | `/api/auth/reissue` | refresh token 기반 access token 재발급 |
 | `GET` | `/api/users/me` | 현재 로그인 사용자 조회 |
 | `PATCH` | `/api/users/me/profile-image` | 프로필 이미지 수정 |
+| `PUT` | `/api/users/{public_user_id}/follow` | 사용자 팔로우 |
+| `DELETE` | `/api/users/{public_user_id}/follow` | 사용자 팔로우 해제 |
 
 ### Theme
 
