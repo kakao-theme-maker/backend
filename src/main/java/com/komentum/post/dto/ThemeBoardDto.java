@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
+import com.komentum.theme.core.dto.ThemeDesignAssetDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -69,6 +70,9 @@ public class ThemeBoardDto {
     @Schema(description = "사용자 프로필 이미지")
     @JsonProperty("profile_image")
     private String profileImage;
+
+    @Schema(description = "테마에 사용된 에셋 정보")
+    private List<ThemeDesignAssetDto> themeDesignAssetDtoList;
   }
 
   @Data

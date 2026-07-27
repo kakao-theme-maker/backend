@@ -7,6 +7,7 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.query.ThemeBoardQuery;
 import com.komentum.post.facade.BoardManagementHelper;
+import com.komentum.theme.core.dto.ThemeDesignAssetDto;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,7 @@ public class ThemeBoardMapperSupport {
    * 파라미터 기반으로 ThemeBoardDetailDto 매핑
    * */
   public ThemeBoardDetailDto toThemeBoardDetailDto(ThemeBoardQuery.Detail detail, List<Tag> tags,
+      List<ThemeDesignAssetDto> themeDesignAssetDtoList,
       BoardManagementHelper helper) {
     String previewImageUrl = helper.findPreviewImageUrl(detail.getPreviewImageName());
     List<String> previewImageList = previewImageUrl == null ? List.of() : List.of(previewImageUrl);
@@ -58,6 +60,7 @@ public class ThemeBoardMapperSupport {
         .liked(detail.isLiked())
         .bookmarked(detail.isBookmarked())
         .profileImage(detail.getProfileImage())
+        .themeDesignAssetDtoList(themeDesignAssetDtoList)
         .build();
   }
 }
