@@ -3,6 +3,7 @@ package com.komentum.theme.core.repository;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.domain.ThemeImageId;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -32,6 +33,6 @@ public interface ThemeImageRepository extends JpaRepository<ThemeImage, ThemeIma
       + "JOIN FETCH ti.themeComponent tc "
       + "JOIN FETCH ti.designComponent dc "
       + "JOIN FETCH ti.componentType ct "
-      + "WHERE tc.themeComponentId = :themeComponentId")
-  List<ThemeImage> fetchJoinAllByThemeComponentId(Integer themeComponentId);
+      + "WHERE tc.themeComponentId in :themeComponentId")
+  List<ThemeImage> fetchJoinAllByThemeComponentIds(Collection<Integer> themeComponentId);
 }
