@@ -30,11 +30,11 @@ public enum StyleCode {
   TABBAR_STYLE_BACKGROUND_COLOR("tabbarStyleBackgroundColor"),
   // message notification bar style
   MESSAGE_NOTIFICATION_BAR_BACKGROUND_COLOR("messageNotificationBarBackgroundColor"),
-  MESSAGE_NOTIFICATION_BAR_NAME_TEXT_COLOR("messageNotificationBarNameTextColor"),
+  //  MESSAGE_NOTIFICATION_BAR_NAME_TEXT_COLOR("messageNotificationBarNameTextColor"),
   MESSAGE_NOTIFICATION_BAR_MESSAGE_TEXT_COLOR("messageNotificationBarMessageTextColor"),
   // direct share bar style
   DIRECT_SHARE_BAR_BACKGROUND_COLOR("directShareBarBackgroundColor"),
-  DIRECT_SHARE_BAR_NAME_TEXT_COLOR("directShareBarNameTextColor"),
+  //  DIRECT_SHARE_BAR_NAME_TEXT_COLOR("directShareBarNameTextColor"),
   DIRECT_SHARE_BAR_MESSAGE_TEXT_COLOR("directShareBarMessageTextColor"),
   // passcode page style
   PASSCODE_BACKGROUND_COLOR("passcodeBackgroundColor"),

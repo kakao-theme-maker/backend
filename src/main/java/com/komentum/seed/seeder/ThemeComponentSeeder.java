@@ -17,7 +17,6 @@ import com.komentum.theme.core.repository.ThemeStyleRepository;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +33,7 @@ public class ThemeComponentSeeder {
   private final ColorStyleRepository colorStyleRepository;
   private final Faker faker;
 
-  private ThemeComponent generateOne(User author, ThemeType themeType, String themeCode) {
+  private ThemeComponent generateOne(User author, ThemeType themeType) {
     return ThemeComponent.builder()
         .themeName(faker.lorem().word())
         .versionName("1.1.1.1")
@@ -42,7 +41,6 @@ public class ThemeComponentSeeder {
         .isDone(true)
         .isPublic(true)
         .themeType(themeType)
-        .themeCode(themeCode)
         .userEmail(author.getUserEmail())
         .build();
   }
@@ -68,7 +66,7 @@ public class ThemeComponentSeeder {
       themeStyles.add(ThemeStyle.builder()
           .colorStyle(colorStyle)
           .themeComponent(themeComponent)
-          .color(faker.color().name())
+          .color(faker.color().hex())
           .build());
     }
     return themeStyleRepository.saveAll(themeStyles);
@@ -81,11 +79,8 @@ public class ThemeComponentSeeder {
     for (User author : authors) {
       for (int i = 0; i < size; i++) {
         ThemeType themeType = ThemeType.USER;
-        if (i % 2 == 0) {
-          themeType = ThemeType.DEFAULT;
-        }
         themeComponents.add(
-            seedOne(author, designComponents, themeType, UUID.randomUUID().toString()));
+            seedOne(author, designComponents, themeType));
       }
     }
     return themeComponents;
@@ -93,14 +88,14 @@ public class ThemeComponentSeeder {
 
   @Transactional
   public ThemeComponent seedOne(User author, List<DesignComponent> designComponents) {
-    return seedOne(author, designComponents, ThemeType.USER, UUID.randomUUID().toString());
+    return seedOne(author, designComponents, ThemeType.USER);
   }
 
   @Transactional
   public ThemeComponent seedOne(User author, List<DesignComponent> designComponents,
-      ThemeType themeType, String themeCode) {
+      ThemeType themeType) {
     ThemeComponent themeComponent = themeComponentRepository.save(
-        generateOne(author, themeType, themeCode));
+        generateOne(author, themeType));
     List<ThemeImage> themeImages = seedThemeImages(themeComponent, designComponents);
     List<ThemeStyle> themeStyles = seedThemeStyles(themeComponent);
     for (ThemeImage themeImage : themeImages) {

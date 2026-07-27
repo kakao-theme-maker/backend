@@ -480,15 +480,6 @@
           }
         }
       },
-      "messageNotificationBarNameTextColor": {
-        "name": "메시지 알림 배너 이름 색상",
-        "description": "메시지 알림 배너 이름 색상",
-        "usage": {
-          "messageNotificationBar": {
-            "description": "메시지 알림 배너 이름 색상"
-          }
-        }
-      },
       "messageNotificationBarMessageTextColor": {
         "name": "메시지 알림 배너 텍스트 색상",
         "description": "메시지 알림 배너 텍스트 색상",
@@ -496,7 +487,8 @@
           "messageNotificationBar": {
             "description": "메시지 알림 배너 메시지 색상"
           }
-        }
+        },
+        "devNote": "android에는 없음"
       },
       "directShareBarBackgroundColor": {
         "name": "전달 완료 배너 배경색",
@@ -504,15 +496,6 @@
         "usage": {
           "directShareBar": {
             "description": "전달 완료 배너 배경 색상"
-          }
-        }
-      },
-      "directShareBarNameTextColor": {
-        "name": "전달 완료 배너 이름 색상",
-        "description": "전달 완료 배너 이름 색상",
-        "usage": {
-          "directShareBar": {
-            "description": "전달 완료 배너 이름 색상"
           }
         }
       },
@@ -802,14 +785,14 @@
               "path": "drawable-sw600dp/theme_maintab_cell_image.9.png",
               "width": 1440,
               "height": 214,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             },
             {
               "code": "tabbarStyleBackgroundImageXxhdpi",
               "path": "drawable-xxhdpi/theme_maintab_cell_image.9.png",
               "width": 1440,
               "height": 214,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "tabbarStyleFriendsNormalIconImage": [
@@ -1082,7 +1065,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_me_01_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "messageCellStyleSendGroupBackgroundImage": [
@@ -1091,7 +1074,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_me_02_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "messageCellStyleReceiveBackgroundImage": [
@@ -1100,7 +1083,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_you_01_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "messageCellStyleReceiveGroupBackgroundImage": [
@@ -1109,7 +1092,7 @@
               "path": "drawable-xxhdpi/theme_chatroom_bubble_you_02_image.9.png",
               "width": 124,
               "height": 114,
-              "fileExtension": "png"
+              "fileExtension": "9png"
             }
           ],
           "buttonStyleAddFriendImage": [
@@ -1118,6 +1101,15 @@
               "path": "drawable-xxhdpi/theme_find_add_friend_button_image.png",
               "width": 126,
               "height": 102,
+              "fileExtension": "png"
+            }
+          ],
+          "defaultProfileStyleProfileImage": [
+            {
+              "code": "defaultProfileStyleProfileImageXxhdpi",
+              "path": "drawable-xxhdpi/theme_profile_01_image.png",
+              "width": 240,
+              "height": 240,
               "fileExtension": "png"
             }
           ]
@@ -1242,11 +1234,11 @@
               "code": "androidMessageNotificationBarBackgroundColor"
             }
           ],
-          "messageNotificationBarNameTextColor": [
+          "messageNotificationBarMessageTextColor": [
             {
               "resourceGroup": "color",
               "resourceName": "theme_notification_color",
-              "code": "androidMessageNotificationBarNameTextColor"
+              "code": "androidMessageNotificationBarMessageTextColor"
             }
           ],
           "directShareBarBackgroundColor": [
@@ -1256,11 +1248,11 @@
               "code": "androidDirectShareBarBackgroundColor"
             }
           ],
-          "directShareBarNameTextColor": [
+          "directShareBarMessageTextColor": [
             {
               "resourceGroup": "color",
               "resourceName": "theme_direct_share_color",
-              "code": "androidDirectShareBarNameTextColor"
+              "code": "androidDirectShareBarMessageTextColor"
             }
           ],
           "passcodeBackgroundColor": [
@@ -1647,6 +1639,20 @@
               "width": 120,
               "height": 105,
               "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendSelectedBackgroundImage2x",
+              "path": "chatroomBubbleSend01Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendSelectedBackgroundImage3x",
+              "path": "chatroomBubbleSend01Selected@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
             }
           ],
           "messageCellStyleSendGroupBackgroundImage": [
@@ -1660,6 +1666,20 @@
             {
               "code": "iOSMessageCellStyleSendGroupBackgroundImage3x",
               "path": "chatroomBubbleSend02@3x.png",
+              "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendGroupSelectedBackgroundImage2x",
+              "path": "chatroomBubbleSend02Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleSendGroupSelectedBackgroundImage3x",
+              "path": "chatroomBubbleSend02Selected@3x.png",
               "width": 120,
               "height": 105,
               "fileExtension": "png"
@@ -1679,6 +1699,20 @@
               "width": 120,
               "height": 105,
               "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveSelectedBackgroundImage2x",
+              "path": "chatroomBubbleReceive01Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveSelectedBackgroundImage3x",
+              "path": "chatroomBubbleReceive01Selected@3x.png",
+              "width": 121,
+              "height": 105,
+              "fileExtension": "png"
             }
           ],
           "messageCellStyleReceiveGroupBackgroundImage": [
@@ -1693,6 +1727,20 @@
               "code": "iOSMessageCellStyleReceiveGroupBackgroundImage3x",
               "path": "chatroomBubbleReceive02@3x.png",
               "width": 120,
+              "height": 105,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveGroupSelectedBackgroundImage2x",
+              "path": "chatroomBubbleReceive02Selected@2x.png",
+              "width": 80,
+              "height": 70,
+              "fileExtension": "png"
+            },
+            {
+              "code": "iOSMessageCellStyleReceiveGroupSelectedBackgroundImage3x",
+              "path": "chatroomBubbleReceive02Selected@3x.png",
+              "width": 121,
               "height": 105,
               "fileExtension": "png"
             }
@@ -1843,11 +1891,18 @@
               "code": "iOSMessageNotificationBarBackgroundColor"
             }
           ],
-          "messageNotificationBarNameTextColor": [
+          "messageNotificationBarMessageTextColor": [
             {
-              "resourceGroup": "LabelStyle-MessageNotificationBarName",
+              "resourceGroup": "LabelStyle-MessageNotificationBarMessage",
               "resourceName": "-ios-text-color",
-              "code": "iOSMessageNotificationBarNameTextColor"
+              "code": "iOSMessageNotificationBarMessageTextColor"
+            }
+          ],
+          "messageNotificationBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-MessageNotificationBarMessage",
+              "resourceName": "-ios-text-color",
+              "code": "iOSMessageNotificationBarMessageTextColor"
             }
           ],
           "directShareBarBackgroundColor": [
@@ -1857,11 +1912,18 @@
               "code": "iOSDirectShareBarBackgroundColor"
             }
           ],
-          "directShareBarNameTextColor": [
+          "directShareBarMessageTextColor": [
             {
-              "resourceGroup": "LabelStyle-DirectShareBarName",
+              "resourceGroup": "LabelStyle-DirectShareBarMessage",
               "resourceName": "-ios-text-color",
-              "code": "iOSDirectShareBarNameTextColor"
+              "code": "iOSDirectShareBarMessageTextColor"
+            }
+          ],
+          "directShareBarMessageTextColor": [
+            {
+              "resourceGroup": "LabelStyle-DirectShareBarMessage",
+              "resourceName": "-ios-text-color",
+              "code": "iOSDirectShareBarMessageTextColor"
             }
           ],
           "passcodeBackgroundColor": [
@@ -1965,5 +2027,4 @@
     }
   }
 }
-
 

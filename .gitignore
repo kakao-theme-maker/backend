@@ -58,4 +58,5 @@ docker/docker_redis/
 # QueryDsl
 **/src/main/generated
 
-*.jks
+keystore
+**/keystore/**

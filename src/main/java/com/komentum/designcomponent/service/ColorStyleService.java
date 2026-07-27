@@ -3,10 +3,13 @@ package com.komentum.designcomponent.service;
 import com.komentum.designcomponent.domain.ColorStyle;
 import com.komentum.designcomponent.dto.ColorStyleCreateDto;
 import com.komentum.designcomponent.dto.ColorStyleUpdateRequest;
+import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.mapper.ColorStyleMapper;
 import com.komentum.designcomponent.repository.ColorStyleRepository;
 import com.komentum.global.exception.ResourceNotFoundException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +53,20 @@ public class ColorStyleService {
   public List<ColorStyle> getAllColorStyles() {
     return colorStyleRepository.findAll();
   }
-  
+
+  /**
+   * styleCode - ColorStyle Entity 맵을 조회한다.
+   * */
+  @Transactional(readOnly = true)
+  public Map<StyleCode, ColorStyle> findColorStyleMap() {
+    return colorStyleRepository.findAll()
+        .stream()
+        .collect(Collectors.toMap(
+            ColorStyle::getStyleCode,
+            colorStyle -> colorStyle)
+        );
+  }
+
   /**
    * colorStyle 갱신
    * @param colorStyleId 갱신할 colorStyle ID
