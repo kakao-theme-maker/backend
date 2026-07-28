@@ -325,26 +325,96 @@ class ThemeBoardControllerTest {
   void findThemeBoardDetails_ifPinnedPostIdExists() throws Exception {
     // given
     Post pinnedPost = postScenarioResult.posts().get(0);
+    User pinnedAuthor = pinnedPost.getUser();
+    MultiValueMap<String, String> params = TestParams.withPaging(0, 10);
+    params.add("pinned_post_id", pinnedPost.getPostId().toString());
     // stub
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
-    List<ThemeBoardDetailDto> response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<ThemeBoardDetailDto>>builder()
-            .mockMvc(mockMvc)
-            .path(String.format("/api/theme-boards/details?pinned_post_id=%d&page=0",
-                pinnedPost.getPostId()))
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(testClient))
-            .statusCode(200)
-            .responseType(new TypeReference<>() {
-            })
-            .build());
+    List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
     // then
     assertThat(response).isNotEmpty();
     assertThat(response.get(0).getPostId()).isEqualTo(pinnedPost.getPostId());
     for (ThemeBoardDetailDto dto : response) {
       assertThemeBoardDetail(dto);
+      assertThat(dto.getUserEmail()).isEqualTo(pinnedAuthor.getUserEmail());
+    }
+  }
+
+  @Test
+  @DisplayName("When no pinned post ID is provided, return theme board details using requested paging.")
+  void findThemeBoardDetails_withoutPinnedPostId_returnsRequestedPage() throws Exception {
+    // given
+    int pageSize = 3;
+    MultiValueMap<String, String> params = TestParams.withPaging(0, pageSize);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
+    // then
+    assertThat(response).hasSize(pageSize);
+    for (ThemeBoardDetailDto dto : response) {
+      assertThemeBoardDetail(dto);
+    }
+  }
+
+  @Test
+  @DisplayName("When requesting a later pinned page, do not return the pinned post again.")
+  void findThemeBoardDetails_withPinnedPostIdOnLaterPage_doesNotReturnPinnedPostAgain()
+      throws Exception {
+    // given
+    Post pinnedPost = postScenarioResult.posts().get(0);
+    MultiValueMap<String, String> params = TestParams.withPaging(1, 1);
+    params.add("pinned_post_id", pinnedPost.getPostId().toString());
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
+    // then
+    assertThat(response).isNotEmpty();
+    assertThat(response)
+        .extracting(ThemeBoardDetailDto::getPostId)
+        .doesNotContain(pinnedPost.getPostId());
+  }
+
+  @Test
+  @DisplayName("When withImages is true, include theme design assets in each detail.")
+  void findThemeBoardDetails_withImagesTrue_returnsThemeDesignAssets() throws Exception {
+    // given
+    int pageSize = 2;
+    MultiValueMap<String, String> params = TestParams.withPaging(0, pageSize);
+    params.add("withImages", "true");
+    // stub
+    stubFileManager();
+    // when
+    List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
+    // then
+    assertThat(response).hasSize(pageSize);
+    for (ThemeBoardDetailDto dto : response) {
+      assertThemeBoardDetail(dto);
+      assertThat(dto.getThemeDesignAssetDtoList()).hasSize(TypeCode.values().length);
+    }
+  }
+
+  @Test
+  @DisplayName("When withImages is omitted, do not include theme design assets in details.")
+  void findThemeBoardDetails_withoutWithImages_omitsThemeDesignAssets() throws Exception {
+    // given
+    int pageSize = 2;
+    MultiValueMap<String, String> params = TestParams.withPaging(0, pageSize);
+    // stub
+    Mockito.when(fileManager.resolveFilePath(anyString()))
+        .thenReturn(UUID.randomUUID().toString());
+    // when
+    List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
+    // then
+    assertThat(response).hasSize(pageSize);
+    for (ThemeBoardDetailDto dto : response) {
+      assertThemeBoardDetail(dto);
+      assertThat(dto.getThemeDesignAssetDtoList()).isNull();
     }
   }
 
