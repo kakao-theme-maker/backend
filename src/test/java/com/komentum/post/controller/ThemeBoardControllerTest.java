@@ -291,6 +291,8 @@ class ThemeBoardControllerTest {
       assertThat(dto.getDesignComponentId()).isNotNull();
       assertThat(dto.getImageUrl()).isNotNull();
       assertThat(dto.getTypeCode()).isNotNull();
+      assertThat(dto.getTypeCodeGroup()).isNotNull();
+      assertThat(dto.getTypeCodeGroupName()).isNotBlank();
     }
   }
 
