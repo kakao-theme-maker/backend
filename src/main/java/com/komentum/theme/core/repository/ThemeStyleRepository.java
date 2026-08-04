@@ -11,10 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ThemeStyleRepository extends JpaRepository<ThemeStyle, Integer> {
 
-  @Query("select ts "
-      + "from ThemeStyle ts "
-      + "join fetch ts.themeComponent tc "
-      + "where tc.themeComponentId = :themeComponentId")
+  @Query("select ts from ThemeStyle ts join fetch ThemeComponent tc where tc.themeComponentId = :themeComponentId")
   List<ThemeStyle> findByThemeComponentId(
       @Param("themeComponentId") Integer themeComponentId); // component 리스트 반환
 
@@ -27,5 +24,6 @@ public interface ThemeStyleRepository extends JpaRepository<ThemeStyle, Integer>
       + "JOIN FETCH ts.themeComponent tc "
       + "JOIN FETCH ts.colorStyle cs "
       + "WHERE tc.themeComponentId = :themeComponentId")
-  List<ThemeStyle> fetchJoinAllByThemeComponentId(Integer themeComponentId);
+  List<ThemeStyle> fetchJoinAllByThemeComponentId(
+      @Param("themeComponentId") Integer themeComponentId); // component 삭제
 }

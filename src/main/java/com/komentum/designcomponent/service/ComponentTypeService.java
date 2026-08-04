@@ -3,10 +3,13 @@ package com.komentum.designcomponent.service;
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.dto.ComponentTypeCreateRequest;
 import com.komentum.designcomponent.dto.ComponentTypeUpdateRequest;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.mapper.ComponentTypeMapper;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +51,19 @@ public class ComponentTypeService {
   @Transactional(readOnly = true)
   public List<ComponentType> getAllComponentTypes() {
     return componentTypeRepository.findAll();
+  }
+
+  /**
+   * TypeCode - ComponentType map을 조회한다
+   * */
+  @Transactional(readOnly = true)
+  public Map<TypeCode, ComponentType> findComponentTypeMap() {
+    return componentTypeRepository.findAll()
+        .stream()
+        .collect(Collectors.toMap(
+            ComponentType::getTypeCode,
+            componentType -> componentType)
+        );
   }
 
   /**
