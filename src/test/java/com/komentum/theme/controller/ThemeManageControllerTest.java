@@ -368,6 +368,7 @@ class ThemeManageControllerTest {
             .clientDto(TestClientDto.fromEntity(rootUser))
             .build());
     // then
+    resultActions.andExpect(status().isOk());
     List<ThemeComponent> themeComponents = themeComponentRepository.findAll();
     assertThat(themeComponents).hasSize(1);
     assertThat(themeComponents.get(0).getThemeCode())
