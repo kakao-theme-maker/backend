@@ -45,7 +45,10 @@ public enum TypeCode {
   DEFAULT_PROFILE_STYLE_PROFILE_IMAGE("defaultProfileStyleProfileImage"),
 
   // button style
-  BUTTON_STYLE_ADD_FRIEND_IMAGE("buttonStyleAddFriendImage");
+  BUTTON_STYLE_ADD_FRIEND_IMAGE("buttonStyleAddFriendImage"),
+
+  // theme icon
+  COMMON_ICO_THEME("commonIcoTheme");
 
   private final String typeCode;
 

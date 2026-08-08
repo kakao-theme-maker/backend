@@ -59,15 +59,18 @@ public class PlatformColorStyleSeeder {
           .orElseThrow(() -> new IllegalStateException((
               "Invalid color style with style code : " + styleCode.getStyleCode())));
       for (JsonNode node : platformColorStyle.getValue()) {
-        result.add(
-            PlatformColorStyle.builder()
-                .platform(platform)
-                .resourceGroup(node.path("resourceGroup").asText())
-                .resourceName(node.path("resourceName").asText())
-                .code(node.path("code").asText())
-                .colorStyle(colorStyle)
-                .build()
-        );
+        JsonNode weightNode = node.path("weight");
+        PlatformColorStyle pcs = PlatformColorStyle.builder()
+            .platform(platform)
+            .resourceGroup(node.path("resourceGroup").asText())
+            .resourceName(node.path("resourceName").asText())
+            .code(node.path("code").asText())
+            .colorStyle(colorStyle)
+            .build();
+        if (weightNode != null && !weightNode.isNull()) {
+          pcs.setWeight(weightNode.asDouble());
+        }
+        result.add(pcs);
       }
     }
     return result;
