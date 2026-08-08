@@ -1,9 +1,11 @@
 package com.komentum.theme.ios.editor;
 
 import com.komentum.designcomponent.domain.PlatformColorStyle;
+import com.komentum.global.utils.RegexValidator;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeStyle;
 import com.komentum.theme.ios.utils.IosThemePathManager;
+import com.komentum.theme.utils.ColorEditor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -73,7 +75,7 @@ public class IosThemeCssEditor {
       if (themeStyle == null) {
         continue;
       }
-      String color = normalizeCssColor(themeStyle.getColor());
+      String color = normalizeCssColor(themeStyle.getColor(), platformColorStyle.getWeight());
       if (color == null) {
         continue;
       }
@@ -117,25 +119,24 @@ public class IosThemeCssEditor {
     return themeComponent.getVersionNumber();
   }
 
-  private String normalizeCssColor(String color) {
-    if (color == null || color.isBlank()) {
+  private String normalizeCssColor(String color, double weight) {
+    if (!RegexValidator.isValidHexColor(color)) {
       return null;
     }
     String normalized = color.trim();
+    // 테마 내에서 6자리 hex color만 사용할 수 있음
+    // 6자리 색상이고 #이 없다면, 6자리 hex color로 변환
     if (normalized.matches("[0-9a-fA-F]{6}")) {
-      return "#" + normalized;
+      normalized = "#" + normalized;
     }
-    // 공통 테마의 8자리 색상은 RRGGBBAA 형식이다.
-    // 현재 iOS CSS에는 알파를 반영하지 않으므로 뒤의 AA를 제외한 #RRGGBB만 기록한다.
-    if (normalized.matches("[0-9a-fA-F]{8}")) {
-      return "#" + normalized.substring(0, 6);
+    // 8자리 색상이고 #이 없으면, 6자리 hex color로 변환
+    else if (normalized.matches("[0-9a-fA-F]{8}")) {
+      normalized = "#" + normalized.substring(0, 6);
     }
-    if (normalized.matches("#[0-9a-fA-F]{8}")) {
-      return normalized.substring(0, 7);
+    // 8자리 색상이면, 6자리 hex color로 변환
+    else if (normalized.matches("#[0-9a-fA-F]{8}")) {
+      normalized = normalized.substring(0, 7);
     }
-    if (normalized.matches("#[0-9a-fA-F]{6}")) {
-      return normalized;
-    }
-    return null;
+    return ColorEditor.toDarkColor(normalized, weight);
   }
 }
