@@ -260,7 +260,7 @@ public class DefaultThemeSeeder {
       ComponentType componentType, List<PlatformComponentType> platformComponentTypes)
       throws IOException {
     PlatformComponentType pct = platformComponentTypes.get(0);
-    Path imagePath = themeRootPath.resolve(Path.of(pct.getPath()));
+    Path imagePath = ThemePathManager.getAndroidThemeImagePath(themeRootPath, pct.getPath());
     String imageUrl = fileManager.uploadFile(Files.readAllBytes(imagePath),
         UUID.randomUUID().toString());
     DesignComponent dc = DesignComponent.builder()
@@ -279,7 +279,7 @@ public class DefaultThemeSeeder {
   private void seedDefaultThemeStyles(ThemeComponent theme, Path themeRootPath,
       DefaultThemeContext context) {
     StyleCode[] styleCodes = StyleCode.values();
-    Path colorSheetPath = themeRootPath.resolve("values").resolve("colors.xml");
+    Path colorSheetPath = ThemePathManager.getAndroidColorSheetPath(themeRootPath);
     // android는 resourceGroup이 color로 동일, resourceName은 고유값을 갖는다
     Map<String, ColorResourceInfo> colorResourceInfoMap = readColorSheet(colorSheetPath).stream()
         .collect(Collectors.toMap(

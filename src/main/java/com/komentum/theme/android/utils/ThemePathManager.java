@@ -46,15 +46,24 @@ public class ThemePathManager {
   }
 
   public static Path getAndroidThemeImagePath(String themeId, AndroidComponentDto component) {
-    return getThemeSourceDir(themeId)
+    Path themeSourcePath = getThemeSourceDir(themeId);
+    return getAndroidThemeImagePath(themeSourcePath, component.getImageFilePath());
+  }
+
+  public static Path getAndroidThemeImagePath(Path themeSourcePath, String imageFilePath) {
+    return themeSourcePath
         .resolve("src")
         .resolve("main")
-        .resolve("theme")
-        .resolve(component.getImageFilePath());
+        .resolve(imageFilePath);
   }
 
   public static Path getAndroidColorSheetPath(String themeId) {
-    return getThemeSourceDir(themeId)
+    Path themeSourcePath = getThemeSourceDir(themeId);
+    return getAndroidColorSheetPath(themeSourcePath);
+  }
+
+  public static Path getAndroidColorSheetPath(Path themeSourcePath) {
+    return themeSourcePath
         .resolve("src")
         .resolve("main")
         .resolve("theme")
