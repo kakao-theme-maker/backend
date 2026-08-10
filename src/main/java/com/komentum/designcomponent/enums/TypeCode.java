@@ -7,50 +7,87 @@ import lombok.Getter;
 @Getter
 public enum TypeCode {
 
-  // main view images
-  MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE("mainviewStylePrimaryBackgroundImage"),
+  // mainview background
+  MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE("mainviewStylePrimaryBackgroundImage",
+      TypeCodeGroup.MAINVIEW_BACKGROUND),
 
-  // tab bar images
-  TABBAR_STYLE_BACKGROUND_IMAGE("tabbarStyleBackgroundImage"),
-  TABBAR_STYLE_FRIENDS_NORMAL_ICON_IMAGE("tabbarStyleFriendsNormalIconImage"),
-  TABBAR_STYLE_FRIENDS_SELECTED_ICON_IMAGE("tabbarStyleFriendsSelectedIconImage"),
-  TABBAR_STYLE_CHATS_NORMAL_ICON_IMAGE("tabbarStyleChatsNormalIconImage"),
-  TABBAR_STYLE_CHATS_SELECTED_ICON_IMAGE("tabbarStyleChatsSelectedIconImage"),
-  TABBAR_STYLE_OPEN_CHATS_NORMAL_ICON_IMAGE("tabbarStyleOpenChatsNormalIconImage"),
-  TABBAR_STYLE_OPEN_CHATS_SELECTED_ICON_IMAGE("tabbarStyleOpenChatsSelectedIconImage"),
-  TABBAR_STYLE_SHOPPING_NORMAL_ICON_IMAGE("tabbarStyleShoppingNormalIconImage"),
-  TABBAR_STYLE_SHOPPING_SELECTED_ICON_IMAGE("tabbarStyleShoppingSelectedIconImage"),
-  TABBAR_STYLE_MORE_NORMAL_ICON_IMAGE("tabbarStyleMoreNormalIconImage"),
-  TABBAR_STYLE_MORE_SELECTED_ICON_IMAGE("tabbarStyleMoreSelectedIconImage"),
+  // tabbar background
+  TABBAR_STYLE_BACKGROUND_IMAGE("tabbarStyleBackgroundImage",
+      TypeCodeGroup.TABBAR_BACKGROUND),
 
-  // passcode page images
-  PASSCODE_BACKGROUND_IMAGE("passcodeBackgroundImage"),
-  PASSCODE_STYLE_BULLET_FIRST_IMAGE("passcodeStyleBulletFirstImage"),
-  PASSCODE_STYLE_BULLET_SECOND_IMAGE("passcodeStyleBulletSecondImage"),
-  PASSCODE_STYLE_BULLET_THIRD_IMAGE("passcodeStyleBulletThirdImage"),
-  PASSCODE_STYLE_BULLET_FOURTH_IMAGE("passcodeStyleBulletFourthImage"),
-  PASSCODE_STYLE_BULLET_SELECTED_FIRST_IMAGE("passcodeStyleBulletSelectedFirstImage"),
-  PASSCODE_STYLE_BULLET_SELECTED_SECOND_IMAGE("passcodeStyleBulletSelectedSecondImage"),
-  PASSCODE_STYLE_BULLET_SELECTED_THIRD_IMAGE("passcodeStyleBulletSelectedThirdImage"),
-  PASSCODE_STYLE_BULLET_SELECTED_FOURTH_IMAGE("passcodeStyleBulletSelectedFourthImage"),
+  // tabbar icon
+  TABBAR_STYLE_FRIENDS_NORMAL_ICON_IMAGE("tabbarStyleFriendsNormalIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_FRIENDS_SELECTED_ICON_IMAGE("tabbarStyleFriendsSelectedIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_CHATS_NORMAL_ICON_IMAGE("tabbarStyleChatsNormalIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_CHATS_SELECTED_ICON_IMAGE("tabbarStyleChatsSelectedIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_OPEN_CHATS_NORMAL_ICON_IMAGE("tabbarStyleOpenChatsNormalIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_OPEN_CHATS_SELECTED_ICON_IMAGE("tabbarStyleOpenChatsSelectedIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_SHOPPING_NORMAL_ICON_IMAGE("tabbarStyleShoppingNormalIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_SHOPPING_SELECTED_ICON_IMAGE("tabbarStyleShoppingSelectedIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_MORE_NORMAL_ICON_IMAGE("tabbarStyleMoreNormalIconImage",
+      TypeCodeGroup.TABBAR_ICON),
+  TABBAR_STYLE_MORE_SELECTED_ICON_IMAGE("tabbarStyleMoreSelectedIconImage",
+      TypeCodeGroup.TABBAR_ICON),
 
-  // chat room images
-  CHAT_ROOM_BACKGROUND_IMAGE("chatRoomBackgroundImage"),
-  MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE("messageCellStyleSendBackgroundImage"),
-  MESSAGE_CELL_STYLE_SEND_GROUP_BACKGROUND_IMAGE("messageCellStyleSendGroupBackgroundImage"),
-  MESSAGE_CELL_STYLE_RECEIVE_BACKGROUND_IMAGE("messageCellStyleReceiveBackgroundImage"),
-  MESSAGE_CELL_STYLE_RECEIVE_GROUP_BACKGROUND_IMAGE("messageCellStyleReceiveGroupBackgroundImage"),
+  // passcode background
+  PASSCODE_BACKGROUND_IMAGE("passcodeBackgroundImage",
+      TypeCodeGroup.PASSCODE_BACKGROUND),
 
-  // profile style
-  DEFAULT_PROFILE_STYLE_PROFILE_IMAGE("defaultProfileStyleProfileImage"),
+  // passcode bullet
+  PASSCODE_STYLE_BULLET_FIRST_IMAGE("passcodeStyleBulletFirstImage",
+      TypeCodeGroup.PASSCODE_BULLET),
+  PASSCODE_STYLE_BULLET_SECOND_IMAGE("passcodeStyleBulletSecondImage",
+      TypeCodeGroup.PASSCODE_BULLET),
+  PASSCODE_STYLE_BULLET_THIRD_IMAGE("passcodeStyleBulletThirdImage",
+      TypeCodeGroup.PASSCODE_BULLET),
+  PASSCODE_STYLE_BULLET_FOURTH_IMAGE("passcodeStyleBulletFourthImage",
+      TypeCodeGroup.PASSCODE_BULLET),
+  PASSCODE_STYLE_BULLET_SELECTED_FIRST_IMAGE("passcodeStyleBulletSelectedFirstImage",
+      TypeCodeGroup.PASSCODE_BULLET),
+  PASSCODE_STYLE_BULLET_SELECTED_SECOND_IMAGE("passcodeStyleBulletSelectedSecondImage",
+      TypeCodeGroup.PASSCODE_BULLET),
+  PASSCODE_STYLE_BULLET_SELECTED_THIRD_IMAGE("passcodeStyleBulletSelectedThirdImage",
+      TypeCodeGroup.PASSCODE_BULLET),
+  PASSCODE_STYLE_BULLET_SELECTED_FOURTH_IMAGE("passcodeStyleBulletSelectedFourthImage",
+      TypeCodeGroup.PASSCODE_BULLET),
 
-  // button style
-  BUTTON_STYLE_ADD_FRIEND_IMAGE("buttonStyleAddFriendImage");
+  // chat room background
+  CHAT_ROOM_BACKGROUND_IMAGE("chatRoomBackgroundImage",
+      TypeCodeGroup.CHATROOM_BACKGROUND),
+
+  // chatroom bubble
+  MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE("messageCellStyleSendBackgroundImage",
+      TypeCodeGroup.CHATROOM_BUBBLE),
+  MESSAGE_CELL_STYLE_SEND_GROUP_BACKGROUND_IMAGE("messageCellStyleSendGroupBackgroundImage",
+      TypeCodeGroup.CHATROOM_BUBBLE),
+  MESSAGE_CELL_STYLE_RECEIVE_BACKGROUND_IMAGE("messageCellStyleReceiveBackgroundImage",
+      TypeCodeGroup.CHATROOM_BUBBLE),
+  MESSAGE_CELL_STYLE_RECEIVE_GROUP_BACKGROUND_IMAGE("messageCellStyleReceiveGroupBackgroundImage",
+      TypeCodeGroup.CHATROOM_BUBBLE),
+
+  // default profile
+  DEFAULT_PROFILE_STYLE_PROFILE_IMAGE("defaultProfileStyleProfileImage",
+      TypeCodeGroup.DEFAULT_PROFILE),
+
+  // service button
+  BUTTON_STYLE_ADD_FRIEND_IMAGE("buttonStyleAddFriendImage",
+      TypeCodeGroup.SERVICE_BUTTON),
+  ;
 
   private final String typeCode;
+  private final TypeCodeGroup typeCodeGroup;
 
-  TypeCode(String typeCode) {
+  TypeCode(String typeCode, TypeCodeGroup typeCodeGroup) {
     this.typeCode = typeCode;
+    this.typeCodeGroup = typeCodeGroup;
   }
 
   /**
