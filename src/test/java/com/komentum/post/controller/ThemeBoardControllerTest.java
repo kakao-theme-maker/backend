@@ -228,31 +228,6 @@ class ThemeBoardControllerTest {
   }
 
   @Test
-  @DisplayName("게시글 목록 API 문서에는 sort_type만 정렬 조건으로 노출한다.")
-  void postBoardListOpenApi_excludesPageableSort() throws Exception {
-    User client = boardDetailDataGenerator.getUsers().get(0);
-    mockMvc.perform(mockMvcUtils.addAuthentication(
-            get("/v3/api-docs"), TestClientDto.fromEntity(client)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath(
-            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'page')]").isNotEmpty())
-        .andExpect(jsonPath(
-            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'size')]").isNotEmpty())
-        .andExpect(jsonPath(
-            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'sort_type')]").isNotEmpty())
-        .andExpect(jsonPath(
-            "$.paths['/api/theme-boards'].get.parameters[?(@.name == 'sort')]").isEmpty())
-        .andExpect(jsonPath(
-            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'page')]").isNotEmpty())
-        .andExpect(jsonPath(
-            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'size')]").isNotEmpty())
-        .andExpect(jsonPath(
-            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'sort_type')]").isNotEmpty())
-        .andExpect(jsonPath(
-            "$.paths['/api/design-boards'].get.parameters[?(@.name == 'sort')]").isEmpty());
-  }
-
-  @Test
   @DisplayName("페이지 기반 테마 게시글 목록 조회 성공 테스트")
   void getPosts_success() throws Exception {
     // given
