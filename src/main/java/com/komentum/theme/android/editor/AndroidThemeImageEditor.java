@@ -1,8 +1,8 @@
 package com.komentum.theme.android.editor;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.global.utils.NinePatchConverter;
 import com.komentum.theme.android.dto.AndroidComponentDto;
+import com.komentum.theme.android.utils.NinePatchConverter;
 import com.komentum.theme.android.utils.ThemePathManager;
 import jakarta.annotation.PreDestroy;
 import java.io.IOException;
@@ -26,9 +26,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AndroidThemeImageEditor {
 
-  private final FileManager fileManager;
-
   private static final int IMAGE_EDITOR_THREAD_POOL_SIZE = 8;
+  private final FileManager fileManager;
   private final ExecutorService executorService = Executors.newFixedThreadPool(
       IMAGE_EDITOR_THREAD_POOL_SIZE);
 
@@ -52,7 +51,7 @@ public class AndroidThemeImageEditor {
     String imageFileName = fileManager.convertUrlToFileName(component.getImageUrl());
     try (
         InputStream is = NinePatchConverter.convertIfNeeded(fileManager.download(imageFileName),
-            component.getFileExtension());
+            component.getFileExtension(), component.getImageInset());
         OutputStream os = Files.newOutputStream(tempImagePath,
             StandardOpenOption.CREATE,
             StandardOpenOption.TRUNCATE_EXISTING)

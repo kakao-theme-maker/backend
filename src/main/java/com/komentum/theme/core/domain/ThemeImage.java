@@ -2,6 +2,7 @@ package com.komentum.theme.core.domain;
 
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -43,6 +44,10 @@ public class ThemeImage {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "component_type_id")
   private ComponentType componentType;
+
+  // inset 정보가 필요한 이미지만 imageInset을 가져도 됨
+  @Embedded
+  private ImageInset imageInset;
 
   public static ThemeImage copyOf(ThemeComponent targetTheme, ThemeImage sourceImage) {
     return ThemeImage.builder()

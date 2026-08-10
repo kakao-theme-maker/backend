@@ -46,6 +46,12 @@ import org.springframework.util.FileSystemUtils;
 @EnableConfigurationProperties({AndroidSigningProperties.class, AndroidDockerImageProperties.class})
 public class AndroidThemeGenerator {
 
+  public static final String DOCKER_THEME_DIRECTORY_NAME = "source";
+  private static final String SAMPLE_THEME_PATH = "themeSample/android/sampleTheme.zip";
+  // keystore const
+  private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
+  private static final String ENV_KEY_ALIAS = "KEY_ALIAS";
+  private static final String ENV_KEY_PASSWORD = "KEY_PASSWORD";
   private final ThemeImageRepository themeImageRepository;
   private final PlatformComponentTypeRepository platformComponentTypeRepository;
   private final PlatformColorStyleRepository platformColorStyleRepository;
@@ -58,17 +64,8 @@ public class AndroidThemeGenerator {
   private final AndroidMetaDataEditor androidMetaDataEditor;
   private final FileManager fileManager;
 
-  private static final String SAMPLE_THEME_PATH = "themeSample/android/sampleTheme.zip";
-  public static final String DOCKER_THEME_DIRECTORY_NAME = "source";
-
-  // keystore const
-  private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
-  private static final String ENV_KEY_ALIAS = "KEY_ALIAS";
-  private static final String ENV_KEY_PASSWORD = "KEY_PASSWORD";
-
   /**
-   * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 URL을 반환한다.
-   * 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
+   * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 URL을 반환한다. 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
    *
    * @param themeComponent 테마 Entity
    * @return 업로드된 APK의 URL
@@ -143,8 +140,8 @@ public class AndroidThemeGenerator {
             "platformComponentType is null with typeCode :" + targetTypeCode.name());
       }
       for (PlatformComponentType pc : platformComponentTypes) {
-        String imageUrl = themeImage.getDesignComponent().getImageUrl();
-        androidImageList.add(AndroidComponentDto.fromEntity(pc, imageUrl));
+        androidImageList.add(AndroidComponentDto.fromEntity(pc, themeImage.getDesignComponent(),
+            themeImage.getImageInset()));
       }
     }
     // 이미지 파일을 테마에 저장
