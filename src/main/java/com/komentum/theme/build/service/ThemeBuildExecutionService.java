@@ -1,7 +1,6 @@
 package com.komentum.theme.build.service;
 
 import com.komentum.designcomponent.enums.Platform;
-import com.komentum.theme.build.config.ThemeBuildConfig;
 import com.komentum.theme.build.service.ThemeBuildStateService.BuildContext;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
@@ -9,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -21,7 +19,7 @@ public class ThemeBuildExecutionService {
   private final Map<Platform, ThemePackageBuildHandler> handlers;
 
   public ThemeBuildExecutionService(
-      @Qualifier(ThemeBuildConfig.THEME_BUILD_EXECUTOR) Executor themeBuildExecutor,
+      Executor themeBuildExecutor,
       ThemeBuildStateService themeBuildStateService,
       List<ThemePackageBuildHandler> buildHandlers
   ) {

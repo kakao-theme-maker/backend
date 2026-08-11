@@ -9,9 +9,7 @@ import org.springframework.security.concurrent.DelegatingSecurityContextRunnable
 @Configuration
 public class ThemeBuildConfig {
 
-  public static final String THEME_BUILD_EXECUTOR = "themeBuildExecutor";
-
-  @Bean(name = THEME_BUILD_EXECUTOR)
+  @Bean
   public Executor themeBuildExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(2);
