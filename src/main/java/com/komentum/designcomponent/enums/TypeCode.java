@@ -80,7 +80,10 @@ public enum TypeCode {
   // service button
   BUTTON_STYLE_ADD_FRIEND_IMAGE("buttonStyleAddFriendImage",
       TypeCodeGroup.SERVICE_BUTTON),
-  ;
+
+  // common theme icon
+  COMMON_ICO_THEME("commonIcoTheme",
+      TypeCodeGroup.COMMON_THEME_ICON);
 
   private final String typeCode;
   private final TypeCodeGroup typeCodeGroup;

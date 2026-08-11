@@ -12,7 +12,8 @@ public enum TypeCodeGroup {
   PASSCODE_BULLET("잠금 불릿"),
   CHATROOM_BACKGROUND("채팅방 배경"),
   CHATROOM_BUBBLE("채팅방 말풍선"),
-  SERVICE_BUTTON("서비스 버튼");
+  SERVICE_BUTTON("서비스 버튼"),
+  COMMON_THEME_ICON("테마 아이콘");
 
   private final String description;
 
