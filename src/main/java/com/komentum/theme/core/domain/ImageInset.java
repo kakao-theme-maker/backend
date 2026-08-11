@@ -1,8 +1,10 @@
 package com.komentum.theme.core.domain;
 
+import com.komentum.theme.core.dto.ThemeUpdateRequest.InsetUpdateDto;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,6 +12,7 @@ import lombok.Setter;
 @Embeddable
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class ImageInset {
@@ -23,4 +26,24 @@ public class ImageInset {
   private Integer edgeInsetLeft;
   private Integer edgeInsetBottom;
   private Integer edgeInsetRight;
+
+  public boolean isValid() {
+    return stretchX != null &&
+        stretchY != null &&
+        edgeInsetTop != null &&
+        edgeInsetLeft != null &&
+        edgeInsetBottom != null &&
+        edgeInsetRight != null;
+  }
+
+  public static ImageInset from(InsetUpdateDto insetUpdateDto) {
+    return ImageInset.builder()
+        .stretchX(insetUpdateDto.getStretchX())
+        .stretchY(insetUpdateDto.getStretchY())
+        .edgeInsetTop(insetUpdateDto.getTop())
+        .edgeInsetLeft(insetUpdateDto.getLeft())
+        .edgeInsetBottom(insetUpdateDto.getBottom())
+        .edgeInsetRight(insetUpdateDto.getRight())
+        .build();
+  }
 }

@@ -1,6 +1,7 @@
 package com.komentum.designcomponent.repository;
 
 import com.komentum.designcomponent.domain.DesignComponent;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -33,7 +34,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
 
   @EntityGraph(attributePaths = {"user", "componentTypeMappings",
       "componentTypeMappings.componentType"})
-  List<DesignComponent> findByDesignComponentIdIn(List<Integer> designComponentIds);
+  List<DesignComponent> findByDesignComponentIdIn(Collection<Integer> designComponentIds);
 
   @EntityGraph(attributePaths = {"user", "componentTypeMappings",
       "componentTypeMappings.componentType"})

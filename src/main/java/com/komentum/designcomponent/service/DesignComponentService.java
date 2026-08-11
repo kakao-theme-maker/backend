@@ -15,6 +15,7 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.user.domain.User;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +104,7 @@ public class DesignComponentService {
   }
 
   @Transactional(readOnly = true)
-  public List<DesignComponent> findByIdIn(List<Integer> ids) {
+  public List<DesignComponent> findByIdIn(Collection<Integer> ids) {
     if (ids == null || ids.isEmpty()) {
       return List.of();
     }
@@ -115,7 +116,7 @@ public class DesignComponentService {
   }
 
   @Transactional(readOnly = true)
-  public Map<Integer, DesignComponent> findMapByIdIn(List<Integer> ids) {
+  public Map<Integer, DesignComponent> findMapByIdIn(Set<Integer> ids) {
     List<DesignComponent> designComponents = findByIdIn(ids);
     return designComponents.stream()
         .collect(Collectors.toMap(

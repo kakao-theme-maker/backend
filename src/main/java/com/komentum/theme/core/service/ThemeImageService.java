@@ -139,8 +139,7 @@ public class ThemeImageService {
         typeCodes.values()
             .stream()
             .map(ThemeImageUpdateRequest::getDesignComponentId)
-            .toList()
-    );
+            .collect(Collectors.toSet()));
     // 기존 theme image 목록 조회
     Map<TypeCode, ThemeImage> themeImages = fetchJoinThemeImagesByThemeComponentId(
         themeComponentId).stream()
@@ -153,7 +152,7 @@ public class ThemeImageService {
       ThemeImage themeImage = themeImages.get(typeCode);
       DesignComponent requestedImage = requestedImageMap.get(updateRequest.getDesignComponentId());
       if (themeImage != null && requestedImage != null) {
-        themeImage.setDesignComponent(requestedImage);
+        themeImage.update(requestedImage, updateRequest);
       }
     });
   }

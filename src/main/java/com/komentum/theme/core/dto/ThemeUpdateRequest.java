@@ -35,20 +35,10 @@ public class ThemeUpdateRequest {
   @Schema(description = "수정할 이미지 정보")
   public static class ThemeImageUpdateRequest {
 
+    @Schema(description = "수정할 이미지 식별자(ID)")
     Integer designComponentId;
-    Inset inset;
-  }
-
-  @Setter
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  public static class Inset {
-
-    int top;
-    int left;
-    int bottom;
-    int right;
+    @Schema(description = "이미지 inset 정보 ( 말풍선인 경우 ), nullable")
+    InsetUpdateDto inset;
   }
 
   @Getter
@@ -56,8 +46,32 @@ public class ThemeUpdateRequest {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(description = "말풍선 inset 정보")
+  public static class InsetUpdateDto {
+
+    @Schema(description = "말풍선 컨텐츠 padding")
+    int top;
+    @Schema(description = "말풍선 컨텐츠 padding")
+    int left;
+    @Schema(description = "말풍선 컨텐츠 padding")
+    int bottom;
+    @Schema(description = "말풍선 컨텐츠 padding")
+    int right;
+    @Schema(description = "말풍선이 확장되기 시작하는 이미지 내 x 좌표")
+    int stretchX;
+    @Schema(description = "말풍선이 확장되기 시작하는 이미지 내 y 좌표")
+    int stretchY;
+  }
+
+  @Getter
+  @Setter
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Schema(description = "테마 색상 갱신 DTO")
   public static class ThemeStyleUpdateRequest {
 
+    @Schema(description = "새로 저장할 hex color")
     String color;
   }
 }
