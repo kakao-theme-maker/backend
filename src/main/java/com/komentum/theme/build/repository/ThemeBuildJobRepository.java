@@ -27,31 +27,28 @@ public interface ThemeBuildJobRepository extends JpaRepository<ThemeBuildJob, Lo
   @Modifying(flushAutomatically = true)
   @Query("""
       update ThemeBuildJob job
-      set job.status = :successStatus,
+      set job.status = com.komentum.theme.build.domain.ThemeBuildStatus.SUCCESS,
           job.packageUrl = :packageUrl,
           job.updatedAt = :updatedAt
       where job.buildId = :buildId
-        and job.status = :runningStatus
+        and job.status = com.komentum.theme.build.domain.ThemeBuildStatus.RUNNING
       """)
   int markSuccessIfRunning(
       @Param("buildId") Long buildId,
       @Param("packageUrl") String packageUrl,
-      @Param("updatedAt") LocalDateTime updatedAt,
-      @Param("runningStatus") ThemeBuildStatus runningStatus,
-      @Param("successStatus") ThemeBuildStatus successStatus
+      @Param("updatedAt") LocalDateTime updatedAt
   );
 
   @Modifying(flushAutomatically = true)
   @Query("""
       update ThemeBuildJob job
-      set job.status = :failedStatus,
+      set job.status = com.komentum.theme.build.domain.ThemeBuildStatus.FAILED,
           job.updatedAt = :updatedAt
-      where job.buildId = :buildId and job.status = :runningStatus
+      where job.buildId = :buildId
+        and job.status = com.komentum.theme.build.domain.ThemeBuildStatus.RUNNING
       """)
   int markFailedIfRunning(
       @Param("buildId") Long buildId,
-      @Param("updatedAt") LocalDateTime updatedAt,
-      @Param("runningStatus") ThemeBuildStatus runningStatus,
-      @Param("failedStatus") ThemeBuildStatus failedStatus
+      @Param("updatedAt") LocalDateTime updatedAt
   );
 }

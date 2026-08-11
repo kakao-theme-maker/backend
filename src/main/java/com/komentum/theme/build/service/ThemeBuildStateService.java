@@ -21,9 +21,7 @@ public class ThemeBuildStateService {
     return themeBuildJobRepository.markSuccessIfRunning(
         buildId,
         packageUrl,
-        updatedAt,
-        ThemeBuildStatus.RUNNING,
-        ThemeBuildStatus.SUCCESS
+        updatedAt
     ) == 1;
   }
 
@@ -31,9 +29,7 @@ public class ThemeBuildStateService {
   public void markFailed(Long buildId, LocalDateTime updatedAt) {
     themeBuildJobRepository.markFailedIfRunning(
         buildId,
-        updatedAt,
-        ThemeBuildStatus.RUNNING,
-        ThemeBuildStatus.FAILED
+        updatedAt
     );
   }
 
