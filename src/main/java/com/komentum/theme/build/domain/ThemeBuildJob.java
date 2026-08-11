@@ -68,16 +68,14 @@ public class ThemeBuildJob {
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 
-  private ThemeBuildJob(ThemeComponent themeComponent, Platform platform) {
-    this.themeComponent = themeComponent;
-    this.platform = platform;
-    this.status = ThemeBuildStatus.RUNNING;
-  }
-
   public static ThemeBuildJob createRunning(
       ThemeComponent themeComponent,
       Platform platform
   ) {
-    return new ThemeBuildJob(themeComponent, platform);
+    ThemeBuildJob job = new ThemeBuildJob();
+    job.themeComponent = themeComponent;
+    job.platform = platform;
+    job.status = ThemeBuildStatus.RUNNING;
+    return job;
   }
 }
