@@ -30,6 +30,7 @@ import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.domain.ThemeStyle;
 import com.komentum.theme.core.dto.ThemeDetailResponse;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
+import com.komentum.theme.core.dto.ThemeUpdateRequest.InsetUpdateDto;
 import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
 import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeStyleUpdateRequest;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
@@ -142,7 +143,7 @@ class ThemeManageControllerTest {
             designComponentList)
         .withCountPerUser(1)
         .build().themeComponents().get(0);
-    TypeCode updatedTypeCode = TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE;
+    TypeCode updatedTypeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
     StyleCode updatedStyleCode = StyleCode.CHAT_ROOM_BACKGROUND_COLOR;
     String expectedThemeName = UUID.randomUUID().toString();
     DesignComponent expectedImage = designComponentList.get(0);
@@ -151,6 +152,12 @@ class ThemeManageControllerTest {
         .themeName(expectedThemeName)
         .typeCodes(Map.of(
             updatedTypeCode,
+            ThemeImageUpdateRequest.builder()
+                .designComponentId(expectedImage.getDesignComponentId())
+                .inset(new InsetUpdateDto(50, 50, 50, 50, 50, 50))
+                .build(),
+            
+            TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE,
             ThemeImageUpdateRequest.builder()
                 .designComponentId(expectedImage.getDesignComponentId())
                 .build()
@@ -184,6 +191,8 @@ class ThemeManageControllerTest {
     assertThat(updated.getThemeName()).isEqualTo(expectedThemeName);
     assertThat(updatedThemeImage.getDesignComponent().getDesignComponentId())
         .isEqualTo(expectedImage.getDesignComponentId());
+    assertThat(updatedThemeImage.getImageInset().getEdgeInsetBottom())
+        .isEqualTo(50);
     assertThat(updatedThemeStyle.getColor()).isEqualTo(expectedColor);
   }
 
