@@ -1,8 +1,7 @@
 package com.komentum.theme.android.dto;
 
-import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.theme.domain.ThemeImage;
+import com.komentum.designcomponent.domain.PlatformComponentType;
+import com.komentum.global.enums.FileExtension;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,19 +14,19 @@ import lombok.NoArgsConstructor;
 public class AndroidComponentDto {
 
   String imageUrl;
-  String AndroidComponentPath;
-  String AndroidComponentName;
+  String imageFilePath;
   Integer sizeX;
   Integer sizeY;
+  FileExtension fileExtension;
 
-  public static AndroidComponentDto fromEntity(ThemeImage themeImage) {
-    DesignComponent component = themeImage.getDesignComponent();
-    ComponentType componentType = themeImage.getComponentType();
+  public static AndroidComponentDto fromEntity(PlatformComponentType platformComponentType,
+      String imageUrl) {
     return AndroidComponentDto.builder()
-        .imageUrl(component.getImageUrl())
-        .AndroidComponentName(componentType.getComponentName())
-        .AndroidComponentPath(componentType.getComponentPath())
-        .sizeX(componentType.getSizeX())
-        .sizeY(componentType.getSizeY()).build();
+        .imageUrl(imageUrl)
+        .imageFilePath(platformComponentType.getPath())
+        .sizeX(platformComponentType.getWidth())
+        .sizeY(platformComponentType.getHeight())
+        .fileExtension(platformComponentType.getFileExtension())
+        .build();
   }
 }

@@ -1,7 +1,6 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.consts.ThemeBoardConsts;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -16,16 +15,18 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
 import com.komentum.post.service.transaction.ThemeBoardTransactionService;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.theme.theme.domain.ThemeImage;
-import com.komentum.theme.theme.service.ThemeImageService;
-import com.komentum.theme.theme.service.ThemeRetrieveService;
+import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.dto.ThemeDesignAssetDto;
+import com.komentum.theme.core.service.ThemeImageService;
+import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 // TODO : 태그 기능 추가 시 태그 생성 / 조회 로직 추가하기
 // Exit Plan: 150 lines
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ThemeBoardManagementFacade {
@@ -52,10 +54,9 @@ public class ThemeBoardManagementFacade {
       ThemeComponent themeComponent) {
     // previewImage가 유효하지 않으면, ThemeComponent의 이미지 사용
     if (previewImage == null || previewImage.isEmpty()) {
-      ThemeImage themeImage = themeImageService.findByThemeComponentAndComponentTypeName(
-          themeComponent, ThemeBoardConsts.DEFAULT_COMPONENT_TYPE_NAME);
-      DesignComponent designComponent = themeImage.getDesignComponent();
-      String fileName = fileManager.convertUrlToFileName(designComponent.getImageUrl());
+      String themePreviewImageUrl = themeImageService.findThemePreviewImageUrl(
+          themeComponent.getThemeComponentId());
+      String fileName = fileManager.convertUrlToFileName(themePreviewImageUrl);
       byte[] previewImageBytes = fileManager.downloadFile(fileName);
       return boardManagementHelper
           .savePreviewImageIfPresent(Post.class, fileName, previewImageBytes);
@@ -72,8 +73,9 @@ public class ThemeBoardManagementFacade {
    *
    */
   @Transactional
-  public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier) {
-    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
+  public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier,
+      Boolean withImages) {
+    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier, withImages);
   }
 
   /**
@@ -84,20 +86,32 @@ public class ThemeBoardManagementFacade {
    * */
   @Transactional(readOnly = true)
   public List<ThemeBoardDetailDto> findThemeBoardDetails(Pageable pageable, Long pinnedPostId,
-      String userIdentifier) {
+      String userIdentifier, Boolean withImages) {
     User client = userEntityFinder.findUserEntity(userIdentifier);
+    // detail DTO 목록 조회
     Post pinnedPost = pinnedPostId == null ?
         null :
         postService.findByPostIdAndPostType(pinnedPostId, PostType.THEME_BOARD);
     List<ThemeBoardQuery.Detail> details = themeBoardService.findThemeBoardQueryDetailList(pageable,
         client, pinnedPost);
+    // tag 조회
     List<Long> postIds = details.stream()
         .map(Detail::getPostId)
         .toList();
     Map<Long, List<Tag>> tagMap = tagService.getTagPerPosts(postIds);
+    // 테마 이미지 목록 조회
+    Set<Integer> themeIds = details.stream().map(Detail::getThemeComponentId)
+        .collect(Collectors.toSet());
+    Map<Integer, List<ThemeDesignAssetDto>> themeImageMap = Boolean.TRUE.equals(withImages)
+        ? themeImageService.findThemeDesignAssetMap(themeIds) :
+        Map.of();
+    // DTO 조립
     return details.stream().map(detail -> {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
-      return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, boardManagementHelper);
+      List<ThemeDesignAssetDto> themeDesignAssetDtoList = themeImageMap.get(
+          detail.getThemeComponentId()); // nullable
+      return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, themeDesignAssetDtoList,
+          boardManagementHelper);
     }).toList();
   }
 
@@ -110,8 +124,13 @@ public class ThemeBoardManagementFacade {
    */
   @Transactional(readOnly = true)
   public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable) {
+    return findThemeBoardPreviews(pageable, null);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ThemeBoardPreviewDto> findThemeBoardPreviews(Pageable pageable, String keyword) {
     List<ThemeBoardQuery.Preview> themeBoardQueryPreviewList = themeBoardService.findThemeBoardQueryPreview(
-        pageable);
+        pageable, keyword);
     return themeBoardMapperSupport.toThemeBoardPreviewDtoList(themeBoardQueryPreviewList,
         boardManagementHelper);
   }
@@ -168,9 +187,11 @@ public class ThemeBoardManagementFacade {
           themeComponent,
           author,
           previewImageName);
-      return themeBoardTransactionService.findThemeBoardDetail(savedPost.getPostId(), authorId);
+      return themeBoardTransactionService.findThemeBoardDetail(savedPost.getPostId(), authorId,
+          false);
     } catch (Exception e) {
       boardManagementHelper.deleteFileSilently(previewImageName, "테마 게시글 생성 실패로 인한 저장된 파일 롤백");
+      log.error("테마 게시글 생성 실패", e);
       throw new RuntimeException("테마 게시글 생성 실패", e);
     }
   }
@@ -200,7 +221,7 @@ public class ThemeBoardManagementFacade {
       boardManagementHelper.deleteFileSilently(newImageName, "ThemeBoard 갱신 실패로 인한 파일 롤백 실패");
       throw e;
     }
-    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier);
+    return themeBoardTransactionService.findThemeBoardDetail(postId, userIdentifier, false);
   }
 
   /**

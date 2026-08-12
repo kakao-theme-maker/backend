@@ -1,7 +1,7 @@
 package com.komentum.theme.android.dto;
 
-import com.komentum.theme.component.domain.ColorStyle;
-import com.komentum.theme.theme.domain.ThemeStyle;
+import com.komentum.designcomponent.domain.PlatformColorStyle;
+import com.komentum.theme.core.domain.ThemeStyle;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,16 +13,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AndroidColorDto {
 
-  String sheetPath;
   String color;
   String attrName;
 
-  public static AndroidColorDto fromEntity(ThemeStyle themeStyle) {
-    ColorStyle colorStyle = themeStyle.getColorStyle();
+  public static AndroidColorDto fromEntity(ThemeStyle themeStyle,
+      PlatformColorStyle platformColorStyle) {
     return AndroidColorDto.builder()
         .color(themeStyle.getColor())
-        .attrName(colorStyle.getStylePropsName())
-        .sheetPath(colorStyle.getStyleSheetPath())
+        .attrName(platformColorStyle.getResourceName())
         .build();
   }
 }

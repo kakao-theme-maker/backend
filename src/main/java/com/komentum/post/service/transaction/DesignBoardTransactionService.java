@@ -1,5 +1,8 @@
 package com.komentum.post.service.transaction;
 
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.service.DesignComponentService;
+import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
 import com.komentum.post.domain.enums.PostType;
@@ -17,11 +20,12 @@ import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
-import com.komentum.theme.component.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +43,7 @@ public class DesignBoardTransactionService {
   private final DesignBoardService designBoardService;
   private final TagService tagService;
   private final DesignBoardRepository designBoardRepository;
+  private final DesignComponentService designComponentService;
 
   @Transactional(readOnly = true)
   public DesignBoardDetailDto findDesignBoardDetail(Long postId, String userIdentifier) {
@@ -49,22 +54,40 @@ public class DesignBoardTransactionService {
     DesignBoardQuery.Detail detail = designBoardRepositorySupport
         .findDetailByPostId(postId, client);
     List<Tag> tags = tagService.findAllByPostId(postId);
+    // generate preview image url list
+    Post targetPost = postService.getPostByPostId(postId);
+    String previewImageUrl =
+        helper.findPreviewImageUrl(targetPost.getPreviewImageName());
+    List<DesignBoard> designBoards = designBoardService.findWithDesignComponentsByPostId(postId);
+    List<String> designImageUrls = designBoards.stream()
+        .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+        .toList();
+    List<String> previewImageUrls = Stream.concat(
+            Stream.ofNullable(previewImageUrl),
+            designImageUrls.stream()
+        )
+        .filter(Objects::nonNull)
+        .toList();
+    // generate response dto
     return designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
-        helper,
-        tags);
+        tags,
+        previewImageUrls,
+        designBoardMapperSupport.toComponentTypeDtos(designBoards));
   }
 
   @Transactional
   public Post saveDesignBoardAndGetPost(
       DesignBoardCreateDto createDto,
-      DesignComponent designComponent,
+      List<DesignComponent> designComponents,
       User author,
       String previewImageName) {
     PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
     Post savedPost = postService
         .createPost(postCreateDto, author, previewImageName, PostType.DESIGN_BOARD);
-    designBoardService.save(savedPost, designComponent);
+    for (DesignComponent designComponent : designComponents) {
+      designBoardService.save(savedPost, designComponent);
+    }
     if (createDto.getPostTags() != null) {
       tagService.createTags(savedPost, createDto.getPostTags());
     }
@@ -80,13 +103,22 @@ public class DesignBoardTransactionService {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
       throw new EntityNotFoundException("cannot find design board with post id = " + postId);
     }
+    // update post info
     PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, previewImageName);
     Post targetPost = postService.getPostByPostId(postId);
     String oldFileName = targetPost.getPreviewImageName();
     targetPost.update(postUpdateDto);
+    // update tags
     if (updateDto.getPostTags() != null) {
       tagService.synchronizeTags(targetPost, updateDto.getPostTags());
     }
+    // synchronize design boards
+    if (updateDto.getDesignComponentIds() != null && !updateDto.getDesignComponentIds().isEmpty()) {
+      List<DesignComponent> requestedComponents = designComponentService.findByIdIn(
+          updateDto.getDesignComponentIds());
+      designBoardService.synchronizeDesignBoards(targetPost, requestedComponents);
+    }
+    // retrieve old file name
     return oldFileName;
   }
 }

@@ -1,22 +1,22 @@
 package com.komentum.test.data;
 
 import com.github.javafaker.Faker;
-import com.komentum.theme.component.domain.ColorStyle;
-import com.komentum.theme.component.domain.ComponentType;
-import com.komentum.theme.component.domain.DesignComponent;
-import com.komentum.theme.component.repository.ColorStyleRepository;
-import com.komentum.theme.component.repository.ComponentTypeRepository;
-import com.komentum.theme.component.repository.DesignComponentRepository;
-import com.komentum.theme.component.service.ThemeDataJsonReader;
-import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.theme.theme.domain.ThemeImage;
-import com.komentum.theme.theme.domain.ThemeStyle;
-import com.komentum.theme.theme.dto.ThemeImageRequest;
-import com.komentum.theme.theme.dto.ThemeStyleRequest;
-import com.komentum.theme.theme.repository.ThemeComponentRepository;
-import com.komentum.theme.theme.repository.ThemeImageRepository;
-import com.komentum.theme.theme.repository.ThemeStyleRepository;
-import java.io.IOException;
+import com.komentum.designcomponent.domain.ColorStyle;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.repository.ColorStyleRepository;
+import com.komentum.designcomponent.repository.ComponentTypeRepository;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
+import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
+import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
+import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeImage;
+import com.komentum.theme.core.domain.ThemeStyle;
+import com.komentum.theme.core.dto.ThemeImageRequest;
+import com.komentum.theme.core.dto.ThemeStyleRequest;
+import com.komentum.theme.core.repository.ThemeComponentRepository;
+import com.komentum.theme.core.repository.ThemeImageRepository;
+import com.komentum.theme.core.repository.ThemeStyleRepository;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,10 @@ import org.springframework.stereotype.Component;
 public class ThemeDataGenerator {
 
   @Autowired
-  private ThemeDataJsonReader themeDataJsonReader;
+  private ComponentTypeSeeder componentTypeSeeder;
+
+  @Autowired
+  private ColorStyleSeeder colorStyleSeeder;
 
   @Autowired
   private ThemeComponentRepository themeComponentRepository;
@@ -91,21 +94,13 @@ public class ThemeDataGenerator {
   }
 
   public List<ColorStyle> generateColorStyles() {
-    try {
-      List<ColorStyle> colorStyles = themeDataJsonReader.readJsonColorStyles();
-      return colorStyleRepository.saveAll(colorStyles);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    colorStyleSeeder.upsertColorStyleSeed();
+    return colorStyleRepository.findAll();
   }
 
   public List<ComponentType> generateComponentTypes() {
-    try {
-      List<ComponentType> componentTypes = themeDataJsonReader.readJsonComponentTypes();
-      return componentTypeRepository.saveAll(componentTypes);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    componentTypeSeeder.upsertComponentType();
+    return componentTypeRepository.findAll();
   }
 
   public List<DesignComponent> generateDesignComponents(int size) {

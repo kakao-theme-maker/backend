@@ -8,15 +8,18 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "file.storage", havingValue = "local")
 @EnableConfigurationProperties(FileStorageProperty.class)
@@ -70,7 +73,20 @@ public class LocalFileManager implements FileManager {
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
       Files.copy(inputStream, Paths.get(fileLocation));
     } catch (IOException e) {
-      throw new RuntimeException("failed to upload file : " + fileLocation, e);
+      log.error("failed to upload file : {}", fileLocation, e);
+      throw new UncheckedIOException("failed to upload file : " + fileLocation, e);
+    }
+    return resolveFilePath(fileName);
+  }
+
+  @Override
+  public String uploadFile(InputStream is, long contentLength, String fileName) {
+    String fileLocation = resolveFileLocation(fileName);
+    try (is) {
+      Files.copy(is, Paths.get(fileLocation));
+    } catch (IOException e) {
+      log.error("failed to upload file : {}", fileLocation, e);
+      throw new UncheckedIOException("failed to upload file : " + fileLocation, e);
     }
     return resolveFilePath(fileName);
   }
@@ -92,6 +108,17 @@ public class LocalFileManager implements FileManager {
       return Files.readAllBytes(Paths.get(fileLocation));
     } catch (IOException e) {
       throw new RuntimeException("failed to read file : " + fileName, e);
+    }
+  }
+
+  @Override
+  public InputStream download(String fileName) {
+    try {
+      String fileLocation = resolveFileLocation(fileName);
+      Path filePath = Paths.get(fileLocation);
+      return Files.newInputStream(filePath);
+    } catch (IOException e) {
+      throw new UncheckedIOException("[LocalFileManager] failed to read file : " + fileName, e);
     }
   }
 }

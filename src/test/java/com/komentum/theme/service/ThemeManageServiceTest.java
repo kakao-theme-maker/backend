@@ -4,13 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
-import com.komentum.theme.component.dto.CreateThemeRequest;
-import com.komentum.theme.theme.domain.ThemeComponent;
-import com.komentum.theme.theme.dto.ThemeComponentDto;
-import com.komentum.theme.theme.dto.ThemeImageRequest;
-import com.komentum.theme.theme.dto.ThemeStyleRequest;
-import com.komentum.theme.theme.repository.ThemeComponentRepository;
-import com.komentum.theme.theme.service.ThemeManageService;
+import com.komentum.test.data.scenario.UserScenarioSupport;
+import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.dto.CreateThemeRequest;
+import com.komentum.theme.core.dto.ThemeComponentDto;
+import com.komentum.theme.core.dto.ThemeImageRequest;
+import com.komentum.theme.core.dto.ThemeStyleRequest;
+import com.komentum.theme.core.repository.ThemeComponentRepository;
+import com.komentum.theme.core.service.ThemeManageService;
+import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
@@ -34,6 +36,9 @@ class ThemeManageServiceTest {
   @Autowired
   private ThemeComponentRepository themeComponentRepository;
 
+  @Autowired
+  private UserScenarioSupport userScenarioSupport;
+
   private final int initialThemeCounts = 10;
   private int initialStylePerTheme;
   private int initialImagePerTheme;
@@ -56,22 +61,13 @@ class ThemeManageServiceTest {
   @DisplayName("success test of creating new theme")
   public void createTheme_success() {
     // given
-    CreateThemeRequest createThemeRequest = CreateThemeRequest.builder()
-        .themeName("themeName")
-        .images(themeDataGenerator.getImageRequests())
-        .styles(themeDataGenerator.getStyleRequests())
-        .isPublic(true)
-        .versionName("versionName")
-        .userEmail("test@test.com")
-        .build();
+    User client = userScenarioSupport.builder().withUsers(1).build().getFirstUser();
     // when
-    ThemeComponentDto res = themeManageService.createTheme(createThemeRequest);
+    ThemeComponent res = themeManageService.createNewTheme(client);
     // then
     Optional<ThemeComponent> saved = themeComponentRepository.findById(res.getThemeComponentId());
     assertThat(saved.isPresent()).isTrue();
-    assertThat(res.getImages()).hasSize(saved.get().getThemeImages().size());
-    assertThat(res.getStyles()).hasSize(saved.get().getThemeStyles().size());
-    assertThat(res.getVersionNumber()).isEqualTo("1");
+    assertThat(res.getVersionNumber()).isEqualTo("0");
   }
 
   @Test

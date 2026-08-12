@@ -1,0 +1,760 @@
+{
+  "schema": {
+    "definitions": {
+      "explain": "섹션(페이지)별 디자인 요소, 스타일 요소 정의를 위한 고유어",
+      "sectionCodes": "섹션 구분자",
+      "typeCodes": "디자인 요소 구분자",
+      "styleCodes": "스타일 요소 구분자"
+    },
+    "sections": {
+      "explain": "섹션별 디자인 요소, 스타일 요소를 typeCode와 styleCode로 정의",
+      "sectionCode": "섹션에 대한 section code",
+      "name": "섹션 이름",
+      "description": "섹션 설명",
+      "components": "섹션에 포함된 디자인 요소 목록",
+      "styles": "섹션에 포함된 스타일 요소 목록"
+    },
+    "platformMappings": {
+      "explain": "플랫폼별로 디자인 요소, 스타일 요소와 실제 이미지 매핑",
+      "android": {
+        "explain": "안드로이드 플랫폼 매핑 정보",
+        "components": "플랫폼별 디자인 요소 매핑 정보",
+        "styles": "플랫폼별 스타일 매핑 정보"
+      },
+      "ios": {
+        "explain": "iOS 플랫폼 매핑 정보",
+        "components": "플랫폼별 디자인 요소 매핑 정보",
+        "styles": "플랫폼별 스타일 매핑 정보"
+      }
+    }
+  },
+  "definitions": {
+    "sectionCodes": {
+      "friendTab": {
+        "name": "친구탭",
+        "description": "카카오톡 친구탭의 구성 이미지, 스타일 정보입니다."
+      },
+      "chatTab": {
+        "name": "채팅탭",
+        "description": "카카오톡 채팅탭의 구성 이미지, 스타일 정보입니다."
+      },
+      "chatRoom": {
+        "name": "채팅방",
+        "description": "카카오톡 채팅방의 구성 이미지, 스타일 정보입니다."
+      },
+      "mainTab": {
+        "name": "메인탭",
+        "description": "카카오톡 메인탭의 구성 이미지, 스타일 정보입니다."
+      },
+      "friendFindTab": {
+        "name": "친구찾기탭",
+        "description": "카카오톡 친구찾기탭의 구성 이미지, 스타일 정보입니다."
+      },
+      "passCodeTab": {
+        "name": "잠금화면",
+        "description": "카카오톡 잠금화면의 구성 이미지, 스타일 정보입니다."
+      },
+      "messageNotification": {
+        "name": "메시지 알림 배너",
+        "description": "카카오톡 메시지 알림 배너의 구성 이미지, 스타일 정보입니다."
+      }
+    },
+    "typeCodes": {
+      "commonIcoTheme": {
+        "name": "테마 노출 아이콘",
+        "description": "카카오톡 테마 노출 아이콘입니다"
+      },
+      "backgroundImage": {
+        "name": "친구탭/채팅탭 배경 이미지",
+        "description": "친구탭/채팅탭의 배경 이미지입니다."
+      },
+      "maintabBgImage": {
+        "name": "메인탭 배경 이미지",
+        "description": "메인탭의 배경 이미지입니다."
+      },
+      "maintabIcoFriends": {
+        "name": "친구탭 아이콘",
+        "description": "메인탭의 친구탭 아이콘입니다."
+      },
+      "maintabIcoFriendsSelected": {
+        "name": "친구탭 선택 아이콘",
+        "description": "메인탭의 친구탭 선택 아이콘입니다."
+      },
+      "maintabIcoChat": {
+        "name": "채팅탭 아이콘",
+        "description": "메인탭의 채팅탭 아이콘입니다."
+      },
+      "maintabIcoChatSelected": {
+        "name": "채팅탭 선택 아이콘",
+        "description": "메인탭의 채팅탭 선택 아이콘입니다."
+      },
+      "maintabIcoOpenchat": {
+        "name": "오픈채팅탭 아이콘",
+        "description": "메인탭의 오픈채팅탭 아이콘입니다."
+      },
+      "maintabIcoOpenchatSelected": {
+        "name": "오픈채팅탭 선택 아이콘",
+        "description": "메인탭의 오픈채팅탭 선택 아이콘입니다."
+      },
+      "maintabIcoMore": {
+        "name": "더보기탭 아이콘",
+        "description": "메인탭의 더보기탭 아이콘입니다."
+      },
+      "maintabIcoMoreSelected": {
+        "name": "더보기탭 선택 아이콘",
+        "description": "메인탭의 더보기탭 선택 아이콘입니다."
+      },
+      "maintabIcoShopping": {
+        "name": "쇼핑탭 아이콘",
+        "description": "메인탭의 쇼핑탭 아이콘입니다."
+      },
+      "maintabIcoShoppingSelected": {
+        "name": "쇼핑탭 선택 아이콘",
+        "description": "메인탭의 쇼핑탭 선택 아이콘입니다."
+      },
+      "findBtnAddFriend": {
+        "name": "친구 추가 버튼",
+        "description": "친구탭 상단의 친구 추가 버튼 이미지입니다."
+      },
+      "findBtnAddFriendSelected": {
+        "name": "친구 추가 버튼 (선택됨)",
+        "description": "친구탭 상단의 친구 추가 버튼 이미지 (선택됨)입니다."
+      },
+      "defaultProfileImg": {
+        "name": "기본 프로필 이미지",
+        "description": "프로필이 없는 친구에게 보여지는 기본 프로필 이미지입니다."
+      },
+      "chatRoomBgImage": {
+        "name": "채팅방 배경 이미지",
+        "description": "채팅방의 배경 이미지입니다."
+      },
+      "senderFirstBubbleImage": {
+        "name": "보낸 메시지 첫 번째 말풍선 이미지",
+        "description": "채팅방에서 보낸 메시지의 첫 번째 말풍선 이미지입니다."
+      },
+      "senderFirstBubbleImageSelected": {
+        "name": "보낸 메시지 첫 번째 말풍선 이미지 (선택됨)",
+        "description": "채팅방에서 보낸 메시지의 첫 번째 말풍선 이미지 (선택됨)입니다."
+      },
+      "senderMiddleBubbleImage": {
+        "name": "보낸 메시지 중간 말풍선 이미지",
+        "description": "채팅방에서 보낸 메시지의 중간 말풍선 이미지입니다."
+      },
+      "senderMiddleBubbleImageSelected": {
+        "name": "보낸 메시지 중간 말풍선 이미지 (선택됨)",
+        "description": "채팅방에서 보낸 메시지의 중간 말풍선 이미지 (선택됨)입니다."
+      },
+      "receiverFirstBubbleImage": {
+        "name": "받은 메시지 첫 번째 말풍선 이미지",
+        "description": "채팅방에서 받은 메시지의 첫 번째 말풍선 이미지입니다."
+      },
+      "receiverFirstBubbleImageSelected": {
+        "name": "받은 메시지 첫 번째 말풍선 이미지 (선택됨)",
+        "description": "채팅방에서 받은 메시지의 첫 번째 말풍선 이미지 (선택됨)입니다."
+      },
+      "receiverMiddleBubbleImage": {
+        "name": "받은 메시지 중간 말풍선 이미지",
+        "description": "채팅방에서 받은 메시지의 중간 말풍선 이미지입니다."
+      },
+      "receiverMiddleBubbleImageSelected": {
+        "name": "받은 메시지 중간 말풍선 이미지 (선택됨)",
+        "description": "채팅방에서 받은 메시지의 중간 말풍선 이미지 (선택됨)입니다."
+      },
+      "passCodeBgImage": {
+        "name": "잠금화면 배경 이미지",
+        "description": "카카오톡 잠금화면의 배경 이미지입니다."
+      },
+      "passCodeInputImageEmpty1": {
+        "name": "잠금화면 입력 바 첫 번째 이미지 (빈 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 첫 번째 이미지 (빈 상태)입니다."
+      },
+      "passCodeInputImageEmpty2": {
+        "name": "잠금화면 입력 바 두 번째 이미지 (빈 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 두 번째 이미지 (빈 상태)입니다."
+      },
+      "passCodeInputImageEmpty3": {
+        "name": "잠금화면 입력 바 세 번째 이미지 (빈 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 세 번째 이미지 (빈 상태)입니다."
+      },
+      "passCodeInputImageEmpty4": {
+        "name": "잠금화면 입력 바 네 번째 이미지 (빈 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 네 번째 이미지 (빈 상태)입니다."
+      },
+      "passCodeInputImageFilled1": {
+        "name": "잠금화면 입력 바 첫 번째 이미지 (채워진 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 첫 번째 이미지 (채워진 상태)입니다."
+      },
+      "passCodeInputImageFilled2": {
+        "name": "잠금화면 입력 바 두 번째 이미지 (채워진 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 두 번째 이미지 (채워진 상태)입니다."
+      },
+      "passCodeInputImageFilled3": {
+        "name": "잠금화면 입력 바 세 번째 이미지 (채워진 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 세 번째 이미지 (채워진 상태)입니다."
+      },
+      "passCodeInputImageFilled4": {
+        "name": "잠금화면 입력 바 네 번째 이미지 (채워진 상태)",
+        "description": "카카오톡 잠금화면의 입력 바의 네 번째 이미지 (채워진 상태)입니다."
+      },
+      "passCodeKeypadPressImage": {
+        "name": "잠금화면 키패드 버튼 이미지 (눌린 상태)",
+        "description": "카카오톡 잠금화면의 키패드 버튼이 눌린 상태의 이미지입니다."
+      }
+    },
+    "styleCodes": {
+      "maintabBgColor": {
+        "name": "메인탭 배경 색상",
+        "description": "메인탭의 배경 색상입니다."
+      },
+      "headerTitleIconColor": {
+        "name": "헤더 제목/아이콘 색상",
+        "description": "각 탭 상단 헤더의 제목과 아이콘 색상입니다."
+      },
+      "backgroundColor": {
+        "name": "친구/채팅탭 배경 색상",
+        "description": "친구/채팅탭 배경 색상입니다."
+      },
+      "nameTitleColor": {
+        "name": "친구 이름/채팅방 제목 색상",
+        "description": "친구 이름과 채팅방 제목 색상입니다."
+      },
+      "nameTitleColorSelected": {
+        "name": "친구 이름/채팅방 제목 색상 (선택됨)",
+        "description": "친구 이름과 채팅방 제목 색상 (선택됨)입니다."
+      },
+      "statusMessageColor": {
+        "name": "부가/상태 메시지 색상",
+        "description": "친구의 상태 메시지 색상입니다."
+      },
+      "statusMessageColorSelected": {
+        "name": "부가/상태 메시지 색상 (선택됨)",
+        "description": "친구의 부가 및 상태 메시지 색상 (선택됨)입니다."
+      },
+      "lastMessageColor": {
+        "name": "마지막 메시지/설명 색상",
+        "description": "채팅탭의 마지막 메시지 색상입니다."
+      },
+      "lastMessageColorSelected": {
+        "name": "마지막 메시지/설명 색상 (선택됨)",
+        "description": "채팅탭의 마지막 메시지 색상 (선택됨)입니다."
+      },
+      "listBackgroundColor": {
+        "name": "친구/채팅방 리스트 배경 색상",
+        "description": "친구/채팅방 리스트의 배경 색상입니다."
+      },
+      "listBackgroundColorSelected": {
+        "name": "친구/채팅방 리스트 배경 색상 (선택됨)",
+        "description": "친구/채팅방 리스트가 선택되었을 때의 배경 색상입니다."
+      },
+      "borderColor": {
+        "name": "섹션 보더 색상",
+        "description": "친구탭의 섹션 보더 색상입니다."
+      },
+      "sectionHeaderColor": {
+        "name": "섹션 헤더/제목 색상",
+        "description": "친구탭의 섹션 헤더/제목 색상입니다."
+      },
+      "serviceButtonColor": {
+        "name": "서비스 버튼 색상",
+        "description": "친구탭의 서비스 버튼 색상입니다.(선물하기 등)"
+      },
+      "backgroundColorSecondary": {
+        "name": "보조 배경 색상",
+        "description": "오픈채팅탭/쇼핑탭에서 사용되는 보조 배경 색상입니다."
+      },
+      "chatRoomBackgroundColor": {
+        "name": "채팅방 배경 색상",
+        "description": "채팅방의 배경 색상입니다."
+      },
+      "inputBarBackgroundColor": {
+        "name": "입력 바 배경 색상",
+        "description": "채팅방의 입력 바 배경 색상입니다."
+      },
+      "inputBarTextColor": {
+        "name": "입력 바 텍스트 색상",
+        "description": "채팅방의 입력 바 텍스트 색상입니다."
+      },
+      "sendButtonBackgroundColor": {
+        "name": "전송 버튼 배경 색상",
+        "description": "채팅방의 전송 버튼 배경 색상입니다."
+      },
+      "sendButtonBackgroundColorSelected": {
+        "name": "전송 버튼 배경 색상 (선택됨)",
+        "description": "채팅방의 전송 버튼 배경 색상 (선택됨)입니다."
+      },
+      "sendButtonIconColor": {
+        "name": "전송 버튼 아이콘 색상",
+        "description": "채팅방의 전송 버튼 아이콘 색상입니다."
+      },
+      "sendButtonIconColorSelected": {
+        "name": "전송 버튼 아이콘 색상 (선택됨)",
+        "description": "채팅방의 전송 버튼 아이콘 색상 (선택됨)입니다."
+      },
+      "chatRoomMenuIconColor": {
+        "name": "채팅방 메뉴 아이콘 색상",
+        "description": "채팅방의 메뉴 아이콘 색상입니다."
+      },
+      "chatRoomMenuIconColorSelected": {
+        "name": "채팅방 메뉴 아이콘 색상 (선택됨)",
+        "description": "채팅방의 메뉴 아이콘 색상 (선택됨)입니다."
+      },
+      "chatRoomMenuInputBarBackgroundColor": {
+        "name": "채팅방 메뉴/입력 바 배경 색상",
+        "description": "채팅방 메뉴의 입력 바 배경 색상입니다."
+      },
+      "senderBubbleTextColor": {
+        "name": "보낸 메시지 텍스트 색상",
+        "description": "채팅방에서 보낸 메시지의 텍스트 색상입니다."
+      },
+      "senderBubbleTextColorSelected": {
+        "name": "보낸 메시지 텍스트 색상 (선택됨)",
+        "description": "채팅방에서 보낸 메시지의 텍스트 색상 (선택됨)입니다."
+      },
+      "senderUnreadCountTextColor": {
+        "name": "보낸 메시지 미확인 카운트 텍스트 색상",
+        "description": "채팅방에서 보낸 메시지의 미확인 카운트 텍스트 색상입니다."
+      },
+      "receiverBubbleTextColor": {
+        "name": "받은 메시지 텍스트 색상",
+        "description": "채팅방에서 받은 메시지의 텍스트 색상입니다."
+      },
+      "receiverBubbleTextColorSelected": {
+        "name": "받은 메시지 텍스트 색상 (선택됨)",
+        "description": "채팅방에서 받은 메시지의 텍스트 색상 (선택됨)입니다."
+      },
+      "receiverUnreadCountTextColor": {
+        "name": "받은 메시지 미확인 카운트 텍스트 색상",
+        "description": "채팅방에서 받은 메시지의 미확인 카운트 텍스트 색상입니다."
+      },
+      "passCodeBackgroundColor": {
+        "name": "잠금화면 배경 색상",
+        "description": "카카오톡 잠금화면의 배경 색상입니다."
+      },
+      "passCodeTitleColor": {
+        "name": "잠금화면 제목 색상",
+        "description": "카카오톡 잠금화면의 제목 색상입니다."
+      },
+      "passCodeKeypadBackgroundColor": {
+        "name": "잠금화면 키패드 배경 색상",
+        "description": "카카오톡 잠금화면의 키패드 배경 색상입니다."
+      },
+      "passCodeKeypadTextColor": {
+        "name": "잠금화면 키패드 텍스트 색상",
+        "description": "카카오톡 잠금화면의 키패드 텍스트 색상입니다."
+      },
+      "passCodeKeypadTextColorSelected": {
+        "name": "잠금화면 키패드 텍스트 색상 (선택됨)",
+        "description": "카카오톡 잠금화면의 키패드 텍스트 색상 (선택됨)입니다."
+      },
+      "messageNotificationBackgroundColor": {
+        "name": "메시지 알림 배너 배경 색상",
+        "description": "카카오톡 메시지 알림 배너의 배경 색상입니다."
+      },
+      "messageNotificationTitleColor": {
+        "name": "메시지 알림 배너 제목 색상",
+        "description": "카카오톡 메시지 알림 배너의 제목 색상입니다."
+      },
+      "messageNotificationMessageColor": {
+        "name": "메시지 알림 배너 메시지 색상",
+        "description": "카카오톡 메시지 알림 배너의 메시지 색상입니다."
+      },
+      "messageDirectShareBackgroundColor": {
+        "name": "메시지 전달 완료 배너 배경 색상",
+        "description": "카카오톡 메시지 전달 완료 배너의 배경 색상입니다."
+      },
+      "messageDirectShareTitleColor": {
+        "name": "메시지 전달 완료 배너 제목 색상",
+        "description": "카카오톡 메시지 전달 완료 배너의 제목 색상입니다."
+      },
+      "messageDirectShareMessageColor": {
+        "name": "메시지 전달 완료 배너 메시지 색상",
+        "description": "카카오톡 메시지 전달 완료 배너의 메시지 색상입니다."
+      },
+      "tabBottomBannerColor": {
+        "name": "탭 하단 배너 색상",
+        "description": "카카오톡 탭 하단의 배너 색상입니다."
+      },
+      "passCodeKeypadPressColor": {
+        "name": "잠금화면 키패드 버튼 색상 (눌린 상태)",
+        "description": "카카오톡 잠금화면의 키패드 버튼이 눌린 상태의 색상입니다."
+      }
+    }
+  },
+  "sections": [
+    {
+      "sectionCode": "friendTab",
+      "name": "친구탭",
+      "components": [
+        {
+          "typeCode": "backgroundImage"
+        }
+      ],
+      "styles": [
+        {
+          "styleCode": "headerTitleIconColor"
+        },
+        {
+          "styleCode": "backgroundColor"
+        },
+        {
+          "styleCode": "nameTitleColor"
+        },
+        {
+          "styleCode": "nameTitleColorSelected"
+        },
+        {
+          "styleCode": "statusMessageColor"
+        },
+        {
+          "styleCode": "statusMessageColorSelected"
+        },
+        {
+          "styleCode": "listBackgroundColor"
+        },
+        {
+          "styleCode": "listBackgroundColorSelected"
+        },
+        {
+          "styleCode": "borderColor"
+        },
+        {
+          "styleCode": "sectionHeaderColor"
+        },
+        {
+          "styleCode": "serviceButtonColor"
+        },
+        {
+          "styleCode": "tabBottomBannerColor"
+        }
+      ]
+    },
+    {
+      "sectionCode": "chatTab",
+      "name": "채팅탭",
+      "components": [],
+      "styles": [
+        {
+          "styleCode": "headerTitleIconColor"
+        },
+        {
+          "styleCode": "backgroundColor"
+        },
+        {
+          "styleCode": "nameTitleColor"
+        },
+        {
+          "styleCode": "nameTitleColorSelected"
+        },
+        {
+          "styleCode": "lastMessageColor"
+        },
+        {
+          "styleCode": "lastMessageColorSelected"
+        },
+        {
+          "styleCode": "listBackgroundColor"
+        },
+        {
+          "styleCode": "listBackgroundColorSelected"
+        },
+        {
+          "styleCode": "tabBottomBannerColor"
+        }
+      ]
+    },
+    {
+      "sectionCode": "chatRoom",
+      "name": "채팅방",
+      "description": "카카오톡 채팅방의 구성 이미지, 스타일 정보입니다.",
+      "components": [
+        {
+          "typeCode": "chatRoomBgImage"
+        },
+        {
+          "typeCode": "senderFirstBubbleImage"
+        },
+        {
+          "typeCode": "senderFirstBubbleImageSelected"
+        },
+        {
+          "typeCode": "senderMiddleBubbleImage"
+        },
+        {
+          "typeCode": "senderMiddleBubbleImageSelected"
+        },
+        {
+          "typeCode": "receiverFirstBubbleImage"
+        },
+        {
+          "typeCode": "receiverFirstBubbleImageSelected"
+        },
+        {
+          "typeCode": "receiverMiddleBubbleImage"
+        },
+        {
+          "typeCode": "receiverMiddleBubbleImageSelected"
+        }
+      ],
+      "styles": [
+        {
+          "styleCode": "chatRoomBackgroundColor"
+        },
+        {
+          "styleCode": "inputBarBackgroundColor"
+        },
+        {
+          "styleCode": "inputBarTextColor"
+        },
+        {
+          "styleCode": "sendButtonBackgroundColor"
+        },
+        {
+          "styleCode": "sendButtonBackgroundColorSelected"
+        },
+        {
+          "styleCode": "sendButtonIconColor"
+        },
+        {
+          "styleCode": "sendButtonIconColorSelected"
+        },
+        {
+          "styleCode": "chatRoomMenuIconColor"
+        },
+        {
+          "styleCode": "chatRoomMenuIconColorSelected"
+        },
+        {
+          "styleCode": "chatRoomMenuInputBarBackgroundColor"
+        },
+        {
+          "styleCode": "senderBubbleTextColor"
+        },
+        {
+          "styleCode": "senderBubbleTextColorSelected"
+        },
+        {
+          "styleCode": "senderUnreadCountTextColor"
+        },
+        {
+          "styleCode": "receiverBubbleTextColor"
+        },
+        {
+          "styleCode": "receiverBubbleTextColorSelected"
+        },
+        {
+          "styleCode": "receiverUnreadCountTextColor"
+        }
+      ]
+    },
+    {
+      "sectionCode": "mainTab",
+      "name": "메인탭",
+      "description": "카카오톡 메인탭의 구성 이미지, 스타일 정보입니다",
+      "components": [
+        {
+          "typeCode": "maintabBgImage"
+        },
+        {
+          "typeCode": "maintabIcoFriends"
+        },
+        {
+          "typeCode": "maintabIcoFriendsSelected"
+        },
+        {
+          "typeCode": "maintabIcoChat"
+        },
+        {
+          "typeCode": "maintabIcoChatSelected"
+        },
+        {
+          "typeCode": "maintabIcoOpenchat"
+        },
+        {
+          "typeCode": "maintabIcoOpenchatSelected"
+        },
+        {
+          "typeCode": "maintabIcoShopping"
+        },
+        {
+          "typeCode": "maintabIcoShoppingSelected"
+        },
+        {
+          "typeCode": "maintabIcoMore"
+        },
+        {
+          "typeCode": "maintabIcoMoreSelected"
+        }
+      ],
+      "styles": [
+        {
+          "styleCode": "maintabBgColor"
+        }
+      ]
+    },
+    {
+      "sectionCode": "messageNotification",
+      "name": "메시지 알림 배너",
+      "description": "카카오톡 메시지 알림 배너의 구성 이미지, 스타일 정보입니다",
+      "components": [
+        {
+          "typeCode": "messageNotificationBackground"
+        },
+        {
+          "typeCode": "messageNotificationTitle"
+        },
+        {
+          "typeCode": "messageNotificationMessage"
+        },
+        {
+          "typeCode": "messageDirectShareBackground"
+        },
+        {
+          "typeCode": "messageDirectShareTitle"
+        },
+        {
+          "typeCode": "messageDirectShareMessage"
+        }
+      ],
+      "styles": [
+        {
+          "styleCode": "messageNotificationBackgroundColor"
+        },
+        {
+          "styleCode": "messageNotificationTitleColor"
+        },
+        {
+          "styleCode": "messageNotificationMessageColor"
+        },
+        {
+          "styleCode": "messageDirectShareBackgroundColor"
+        },
+        {
+          "styleCode": "messageDirectShareTitleColor"
+        },
+        {
+          "styleCode": "messageDirectShareMessageColor"
+        }
+      ]
+    },
+    {
+      "sectionCode": "passCodeTab",
+      "name": "잠금화면",
+      "description": "카카오톡 잠금화면의 구성 이미지, 스타일 정보입니다",
+      "components": [
+        {
+          "typeCode": "passCodeBgImage"
+        },
+        {
+          "typeCode": "passCodeInputImageEmpty1"
+        },
+        {
+          "typeCode": "passCodeInputImageEmpty2"
+        },
+        {
+          "typeCode": "passCodeInputImageEmpty3"
+        },
+        {
+          "typeCode": "passCodeInputImageEmpty4"
+        },
+        {
+          "typeCode": "passCodeInputImageFilled1"
+        },
+        {
+          "typeCode": "passCodeInputImageFilled2"
+        },
+        {
+          "typeCode": "passCodeInputImageFilled3"
+        },
+        {
+          "typeCode": "passCodeInputImageFilled4"
+        },
+        {
+          "typeCode": "passCodeKeypadPressImage"
+        }
+      ],
+      "styles": [
+        {
+          "styleCode": "passCodeBackgroundColor"
+        },
+        {
+          "styleCode": "passCodeTitleColor"
+        },
+        {
+          "styleCode": "passCodeKeypadBackgroundColor"
+        },
+        {
+          "styleCode": "passCodeKeypadTextColor"
+        },
+        {
+          "styleCode": "passCodeKeypadTextColorSelected"
+        },
+        {
+          "styleCode": "passCodeKeypadPressColor"
+        }
+      ]
+    }
+  ],
+  "platformMappings": {
+    "android": {
+      "components": {
+        "commonIcoTheme": [
+          {
+            "path": "res/mipmap-hdpi/ic_launcher.png",
+            "width": "72",
+            "height": "72",
+            "extension": "png"
+          },
+          {
+            "path": "res/mipmap-mdpi/ic_launcher.png",
+            "width": "48",
+            "height": "48",
+            "extension": "png"
+          },
+          {
+            "path": "res/mipmap-xhdpi/ic_launcher.png",
+            "width": "96",
+            "height": "96",
+            "extension": "png"
+          },
+          {
+            "path": "res/mipmap-xxhdpi/ic_launcher.png",
+            "width": "144",
+            "height": "144",
+            "extension": "png"
+          },
+          {
+            "path": "res/mipmap-xxxhdpi/ic_launcher.png",
+            "width": "192",
+            "height": "192",
+            "extension": "png"
+          }
+        ],
+        "backgroundImage": [
+          {
+            "path": "res/drawable-sw600dp/theme_background_image.png",
+            "width": "1440",
+            "height": "2880",
+            "extension": "png"
+          },
+          {
+            "path": "res/drawable-xxhdpi/theme_background_image.png",
+            "width": "1440",
+            "height": "2880",
+            "extension": "png"
+          }
+        ]
+      },
+      "styles": {
+        "maintabBgColor": {
+          "styleGroup": "color",
+          "styleKey": "theme_maintab_cell_color"
+        },
+        "headerTitleIconColor": {
+          "styleGroup": "color",
+          "styleKey": "theme_header_color"
+        }
+      }
+    },
+    "ios": {}
+  }
+}

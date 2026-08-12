@@ -1,20 +1,21 @@
 package com.komentum.post.service;
 
-import com.komentum.global.exception.CustomEntityNotFoundException;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QDesignBoard;
 import com.komentum.post.dto.query.DesignBoardQuery;
-import com.komentum.post.mapper.PostDtoMapper;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
-import com.komentum.theme.component.domain.DesignComponent;
+import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,6 @@ public class DesignBoardService {
 
   private final DesignBoardRepository designBoardRepository;
   private final DesignBoardRepositorySupport designBoardRepositorySupport;
-  private final PostService postService;
-  private final PostDtoMapper postDtoMapper;
   private final JPAQueryFactory queryFactory;
 
   @Transactional(readOnly = true)
@@ -39,19 +38,43 @@ public class DesignBoardService {
   }
 
   @Transactional(readOnly = true)
-  public DesignBoardQuery.Detail findDetailById(Long postId, User client) {
-    return designBoardRepositorySupport.findDetailByPostId(postId, client);
-  }
-
-  @Transactional(readOnly = true)
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
-    return designBoardRepositorySupport.findPreviewList(pageable);
+    return findPreviewList(pageable, null, null);
   }
 
   @Transactional(readOnly = true)
-  public DesignBoard findByPostId(long postId) {
-    return designBoardRepository.findByPost_PostId(postId)
-        .orElseThrow(() -> new CustomEntityNotFoundException(DesignBoard.class, postId));
+  public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable, String keyword,
+      TypeCode typeCode) {
+    PostSearchCondition condition = new PostSearchCondition()
+        .withKeyword(keyword)
+        .withTypeCode(typeCode);
+    return designBoardRepositorySupport.findPreviewList(pageable, condition,
+        List.of(PostSortType.DEFAULT));
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoard> findWithDesignBoardByPostId(long postId) {
+    return designBoardRepository.findByPost_PostId(postId);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoard> findWithDesignComponentsByPostIdIn(List<Long> postIds) {
+    return designBoardRepository.findWithDesignComponentByPost_PostIdIn(postIds);
+  }
+
+  @Transactional(readOnly = true)
+  public Map<Long, List<DesignBoard>> findWithDesignComponentsByPostIdMap(List<Long> postIds) {
+    if (postIds == null || postIds.isEmpty()) {
+      return Map.of();
+    }
+    return findWithDesignComponentsByPostIdIn(postIds)
+        .stream()
+        .collect(Collectors.groupingBy(designBoard -> designBoard.getPost().getPostId()));
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoard> findWithDesignComponentsByPostId(Long postId) {
+    return findWithDesignComponentsByPostIdIn(List.of(postId));
   }
 
   @Transactional(readOnly = true)
@@ -79,6 +102,22 @@ public class DesignBoardService {
         .post(post)
         .designComponent(designComponent)
         .build());
+  }
+
+  @Transactional
+  public void synchronizeDesignBoards(
+      Post post,
+      List<DesignComponent> requestedComponents
+  ) {
+    // delete all design boards
+    designBoardRepository.deleteByPost_PostId(post.getPostId());
+    // generate all design boards
+    List<DesignBoard> designBoards = findWithDesignBoardByPostId(post.getPostId());
+    for (DesignComponent component : requestedComponents) {
+      save(post, component);
+    }
+    List<DesignBoard> updated = findWithDesignBoardByPostId(post.getPostId());
+    int a = 1;
   }
 
   @Transactional
