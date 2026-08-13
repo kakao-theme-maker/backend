@@ -34,6 +34,5 @@ public class DesignComponentDto {
   private Boolean isPublic;
 
   @Schema(description = "연결된 component type 목록")
-  @JsonProperty("component_types")
   private List<ComponentTypeDto> componentTypes;
 }
