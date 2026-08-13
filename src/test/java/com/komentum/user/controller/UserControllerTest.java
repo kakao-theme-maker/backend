@@ -204,7 +204,7 @@ public class UserControllerTest {
     userRepository.save(user);
 
     MockMultipartFile profileImage = new MockMultipartFile(
-        "profile_image",
+        "profileImage",
         "test-image.png",
         "image/png",
         "test image content".getBytes()
