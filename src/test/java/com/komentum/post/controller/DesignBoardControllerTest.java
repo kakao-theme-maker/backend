@@ -228,7 +228,7 @@ public class DesignBoardControllerTest {
     DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     Post pinnedPost = targetDesignBoard.getPost();
     MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
-    params.add("pinned_post_id", pinnedPost.getPostId().toString());
+    params.add("pinnedPostId", pinnedPost.getPostId().toString());
     User client = userResult.getFirstUser();
     // when
     List<DesignBoardDetailDto> response = mockMvcUtils.doAuthRequest(
@@ -301,7 +301,7 @@ public class DesignBoardControllerTest {
         .toList();
     MultiValueMap<String, String> params = TestParams.withPaging(0,
         postResult.designBoards().size());
-    params.add("type_code", typeCode.getTypeCode());
+    params.add("typeCode", typeCode.getTypeCode());
     User client = userResult.getFirstUser();
     // when
     List<DesignBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
@@ -331,7 +331,7 @@ public class DesignBoardControllerTest {
   void findDesignBoards_invalidTypeCode() throws Exception {
     // given
     MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
-    params.add("type_code", "invalidTypeCode");
+    params.add("typeCode", "invalidTypeCode");
     User client = userResult.getFirstUser();
     // when & then
     mockMvcUtils.doAuthRequest(
@@ -369,9 +369,9 @@ public class DesignBoardControllerTest {
         .postTags(tagCreateDtoList)
         .build();
     MockMultipartFile previewImage = MockMultipartFileUtils
-        .generateImageFormData("preview_image", ImageExtension.PNG);
+        .generateImageFormData("previewImage", ImageExtension.PNG);
     MockMultipartFile boardInfo = MockMultipartFileUtils
-        .generateJsonFormData("board_info", createDto);
+        .generateJsonFormData("boardInfo", createDto);
     List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
@@ -418,9 +418,9 @@ public class DesignBoardControllerTest {
         .postTags(tagUpdateDtoList)
         .build();
     MockMultipartFile previewImage = MockMultipartFileUtils
-        .generateImageFormData("preview_image", ImageExtension.PNG);
+        .generateImageFormData("previewImage", ImageExtension.PNG);
     MockMultipartFile boardInfo = MockMultipartFileUtils
-        .generateJsonFormData("board_info", updateDto);
+        .generateJsonFormData("boardInfo", updateDto);
     List<MockMultipartFile> formDataList = List.of(boardInfo, previewImage);
     // when
     DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(

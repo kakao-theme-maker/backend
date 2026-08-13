@@ -1,6 +1,5 @@
 package com.komentum.post.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.enums.TypeCode;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,11 +16,9 @@ import lombok.NoArgsConstructor;
 public class BoardComponentTypeDto {
 
   @Schema(description = "component type 식별자")
-  @JsonProperty("component_type_id")
   private Integer componentTypeId;
 
   @Schema(description = "component type code")
-  @JsonProperty("type_code")
   private TypeCode typeCode;
 
   @Schema(description = "component type 이름")

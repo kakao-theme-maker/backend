@@ -62,7 +62,6 @@ public class DesignBoardDto {
     private String profileImage;
 
     @Schema(description = "게시글에 연결된 component type 목록")
-    @JsonProperty("component_types")
     private List<BoardComponentTypeDto> componentTypes;
   }
 
@@ -95,7 +94,6 @@ public class DesignBoardDto {
     private Long prefers;
 
     @Schema(description = "게시글에 연결된 component type 목록")
-    @JsonProperty("component_types")
     private List<BoardComponentTypeDto> componentTypes;
   }
 

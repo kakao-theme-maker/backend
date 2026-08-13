@@ -21,11 +21,11 @@ public class CategoryPostController {
   /**
    * 카테고리에 게시글을 등록하고, 이미 등록되었다면 기존 상태 유지
    * */
-  @PutMapping("/categories/{category_id}/posts/{post_id}")
-  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=category_id인 카테고리에 ID=post_id인 게시글을 추가한다")
+  @PutMapping("/categories/{categoryId}/posts/{postId}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=category_id인 카테고리에 ID=postId인 게시글을 추가한다")
   public ResponseEntity<CategoryPostResponse> registerPostOnCategory(
-      @PathVariable("category_id") Long categoryId,
-      @PathVariable("post_id") Long postId
+      @PathVariable Long categoryId,
+      @PathVariable Long postId
   ) {
     return ResponseEntity.ok(
         categoryPostManagementFacade.registerPostOnCategory(categoryId, postId));

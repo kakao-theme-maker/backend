@@ -329,7 +329,7 @@ class ThemeBoardControllerTest {
     Post pinnedPost = postScenarioResult.posts().get(0);
     User pinnedAuthor = pinnedPost.getUser();
     MultiValueMap<String, String> params = TestParams.withPaging(0, 10);
-    params.add("pinned_post_id", pinnedPost.getPostId().toString());
+    params.add("pinnedPostId", pinnedPost.getPostId().toString());
     // stub
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
@@ -369,7 +369,7 @@ class ThemeBoardControllerTest {
     // given
     Post pinnedPost = postScenarioResult.posts().get(0);
     MultiValueMap<String, String> params = TestParams.withPaging(1, 1);
-    params.add("pinned_post_id", pinnedPost.getPostId().toString());
+    params.add("pinnedPostId", pinnedPost.getPostId().toString());
     // stub
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
@@ -485,7 +485,7 @@ class ThemeBoardControllerTest {
         .thenReturn(UUID.randomUUID().toString());
     // when & then
     mockMvc.perform(mockMvcUtils.addAuthentication(
-            get("/api/theme-boards/{post_id}", targetThemeBoard.getPost().getPostId()),
+            get("/api/theme-boards/{postId}", targetThemeBoard.getPost().getPostId()),
             TestClientDto.fromEntity(testClient)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.component_types").doesNotExist());
@@ -519,9 +519,9 @@ class ThemeBoardControllerTest {
         .postTags(postTags)
         .build();
     MockMultipartFile testPreviewImage = MockMultipartFileUtils
-        .generateImageFormData("preview_image", ImageExtension.PNG);
+        .generateImageFormData("previewImage", ImageExtension.PNG);
     MockMultipartFile boardInfo = MockMultipartFileUtils
-        .generateJsonFormData("board_info", createDto);
+        .generateJsonFormData("boardInfo", createDto);
     List<MockMultipartFile> formDataList = List.of(testPreviewImage, boardInfo);
     // stub
     Mockito.when(fileManager.uploadFile(any(), any()))
@@ -567,9 +567,9 @@ class ThemeBoardControllerTest {
         .postTags(postTags)
         .build();
     MockMultipartFile testPreviewImage = MockMultipartFileUtils
-        .generateImageFormData("preview_image", ImageExtension.PNG);
+        .generateImageFormData("previewImage", ImageExtension.PNG);
     MockMultipartFile boardInfo = MockMultipartFileUtils
-        .generateJsonFormData("board_info", updateDto);
+        .generateJsonFormData("boardInfo", updateDto);
     List<MockMultipartFile> formDataList = List.of(testPreviewImage, boardInfo);
     // stub
     Mockito.when(fileManager.uploadFile(any(), any()))
