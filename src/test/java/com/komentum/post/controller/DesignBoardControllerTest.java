@@ -14,6 +14,7 @@ import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
+import com.komentum.post.domain.Prefer;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
@@ -23,6 +24,7 @@ import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.PostRepository;
+import com.komentum.post.repository.PreferRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.MockMultipartFileUtils;
@@ -36,6 +38,9 @@ import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
 import com.komentum.user.domain.User;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,6 +49,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -63,6 +71,9 @@ public class DesignBoardControllerTest {
 
   @Autowired
   private PostRepository postRepository;
+
+  @Autowired
+  private PreferRepository preferRepository;
 
   @Autowired
   private DesignBoardRepository designBoardRepository;
@@ -169,6 +180,55 @@ public class DesignBoardControllerTest {
     );
   }
 
+  private List<DesignBoardPreviewDto> requestDesignBoardPreviews(
+      MultiValueMap<String, String> params, User client) throws Exception {
+    return mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards")
+            .params(params)
+            .responseType(new TypeReference<>() {
+            })
+            .clientDto(TestClientDto.fromEntity(client))
+            .build()
+    );
+  }
+
+  private void prepareDesignBoardSortData() {
+    LocalDateTime baseDate = LocalDateTime.of(2025, 1, 1, 0, 0);
+    List<Prefer> prefers = new ArrayList<>();
+    for (int i = 0; i < postResult.posts().size(); i++) {
+      Post post = postResult.posts().get(i);
+      post.setCreatedAt(baseDate.plusDays(i));
+      for (int j = 0; j < i % 3; j++) {
+        prefers.add(Prefer.createTransient(post, userResult.users().get(j)));
+      }
+    }
+    postRepository.saveAll(postResult.posts());
+    preferRepository.saveAll(prefers);
+  }
+
+  private Comparator<DesignBoardPreviewDto> designBoardComparator(String sortType) {
+    Comparator<DesignBoardPreviewDto> createdAtDesc = Comparator.comparing(
+        DesignBoardPreviewDto::getCreatedAt, Comparator.reverseOrder());
+    Comparator<DesignBoardPreviewDto> postIdDesc = Comparator.comparing(
+        DesignBoardPreviewDto::getPostId, Comparator.reverseOrder());
+    return switch (sortType == null ? "CREATED_DESC" : sortType) {
+      case "CREATED_ASC" -> Comparator.comparing(DesignBoardPreviewDto::getCreatedAt)
+          .thenComparing(postIdDesc);
+      case "CREATED_DESC" -> createdAtDesc.thenComparing(postIdDesc);
+      case "PREFER_ASC" -> Comparator.comparing(DesignBoardPreviewDto::getPrefers)
+          .thenComparing(createdAtDesc)
+          .thenComparing(postIdDesc);
+      case "PREFER_DESC" -> Comparator.comparing(
+              DesignBoardPreviewDto::getPrefers, Comparator.reverseOrder())
+          .thenComparing(createdAtDesc)
+          .thenComparing(postIdDesc);
+      default -> throw new IllegalArgumentException("unsupported sort type: " + sortType);
+    };
+  }
+
   private ComponentType getComponentType(TypeCode typeCode) {
     componentTypeSeeder.upsertComponentType();
     return componentTypeRepository.findAllByTypeCodeIn(List.of(typeCode)).get(0);
@@ -196,6 +256,33 @@ public class DesignBoardControllerTest {
     );
     // then
     assertThat(responses).isNotNull().hasSize(pageSize);
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = {"CREATED_ASC", "CREATED_DESC", "PREFER_ASC", "PREFER_DESC"})
+  @DisplayName("디자인 게시글 목록을 생성일 또는 좋아요 수 기준으로 정렬한다.")
+  void findDesignBoards_sortType(String sortType) throws Exception {
+    // given
+    prepareDesignBoardSortData();
+    User client = userResult.getFirstUser();
+    MultiValueMap<String, String> params = TestParams.withPaging(0,
+        postResult.designBoards().size());
+    if (sortType != null) {
+      params.add("sort_type", sortType);
+    }
+    // when
+    List<DesignBoardPreviewDto> response = requestDesignBoardPreviews(params, client);
+    // then
+    assertThat(response)
+        .hasSize(postResult.designBoards().size())
+        .isSortedAccordingTo(designBoardComparator(sortType));
+
+    MultiValueMap<String, String> repeatedParams = TestParams.withPaging(0,
+        postResult.designBoards().size());
+    repeatedParams.add("sort_type", sortType == null ? "CREATED_DESC" : sortType);
+    assertThat(requestDesignBoardPreviews(repeatedParams, client))
+        .containsExactlyElementsOf(response);
   }
 
   @Test

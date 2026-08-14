@@ -15,6 +15,7 @@ import com.komentum.post.mapper.DesignBoardMapperSupport;
 import com.komentum.post.service.DesignBoardService;
 import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
+import com.komentum.post.service.enums.PostSortType;
 import com.komentum.post.service.transaction.DesignBoardTransactionService;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.TypeCode;
@@ -76,14 +77,20 @@ public class DesignBoardManagementFacade {
    * */
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable) {
-    return findBoardPreviews(pageable, null, null);
+    return findBoardPreviews(pageable, null, null, PostSortType.CREATED_DESC);
   }
 
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable, String keyword,
       TypeCode typeCode) {
+    return findBoardPreviews(pageable, keyword, typeCode, PostSortType.CREATED_DESC);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable, String keyword,
+      TypeCode typeCode, PostSortType sortType) {
     List<DesignBoardQuery.Preview> preview = designBoardService.findPreviewList(pageable, keyword,
-        typeCode);
+        typeCode, sortType);
     List<Long> postIds = preview.stream()
         .map(DesignBoardQuery.Preview::getPostId)
         .toList();
