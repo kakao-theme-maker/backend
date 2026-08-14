@@ -6,8 +6,11 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.facade.ThemeBoardManagementFacade;
+import com.komentum.post.service.enums.PostSortType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -41,13 +44,27 @@ public class ThemeBoardController {
    * @return 조회한 게시글 목록 반환
    */
   @GetMapping
-  @Operation(summary = "인증된 사용자가 테마 게시글 목록을 조회한다")
+  @Operation(
+      summary = "인증된 사용자가 테마 게시글 목록을 조회한다",
+      parameters = {
+          @Parameter(name = "page", in = ParameterIn.QUERY, description = "페이지 번호 (0부터 시작)",
+              schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")),
+          @Parameter(name = "size", in = ParameterIn.QUERY, description = "페이지당 게시글 수",
+              schema = @Schema(type = "integer", defaultValue = "20", minimum = "1"))
+      })
   public ResponseEntity<List<ThemeBoardPreviewDto>> findThemeBoards(
       @Parameter(description = "게시글 제목/내용 검색어")
       @RequestParam(value = "keyword", required = false) String keyword,
-      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
+      @Parameter(
+          description = "정렬 기준",
+          schema = @Schema(
+              allowableValues = {"CREATED_ASC", "CREATED_DESC", "PREFER_ASC", "PREFER_DESC"},
+              defaultValue = "CREATED_DESC"))
+      @RequestParam(value = "sort_type", defaultValue = "CREATED_DESC")
+      PostSortType sortType,
+      @Parameter(hidden = true) @PageableDefault(size = 20) Pageable pageable) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword));
+        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword, sortType));
   }
 
   /**

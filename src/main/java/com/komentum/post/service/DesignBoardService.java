@@ -39,17 +39,23 @@ public class DesignBoardService {
 
   @Transactional(readOnly = true)
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
-    return findPreviewList(pageable, null, null);
+    return findPreviewList(pageable, null, null, PostSortType.CREATED_DESC);
   }
 
   @Transactional(readOnly = true)
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable, String keyword,
       TypeCode typeCode) {
+    return findPreviewList(pageable, keyword, typeCode, PostSortType.CREATED_DESC);
+  }
+
+  @Transactional(readOnly = true)
+  public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable, String keyword,
+      TypeCode typeCode, PostSortType sortType) {
     PostSearchCondition condition = new PostSearchCondition()
         .withKeyword(keyword)
         .withTypeCode(typeCode);
     return designBoardRepositorySupport.findPreviewList(pageable, condition,
-        List.of(PostSortType.DEFAULT));
+        List.of(sortType));
   }
 
   @Transactional(readOnly = true)
@@ -91,7 +97,7 @@ public class DesignBoardService {
             pageable,
             client,
             condition,
-            List.of(PostSortType.DEFAULT)
+            List.of(PostSortType.CREATED_DESC)
         )
     );
   }
