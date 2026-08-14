@@ -269,7 +269,7 @@ public class DesignBoardControllerTest {
     MultiValueMap<String, String> params = TestParams.withPaging(0,
         postResult.designBoards().size());
     if (sortType != null) {
-      params.add("sort_type", sortType);
+      params.add("sortType", sortType);
     }
     // when
     List<DesignBoardPreviewDto> response = requestDesignBoardPreviews(params, client);
@@ -280,7 +280,7 @@ public class DesignBoardControllerTest {
 
     MultiValueMap<String, String> repeatedParams = TestParams.withPaging(0,
         postResult.designBoards().size());
-    repeatedParams.add("sort_type", sortType == null ? "CREATED_DESC" : sortType);
+    repeatedParams.add("sortType", sortType == null ? "CREATED_DESC" : sortType);
     assertThat(requestDesignBoardPreviews(repeatedParams, client))
         .containsExactlyElementsOf(response);
   }
