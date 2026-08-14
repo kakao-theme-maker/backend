@@ -19,6 +19,14 @@ public interface ThemeImageRepository extends JpaRepository<ThemeImage, ThemeIma
   void deleteByThemeComponentId(
       @Param("themeComponentId") Integer themeComponentId); // theme Image 엔티티 삭제
 
+  @Modifying
+  @Query("""
+      DELETE FROM ThemeImage ti
+      WHERE ti.themeComponent.themeComponentId = :themeComponentId
+        AND ti.componentType.typeCode = :typeCode
+      """)
+  void deleteByThemeComponentIdAndTypeCode(Integer themeComponentId, TypeCode typeCode);
+
   @Query("SELECT ti FROM ThemeImage ti "
       + "JOIN FETCH ti.themeComponent tc "
       + "JOIN FETCH ti.componentType ct "

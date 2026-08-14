@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -138,6 +139,7 @@ public class ThemeImageService {
     Map<Integer, DesignComponent> requestedImageMap = designComponentService.findMapByIdIn(
         typeCodes.values()
             .stream()
+            .filter(Objects::nonNull)
             .map(ThemeImageUpdateRequest::getDesignComponentId)
             .collect(Collectors.toSet()));
     // 기존 theme image 목록 조회
@@ -149,10 +151,18 @@ public class ThemeImageService {
         ));
     // 요청 데이터 기반으로 기존 theme image 수정
     typeCodes.forEach((typeCode, updateRequest) -> {
-      ThemeImage themeImage = themeImages.get(typeCode);
-      DesignComponent requestedImage = requestedImageMap.get(updateRequest.getDesignComponentId());
-      if (themeImage != null && requestedImage != null) {
-        themeImage.update(requestedImage, updateRequest);
+      // updateRequest가 null이면 기존 ThemeImage를 삭제한다
+      if (updateRequest == null) {
+        themeImageRepository.deleteByThemeComponentIdAndTypeCode(themeComponentId, typeCode);
+      }
+      // 값이 모두 존재하면, 기존 ThemeImage를 갱신한다
+      else {
+        ThemeImage themeImage = themeImages.get(typeCode);
+        DesignComponent requestedImage = requestedImageMap.get(
+            updateRequest.getDesignComponentId());
+        if (themeImage != null && requestedImage != null) {
+          themeImage.update(requestedImage, updateRequest);
+        }
       }
     });
   }
