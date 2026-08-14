@@ -41,11 +41,11 @@ import com.komentum.user.domain.User;
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.junit.jupiter.api.AfterEach;
@@ -60,7 +60,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
@@ -134,66 +133,121 @@ class ThemeManageControllerTest {
     assertThat(response.getStyleCodes()).isNotEmpty();
   }
 
+
   @Test
-  @DisplayName("사용자는 테마 이름, 이미지, 색상을 수정할 수 있다")
-  @Transactional
-  public void updateTheme_success() throws Exception {
+  @DisplayName("사용자는 테마 이미지를 수정할 수 있다")
+  public void updateTheme_successWhenUpdateImage() throws Exception {
     // given
-    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
-            designComponentList)
-        .withCountPerUser(1)
-        .build().themeComponents().get(0);
-    TypeCode updatedTypeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
-    StyleCode updatedStyleCode = StyleCode.CHAT_ROOM_BACKGROUND_COLOR;
-    String expectedThemeName = UUID.randomUUID().toString();
-    DesignComponent expectedImage = designComponentList.get(0);
-    String expectedColor = "#FFFFFF";
-    ThemeUpdateRequest updateRequestDto = ThemeUpdateRequest.builder()
-        .themeName(expectedThemeName)
+    ThemeComponent targetTheme = themeComponentScenarioSupport
+        .builder(List.of(testUser), designComponentList)
+        .withCountPerUser(1).build().themeComponents().get(0);
+    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
+        .styleCodes(Map.of())
         .typeCodes(Map.of(
-            updatedTypeCode,
+            TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE,
             ThemeImageUpdateRequest.builder()
-                .designComponentId(expectedImage.getDesignComponentId())
+                .designComponentId(designComponentList.get(0).getDesignComponentId())
                 .inset(new InsetUpdateDto(50, 50, 50, 50, 50, 50))
-                .build(),
-            
-            TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE,
-            ThemeImageUpdateRequest.builder()
-                .designComponentId(expectedImage.getDesignComponentId())
-                .build()
-        ))
-        .styleCodes(Map.of(
-            updatedStyleCode,
-            ThemeStyleUpdateRequest.builder()
-                .color(expectedColor)
                 .build()
         ))
         .build();
     // when
-    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put("/api/themes/{id}",
-        targetTheme.getThemeComponentId());
-    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
-        ExecutionContext.builder()
-            .mockMvc(mockMvc)
-            .body(updateRequestDto)
-            .clientDto(TestClientDto.fromEntity(testUser))
-            .build());
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
+        testUser);
     // then
     resultActions.andExpect(status().isNoContent());
-    ThemeComponent updated = themeComponentRepository.findById(targetTheme.getThemeComponentId())
-        .orElseThrow();
-    ThemeImage updatedThemeImage = updated.getThemeImages().stream()
-        .filter(v -> v.getComponentType().getTypeCode().equals(updatedTypeCode))
+    ThemeImage updatedThemeImage = themeImageRepository.fetchJoinAllByThemeComponentId(
+            targetTheme.getThemeComponentId())
+        .stream().filter(v -> v.getComponentType().getTypeCode()
+            .equals(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE))
         .findFirst().orElseThrow();
-    ThemeStyle updatedThemeStyle = updated.getThemeStyles().stream()
-        .filter(v -> v.getColorStyle().getStyleCode().equals(updatedStyleCode))
+    assertThat(updatedThemeImage.getImageInset().getEdgeInsetBottom()).isEqualTo(50);
+  }
+
+  @Test
+  @DisplayName("테마 이미지에 null을 넣으면 해당 이미지를 삭제한다")
+  public void updateTheme_deleteImageWhenImageIsNull() throws Exception {
+    // given
+    ThemeComponent targetTheme = themeComponentScenarioSupport
+        .builder(List.of(testUser), designComponentList)
+        .withCountPerUser(1).build().themeComponents().get(0);
+    Map<TypeCode, ThemeImageUpdateRequest> updateMap = new HashMap<>();
+    updateMap.put(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE, null);
+    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
+        .styleCodes(Map.of())
+        .typeCodes(updateMap)
+        .build();
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
+        testUser);
+    // then
+    resultActions.andExpect(status().isNoContent());
+    ThemeImage updatedThemeImage = themeImageRepository.fetchJoinAllByThemeComponentId(
+            targetTheme.getThemeComponentId())
+        .stream().filter(v -> v.getComponentType().getTypeCode()
+            .equals(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE))
+        .findFirst().orElse(null);
+    assertThat(updatedThemeImage).isNull();
+  }
+
+  @Test
+  @DisplayName("사용자는 테마 스타일을 수정할 수 있다")
+  public void updateTheme_successWhenUpdateStyle() throws Exception {
+    // given
+    ThemeComponent targetTheme = themeComponentScenarioSupport
+        .builder(List.of(testUser), designComponentList)
+        .withCountPerUser(1).build().themeComponents().get(0);
+    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
+        .styleCodes(Map.of(
+            StyleCode.CHAT_ROOM_BACKGROUND_COLOR,
+            ThemeStyleUpdateRequest.builder()
+                .color("#ffffff").build()
+        ))
+        .typeCodes(Map.of())
+        .build();
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
+        testUser);
+    // then
+    resultActions.andExpect(status().isNoContent());
+    ThemeStyle updatedThemeStyle = themeStyleRepository.fetchJoinAllByThemeComponentId(
+            targetTheme.getThemeComponentId())
+        .stream()
+        .filter(v -> v.getColorStyle().getStyleCode().equals(StyleCode.CHAT_ROOM_BACKGROUND_COLOR))
         .findFirst().orElseThrow();
-    assertThat(updated.getThemeName()).isEqualTo(expectedThemeName);
-    assertThat(updatedThemeImage.getDesignComponent().getDesignComponentId())
-        .isEqualTo(expectedImage.getDesignComponentId());
-    assertThat(updatedThemeImage.getImageInset().getEdgeInsetBottom())
-        .isEqualTo(50);
-    assertThat(updatedThemeStyle.getColor()).isEqualTo(expectedColor);
+    assertThat(updatedThemeStyle.getColor()).isEqualTo("#ffffff");
+  }
+
+  @Test
+  @DisplayName("사용자는 자신이 소유한 테마만 수정할 수 있다")
+  public void updateTheme_failWhenUpdateNotOwnedTheme() throws Exception {
+    // given
+    ThemeComponent targetTheme = themeComponentScenarioSupport
+        .builder(List.of(testUser), designComponentList)
+        .withCountPerUser(1).build().themeComponents().get(0);
+    User other = userScenarioSupport.builder()
+        .withUsers(1)
+        .build().users().get(0);
+    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
+        .styleCodes(Map.of())
+        .typeCodes(Map.of())
+        .build();
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
+        other);
+    // then
+    resultActions.andExpect(status().isForbidden());
+  }
+
+  private ResultActions doThemeUpdateRequest(Integer themeId, ThemeUpdateRequest dto, User client)
+      throws Exception {
+    return mockMvcUtils.performAuthRequest(
+        MockMvcRequestBuilders.put("/api/themes/{id}", themeId),
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .body(dto)
+            .clientDto(TestClientDto.fromEntity(client))
+            .build());
   }
 
   @Test
