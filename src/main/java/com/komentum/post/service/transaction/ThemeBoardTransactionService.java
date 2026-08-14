@@ -18,6 +18,8 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.post.service.ThemeBoardService;
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.dto.ThemeDesignAssetDto;
+import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,16 +41,26 @@ public class ThemeBoardTransactionService {
   private final UserEntityFinder userEntityFinder;
   private final ThemeBoardRepositorySupport themeBoardRepositorySupport;
   private final ThemeBoardRepository themeBoardRepository;
+  private final ThemeImageService themeImageService;
 
+  /**
+   * 테마 게시글 상세 정보를 조회한다
+   * */
   @Transactional(readOnly = true)
-  public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier) {
+  public ThemeBoardDetailDto findThemeBoardDetail(Long postId, String userIdentifier,
+      Boolean withImages) {
     if (!themeBoardRepository.existsByPost_PostId(postId)) {
       throw new EntityNotFoundException("cannot find theme board with post id = " + postId);
     }
     ThemeBoardQuery.Detail detail = themeBoardRepositorySupport
         .findThemeBoardQueryDetail(postId, userEntityFinder.findUserEntity(userIdentifier));
     List<Tag> tags = tagService.findAllByPostId(postId);
-    return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, helper);
+    List<ThemeDesignAssetDto> themeDesignAssetDtoList = Boolean.TRUE.equals(withImages)
+        ? themeImageService.findThemeDesignAssetMap(
+        List.of(detail.getThemeComponentId())).get(detail.getThemeComponentId())
+        : null;
+    return themeBoardMapperSupport.toThemeBoardDetailDto(detail, tags, themeDesignAssetDtoList,
+        helper);
   }
 
   @Transactional

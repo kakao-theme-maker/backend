@@ -75,13 +75,6 @@ public class ThemeComponentSeeder {
   @Transactional
   public List<ThemeComponent> seedPerUser(int size, List<User> authors,
       List<DesignComponent> designComponents) {
-    List<String> userEmailList = authors.stream()
-        .map(User::getUserEmail)
-        .toList();
-    List<ThemeComponent> existing = themeComponentRepository.findByUserEmailIn(userEmailList);
-    if (existing.size() >= size * authors.size()) {
-      return existing;
-    }
     List<ThemeComponent> themeComponents = new ArrayList<>();
     for (User author : authors) {
       for (int i = 0; i < size; i++) {

@@ -97,13 +97,15 @@ public class ThemeBoardController {
    * @param postId 게시글 ID
    * @return 게시글 상세 정보 반환
    */
-  @GetMapping("/{post_id}")
+  @GetMapping("/{postId}")
   @Operation(summary = "인증된 사용자가 ID=post_id인 게시글을 상세 조회한다")
   public ResponseEntity<ThemeBoardDetailDto> findThemeBoardByPostId(
-      @PathVariable("post_id") Long postId,
+      @PathVariable Long postId,
+      @RequestParam(value = "withImages", required = false) Boolean withImages,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.findThemeBoardDetail(postId, userDetails.getUsername()));
+        themeBoardManagementFacade.findThemeBoardDetail(postId, userDetails.getUsername(),
+            withImages));
   }
 
   @GetMapping("/details")
@@ -122,11 +124,12 @@ public class ThemeBoardController {
   public ResponseEntity<List<ThemeBoardDetailDto>> findThemeBoardDetails(
       @Parameter(description = "첫 번째 페이지 최상단에 고정할 게시글 ID")
       @RequestParam(value = "pinned_post_id", required = false) Long pinnedPostId,
+      @RequestParam(value = "withImages", required = false) Boolean withImages,
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     List<ThemeBoardDetailDto> response = themeBoardManagementFacade.findThemeBoardDetails(pageable,
-        pinnedPostId, userDetails.getUsername());
+        pinnedPostId, userDetails.getUsername(), withImages);
     return ResponseEntity.ok(response);
   }
 
