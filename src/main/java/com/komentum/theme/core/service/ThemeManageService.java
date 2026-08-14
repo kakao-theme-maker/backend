@@ -80,7 +80,7 @@ public class ThemeManageService {
             .themeName(randomThemeName)
             .userEmail(targetUser.getUserEmail())
             .versionName(randomThemeName + ".0.0.1")
-            .versionNumber("0")
+            .versionNumber("1")
             .isPublic(true)
             .isDone(false)
             .build()

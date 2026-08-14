@@ -39,7 +39,7 @@ public class ThemeComponentSeeder {
     return ThemeComponent.builder()
         .themeName(faker.lorem().word())
         .versionName("1.1.1.1")
-        .versionNumber("0")
+        .versionNumber("1")
         .isDone(true)
         .isPublic(true)
         .themeType(themeType)

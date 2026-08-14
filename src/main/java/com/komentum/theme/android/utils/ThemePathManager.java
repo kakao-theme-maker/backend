@@ -78,6 +78,11 @@ public class ThemePathManager {
         .resolve("theme");
   }
 
+  public static Path getAndroidBuildGradlePath(String themeId) {
+    return getThemeSourceDir(themeId)
+        .resolve("build.gradle.kts");
+  }
+
   /**
    * <p>테마 폴더의 빌드 결과물에 있는 빌드 결과물 경로를 반환한다.</p>
    * <p>빌드 결과물의 이름은 docker 내 테마 폴더 이름을 따라간다.</p>

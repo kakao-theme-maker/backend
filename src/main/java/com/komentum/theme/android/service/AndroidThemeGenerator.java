@@ -87,7 +87,7 @@ public class AndroidThemeGenerator {
       androidMetaDataEditor.editThemeName(themeId.toString(), themeComponent.getThemeName());
       // 3. 리소스가 수정된 임시 테마를 Docker 호스트 볼륨 마운트를 통해 빌드한다
       ProcessBuilder pb = createProcessBuilderForApkBuild(sourceThemePath,
-          themeComponent.getThemeCode());
+          themeComponent.getThemeCode(), themeComponent.getVersionNumber());
       dockerProcessRunner.runDockerProcess(pb);
       // 4. Docker 호스트 볼륨 마운트를 통해 빌드한 결과물을 FileManager로 업로드 및 반환한다
       return uploadTheme(themeId);
@@ -185,7 +185,7 @@ public class AndroidThemeGenerator {
    * @return Docker 실행 명령어
    */
   private ProcessBuilder createProcessBuilderForApkBuild(Path sourceThemePath,
-      String themeIdentifier) {
+      String themeIdentifier, String versionCode) {
     String dockerImageFullName =
         dockerImageProperties.getImage() + ":" + dockerImageProperties.getTag();
     List<String> command = List.of(
@@ -199,6 +199,7 @@ public class AndroidThemeGenerator {
         dockerImageFullName,
         "assembleRelease",
         "-PandroidApplicationId=" + "com.kakao.talk.theme." + themeIdentifier,
+        "-PversionCode=" + versionCode,
         "-x", "lint",
         "-x", "test"
     );
