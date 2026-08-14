@@ -473,7 +473,7 @@ class ThemeBoardControllerTest {
     mockMvc.perform(mockMvcUtils.addAuthentication(
             get("/api/theme-boards").params(params), TestClientDto.fromEntity(testClient)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].component_types").doesNotExist());
+        .andExpect(jsonPath("$[0].componentTypes").doesNotExist());
   }
 
   @Test
@@ -488,7 +488,7 @@ class ThemeBoardControllerTest {
             get("/api/theme-boards/{postId}", targetThemeBoard.getPost().getPostId()),
             TestClientDto.fromEntity(testClient)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.component_types").doesNotExist());
+        .andExpect(jsonPath("$.componentTypes").doesNotExist());
   }
 
   @Test
