@@ -7,8 +7,11 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
 import com.komentum.post.facade.DesignBoardManagementFacade;
+import com.komentum.post.service.enums.PostSortType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -39,15 +42,29 @@ public class DesignBoardController {
    * 디자인 에셋 게시글 목록 조회
    */
   @GetMapping
-  @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글 목록을 조회힌다")
+  @Operation(
+      summary = "현재 인증된 사용자가 디자인 에셋 게시글 목록을 조회힌다",
+      parameters = {
+          @Parameter(name = "page", in = ParameterIn.QUERY, description = "페이지 번호 (0부터 시작)",
+              schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")),
+          @Parameter(name = "size", in = ParameterIn.QUERY, description = "페이지당 게시글 수",
+              schema = @Schema(type = "integer", defaultValue = "20", minimum = "1"))
+      })
   public ResponseEntity<List<DesignBoardPreviewDto>> findDesignBoards(
       @Parameter(description = "게시글 제목/내용 검색어")
       @RequestParam(value = "keyword", required = false) String keyword,
       @Parameter(description = "component type code")
       @RequestParam(value = "type_code", required = false) TypeCode typeCode,
-      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
+      @Parameter(
+          description = "정렬 기준",
+          schema = @Schema(
+              allowableValues = {"CREATED_ASC", "CREATED_DESC", "PREFER_ASC", "PREFER_DESC"},
+              defaultValue = "CREATED_DESC"))
+      @RequestParam(value = "sort_type", defaultValue = "CREATED_DESC")
+      PostSortType sortType,
+      @Parameter(hidden = true) @PageableDefault(size = 20) Pageable pageable) {
     return ResponseEntity.ok(
-        designBoardManagementFacade.findBoardPreviews(pageable, keyword, typeCode));
+        designBoardManagementFacade.findBoardPreviews(pageable, keyword, typeCode, sortType));
   }
 
   /**

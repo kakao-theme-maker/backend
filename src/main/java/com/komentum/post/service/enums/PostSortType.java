@@ -5,7 +5,8 @@ package com.komentum.post.service.enums;
  * Post, DesignBoard, ThemeBoard 정렬 기준 설정 시 사용 가능
  * */
 public enum PostSortType {
-  DEFAULT,
+  CREATED_ASC,
+  CREATED_DESC,
   PREFER_ASC,
   PREFER_DESC
 }

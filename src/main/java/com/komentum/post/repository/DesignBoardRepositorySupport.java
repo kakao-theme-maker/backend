@@ -104,7 +104,8 @@ public class DesignBoardRepositorySupport {
   }
 
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable) {
-    return findPreviewList(pageable, new PostSearchCondition(), List.of(PostSortType.DEFAULT));
+    return findPreviewList(pageable, new PostSearchCondition(),
+        List.of(PostSortType.CREATED_DESC));
   }
 
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable,
@@ -143,6 +144,7 @@ public class DesignBoardRepositorySupport {
             designBoard.designBoardId
         )
         .orderBy(orderSpecifiers)
+        .orderBy(designBoard.designBoardId.desc())
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
