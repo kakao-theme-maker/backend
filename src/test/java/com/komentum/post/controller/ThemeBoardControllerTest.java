@@ -20,6 +20,7 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.repository.PostRepository;
+import com.komentum.post.repository.PreferRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.MockMultipartFileUtils;
@@ -67,6 +68,9 @@ class ThemeBoardControllerTest {
 
   @Autowired
   private PostRepository postRepository;
+
+  @Autowired
+  private PreferRepository preferRepository;
 
   @Autowired
   private MockMvc mockMvc;
@@ -197,10 +201,10 @@ class ThemeBoardControllerTest {
 
   static Stream<Arguments> themeBoardSortCases() {
     return Stream.of(
-        Arguments.of("CREATED_ASC", List.of(0, 1, 2, 4, 3)),
-        Arguments.of("CREATED_DESC", List.of(4, 3, 2, 1, 0)),
-        Arguments.of("PREFER_ASC", List.of(4, 3, 2, 1, 0)),
-        Arguments.of("PREFER_DESC", List.of(0, 1, 2, 4, 3))
+        Arguments.of("CREATED_ASC", List.of(0, 1, 2, 3, 4, 5, 6, 7)),
+        Arguments.of("CREATED_DESC", List.of(7, 6, 5, 4, 3, 2, 1, 0)),
+        Arguments.of("PREFER_ASC", List.of(0, 7, 6, 5, 4, 3, 2, 1)),
+        Arguments.of("PREFER_DESC", List.of(7, 6, 5, 4, 3, 2, 1, 0))
     );
   }
 
@@ -209,13 +213,21 @@ class ThemeBoardControllerTest {
   @DisplayName("테마 게시글 목록을 생성 시간 또는 좋아요 수로 정렬한다.")
   void findThemeBoards_sort(String sortType, List<Integer> expectedIndexes) throws Exception {
     // given
-    User client = boardDetailDataGenerator.getUsers().get(0);
+    User client = testClient;
+    List<Post> posts = postScenarioResult.posts();
+    preferRepository.deleteAll(preferRepository.fetchJoinByPostIn(List.of(posts.get(0))));
+    LocalDateTime baseTime = LocalDateTime.of(2025, 1, 1, 0, 0);
+    for (int i = 0; i < posts.size(); i++) {
+      posts.get(i).setCreatedAt(baseTime.plusDays(i));
+    }
+    postRepository.saveAll(posts);
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
-    MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
+    MultiValueMap<String, String> params = TestParams.withPaging(0,
+        postScenarioResult.themeBoards().size());
     params.add("sort_type", sortType);
     List<Long> expectedPostIds = expectedIndexes.stream()
-        .map(index -> boardDetailDataGenerator.getThemeBoards().get(index).getPost().getPostId())
+        .map(index -> postScenarioResult.themeBoards().get(index).getPost().getPostId())
         .toList();
     // when
     List<ThemeBoardPreviewDto> response = requestThemeBoardPreviews(params, client);
@@ -229,7 +241,7 @@ class ThemeBoardControllerTest {
   @DisplayName("테마 게시글 정렬값을 생략하면 생성 시간 내림차순으로 정렬한다.")
   void findThemeBoards_defaultSort() throws Exception {
     // given
-    User client = boardDetailDataGenerator.getUsers().get(0);
+    User client = testClient;
     Mockito.when(fileManager.resolveFilePath(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     MultiValueMap<String, String> defaultParams = TestParams.withPaging(0, 5);
@@ -259,7 +271,7 @@ class ThemeBoardControllerTest {
   @DisplayName("지원하지 않는 테마 게시글 정렬값은 400을 반환한다.")
   void findThemeBoards_invalidSort(String sortType) throws Exception {
     // given
-    User client = boardDetailDataGenerator.getUsers().get(0);
+    User client = testClient;
     MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
     params.add("sort_type", sortType);
     // when & then
@@ -538,8 +550,8 @@ class ThemeBoardControllerTest {
     secondPageParams.add("keyword", keyword);
     secondPageParams.add("sort_type", "PREFER_ASC");
     // when
-    List<ThemeBoardPreviewDto> firstPage = requestThemeBoardPreviews(firstPageParams, client);
-    List<ThemeBoardPreviewDto> secondPage = requestThemeBoardPreviews(secondPageParams, client);
+    List<ThemeBoardPreviewDto> firstPage = requestThemeBoardPreviews(firstPageParams, testClient);
+    List<ThemeBoardPreviewDto> secondPage = requestThemeBoardPreviews(secondPageParams, testClient);
     // then
     assertThat(firstPage)
         .extracting(ThemeBoardPreviewDto::getPostId)
