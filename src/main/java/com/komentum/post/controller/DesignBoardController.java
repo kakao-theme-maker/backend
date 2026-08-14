@@ -1,7 +1,7 @@
 package com.komentum.post.controller;
 
-import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
@@ -54,13 +54,13 @@ public class DesignBoardController {
       @Parameter(description = "게시글 제목/내용 검색어")
       @RequestParam(value = "keyword", required = false) String keyword,
       @Parameter(description = "component type code")
-      @RequestParam(value = "type_code", required = false) TypeCode typeCode,
+      @RequestParam(value = "typeCode", required = false) TypeCode typeCode,
       @Parameter(
           description = "정렬 기준",
           schema = @Schema(
               allowableValues = {"CREATED_ASC", "CREATED_DESC", "PREFER_ASC", "PREFER_DESC"},
               defaultValue = "CREATED_DESC"))
-      @RequestParam(value = "sort_type", defaultValue = "CREATED_DESC")
+      @RequestParam(value = "sortType", defaultValue = "CREATED_DESC")
       PostSortType sortType,
       @Parameter(hidden = true) @PageableDefault(size = 20) Pageable pageable) {
     return ResponseEntity.ok(
