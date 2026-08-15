@@ -77,7 +77,7 @@ public class IosThemeCssEditor {
         throw new IllegalArgumentException(
             "[IosThemeCssEditor] themeImage is not bubble : " + typeCode);
       }
-      if (bubble.getImageInset() == null || !bubble.getImageInset().isValid()) {
+      if (bubble.getImageInset() == null || !bubble.getImageInset().hasAllValue()) {
         throw new IllegalArgumentException(
             "[IosThemeCssEditor] invalid image bubble inset");
       }

@@ -69,6 +69,11 @@ public final class NinePatchConverter {
     int width = source.getWidth();
     int height = source.getHeight();
     BufferedImage result = createWithoutMarker(source);
+    // inset이 유효하지 않다면 ( source의 width나 height의 범위를 벗어난다면 ) 예외 처리
+    if (!imageInset.isInImageRange(width, height)) {
+      throw new IllegalArgumentException(
+          "[NinePatchConverter] Invalid image inset: inset out of bound");
+    }
     /*
      * 위쪽 Border에 StretchX 영역에 대한 검은 선을 그린다
      * Android는 이 검은 선이 표시된 가로 구간만 이미지를 늘린다.

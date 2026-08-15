@@ -27,13 +27,23 @@ public class ImageInset {
   private Integer edgeInsetBottom;
   private Integer edgeInsetRight;
 
-  public boolean isValid() {
+  public boolean hasAllValue() {
     return stretchX != null &&
         stretchY != null &&
         edgeInsetTop != null &&
         edgeInsetLeft != null &&
         edgeInsetBottom != null &&
         edgeInsetRight != null;
+  }
+
+  public boolean isInImageRange(int width, int height) {
+    return hasAllValue() &&
+        (stretchX >= 0 && stretchX <= width) &&
+        (stretchY >= 0 && stretchY <= height) &&
+        (edgeInsetTop >= 0 && edgeInsetTop <= height) &&
+        (edgeInsetLeft >= 0 && edgeInsetLeft <= width) &&
+        (edgeInsetBottom >= 0 && edgeInsetBottom <= height) &&
+        (edgeInsetRight >= 0 && edgeInsetRight <= width);
   }
 
   public static ImageInset from(InsetUpdateDto insetUpdateDto) {
