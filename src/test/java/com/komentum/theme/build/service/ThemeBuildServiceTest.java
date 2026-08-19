@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.komentum.designcomponent.enums.Platform;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.security.UserRole;
+import com.komentum.test.fixture.theme.ThemeBuildFixture;
 import com.komentum.theme.build.domain.ThemeBuildJob;
 import com.komentum.theme.build.domain.ThemeBuildStatus;
 import com.komentum.theme.build.dto.ThemeBuildStartResponse;
@@ -20,7 +21,6 @@ import com.komentum.theme.core.service.ThemeManageService;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -70,8 +70,9 @@ class ThemeBuildServiceTest {
 
   @BeforeEach
   void setUp() {
-    owner = saveUser("theme-build-service-owner@test.com", UserRole.USER);
-    theme = saveTheme(owner);
+    owner = userRepository.save(
+        ThemeBuildFixture.user("theme-build-service-owner@test.com", UserRole.USER));
+    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner.getUserEmail()));
     authenticate(owner);
   }
 
@@ -225,25 +226,5 @@ class ThemeBuildServiceTest {
             null,
             userDetails.getAuthorities()
         ));
-  }
-
-  private User saveUser(String email, UserRole role) {
-    return userRepository.save(User.builder()
-        .publicUserId(UUID.randomUUID().toString())
-        .userEmail(email)
-        .name("theme build service test user")
-        .role(role)
-        .build());
-  }
-
-  private ThemeComponent saveTheme(User user) {
-    return themeComponentRepository.save(ThemeComponent.builder()
-        .userEmail(user.getUserEmail())
-        .themeName("theme build service test")
-        .versionNumber("1")
-        .versionName("1.0.0")
-        .isDone(true)
-        .isPublic(false)
-        .build());
   }
 }

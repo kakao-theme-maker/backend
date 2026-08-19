@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.designcomponent.enums.Platform;
 import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.fixture.theme.ThemeBuildFixture;
 import com.komentum.theme.build.domain.ThemeBuildJob;
 import com.komentum.theme.build.domain.ThemeBuildStatus;
 import com.komentum.theme.build.repository.ThemeBuildJobRepository;
@@ -32,14 +33,8 @@ class ThemeBuildStateServiceTest {
 
   @BeforeEach
   void setUp() {
-    theme = themeComponentRepository.save(ThemeComponent.builder()
-        .userEmail("theme-build-state@test.com")
-        .themeName("theme build state test")
-        .versionNumber("1")
-        .versionName("1.0.0")
-        .isDone(true)
-        .isPublic(false)
-        .build());
+    theme = themeComponentRepository.save(
+        ThemeBuildFixture.theme("theme-build-state@test.com"));
   }
 
   @AfterEach
