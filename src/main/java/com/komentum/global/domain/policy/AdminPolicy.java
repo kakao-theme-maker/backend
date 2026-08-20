@@ -12,7 +12,7 @@ public class AdminPolicy {
   private final CurrentPrincipalProvider principalProvider;
 
   /**
-   * 인증 정보에 저장된 email과 owner email이 동일하거나, admin 권한을 갖는 사용자라면 TRUE 반환
+   * 현재 스레드에 저장된 사용자가 Admin 권한을 갖는지 확인한다.
    * */
   public boolean validate() {
     return principalProvider.retrievePrincipal()
