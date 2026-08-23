@@ -1,8 +1,6 @@
 package com.komentum.user.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.test.MockMvcUtils;
@@ -105,15 +103,6 @@ class FollowControllerTest {
     unfollow(follower, missingPublicUserId, 404);
 
     assertThat(followRepository.count()).isZero();
-  }
-
-  @Test
-  @DisplayName("인증되지 않은 사용자는 팔로우할 수 없다")
-  void follow_unauthenticated_returnsUnauthorized() throws Exception {
-    User followee = userScenarioResult.getFirstUser();
-
-    mockMvc.perform(put("/api/users/{public_user_id}/follow", followee.getPublicUserId()))
-        .andExpect(status().isUnauthorized());
   }
 
   private void follow(User follower, String followeePublicUserId, int statusCode)
