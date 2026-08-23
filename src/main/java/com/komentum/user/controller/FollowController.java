@@ -20,21 +20,21 @@ public class FollowController {
 
   private final FollowService followService;
 
-  @PutMapping("/{public_user_id}/follow")
+  @PutMapping("/{publicUserId}/follow")
   @Operation(summary = "현재 인증된 사용자가 대상 사용자를 팔로우한다")
   public ResponseEntity<Void> follow(
       @Parameter(description = "팔로우할 사용자의 공개 ID")
-      @PathVariable("public_user_id") String followeePublicUserId,
+      @PathVariable("publicUserId") String followeePublicUserId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     followService.follow(userDetails.getUsername(), followeePublicUserId);
     return ResponseEntity.ok().build();
   }
 
-  @DeleteMapping("/{public_user_id}/follow")
+  @DeleteMapping("/{publicUserId}/follow")
   @Operation(summary = "현재 인증된 사용자가 대상 사용자를 팔로우 해제한다")
   public ResponseEntity<Void> unfollow(
       @Parameter(description = "팔로우 해제할 사용자의 공개 ID")
-      @PathVariable("public_user_id") String followeePublicUserId,
+      @PathVariable("publicUserId") String followeePublicUserId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     followService.unfollow(userDetails.getUsername(), followeePublicUserId);
     return ResponseEntity.noContent().build();
