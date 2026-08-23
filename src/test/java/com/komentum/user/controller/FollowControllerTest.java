@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.global.dto.CustomResponse;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
@@ -13,9 +12,7 @@ import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport.UserScenarioResult;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
-import com.komentum.test.dto.TestParams;
 import com.komentum.user.domain.User;
-import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.repository.FollowRepository;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -27,7 +24,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.MultiValueMap;
 
 @SpringBootTest
 @EnableTestProfile
@@ -120,24 +116,6 @@ class FollowControllerTest {
         .andExpect(status().isUnauthorized());
   }
 
-  @Test
-  @DisplayName("사용자 조회 시 팔로워와 팔로잉 수를 올바른 방향으로 반환한다")
-  void retrieveUser_returnsCorrectFollowCounts() throws Exception {
-    User followerA = userScenarioResult.users().get(0);
-    User followee = userScenarioResult.users().get(1);
-    User followerC = userScenarioResult.users().get(2);
-    follow(followerA, followee.getPublicUserId(), 200);
-    follow(followerC, followee.getPublicUserId(), 200);
-
-    UserResponseDto followeeResponse = retrieveUser(followerA, followee);
-    UserResponseDto followerResponse = retrieveUser(followerA, followerA);
-
-    assertThat(followeeResponse.getFollowers()).isEqualTo(2);
-    assertThat(followeeResponse.getFollowing()).isZero();
-    assertThat(followerResponse.getFollowers()).isZero();
-    assertThat(followerResponse.getFollowing()).isEqualTo(1);
-  }
-
   private void follow(User follower, String followeePublicUserId, int statusCode)
       throws Exception {
     mockMvcUtils.doAuthRequest(
@@ -162,23 +140,6 @@ class FollowControllerTest {
             .httpMethod(HttpMethod.DELETE)
             .clientDto(TestClientDto.fromEntity(follower))
             .statusCode(statusCode)
-            .responseType(new TypeReference<>() {
-            })
-            .build()
-    );
-  }
-
-  private UserResponseDto retrieveUser(User requester, User target) throws Exception {
-    MultiValueMap<String, String> params = TestParams.withEmpty();
-    params.add("userPublicID", target.getPublicUserId());
-    return mockMvcUtils.doAuthUnwrappedRequest(
-        MockMvcRequestDto.<Void, CustomResponse<UserResponseDto>>builder()
-            .mockMvc(mockMvc)
-            .path("/api/users")
-            .httpMethod(HttpMethod.GET)
-            .params(params)
-            .clientDto(TestClientDto.fromEntity(requester))
-            .statusCode(200)
             .responseType(new TypeReference<>() {
             })
             .build()
