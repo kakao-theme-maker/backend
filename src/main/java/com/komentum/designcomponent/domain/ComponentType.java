@@ -1,6 +1,7 @@
 package com.komentum.designcomponent.domain;
 
 import com.komentum.designcomponent.dto.ComponentTypeUpdateRequest;
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.TypeCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,6 +43,14 @@ public class ComponentType {
   @Column(nullable = false)
   private String name;
 
+  /**
+   * 이 component type이 공통으로 사용되는지, 특정 플랫폼 전용인지를 나타낸다.
+   */
+  @Enumerated(EnumType.STRING)
+  @Builder.Default
+  @Column(name = "platform_scope", nullable = false)
+  private PlatformScope platformScope = PlatformScope.COMMON;
+
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
@@ -60,12 +69,16 @@ public class ComponentType {
     if (componentType.getName() != null) {
       this.name = componentType.getName();
     }
+    if (componentType.getPlatformScope() != null) {
+      this.platformScope = componentType.getPlatformScope();
+    }
   }
 
   public void replace(ComponentType componentType) {
     this.explain = componentType.getExplain();
     this.name = componentType.getName();
     this.typeCode = componentType.getTypeCode();
+    this.platformScope = componentType.getPlatformScope();
   }
 
   public boolean isSame(ComponentType other) {
@@ -74,6 +87,7 @@ public class ComponentType {
     }
     return Objects.equals(this.explain, other.explain)
         && this.typeCode.equals(other.typeCode)
-        && this.name.equals(other.name);
+        && this.name.equals(other.name)
+        && this.platformScope == other.platformScope;
   }
 }
