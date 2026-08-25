@@ -147,6 +147,7 @@ class ThemeManageControllerTest {
     String expectedThemeName = UUID.randomUUID().toString();
     DesignComponent expectedImage = designComponentList.get(0);
     String expectedColor = "#FFFFFF";
+    Integer expectedAlpha = 80;
     ThemeUpdateRequest updateRequestDto = ThemeUpdateRequest.builder()
         .themeName(expectedThemeName)
         .typeCodes(Map.of(
@@ -159,6 +160,7 @@ class ThemeManageControllerTest {
             updatedStyleCode,
             ThemeStyleUpdateRequest.builder()
                 .color(expectedColor)
+                .alpha(expectedAlpha)
                 .build()
         ))
         .build();
@@ -185,6 +187,102 @@ class ThemeManageControllerTest {
     assertThat(updatedThemeImage.getDesignComponent().getDesignComponentId())
         .isEqualTo(expectedImage.getDesignComponentId());
     assertThat(updatedThemeStyle.getColor()).isEqualTo(expectedColor);
+    assertThat(updatedThemeStyle.getAlpha()).isEqualTo(expectedAlpha);
+  }
+
+  @Test
+  @DisplayName("color와 alpha 중 alpha 값이 유효 범위(0~100)를 벗어나면 테마 수정에 실패한다")
+  @Transactional
+  public void updateTheme_invalidAlphaRange_fail() throws Exception {
+    // given
+    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
+            designComponentList)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
+    StyleCode updatedStyleCode = StyleCode.CHAT_ROOM_BACKGROUND_COLOR;
+    ThemeUpdateRequest updateRequestDto = ThemeUpdateRequest.builder()
+        .styleCodes(Map.of(
+            updatedStyleCode,
+            ThemeStyleUpdateRequest.builder()
+                .color("#FFFFFF")
+                .alpha(150)
+                .build()
+        ))
+        .build();
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put("/api/themes/{id}",
+        targetTheme.getThemeComponentId());
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .body(updateRequestDto)
+            .clientDto(TestClientDto.fromEntity(testUser))
+            .build());
+    // then
+    resultActions.andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("color 값 없이 alpha 값만 전달되면 테마 수정에 실패한다")
+  @Transactional
+  public void updateTheme_colorMissing_fail() throws Exception {
+    // given
+    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
+            designComponentList)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
+    StyleCode updatedStyleCode = StyleCode.CHAT_ROOM_BACKGROUND_COLOR;
+    ThemeUpdateRequest updateRequestDto = ThemeUpdateRequest.builder()
+        .styleCodes(Map.of(
+            updatedStyleCode,
+            ThemeStyleUpdateRequest.builder()
+                .alpha(80)
+                .build()
+        ))
+        .build();
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put("/api/themes/{id}",
+        targetTheme.getThemeComponentId());
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .body(updateRequestDto)
+            .clientDto(TestClientDto.fromEntity(testUser))
+            .build());
+    // then
+    resultActions.andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("잘못된 형식의 color 값이 전달되면 테마 수정에 실패한다")
+  @Transactional
+  public void updateTheme_malformedColor_fail() throws Exception {
+    // given
+    ThemeComponent targetTheme = themeComponentScenarioSupport.builder(List.of(testUser),
+            designComponentList)
+        .withCountPerUser(1)
+        .build().themeComponents().get(0);
+    StyleCode updatedStyleCode = StyleCode.CHAT_ROOM_BACKGROUND_COLOR;
+    ThemeUpdateRequest updateRequestDto = ThemeUpdateRequest.builder()
+        .styleCodes(Map.of(
+            updatedStyleCode,
+            ThemeStyleUpdateRequest.builder()
+                .color("not-a-color")
+                .alpha(80)
+                .build()
+        ))
+        .build();
+    // when
+    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put("/api/themes/{id}",
+        targetTheme.getThemeComponentId());
+    ResultActions resultActions = mockMvcUtils.performAuthRequest(request,
+        ExecutionContext.builder()
+            .mockMvc(mockMvc)
+            .body(updateRequestDto)
+            .clientDto(TestClientDto.fromEntity(testUser))
+            .build());
+    // then
+    resultActions.andExpect(status().isBadRequest());
   }
 
   @Test
