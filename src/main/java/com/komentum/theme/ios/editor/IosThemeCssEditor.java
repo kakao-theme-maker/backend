@@ -73,7 +73,7 @@ public class IosThemeCssEditor {
       if (themeStyle == null) {
         continue;
       }
-      String color = normalizeCssColor(themeStyle.getColor());
+      String color = themeStyle.getColorWithAlphaRgba();
       if (color == null) {
         continue;
       }
@@ -115,27 +115,5 @@ public class IosThemeCssEditor {
       return themeComponent.getVersionName();
     }
     return themeComponent.getVersionNumber();
-  }
-
-  private String normalizeCssColor(String color) {
-    if (color == null || color.isBlank()) {
-      return null;
-    }
-    String normalized = color.trim();
-    if (normalized.matches("[0-9a-fA-F]{6}")) {
-      return "#" + normalized;
-    }
-    // 공통 테마의 8자리 색상은 RRGGBBAA 형식이다.
-    // 현재 iOS CSS에는 알파를 반영하지 않으므로 뒤의 AA를 제외한 #RRGGBB만 기록한다.
-    if (normalized.matches("[0-9a-fA-F]{8}")) {
-      return "#" + normalized.substring(0, 6);
-    }
-    if (normalized.matches("#[0-9a-fA-F]{8}")) {
-      return normalized.substring(0, 7);
-    }
-    if (normalized.matches("#[0-9a-fA-F]{6}")) {
-      return normalized;
-    }
-    return null;
   }
 }
