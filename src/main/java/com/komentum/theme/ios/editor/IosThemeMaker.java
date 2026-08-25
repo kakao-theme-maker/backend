@@ -49,10 +49,17 @@ public class IosThemeMaker {
       validateAccess(themeComponent);
       // 연관 엔티티를 fetch join으로 먼저 조회한 뒤,
       // 이미지 다운로드·파일 처리·업로드는 DB 트랜잭션 밖에서 수행한다.
+      // 공통 데이터와 iOS 전용 데이터만 사용하고, Android 전용 데이터는 제외한다.
       List<ThemeImage> themeImages =
-          themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId);
+          themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId).stream()
+              .filter(themeImage -> themeImage.getComponentType().getPlatformScope()
+                  .supports(Platform.IOS))
+              .toList();
       List<ThemeStyle> themeStyles =
-          themeStyleService.fetchJoinThemeStylesByThemeComponentId(themeComponentId);
+          themeStyleService.fetchJoinThemeStylesByThemeComponentId(themeComponentId).stream()
+              .filter(themeStyle -> themeStyle.getColorStyle().getPlatformScope()
+                  .supports(Platform.IOS))
+              .toList();
       List<PlatformComponentType> platformComponentTypes =
           platformComponentTypeRepository.fetchJoinAllByPlatform(Platform.IOS);
       List<PlatformColorStyle> platformColorStyles =
