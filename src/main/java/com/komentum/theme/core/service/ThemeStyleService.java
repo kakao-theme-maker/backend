@@ -33,7 +33,7 @@ public class ThemeStyleService {
     Map<StyleCode, StyleCodeInfo> res = themeStyles.stream()
         .collect(Collectors.toMap(
             ts -> ts.getColorStyle().getStyleCode(),
-            ts -> StyleCodeInfo.of(ts.getColor())
+            ts -> StyleCodeInfo.of(ts.getColor(), ts.getAlpha(), ts.getColorStyle().getPlatformScope())
         ));
     if (res.size() != StyleCode.values().length) {
       log.warn(

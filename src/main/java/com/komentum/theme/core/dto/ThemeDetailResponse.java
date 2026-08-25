@@ -1,6 +1,7 @@
 package com.komentum.theme.core.dto;
 
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.enums.TypeCode;
 import java.util.Map;
@@ -26,11 +27,13 @@ public class ThemeDetailResponse {
 
     Integer designComponentId;
     String imageUrl;
+    PlatformScope platformScope;
 
-    public static TypeCodeInfo of(DesignComponent designComponent) {
+    public static TypeCodeInfo of(DesignComponent designComponent, PlatformScope platformScope) {
       return TypeCodeInfo.builder()
           .designComponentId(designComponent.getDesignComponentId())
           .imageUrl(designComponent.getImageUrl())
+          .platformScope(platformScope)
           .build();
     }
   }
@@ -43,9 +46,15 @@ public class ThemeDetailResponse {
   public static class StyleCodeInfo {
 
     String color;
+    Integer alpha;
+    PlatformScope platformScope;
 
-    public static StyleCodeInfo of(String color) {
-      return StyleCodeInfo.builder().color(color).build();
+    public static StyleCodeInfo of(String color, Integer alpha, PlatformScope platformScope) {
+      return StyleCodeInfo.builder()
+          .color(color)
+          .alpha(alpha)
+          .platformScope(platformScope)
+          .build();
     }
   }
 
