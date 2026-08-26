@@ -16,6 +16,7 @@ import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
+import com.komentum.user.repository.FollowRepository;
 import com.komentum.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -42,6 +43,7 @@ public class TestDataRemover {
   private final DesignBoardRepository designBoardRepository;
   private final PlatformComponentTypeRepository platformComponentTypeRepository;
   private final PlatformColorStyleRepository platformColorStyleRepository;
+  private final FollowRepository followRepository;
 
   /**
    * 모든 테스트 코드에서 사용할 수 있는 데이터베이스 clean용 클래스
@@ -72,6 +74,8 @@ public class TestDataRemover {
     // delete component type and color style
     componentTypeRepository.deleteAll();
     colorStyleRepository.deleteAll();
+    // delete follow
+    followRepository.deleteAll();
     // delete user
     userRepository.deleteAll();
   }

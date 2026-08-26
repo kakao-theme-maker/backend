@@ -17,12 +17,14 @@ import com.komentum.test.data.UserDataGenerator;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.user.domain.Follow;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserBirthUpdateDto;
 import com.komentum.user.dto.UserGenderUpdateDto;
 import com.komentum.user.dto.UserNameUpdateDto;
 import com.komentum.user.dto.UserResponseDto;
+import com.komentum.user.repository.FollowRepository;
 import com.komentum.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -56,6 +58,8 @@ public class UserControllerTest {
   private UserDataGenerator userDataGenerator;
   @Autowired
   private UserRepository userRepository;
+  @Autowired
+  private FollowRepository followRepository;
   @Autowired
   private PostRepository postRepository;
   @MockitoBean
@@ -100,9 +104,18 @@ public class UserControllerTest {
   }
 
   @Test
-  @DisplayName("유저 조회")
-  void inquiryUserTest() throws Exception {
+  @DisplayName("사용자 조회 시 사용자 정보와 팔로워·팔로잉 수를 올바른 방향으로 반환한다")
+  void retrieveUser_returnsUserInfoAndCorrectFollowCounts() throws Exception {
     //given
+    List<User> relatedUsers = userDataGenerator.generateTestUsers(2);
+    User followerA = relatedUsers.get(0);
+    User followerB = relatedUsers.get(1);
+    followRepository.saveAllAndFlush(List.of(
+        new Follow(followerA, user),
+        new Follow(followerB, user),
+        new Follow(user, followerA)
+    ));
+
     UserResponseDto userResponseDto =
         UserResponseDto.builder()
             .userEmail(user.getUserEmail())
@@ -113,8 +126,8 @@ public class UserControllerTest {
             .profileImageName(user.getProfileImgName())
             .publicUserId(user.getPublicUserId())
             .uploads(1)
-            .followers(0)
-            .following(0)
+            .followers(2)
+            .following(1)
             .build();
 
     //when
