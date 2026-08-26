@@ -1,6 +1,5 @@
 package com.komentum.post.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.post.domain.CategoryPost;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -20,10 +19,8 @@ public class CategoryPostDto {
   public static class CategoryPostResponse {
 
     @Schema(description = "카테고리 ID")
-    @JsonProperty("category_id")
     Long categoryId;
     @Schema(description = "게시글 ID")
-    @JsonProperty("post_id")
     Long postId;
 
     public static CategoryPostResponse from(CategoryPost categoryPost) {

@@ -31,9 +31,9 @@ public class CategoryController {
    * 특정 사용자가 생성한 모든 카테고리 조회
    * */
   @GetMapping
-  @Operation(summary = "이메일=user_email인 사용자가 소유한 모든 카테고리를 조회한다")
+  @Operation(summary = "이메일=userEmail인 사용자가 소유한 모든 카테고리를 조회한다")
   public ResponseEntity<List<CategoryResponseDto>> findAllByUser(
-      @RequestParam("user_email") String userEmail) {
+      @RequestParam("userEmail") String userEmail) {
     return ResponseEntity.ok(categoryManagementFacade.findAllByUser(userEmail));
   }
 
@@ -52,10 +52,10 @@ public class CategoryController {
   /**
    * 특정 사용자가 생성한 카테고리 수정
    * */
-  @PatchMapping("/{category_id}")
-  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=category_id인 카테고리를 수정한다")
+  @PatchMapping("/{categoryId}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=categoryId인 카테고리를 수정한다")
   public ResponseEntity<CategoryResponseDto> updateCategory(
-      @PathVariable("category_id") Long categoryId, @RequestBody CategoryUpdateDto updateDto,
+      @PathVariable Long categoryId, @RequestBody CategoryUpdateDto updateDto,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
         categoryManagementFacade.updateCategory(categoryId, updateDto, userDetails.getUsername()));
@@ -64,9 +64,9 @@ public class CategoryController {
   /**
    * 특정 사용자가 생성한 카테고리 삭제
    * */
-  @DeleteMapping("/{category_id}")
-  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=category_id인 카테고리를 삭제한다")
-  public ResponseEntity<Void> deleteCategory(@PathVariable("category_id") Long categoryId,
+  @DeleteMapping("/{categoryId}")
+  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=categoryId인 카테고리를 삭제한다")
+  public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     categoryManagementFacade.deleteCategory(categoryId, userDetails.getUsername());
     return ResponseEntity.noContent().build();

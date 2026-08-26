@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.global.utils.DateUtils;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Category;
@@ -29,7 +30,6 @@ import com.komentum.test.data.scenario.PostScenarioSupport;
 import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.TestClientDto;
-import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.Comparator;
@@ -254,7 +254,7 @@ public class UserPostControllerTest {
     MvcResult result = performGet(path, postType);
     return objectMapper.readValue(
         result.getResponse().getContentAsString(),
-        new TypeReference<List<UserPostListResponseDto>>() {
+        new TypeReference<>() {
         }
     );
   }
@@ -262,7 +262,7 @@ public class UserPostControllerTest {
   private MvcResult performGet(String path, PostType postType) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = get(path);
     if (postType != null) {
-      requestBuilder.param("post_type", postType.name());
+      requestBuilder.param("postType", postType.name());
     }
     return mockMvc.perform(
             mockMvcUtils.addAuthentication(requestBuilder, TestClientDto.fromEntity(client)))

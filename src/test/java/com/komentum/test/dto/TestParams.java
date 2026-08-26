@@ -7,7 +7,7 @@ public class TestParams {
 
   public static final String PAGE_SIZE = "size";
   public static final String PAGE_NUMBER = "page";
-  public static final String USER_EMAIL = "user_email";
+  public static final String USER_EMAIL = "userEmail";
 
   public static MultiValueMap<String, String> withEmpty() {
     return new LinkedMultiValueMap<>();
