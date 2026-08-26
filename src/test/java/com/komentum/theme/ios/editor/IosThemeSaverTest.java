@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.Mockito.when;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.theme.ios.dto.IosThemePackageResponse;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -38,15 +37,15 @@ class IosThemeSaverTest {
     IosThemeSaver saver = new IosThemeSaver(fileManager);
 
     // when
-    IosThemePackageResponse response = saver.save(3, tempDir);
+    String themeUrl = saver.save(3, tempDir);
 
     // then
-    ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
-    Mockito.verify(fileManager).uploadFile(captor.capture(), endsWith(".ktheme"));
-    assertThat(response.getThemeComponentId()).isEqualTo(3);
-    assertThat(response.getThemeUrl()).isEqualTo("https://cdn.example.com/theme.ktheme");
-    assertThat(response.getFileName()).startsWith("ios-theme-3-").endsWith(".ktheme");
-    assertThat(readZipEntries(captor.getValue()))
+    ArgumentCaptor<byte[]> packageCaptor = ArgumentCaptor.forClass(byte[].class);
+    ArgumentCaptor<String> fileNameCaptor = ArgumentCaptor.forClass(String.class);
+    Mockito.verify(fileManager).uploadFile(packageCaptor.capture(), fileNameCaptor.capture());
+    assertThat(themeUrl).isEqualTo("https://cdn.example.com/theme.ktheme");
+    assertThat(fileNameCaptor.getValue()).startsWith("ios-theme-3-").endsWith(".ktheme");
+    assertThat(readZipEntries(packageCaptor.getValue()))
         .containsExactly("Images/sample.png", "KakaoTalkTheme.css");
   }
 

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -56,6 +57,14 @@ public class GlobalExceptionHandler {
       MethodArgumentTypeMismatchException ex) {
     Map<String, String> errors = new HashMap<>();
     errors.put("message", ex.getMostSpecificCause().getMessage());
+    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(
+      HttpMessageNotReadableException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", ex.getMessage());
     return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
   }
 
