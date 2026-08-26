@@ -111,9 +111,9 @@ public class UserControllerTest {
     User followerA = relatedUsers.get(0);
     User followerB = relatedUsers.get(1);
     followRepository.saveAllAndFlush(List.of(
-        Follow.createTransient(followerA, user),
-        Follow.createTransient(followerB, user),
-        Follow.createTransient(user, followerA)
+        new Follow(followerA, user),
+        new Follow(followerB, user),
+        new Follow(user, followerA)
     ));
 
     UserResponseDto userResponseDto =

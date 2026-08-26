@@ -6,7 +6,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -23,9 +22,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(
     name = "user_follow",
-    indexes = {
-        @Index(name = "idx_user_follow_followee_id", columnList = "followee_id")
-    },
     uniqueConstraints = {
         @UniqueConstraint(
             name = "uk_user_follow_follower_followee",
@@ -55,12 +51,8 @@ public class Follow {
   @CreatedDate
   private LocalDateTime followedAt;
 
-  private Follow(User follower, User followee) {
+  public Follow(User follower, User followee) {
     this.follower = follower;
     this.followee = followee;
-  }
-
-  public static Follow createTransient(User follower, User followee) {
-    return new Follow(follower, followee);
   }
 }

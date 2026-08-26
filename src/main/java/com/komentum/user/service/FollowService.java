@@ -29,7 +29,7 @@ public class FollowService {
     }
 
     try {
-      followRepository.saveAndFlush(Follow.createTransient(follower, followee));
+      followRepository.saveAndFlush(new Follow(follower, followee));
     } catch (DataIntegrityViolationException e) {
       if (!followRepository.existsByFollowerAndFollowee(follower, followee)) {
         throw e;
