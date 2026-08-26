@@ -11,6 +11,7 @@ import com.komentum.designcomponent.enums.Platform;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.security.UserRole;
 import com.komentum.test.fixture.theme.ThemeBuildFixture;
+import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.theme.build.domain.ThemeBuildJob;
 import com.komentum.theme.build.domain.ThemeBuildStatus;
 import com.komentum.theme.build.dto.ThemeBuildStartResponse;
@@ -71,7 +72,7 @@ class ThemeBuildServiceTest {
   @BeforeEach
   void setUp() {
     owner = userRepository.save(
-        ThemeBuildFixture.user("theme-build-service-owner@test.com", UserRole.USER));
+        UserFixture.user("theme-build-service-owner@test.com", UserRole.USER));
     theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner.getUserEmail()));
     authenticate(owner);
   }

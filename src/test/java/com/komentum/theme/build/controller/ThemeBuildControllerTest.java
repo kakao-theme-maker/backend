@@ -16,6 +16,7 @@ import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.fixture.theme.ThemeBuildFixture;
+import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.theme.build.domain.ThemeBuildStatus;
 import com.komentum.theme.build.dto.ThemeBuildStartRequest;
 import com.komentum.theme.build.repository.ThemeBuildJobRepository;
@@ -67,7 +68,7 @@ class ThemeBuildControllerTest {
   @BeforeEach
   void setUp() {
     owner = userRepository.save(
-        ThemeBuildFixture.user("theme-build-owner@test.com", UserRole.USER));
+        UserFixture.user("theme-build-owner@test.com", UserRole.USER));
     theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner.getUserEmail()));
   }
 
@@ -165,7 +166,7 @@ class ThemeBuildControllerTest {
   @DisplayName("다른 사용자의 테마 제작 요청은 403을 반환한다")
   void startThemeBuild_forbidden() throws Exception {
     User otherUser = userRepository.save(
-        ThemeBuildFixture.user("theme-build-other@test.com", UserRole.USER));
+        UserFixture.user("theme-build-other@test.com", UserRole.USER));
 
     performStart(theme, otherUser, Platform.ANDROID)
         .andExpect(status().isForbidden());
@@ -177,7 +178,7 @@ class ThemeBuildControllerTest {
   @DisplayName("관리자는 다른 사용자의 테마 제작을 시작할 수 있다")
   void startThemeBuild_adminSuccess() throws Exception {
     User admin = userRepository.save(
-        ThemeBuildFixture.user("theme-build-start-admin@test.com", UserRole.ADMIN));
+        UserFixture.user("theme-build-start-admin@test.com", UserRole.ADMIN));
 
     performStart(theme, admin, Platform.ANDROID)
         .andExpect(status().isAccepted());
@@ -219,7 +220,7 @@ class ThemeBuildControllerTest {
   void findThemeBuild_forbidden() throws Exception {
     Long buildId = startAndReadBuildId(theme, owner);
     User otherUser = userRepository.save(
-        ThemeBuildFixture.user("theme-build-reader@test.com", UserRole.USER));
+        UserFixture.user("theme-build-reader@test.com", UserRole.USER));
 
     performFind(buildId, otherUser)
         .andExpect(status().isForbidden());
@@ -230,7 +231,7 @@ class ThemeBuildControllerTest {
   void findThemeBuild_adminSuccess() throws Exception {
     Long buildId = startAndReadBuildId(theme, owner);
     User admin = userRepository.save(
-        ThemeBuildFixture.user("theme-build-admin@test.com", UserRole.ADMIN));
+        UserFixture.user("theme-build-admin@test.com", UserRole.ADMIN));
 
     assertStatusResponse(performFind(buildId, admin), "RUNNING", null);
   }
