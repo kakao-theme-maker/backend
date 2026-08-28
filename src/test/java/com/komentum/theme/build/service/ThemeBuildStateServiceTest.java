@@ -1,6 +1,7 @@
 package com.komentum.theme.build.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.byLessThan;
 
 import com.komentum.designcomponent.enums.Platform;
 import com.komentum.test.config.EnableTestProfile;
@@ -11,6 +12,7 @@ import com.komentum.theme.build.repository.ThemeBuildJobRepository;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,7 +59,7 @@ class ThemeBuildStateServiceTest {
     assertThat(updated).isTrue();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.SUCCESS);
     assertThat(result.getPackageUrl()).isEqualTo(packageUrl);
-    assertThat(result.getUpdatedAt()).isAfterOrEqualTo(updatedAt);
+    assertThat(result.getUpdatedAt()).isCloseTo(updatedAt, byLessThan(2, ChronoUnit.SECONDS));
   }
 
   @Test
@@ -71,7 +73,7 @@ class ThemeBuildStateServiceTest {
     ThemeBuildJob result = themeBuildJobRepository.findById(job.getBuildId()).orElseThrow();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.FAILED);
     assertThat(result.getPackageUrl()).isNull();
-    assertThat(result.getUpdatedAt()).isAfterOrEqualTo(updatedAt);
+    assertThat(result.getUpdatedAt()).isCloseTo(updatedAt, byLessThan(2, ChronoUnit.SECONDS));
   }
 
   @Test
@@ -91,7 +93,7 @@ class ThemeBuildStateServiceTest {
     assertThat(updated).isFalse();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.FAILED);
     assertThat(result.getPackageUrl()).isNull();
-    assertThat(result.getUpdatedAt()).isAfterOrEqualTo(failedAt);
+    assertThat(result.getUpdatedAt()).isCloseTo(failedAt, byLessThan(2, ChronoUnit.SECONDS));
   }
 
   private ThemeBuildJob saveRunningJob() {
