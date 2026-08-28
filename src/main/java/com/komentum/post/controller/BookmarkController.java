@@ -20,22 +20,22 @@ public class BookmarkController {
 
   private final BookmarkManagementFacade bookmarkManagementFacade;
 
-  @PutMapping("/posts/{post_id}")
+  @PutMapping("/posts/{postId}")
   @Operation(summary = "게시글을 북마크에 추가하고, 게시글이 이미 북마크에 존재한다면 현재 상태를 유지한다")
   public ResponseEntity<Void> addPostOnBookmark(
       @Parameter(description = "북마크에 추가할 게시글 ID")
-      @PathVariable("post_id") Long postId,
+      @PathVariable Long postId,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     bookmarkManagementFacade.addPostOnBookmark(postId, userDetails.getUsername());
     return ResponseEntity.ok().build();
   }
 
-  @DeleteMapping("/posts/{post_id}")
+  @DeleteMapping("/posts/{postId}")
   @Operation(summary = "게시글을 북마크에서 제거하고, 게시글이 북마크에 존재하지 않다면 현재 상태를 유지한다")
   public ResponseEntity<Void> deletePostFromBookmark(
       @Parameter(description = "북마크에서 제거할 게시글 ID")
-      @PathVariable("post_id") Long postId,
+      @PathVariable Long postId,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     bookmarkManagementFacade.deletePostFromBookmark(postId, userDetails.getUsername());

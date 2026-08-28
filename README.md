@@ -211,6 +211,8 @@ Docker 이미지 빌드 시 Gradle이 `backend_config`의 설정 파일을 복�
 | `POST` | `/api/auth/reissue` | refresh token 기반 access token 재발급 |
 | `GET` | `/api/users/me` | 현재 로그인 사용자 조회 |
 | `PATCH` | `/api/users/me/profile-image` | 프로필 이미지 수정 |
+| `PUT` | `/api/users/{public_user_id}/follow` | 사용자 팔로우 |
+| `DELETE` | `/api/users/{public_user_id}/follow` | 사용자 팔로우 해제 |
 
 ### Theme
 
@@ -218,7 +220,8 @@ Docker 이미지 빌드 시 Gradle이 `backend_config`의 설정 파일을 복�
 | --- | --- | --- |
 | `POST` | `/api/themes` | 새 테마 생성 |
 | `PUT` | `/api/themes/{themeComponentId}` | 테마 색상/이미지/상태 수정 |
-| `POST` | `/api/themes/{themeComponentId}/packages/ios` | iOS 테마 패키지 생성 |
+| `POST` | `/api/themes/{themeComponentId}/builds` | Android/iOS 테마 패키지 제작 시작 |
+| `GET` | `/api/theme-builds/{buildId}` | 테마 패키지 제작 상태 조회 |
 | `PUT` | `/api/themes/{id}/done` | 테마 완료 처리 |
 | `GET` | `/api/themes/public` | 공개 테마 목록 조회 |
 | `GET` | `/api/themes/popular` | 인기 테마 조회 |

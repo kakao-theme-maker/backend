@@ -1,6 +1,5 @@
 package com.komentum.user.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,15 +18,12 @@ import lombok.NoArgsConstructor;
 public class UserResponseDto {
 
   @Schema(description = "사용자 이메일", example = "test@test.com")
-  @JsonProperty("user_email")
   private String userEmail;
 
   @Schema(description = "사용자 프로필 이미지 주소", example = "https://profile-image.com")
-  @JsonProperty("profile_image")
   private String profileImage;
 
   @Schema(description = "사용자 프로필 이미지 파일명", example = "profile-image.png")
-  @JsonProperty("profile_image_name")
   private String profileImageName;
 
   // 유저 조회에 필요한 정보 추가
@@ -35,10 +31,8 @@ public class UserResponseDto {
   private String name;
 
   @Schema(description = "사용자 공개 ID", example = "UUID")
-  @JsonProperty("public_user_id")
   private String publicUserId;
 
-  @JsonProperty("created_at")
   @Schema(description = "사용자 가입일", example = "YYYY-mm-ddThh:mm:ss")
   private LocalDateTime createdAt;
 

@@ -15,7 +15,6 @@ import com.komentum.theme.core.domain.ThemeStyle;
 import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.theme.core.service.ThemeStyleService;
-import com.komentum.theme.ios.dto.IosThemePackageResponse;
 import com.komentum.theme.ios.utils.IosThemePathManager;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
@@ -43,7 +42,7 @@ public class IosThemeMaker {
   private final IosThemeImageEditor iosThemeImageEditor;
   private final IosThemeSaver iosThemeSaver;
 
-  public IosThemePackageResponse makeTheme(Integer themeComponentId) {
+  public String makeTheme(Integer themeComponentId) {
     Path workDir = null;
     try {
       ThemeComponent themeComponent = themeRetrieveService.getThemeEntityById(themeComponentId);

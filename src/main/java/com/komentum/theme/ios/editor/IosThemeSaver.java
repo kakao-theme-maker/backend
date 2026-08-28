@@ -1,7 +1,6 @@
 package com.komentum.theme.ios.editor;
 
 import com.komentum.global.utils.FileManager;
-import com.komentum.theme.ios.dto.IosThemePackageResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,16 +18,10 @@ public class IosThemeSaver {
 
   private final FileManager fileManager;
 
-  public IosThemePackageResponse save(Integer themeComponentId, Path workDir) throws IOException {
+  public String save(Integer themeComponentId, Path workDir) throws IOException {
     String fileName = resolveThemeName(themeComponentId);
     byte[] packageBytes = createPackageBytes(workDir);
-    String themeUrl = fileManager.uploadFile(packageBytes, fileName);
-    return IosThemePackageResponse.builder()
-        .themeComponentId(themeComponentId)
-        .platform(com.komentum.designcomponent.enums.Platform.IOS)
-        .fileName(fileName)
-        .themeUrl(themeUrl)
-        .build();
+    return fileManager.uploadFile(packageBytes, fileName);
   }
 
   private String resolveThemeName(Integer themeComponentId) {
