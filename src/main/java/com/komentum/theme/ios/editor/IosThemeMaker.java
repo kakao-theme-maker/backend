@@ -3,6 +3,7 @@ package com.komentum.theme.ios.editor;
 import com.komentum.designcomponent.domain.PlatformColorStyle;
 import com.komentum.designcomponent.domain.PlatformComponentType;
 import com.komentum.designcomponent.enums.Platform;
+import com.komentum.designcomponent.enums.TypeCodeGroup;
 import com.komentum.designcomponent.repository.PlatformColorStyleRepository;
 import com.komentum.designcomponent.repository.PlatformComponentTypeRepository;
 import com.komentum.global.domain.policy.OwnerAdminPolicy;
@@ -59,7 +60,14 @@ public class IosThemeMaker {
 
       workDir = IosThemePathManager.createThemeWorkDir(themeComponentId);
       iosThemeTemplateExtractor.extractTemplate(workDir);
+      // edit theme colors
       iosThemeCssEditor.editCss(workDir, themeComponent, themeStyles, platformColorStyles);
+      // edit bubble inset
+      List<ThemeImage> bubbles = themeImages.stream()
+          .filter(ti -> ti.getComponentType().getTypeCode().getTypeCodeGroup()
+              .equals(TypeCodeGroup.CHATROOM_BUBBLE)).toList();
+      iosThemeCssEditor.editBubbleInset(workDir, bubbles);
+      // edit theme images
       iosThemeImageEditor.editImages(workDir, themeImages, platformComponentTypes);
       return iosThemeSaver.save(themeComponentId, workDir);
     } catch (AccessDeniedException e) {

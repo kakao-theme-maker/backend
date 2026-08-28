@@ -39,6 +39,10 @@ public class PlatformColorStyle {
   @Column(nullable = false, unique = true)
   private String code;
 
+  @Builder.Default
+  @Column(nullable = false)
+  private Double weight = 1.0;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "color_style_id")
   private ColorStyle colorStyle;

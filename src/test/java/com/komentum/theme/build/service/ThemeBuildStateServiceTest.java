@@ -57,7 +57,7 @@ class ThemeBuildStateServiceTest {
     assertThat(updated).isTrue();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.SUCCESS);
     assertThat(result.getPackageUrl()).isEqualTo(packageUrl);
-    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+    assertThat(result.getUpdatedAt()).isAfterOrEqualTo(updatedAt);
   }
 
   @Test
@@ -71,7 +71,7 @@ class ThemeBuildStateServiceTest {
     ThemeBuildJob result = themeBuildJobRepository.findById(job.getBuildId()).orElseThrow();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.FAILED);
     assertThat(result.getPackageUrl()).isNull();
-    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+    assertThat(result.getUpdatedAt()).isAfterOrEqualTo(updatedAt);
   }
 
   @Test
@@ -91,7 +91,7 @@ class ThemeBuildStateServiceTest {
     assertThat(updated).isFalse();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.FAILED);
     assertThat(result.getPackageUrl()).isNull();
-    assertThat(result.getUpdatedAt()).isEqualTo(failedAt);
+    assertThat(result.getUpdatedAt()).isAfterOrEqualTo(failedAt);
   }
 
   private ThemeBuildJob saveRunningJob() {

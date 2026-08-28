@@ -1,6 +1,7 @@
-package com.komentum.global.utils;
+package com.komentum.theme.android.utils;
 
 import com.komentum.global.enums.FileExtension;
+import com.komentum.theme.core.domain.ImageInset;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -12,45 +13,39 @@ import javax.imageio.ImageIO;
 
 public final class NinePatchConverter {
 
-  // stretch 영역을 이미지의 40 ~ 60% 영역으로 지정
-  // 9-patch PNG의 검은 선으로 표시되는 영역 ( 확장되는 영역 )
-  private static final double STRETCH_START_RATIO = 0.4;
-  private static final double STRETCH_END_RATIO = 0.6;
-
-  // content 영역을 이미지의 20 ~ 80% 영역으로 지정
-  // 실제 콘텐츠 및 텍스트가 배치될 수 있는 영역
-  private static final double CONTENT_START_RATIO = 0.2;
-  private static final double CONTENT_END_RATIO = 0.8;
-
   /**
-   * 파일이 9-patch PNG라면 일반 PNG를 Android에서 사용하는
-   * 9-patch 형식으로 변환한다.
-   * 일반 PNG라면 별도 변환 없이 그대로 반환한다.
+   * 파일이 9-patch PNG라면 일반 PNG를 Android에서 사용하는 9-patch 형식으로 변환한다. 일반 PNG라면 별도 변환 없이 그대로 반환한다.
    */
   public static InputStream convertIfNeeded(
       InputStream inputStream,
-      FileExtension extension
+      FileExtension extension,
+      ImageInset imageInset
   ) throws IOException {
     // 9-patch-PNG가 아니라면 이미지 다시 반환
     if (extension != FileExtension.NINE_PATCH_PNG) {
       return inputStream;
     }
-    // InputStream 이미지를 9-patch-PNG로 변환
+    // 9-patch image로 변환
     BufferedImage source = ImageIO.read(inputStream);
     if (source == null) {
-      throw new IOException("Invalid image");
+      throw new IOException("[9-patch converter] Invalid source image");
     }
-    BufferedImage result = convert(source);
+    BufferedImage result;
+    if (imageInset == null) {
+      result = createWithoutMarker(source);
+    } else {
+      result = convertWithMarker(source, imageInset);
+    }
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ImageIO.write(result, "png", baos);
     return new ByteArrayInputStream(baos.toByteArray());
   }
 
   /**
-   * 일반 PNG를 9-patch-PNG로 변환
-   * */
-  private static BufferedImage convert(BufferedImage source) {
-    // 상하좌우 1px씩 추가된 새로운 이미지 생성
+   * marker가 없는 9-patch PNG를 반환한다. inset이 없는 9-patch image의 경우 이 메서드를 사용한다.
+   *
+   */
+  private static BufferedImage createWithoutMarker(BufferedImage source) {
     int width = source.getWidth();
     int height = source.getHeight();
     BufferedImage result = new BufferedImage(
@@ -62,15 +57,32 @@ public final class NinePatchConverter {
     Graphics2D graphics = result.createGraphics();
     graphics.drawImage(source, 1, 1, null);
     graphics.dispose();
+    return result;
+  }
+
+  /**
+   * 일반 PNG를 9-patch-PNG로 변환
+   *
+   */
+  private static BufferedImage convertWithMarker(BufferedImage source, ImageInset imageInset) {
+    // 상하좌우 1px씩 추가된 새로운 여백 이미지 생성
+    int width = source.getWidth();
+    int height = source.getHeight();
+    BufferedImage result = createWithoutMarker(source);
+    // inset이 유효하지 않다면 ( source의 width나 height의 범위를 벗어난다면 ) 예외 처리
+    if (!imageInset.isInImageRange(width, height)) {
+      throw new IllegalArgumentException(
+          "[NinePatchConverter] Invalid image inset: inset out of bound");
+    }
     /*
-     * 위쪽 Border에 Stretch 영역을 나타내는 검은 선을 그린다.
+     * 위쪽 Border에 StretchX 영역에 대한 검은 선을 그린다
      * Android는 이 검은 선이 표시된 가로 구간만 이미지를 늘린다.
      */
     drawHorizontal(
         result,
-        1,
-        ratio(width, STRETCH_START_RATIO),
-        ratio(width, STRETCH_END_RATIO)
+        0,
+        imageInset.getStretchX(),
+        imageInset.getStretchX() + 1
     );
     /*
      * 왼쪽 Border에 Stretch 영역을 나타내는 검은 선을 그린다.
@@ -78,9 +90,9 @@ public final class NinePatchConverter {
      */
     drawVertical(
         result,
-        1,
-        ratio(height, STRETCH_START_RATIO),
-        ratio(height, STRETCH_END_RATIO)
+        0,
+        imageInset.getStretchY(),
+        imageInset.getStretchY() + 1
     );
     /*
      * 아래쪽 Border에 Content 영역을 나타내는 검은 선을 그린다.
@@ -89,8 +101,8 @@ public final class NinePatchConverter {
     drawHorizontal(
         result,
         height + 1,
-        ratio(width, CONTENT_START_RATIO),
-        ratio(width, CONTENT_END_RATIO)
+        imageInset.getEdgeInsetLeft(),
+        width - imageInset.getEdgeInsetRight()
     );
     /*
      * 오른쪽 Border에 Content 영역을 나타내는 검은 선을 그린다.
@@ -99,14 +111,10 @@ public final class NinePatchConverter {
     drawVertical(
         result,
         width + 1,
-        ratio(height, CONTENT_START_RATIO),
-        ratio(height, CONTENT_END_RATIO)
+        imageInset.getEdgeInsetTop(),
+        height - imageInset.getEdgeInsetBottom()
     );
     return result;
-  }
-
-  private static int ratio(int size, double ratio) {
-    return Math.max(0, Math.min(size - 1, (int) Math.round(size * ratio)));
   }
 
   /**
@@ -123,7 +131,7 @@ public final class NinePatchConverter {
       int end
   ) {
     for (int x = start; x <= end; x++) {
-      image.setRGB(x + 1, y, Color.BLACK.getRGB());
+      image.setRGB(x, y, Color.BLACK.getRGB());
     }
   }
 
@@ -141,7 +149,7 @@ public final class NinePatchConverter {
       int end
   ) {
     for (int y = start; y <= end; y++) {
-      image.setRGB(x, y + 1, Color.BLACK.getRGB());
+      image.setRGB(x, y, Color.BLACK.getRGB());
     }
   }
 }

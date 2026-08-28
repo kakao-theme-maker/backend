@@ -4,6 +4,7 @@ import com.komentum.global.utils.RegexValidator;
 import com.komentum.theme.android.dto.AndroidColorDto;
 import com.komentum.theme.android.utils.ThemePathManager;
 import com.komentum.theme.android.utils.XmlEditor;
+import com.komentum.theme.utils.ColorEditor;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -51,12 +52,13 @@ public class AndroidColorStyleEditor {
     Document document = xmlEditor.loadDocument(colorSheetPath.toString());
     NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
     for (AndroidColorDto colorDto : colorDtoList) {
+      String color = ColorEditor.toDarkColor(colorDto.getColor(), colorDto.getWeight());
       Element colorElement = getElementByAttribute(colorList, colorDto.getAttrName());
       if (colorElement == null) {
         throw new IllegalArgumentException("cannot find color element on colors.xml");
       }
       if (!RegexValidator.isValidHexColor(colorDto.getColor())) {
-        throw new IllegalArgumentException("invalid hex color: " + colorDto.getColor());
+        throw new IllegalArgumentException("invalid hex color: " + color);
       }
       colorElement.setTextContent(colorDto.getColor());
     }

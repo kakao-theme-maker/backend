@@ -4,9 +4,11 @@ import com.github.javafaker.Faker;
 import com.komentum.designcomponent.domain.ColorStyle;
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCodeGroup;
 import com.komentum.designcomponent.repository.ColorStyleRepository;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
+import com.komentum.theme.core.domain.ImageInset;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.domain.ThemeStyle;
@@ -37,7 +39,7 @@ public class ThemeComponentSeeder {
     return ThemeComponent.builder()
         .themeName(faker.lorem().word())
         .versionName("1.1.1.1")
-        .versionNumber("0")
+        .versionNumber("1")
         .isDone(true)
         .isPublic(true)
         .themeType(themeType)
@@ -50,11 +52,16 @@ public class ThemeComponentSeeder {
     List<ComponentType> componentTypes = componentTypeRepository.findAll();
     List<ThemeImage> themeImages = new ArrayList<>();
     for (int i = 0; i < componentTypes.size(); i++) {
-      themeImages.add(ThemeImage.builder()
+      ComponentType ct = componentTypes.get(i);
+      ThemeImage ti = ThemeImage.builder()
           .themeComponent(themeComponent)
-          .componentType(componentTypes.get(i))
+          .componentType(ct)
           .designComponent(designComponents.get(i % designComponents.size()))
-          .build());
+          .build();
+      if (ct.getTypeCode().getTypeCodeGroup().equals(TypeCodeGroup.CHATROOM_BUBBLE)) {
+        ti.setImageInset(new ImageInset(50, 50, 15, 15, 15, 15));
+      }
+      themeImages.add(ti);
     }
     return themeImageRepository.saveAll(themeImages);
   }
