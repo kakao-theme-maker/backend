@@ -22,7 +22,8 @@ class DesignComponentCreateControllerTest extends DesignComponentControllerTestS
   @DisplayName("DesignComponent 생성 테스트")
   void createDesignComponent() throws Exception {
     stubImageUpload();
-    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA, componentTypeB);
+    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA,
+        componentTypeB);
     MockMultipartFile requestPart = createRequestPart(createRequest);
     MockMultipartFile image = multipartFixture.imagePart("test.png");
 
@@ -112,7 +113,8 @@ class DesignComponentCreateControllerTest extends DesignComponentControllerTestS
   @DisplayName("다중 업로드 생성 시 여러 componentType 공유 가능")
   void createDesignComponents_multiUploadWithMultipleComponentTypes() throws Exception {
     stubImageUpload();
-    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA, componentTypeB);
+    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA,
+        componentTypeB);
     MockMultipartFile requestPart = createRequestPart(createRequest);
     MockMultipartFile file1 = multipartFixture.filesPart("test-1.png");
     MockMultipartFile file2 = multipartFixture.filesPart("test-2.png");

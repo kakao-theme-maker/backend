@@ -49,7 +49,6 @@ public class DevDataGenerator {
     colorStyleSeeder.upsertColorStyleSeed();
     platformComponentTypeSeeder.upsertPlatformComponentType();
     platformColorStyleSeeder.upsertPlatformColorStyle();
-    // seed design component, theme component
     List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
         users); // 110
     List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users,

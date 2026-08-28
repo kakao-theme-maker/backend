@@ -46,6 +46,12 @@ import org.springframework.util.FileSystemUtils;
 @EnableConfigurationProperties({AndroidSigningProperties.class, AndroidDockerImageProperties.class})
 public class AndroidThemeGenerator {
 
+  public static final String DOCKER_THEME_DIRECTORY_NAME = "source";
+  private static final String SAMPLE_THEME_PATH = "themeSample/android/sampleTheme.zip";
+  // keystore const
+  private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
+  private static final String ENV_KEY_ALIAS = "KEY_ALIAS";
+  private static final String ENV_KEY_PASSWORD = "KEY_PASSWORD";
   private final ThemeImageRepository themeImageRepository;
   private final PlatformComponentTypeRepository platformComponentTypeRepository;
   private final PlatformColorStyleRepository platformColorStyleRepository;
@@ -58,17 +64,8 @@ public class AndroidThemeGenerator {
   private final AndroidMetaDataEditor androidMetaDataEditor;
   private final FileManager fileManager;
 
-  private static final String SAMPLE_THEME_PATH = "themeSample/android/sampleTheme.zip";
-  public static final String DOCKER_THEME_DIRECTORY_NAME = "source";
-
-  // keystore const
-  private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
-  private static final String ENV_KEY_ALIAS = "KEY_ALIAS";
-  private static final String ENV_KEY_PASSWORD = "KEY_PASSWORD";
-
   /**
-   * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 URL을 반환한다.
-   * 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
+   * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 URL을 반환한다. 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
    *
    * @param themeComponent 테마 Entity
    * @return 업로드된 APK의 URL
@@ -90,7 +87,7 @@ public class AndroidThemeGenerator {
       androidMetaDataEditor.editThemeName(themeId.toString(), themeComponent.getThemeName());
       // 3. 리소스가 수정된 임시 테마를 Docker 호스트 볼륨 마운트를 통해 빌드한다
       ProcessBuilder pb = createProcessBuilderForApkBuild(sourceThemePath,
-          themeComponent.getThemeCode());
+          themeComponent.getThemeCode(), themeComponent.getVersionNumber());
       dockerProcessRunner.runDockerProcess(pb);
       // 4. Docker 호스트 볼륨 마운트를 통해 빌드한 결과물을 FileManager로 업로드 및 반환한다
       return uploadTheme(themeId);
@@ -143,8 +140,8 @@ public class AndroidThemeGenerator {
             "platformComponentType is null with typeCode :" + targetTypeCode.name());
       }
       for (PlatformComponentType pc : platformComponentTypes) {
-        String imageUrl = themeImage.getDesignComponent().getImageUrl();
-        androidImageList.add(AndroidComponentDto.fromEntity(pc, imageUrl));
+        androidImageList.add(AndroidComponentDto.fromEntity(pc, themeImage.getDesignComponent(),
+            themeImage.getImageInset()));
       }
     }
     // 이미지 파일을 테마에 저장
@@ -188,7 +185,7 @@ public class AndroidThemeGenerator {
    * @return Docker 실행 명령어
    */
   private ProcessBuilder createProcessBuilderForApkBuild(Path sourceThemePath,
-      String themeIdentifier) {
+      String themeIdentifier, String versionCode) {
     String dockerImageFullName =
         dockerImageProperties.getImage() + ":" + dockerImageProperties.getTag();
     List<String> command = List.of(
@@ -202,6 +199,7 @@ public class AndroidThemeGenerator {
         dockerImageFullName,
         "assembleRelease",
         "-PandroidApplicationId=" + "com.kakao.talk.theme." + themeIdentifier,
+        "-PversionCode=" + versionCode,
         "-x", "lint",
         "-x", "test"
     );

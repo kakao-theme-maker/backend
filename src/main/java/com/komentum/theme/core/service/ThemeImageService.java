@@ -6,13 +6,17 @@ import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
+import com.komentum.theme.core.dto.ThemeDesignAssetDto;
 import com.komentum.theme.core.dto.ThemeDetailResponse.TypeCodeInfo;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
 import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +53,7 @@ public class ThemeImageService {
 
   @Transactional(readOnly = true)
   public Map<TypeCode, TypeCodeInfo> findTypeCodeMapByThemeComponentId(Integer themeComponentId) {
-    List<ThemeImage> themeImages = themeImageRepository.fetchJoinAllByThemeComponentId(
+    List<ThemeImage> themeImages = fetchJoinThemeImagesByThemeComponentId(
         themeComponentId);
     Map<TypeCode, TypeCodeInfo> res = themeImages.stream()
         .collect(Collectors.toMap(
@@ -67,9 +71,45 @@ public class ThemeImageService {
     return res;
   }
 
+  /**
+   * themeComponent ID를 기반으로 ThemeImage 목록을 조회한다.
+   * 연관 엔티티(ThemeComponent, designComponent, componentType)이 함께 조회된다.
+   * */
   @Transactional(readOnly = true)
   public List<ThemeImage> fetchJoinThemeImagesByThemeComponentId(Integer themeComponentId) {
-    return themeImageRepository.fetchJoinAllByThemeComponentId(themeComponentId);
+    return fetchJoinThemeImageMapByThemeIds(List.of(themeComponentId)).get(themeComponentId);
+  }
+
+  /**
+   * themeComponent ID 목록을 기반으로 ThemeComponentId - ThemeImage 맵을 조회한다.
+   * 연관 엔티티(ThemeComponent, designComponent, componentType)이 함께 조회된다.
+   * */
+  @Transactional(readOnly = true)
+  public Map<Integer, List<ThemeImage>> fetchJoinThemeImageMapByThemeIds(
+      Collection<Integer> themeIds) {
+    List<ThemeImage> themeImages = themeImageRepository.fetchJoinAllByThemeComponentIds(themeIds);
+    return themeImages.stream()
+        .collect(Collectors.groupingBy(
+            themeImage -> themeImage.getThemeComponent().getThemeComponentId()
+        ));
+  }
+
+  /**
+   * theme ID 리스트를 기반으로 테마별 ThemeDesignAssetDto 리스트를 조회한다
+   * */
+  @Transactional(readOnly = true)
+  public Map<Integer, List<ThemeDesignAssetDto>> findThemeDesignAssetMap(
+      Collection<Integer> themeIds) {
+    return fetchJoinThemeImageMapByThemeIds(themeIds).entrySet()
+        .stream().collect(Collectors.toMap(
+            Entry::getKey,
+            entry -> entry.getValue().stream()
+                .map(themeImage -> ThemeDesignAssetDto.from(
+                    themeImage.getComponentType(),
+                    themeImage.getDesignComponent()
+                ))
+                .toList()
+        ));
   }
 
   @Transactional
@@ -99,9 +139,9 @@ public class ThemeImageService {
     Map<Integer, DesignComponent> requestedImageMap = designComponentService.findMapByIdIn(
         typeCodes.values()
             .stream()
+            .filter(Objects::nonNull)
             .map(ThemeImageUpdateRequest::getDesignComponentId)
-            .toList()
-    );
+            .collect(Collectors.toSet()));
     // 기존 theme image 목록 조회
     Map<TypeCode, ThemeImage> themeImages = fetchJoinThemeImagesByThemeComponentId(
         themeComponentId).stream()
@@ -111,10 +151,18 @@ public class ThemeImageService {
         ));
     // 요청 데이터 기반으로 기존 theme image 수정
     typeCodes.forEach((typeCode, updateRequest) -> {
-      ThemeImage themeImage = themeImages.get(typeCode);
-      DesignComponent requestedImage = requestedImageMap.get(updateRequest.getDesignComponentId());
-      if (themeImage != null && requestedImage != null) {
-        themeImage.setDesignComponent(requestedImage);
+      // updateRequest가 null이면 기존 ThemeImage를 삭제한다
+      if (updateRequest == null) {
+        themeImageRepository.deleteByThemeComponentIdAndTypeCode(themeComponentId, typeCode);
+      }
+      // 값이 모두 존재하면, 기존 ThemeImage를 갱신한다
+      else {
+        ThemeImage themeImage = themeImages.get(typeCode);
+        DesignComponent requestedImage = requestedImageMap.get(
+            updateRequest.getDesignComponentId());
+        if (themeImage != null && requestedImage != null) {
+          themeImage.update(requestedImage, updateRequest);
+        }
       }
     });
   }

@@ -17,7 +17,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,16 +85,10 @@ public class UserSeeder {
 
   @Transactional
   public List<User> seedData(int size) {
-    int current = (int) userRepository.count();
-    if (current >= size) {
-      return userRepository.findAll(Pageable.ofSize(size)).getContent();
-    }
     List<User> users = new ArrayList<>();
-    int remaining = size - current;
-    for (int i = 0; i < remaining; i++) {
+    for (int i = 0; i < size; i++) {
       users.add(generateOne());
     }
-    userRepository.saveAll(users);
-    return userRepository.findAll(Pageable.ofSize(size)).getContent();
+    return userRepository.saveAll(users);
   }
 }

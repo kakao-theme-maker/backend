@@ -40,6 +40,7 @@ public enum StyleCode {
   PASSCODE_BACKGROUND_COLOR("passcodeBackgroundColor"),
   PASSCODE_STYLE_KEYPAD_BACKGROUND_COLOR("passcodeStyleKeypadBackgroundColor"),
   PASSCODE_STYLE_KEYPAD_TEXT_NORMAL_COLOR("passcodeStyleKeypadTextNormalColor"),
+  PASSCODE_TITLE_TEXT_COLOR("passcodeTitleTextColor"),
   // chat room style
   CHAT_ROOM_BACKGROUND_COLOR("chatRoomBackgroundColor"),
   MESSAGE_CELL_STYLE_SEND_TEXT_COLOR("messageCellStyleSendTextColor"),
@@ -52,7 +53,9 @@ public enum StyleCode {
   INPUT_BAR_STYLE_CHAT_BUTTON_NORMAL_BACKGROUND_COLOR(
       "inputBarStyleChatButtonNormalBackgroundColor"),
   INPUT_BAR_STYLE_CHAT_SEND_NORMAL_BACKGROUND_COLOR("inputBarStyleChatSendNormalBackgroundColor"),
-  INPUT_BAR_STYLE_CHAT_SEND_NORMAL_FOREGROUND_COLOR("inputBarStyleChatSendNormalForegroundColor");
+  INPUT_BAR_STYLE_CHAT_SEND_NORMAL_FOREGROUND_COLOR("inputBarStyleChatSendNormalForegroundColor"),
+  // bottom banner style
+  BOTTOM_BANNER_STYLE_BACKGROUND_COLOR("bottomBannerStyleBackgroundColor");
 
   private final String styleCode;
 

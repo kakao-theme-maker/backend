@@ -67,7 +67,7 @@ class ThemeManageServiceTest {
     // then
     Optional<ThemeComponent> saved = themeComponentRepository.findById(res.getThemeComponentId());
     assertThat(saved.isPresent()).isTrue();
-    assertThat(res.getVersionNumber()).isEqualTo("0");
+    assertThat(res.getVersionNumber()).isEqualTo("1");
   }
 
   @Test

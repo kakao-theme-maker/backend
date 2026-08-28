@@ -101,6 +101,7 @@ public class ThemeComponent {
     if (updateRequest.getThemeName() != null && !updateRequest.getThemeName().isBlank()) {
       this.themeName = updateRequest.getThemeName();
     }
+    versionNumber = Integer.parseInt(versionNumber) + 1 + "";
   }
 
   public void addThemeImage(ThemeImage themeImage) {

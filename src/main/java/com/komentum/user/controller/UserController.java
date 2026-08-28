@@ -86,7 +86,7 @@ public class UserController {
   @PatchMapping(value = "/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "현재 사용자의 프로필 이미지를 수정한다")
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUserProfileImage(
-      @RequestPart("profile_image") MultipartFile profileImage,
+      @RequestPart("profileImage") MultipartFile profileImage,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     UserResponseDto updatedUser = userService.updateUserProfileImage(
         userDetails.getPublicUserId(), profileImage);

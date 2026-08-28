@@ -54,23 +54,29 @@ public class PostOrder {
       NumberExpression<Long> preferCount) {
 
     sortTypeList.forEach(sortType -> {
-      OrderSpecifier<?> orderSpecifier = switch (sortType) {
-        case DEFAULT -> post.createdAt.desc();
+      switch (sortType) {
+        case CREATED_ASC -> orderSpecifiers.add(post.createdAt.asc());
+        case CREATED_DESC -> orderSpecifiers.add(post.createdAt.desc());
         case PREFER_ASC -> {
           if (preferCount == null) {
             throw new IllegalArgumentException("preferCount is null");
           }
-          yield preferCount.asc();
+          orderSpecifiers.add(preferCount.asc());
         }
         case PREFER_DESC -> {
           if (preferCount == null) {
             throw new IllegalArgumentException("preferCount is null");
           }
-          yield preferCount.desc();
+          orderSpecifiers.add(preferCount.desc());
         }
-      };
-      orderSpecifiers.add(orderSpecifier);
+      }
     });
+    if (sortTypeList.stream()
+        .noneMatch(sortType -> sortType == PostSortType.CREATED_ASC
+            || sortType == PostSortType.CREATED_DESC)) {
+      orderSpecifiers.add(post.createdAt.desc());
+    }
+    orderSpecifiers.add(post.postId.desc());
   }
 
   public static OrderSpecifier<?>[] create(
