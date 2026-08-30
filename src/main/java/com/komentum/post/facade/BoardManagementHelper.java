@@ -59,11 +59,7 @@ public class BoardManagementHelper {
       }
       return previewImageFileName;
     } catch (Exception e) {
-      try {
-        fileManager.deleteFile(previewImageFileName);
-      } catch (Exception cleanupException) {
-        e.addSuppressed(cleanupException);
-      }
+      fileManager.deleteFile(previewImageFileName);
       throw new RuntimeException("Failed to process preview image file", e);
     }
   }
