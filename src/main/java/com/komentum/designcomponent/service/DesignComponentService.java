@@ -276,7 +276,7 @@ public class DesignComponentService {
     try {
       fileManager.deleteFile(fileManager.convertUrlToFileName(imageUrl));
     } catch (RuntimeException e) {
-      log.warn("failed to cleanup uploaded image after rollback", e);
+      log.warn("failed to cleanup uploaded image after rollback: {}", imageUrl, e);
     }
   }
 
