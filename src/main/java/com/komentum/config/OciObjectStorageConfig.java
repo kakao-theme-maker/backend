@@ -19,20 +19,21 @@ public class OciObjectStorageConfig {
 
   private final OciObjectStorageProperty property;
 
+  /**
+   * 필수 OCI 설정을 검증하고 Instance Principal 인증 기반 Object Storage 클라이언트를 생성한다.
+   *
+   * @return OCI Object Storage 클라이언트
+   * @throws IllegalArgumentException namespace, bucket name 또는 endpoint가 비어 있는 경우
+   */
   @Bean(destroyMethod = "close")
   public ObjectStorage objectStorage() {
-    validateProperty();
+    Assert.hasText(property.getNamespace(), "oci.object-storage.namespace must not be blank");
+    Assert.hasText(property.getBucketName(), "oci.object-storage.bucket-name must not be blank");
+    Assert.hasText(property.getEndpoint(), "oci.object-storage.endpoint must not be blank");
     InstancePrincipalsAuthenticationDetailsProvider provider =
         InstancePrincipalsAuthenticationDetailsProvider.builder().build();
     return ObjectStorageClient.builder()
         .endpoint(property.getEndpoint())
         .build(provider);
-  }
-
-  private void validateProperty() {
-    Assert.hasText(property.getNamespace(), "oci.object-storage.namespace must not be blank");
-    Assert.hasText(property.getBucketName(), "oci.object-storage.bucket-name must not be blank");
-    Assert.hasText(property.getEndpoint(), "oci.object-storage.endpoint must not be blank");
-    Assert.hasText(property.getParBaseUrl(), "oci.object-storage.par-base-url must not be blank");
   }
 }

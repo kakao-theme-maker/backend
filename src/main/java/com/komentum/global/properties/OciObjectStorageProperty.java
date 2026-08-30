@@ -12,5 +12,4 @@ public class OciObjectStorageProperty {
   private final String namespace;
   private final String bucketName;
   private final String endpoint;
-  private final String parBaseUrl;
 }
