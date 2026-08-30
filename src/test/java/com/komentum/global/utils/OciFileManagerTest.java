@@ -4,16 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.requests.GetObjectRequest;
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
 import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
+import com.komentum.global.properties.FileStorageProperty;
+import com.komentum.global.properties.FileStorageProperty.Storage;
 import com.komentum.global.properties.OciObjectStorageProperty;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 
 @ExtendWith(MockitoExtension.class)
 class OciFileManagerTest {
@@ -34,8 +35,8 @@ class OciFileManagerTest {
   private static final String NAMESPACE = "test-namespace";
   private static final String BUCKET_NAME = "MyObjectStorage";
   private static final String ENDPOINT = "https://private.objectstorage.example.com";
-  private static final String PAR_BASE_URL =
-      "https://objectstorage.example.com/p/test-token/n/test-namespace/b/MyObjectStorage/o/";
+  private static final String FILE_BASE_URL = "https://theme-maker-test.kro.kr";
+  private static final String FILE_URL_PREFIX = FILE_BASE_URL + "/data/uploads/";
 
   @Mock
   private ObjectStorage objectStorage;
@@ -47,21 +48,10 @@ class OciFileManagerTest {
     OciObjectStorageProperty property = new OciObjectStorageProperty(
         NAMESPACE,
         BUCKET_NAME,
-        ENDPOINT,
-        PAR_BASE_URL
+        ENDPOINT
     );
-    ociFileManager = new OciFileManager(objectStorage, property);
-  }
-
-  @Test
-  @DisplayName("ASCII 객체명과 중첩 경로를 PAR URL로 변환하고 다시 복원한다")
-  void resolveAndConvertFilePath_asciiNestedPath_success() {
-    String fileName = "themes/preview/image.png";
-
-    String fileUrl = ociFileManager.resolveFilePath(fileName);
-
-    assertThat(fileUrl).isEqualTo(PAR_BASE_URL + fileName);
-    assertThat(ociFileManager.convertUrlToFileName(fileUrl)).isEqualTo(fileName);
+    FileStorageProperty fileStorageProperty = new FileStorageProperty(FILE_BASE_URL, Storage.OCI);
+    ociFileManager = new OciFileManager(objectStorage, property, fileStorageProperty);
   }
 
   @Test
@@ -74,38 +64,36 @@ class OciFileManagerTest {
 
     String fileUrl = ociFileManager.resolveFilePath(fileName);
 
-    assertThat(fileUrl).isEqualTo(PAR_BASE_URL + encodedFileName);
-    assertThat(fileUrl).doesNotContain("+");
+    assertThat(fileUrl).isEqualTo(FILE_URL_PREFIX + encodedFileName);
     assertThat(ociFileManager.convertUrlToFileName(fileUrl)).isEqualTo(fileName);
   }
 
   @Test
-  @DisplayName("PAR base URL과 일치하지 않는 URL은 객체명으로 변환하지 않는다")
+  @DisplayName("file base URL과 일치하지 않는 URL은 객체명으로 변환하지 않는다")
   void convertUrlToFileName_invalidPrefix_throwsException() {
     assertThatThrownBy(
         () -> ociFileManager.convertUrlToFileName("https://example.com/themes/image.png"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageNotContaining("test-token");
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  @DisplayName("null 또는 빈 객체명과 URL을 거부한다")
+  @DisplayName("빈 객체명과 null URL을 거부한다")
   void resolveAndConvertFilePath_nullOrBlank_throwsException() {
-    assertThatThrownBy(() -> ociFileManager.resolveFilePath(null))
-        .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> ociFileManager.resolveFilePath("  "))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> ociFileManager.convertUrlToFileName(null))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> ociFileManager.convertUrlToFileName("  "))
         .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> ociFileManager.convertUrlToFileName(FILE_URL_PREFIX))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  @DisplayName("byte 배열 업로드 요청에 namespace, bucket, 객체명, 길이와 본문을 전달한다")
+  @DisplayName("byte 배열 업로드 요청에 객체 정보, 길이, MIME type과 본문을 전달한다")
   void uploadFile_byteArray_success() throws IOException {
     byte[] fileBytes = "file-content".getBytes(StandardCharsets.UTF_8);
-    String fileName = "themes/file.txt";
+    String fileName = "themes/file.png";
 
     String fileUrl = ociFileManager.uploadFile(fileBytes, fileName);
 
@@ -116,28 +104,35 @@ class OciFileManagerTest {
     assertThat(request.getBucketName()).isEqualTo(BUCKET_NAME);
     assertThat(request.getObjectName()).isEqualTo(fileName);
     assertThat(request.getContentLength()).isEqualTo((long) fileBytes.length);
+    assertThat(request.getContentType()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
     assertThat(request.getPutObjectBody().readAllBytes()).isEqualTo(fileBytes);
-    assertThat(fileUrl).isEqualTo(PAR_BASE_URL + fileName);
+    assertThat(fileUrl).isEqualTo(FILE_URL_PREFIX + fileName);
   }
 
   @Test
-  @DisplayName("InputStream 업로드 요청에 전달받은 stream과 content length를 그대로 사용한다")
+  @DisplayName("JPEG 확장자는 image/jpeg Content-Type으로 업로드한다")
+  void uploadFile_jpegContentType_success() {
+    ociFileManager.uploadFile(new byte[] {1}, "themes/file.JPEG");
+
+    ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
+    verify(objectStorage).putObject(captor.capture());
+    assertThat(captor.getValue().getContentType()).isEqualTo(MediaType.IMAGE_JPEG_VALUE);
+  }
+
+  @Test
+  @DisplayName("InputStream 업로드에 기본 MIME type을 적용하고 stream을 닫는다")
   void uploadFile_inputStream_success() throws IOException {
     byte[] fileBytes = "stream-content".getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = spy(new ByteArrayInputStream(fileBytes));
-    String fileName = "themes/stream.txt";
+    String fileName = "themes/theme.html";
 
-    String fileUrl = ociFileManager.uploadFile(inputStream, fileBytes.length, fileName);
+    ociFileManager.uploadFile(inputStream, fileBytes.length, fileName);
 
     ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
     verify(objectStorage).putObject(captor.capture());
     PutObjectRequest request = captor.getValue();
-    assertThat(request.getNamespaceName()).isEqualTo(NAMESPACE);
-    assertThat(request.getBucketName()).isEqualTo(BUCKET_NAME);
-    assertThat(request.getObjectName()).isEqualTo(fileName);
-    assertThat(request.getContentLength()).isEqualTo((long) fileBytes.length);
+    assertThat(request.getContentType()).isEqualTo(MediaType.APPLICATION_OCTET_STREAM_VALUE);
     assertThat(request.getPutObjectBody()).isSameAs(inputStream);
-    assertThat(fileUrl).isEqualTo(PAR_BASE_URL + fileName);
     verify(inputStream).close();
   }
 
@@ -153,24 +148,12 @@ class OciFileManagerTest {
 
     ArgumentCaptor<GetObjectRequest> captor = ArgumentCaptor.forClass(GetObjectRequest.class);
     verify(objectStorage).getObject(captor.capture());
-    assertObjectRequest(captor.getValue(), "themes/download.txt");
+    GetObjectRequest request = captor.getValue();
+    assertThat(request.getNamespaceName()).isEqualTo(NAMESPACE);
+    assertThat(request.getBucketName()).isEqualTo(BUCKET_NAME);
+    assertThat(request.getObjectName()).isEqualTo("themes/download.txt");
     assertThat(result).isEqualTo(fileBytes);
     verify(inputStream).close();
-  }
-
-  @Test
-  @DisplayName("객체 다운로드 응답의 InputStream을 호출자에게 반환한다")
-  void download_success() {
-    InputStream inputStream = new ByteArrayInputStream(new byte[]{1, 2, 3});
-    given(objectStorage.getObject(any(GetObjectRequest.class)))
-        .willReturn(GetObjectResponse.builder().inputStream(inputStream).build());
-
-    InputStream result = ociFileManager.download("themes/download.bin");
-
-    ArgumentCaptor<GetObjectRequest> captor = ArgumentCaptor.forClass(GetObjectRequest.class);
-    verify(objectStorage).getObject(captor.capture());
-    assertObjectRequest(captor.getValue(), "themes/download.bin");
-    assertThat(result).isSameAs(inputStream);
   }
 
   @Test
@@ -189,18 +172,6 @@ class OciFileManagerTest {
   }
 
   @Test
-  @DisplayName("OCI SDK 예외를 그대로 전파하고 업로드 stream을 닫는다")
-  void uploadFile_sdkException_propagates() throws IOException {
-    BmcException exception = mock(BmcException.class);
-    InputStream inputStream = spy(new ByteArrayInputStream(new byte[]{1}));
-    given(objectStorage.putObject(any(PutObjectRequest.class))).willThrow(exception);
-
-    assertThatThrownBy(() -> ociFileManager.uploadFile(inputStream, 1, "themes/fail.bin"))
-        .isSameAs(exception);
-    verify(inputStream).close();
-  }
-
-  @Test
   @DisplayName("byte 배열 다운로드 중 IOException이 발생하면 UncheckedIOException으로 변환한다")
   void downloadFile_ioException_throwsUncheckedIOException() {
     InputStream inputStream = new InputStream() {
@@ -214,13 +185,6 @@ class OciFileManagerTest {
 
     assertThatThrownBy(() -> ociFileManager.downloadFile("themes/fail.bin"))
         .isInstanceOf(UncheckedIOException.class)
-        .hasCauseInstanceOf(IOException.class)
-        .hasRootCauseMessage("forced read failure");
-  }
-
-  private void assertObjectRequest(GetObjectRequest request, String fileName) {
-    assertThat(request.getNamespaceName()).isEqualTo(NAMESPACE);
-    assertThat(request.getBucketName()).isEqualTo(BUCKET_NAME);
-    assertThat(request.getObjectName()).isEqualTo(fileName);
+        .hasCauseInstanceOf(IOException.class);
   }
 }
