@@ -3,6 +3,7 @@ package com.komentum.designcomponent.service.seeder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.komentum.designcomponent.domain.ColorStyle;
 import com.komentum.designcomponent.dto.SeedResult;
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.repository.ColorStyleRepository;
 import com.komentum.global.utils.JsonUtils;
@@ -47,7 +48,20 @@ public class ColorStyleSeeder extends AbstractMapJsonSeeder<ColorStyle> {
         .styleCode(StyleCode.from(key))
         .name(node.path("name").asText())
         .explain(node.path("description").asText())
+        .platformScope(resolvePlatformScope(node))
         .build();
+  }
+
+  /**
+   * seed 노드의 platform 필드를 읽어 PlatformScope로 변환한다.
+   * 필드가 없으면 공통(COMMON)으로 취급한다.
+   */
+  private PlatformScope resolvePlatformScope(JsonNode node) {
+    String platform = node.path("platform").asText(null);
+    if (platform == null || platform.isBlank()) {
+      return PlatformScope.COMMON;
+    }
+    return PlatformScope.fromString(platform);
   }
 
   /**

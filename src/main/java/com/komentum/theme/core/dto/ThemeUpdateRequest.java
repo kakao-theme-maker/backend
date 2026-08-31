@@ -3,6 +3,12 @@ package com.komentum.theme.core.dto;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.enums.TypeCode;
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.komentum.global.utils.RegexValidator;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -71,7 +77,19 @@ public class ThemeUpdateRequest {
   @Schema(description = "테마 색상 갱신 DTO")
   public static class ThemeStyleUpdateRequest {
 
+    @NotNull
+    @Pattern(regexp = RegexValidator.HEX_COLOR_REGEX, message = "color must be a valid hex color")
     @Schema(description = "새로 저장할 hex color")
     String color;
+
+    @NotNull
+    @Min(0)
+    @Max(100)
+    Integer alpha;
   }
+
+  String themeName;
+  Map<TypeCode, ThemeImageUpdateRequest> typeCodes;
+  @Valid
+  Map<StyleCode, ThemeStyleUpdateRequest> styleCodes;
 }

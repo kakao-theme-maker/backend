@@ -123,7 +123,11 @@ public class AndroidThemeGenerator {
    */
   private void applyThemeImages(Integer themeId) {
     // themeImage, platformComponentType 조회
-    List<ThemeImage> themeImageList = themeImageRepository.fetchJoinAllByThemeComponentId(themeId);
+    List<ThemeImage> themeImageList = themeImageRepository.fetchJoinAllByThemeComponentId(themeId)
+        .stream()
+        .filter(themeImage -> themeImage.getComponentType().getPlatformScope()
+            .supports(Platform.ANDROID))
+        .toList();
     Map<TypeCode, List<PlatformComponentType>> platformComponentTypeMap = platformComponentTypeRepository
         .fetchJoinAllByPlatform(Platform.ANDROID)
         .stream().collect(Collectors.groupingBy(
@@ -155,7 +159,11 @@ public class AndroidThemeGenerator {
    */
   private void applyThemeStyles(Integer themeId) {
     // themeImage, platformColorStyle 조회
-    List<ThemeStyle> themeStyleList = themeStyleRepository.fetchJoinAllByThemeComponentId(themeId);
+    List<ThemeStyle> themeStyleList = themeStyleRepository.fetchJoinAllByThemeComponentId(themeId)
+        .stream()
+        .filter(themeStyle -> themeStyle.getColorStyle().getPlatformScope()
+            .supports(Platform.ANDROID))
+        .toList();
     Map<StyleCode, List<PlatformColorStyle>> platformColorStyleMap = platformColorStyleRepository
         .fetchJoinAllByPlatform(Platform.ANDROID)
         .stream().collect(Collectors.groupingBy(

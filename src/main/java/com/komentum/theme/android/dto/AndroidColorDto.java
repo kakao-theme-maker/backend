@@ -20,7 +20,7 @@ public class AndroidColorDto {
   public static AndroidColorDto fromEntity(ThemeStyle themeStyle,
       PlatformColorStyle platformColorStyle) {
     return AndroidColorDto.builder()
-        .color(themeStyle.getColor())
+        .color(themeStyle.getColorWithAlphaArgb())
         .attrName(platformColorStyle.getResourceName())
         .weight(platformColorStyle.getWeight())
         .build();

@@ -2,6 +2,7 @@ package com.komentum.theme.core.service;
 
 import com.google.common.base.Functions;
 import com.komentum.designcomponent.enums.StyleCode;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeStyle;
 import com.komentum.theme.core.dto.ThemeDetailResponse.StyleCodeInfo;
@@ -32,7 +33,7 @@ public class ThemeStyleService {
     Map<StyleCode, StyleCodeInfo> res = themeStyles.stream()
         .collect(Collectors.toMap(
             ts -> ts.getColorStyle().getStyleCode(),
-            ts -> StyleCodeInfo.of(ts.getColor())
+            ts -> StyleCodeInfo.of(ts.getColor(), ts.getAlpha(), ts.getColorStyle().getPlatformScope())
         ));
     if (res.size() != StyleCode.values().length) {
       log.warn(
@@ -67,6 +68,13 @@ public class ThemeStyleService {
     themeStyleRepository.saveAll(targetThemeStyles);
   }
 
+  /**
+   * 요청으로 전달된 StyleCode별 color/alpha 값으로 기존 ThemeStyle을 덮어쓴다.
+   * color와 alpha는 항상 함께 존재해야 하며, updateRequestMap이 비어있으면 아무 것도 하지 않는다.
+   *
+   * @throws ResourceNotFoundException 요청에 포함된 StyleCode에 대응하는 ThemeStyle이 존재하지 않는 경우
+   * @throws IllegalArgumentException  요청 항목의 color 또는 alpha가 null이거나 alpha가 0~100 범위를 벗어난 경우
+   */
   @Transactional
   public void updateThemeStyles(
       int themeComponentId,
@@ -81,8 +89,16 @@ public class ThemeStyleService {
             Functions.identity())
         );
     updateRequestMap.forEach((styleCode, updateRequest) -> {
+      if (updateRequest == null) {
+        throw new IllegalArgumentException("style update request must not be null: " + styleCode);
+      }
       ThemeStyle themeStyle = themeStyleMap.get(styleCode);
-      themeStyle.setColor(updateRequest.getColor());
+      if (themeStyle == null) {
+        throw new ResourceNotFoundException(
+            "ThemeStyle not found for styleCode=" + styleCode
+                + ", themeComponentId=" + themeComponentId);
+      }
+      themeStyle.updateColorAndAlpha(updateRequest.getColor(), updateRequest.getAlpha());
     });
   }
 }
