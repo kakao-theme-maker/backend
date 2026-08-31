@@ -1,5 +1,6 @@
 package com.komentum.designcomponent.dto;
 
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -22,4 +23,7 @@ public class ColorStyleUpdateRequest {
 
   @Schema(description = "수정할 color style 종류, null 허용")
   private StyleCode styleCode;
+
+  @Schema(description = "수정할 color style이 공통/Android/iOS 중 어디에 속하는지, null 허용")
+  private PlatformScope platformScope;
 }

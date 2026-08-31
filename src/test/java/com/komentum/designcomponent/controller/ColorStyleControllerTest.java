@@ -11,6 +11,7 @@ import com.komentum.designcomponent.dto.ColorStyleCreateDto;
 import com.komentum.designcomponent.dto.ColorStyleResponse;
 import com.komentum.designcomponent.dto.ColorStyleUpdateRequest;
 import com.komentum.designcomponent.dto.SeedResult;
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.repository.ColorStyleRepository;
 import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
@@ -76,12 +77,14 @@ public class ColorStyleControllerTest {
         .extracting(
             ColorStyle::getStyleCode,
             ColorStyle::getName,
-            ColorStyle::getExplain
+            ColorStyle::getExplain,
+            ColorStyle::getPlatformScope
         )
         .containsExactly(
             response.getStyleCode(),
             response.getName(),
-            response.getExplain()
+            response.getExplain(),
+            response.getPlatformScope()
         );
   }
 
@@ -116,6 +119,7 @@ public class ColorStyleControllerTest {
         .explain("test")
         .name("test")
         .styleCode(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR)
+        .platformScope(PlatformScope.COMMON)
         .build();
     MockHttpServletRequestBuilder requestBuilder = mockMvcUtils.addAuthentication(
         MockMvcRequestBuilders
@@ -134,13 +138,42 @@ public class ColorStyleControllerTest {
         .extracting(
             ColorStyleResponse::getName,
             ColorStyleResponse::getStyleCode,
-            ColorStyleResponse::getExplain
+            ColorStyleResponse::getExplain,
+            ColorStyleResponse::getPlatformScope
         )
         .containsExactly(
             createRequest.getName(),
             createRequest.getStyleCode(),
-            createRequest.getExplain()
+            createRequest.getExplain(),
+            createRequest.getPlatformScope()
         );
+    assertColorStyleResponse(response);
+  }
+
+  @Test
+  @DisplayName("ColorStyle 생성 시 플랫폼 구분(platformScope)을 지정할 수 있다")
+  void createColorStyle_withIosPlatformScope_success() throws Exception {
+    // Given
+    ColorStyleCreateDto createRequest = ColorStyleCreateDto.builder()
+        .explain("iOS 전용 색상")
+        .name("ios color")
+        .styleCode(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR)
+        .platformScope(PlatformScope.IOS)
+        .build();
+    MockHttpServletRequestBuilder requestBuilder = mockMvcUtils.addAuthentication(
+        MockMvcRequestBuilders
+            .post("/api/color-styles")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(createRequest)),
+        TestClientDto.fromEntity(rootUser)
+    );
+    // When
+    ColorStyleResponse response = mockMvcUtils.parseResponse(
+        mockMvc.perform(requestBuilder).andExpect(status().isOk()),
+        new TypeReference<>() {
+        });
+    // then
+    assertThat(response.getPlatformScope()).isEqualTo(PlatformScope.IOS);
     assertColorStyleResponse(response);
   }
 
@@ -203,6 +236,7 @@ public class ColorStyleControllerTest {
         .explain(UUID.randomUUID().toString())
         .name(UUID.randomUUID().toString())
         .styleCode(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR)
+        .platformScope(PlatformScope.ANDROID)
         .build();
     // When
     ColorStyleResponse response = mockMvcUtils.doAuthRequest(
@@ -222,12 +256,14 @@ public class ColorStyleControllerTest {
         .extracting(
             ColorStyleResponse::getName,
             ColorStyleResponse::getStyleCode,
-            ColorStyleResponse::getExplain
+            ColorStyleResponse::getExplain,
+            ColorStyleResponse::getPlatformScope
         )
         .containsExactly(
             updateRequest.getName(),
             updateRequest.getStyleCode(),
-            updateRequest.getExplain()
+            updateRequest.getExplain(),
+            updateRequest.getPlatformScope()
         );
     assertColorStyleResponse(response);
   }

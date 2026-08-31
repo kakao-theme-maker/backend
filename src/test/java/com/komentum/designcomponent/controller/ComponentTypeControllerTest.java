@@ -9,6 +9,7 @@ import com.komentum.designcomponent.dto.ComponentTypeCreateRequest;
 import com.komentum.designcomponent.dto.ComponentTypeDto;
 import com.komentum.designcomponent.dto.ComponentTypeUpdateRequest;
 import com.komentum.designcomponent.dto.SeedResult;
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
@@ -82,11 +83,13 @@ public class ComponentTypeControllerTest {
         .extracting(
             ComponentType::getTypeCode,
             ComponentType::getName,
-            ComponentType::getExplain)
+            ComponentType::getExplain,
+            ComponentType::getPlatformScope)
         .containsExactly(
             response.getTypeCode(),
             response.getName(),
-            response.getExplain());
+            response.getExplain(),
+            response.getPlatformScope());
   }
 
   public ComponentType createTestComponentType(TypeCode typeCode) {
@@ -106,6 +109,7 @@ public class ComponentTypeControllerTest {
         .explain("아이콘")
         .name("icon")
         .typeCode(TypeCode.CHAT_ROOM_BACKGROUND_IMAGE)
+        .platformScope(PlatformScope.COMMON)
         .build();
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(
@@ -125,13 +129,43 @@ public class ComponentTypeControllerTest {
         .extracting(
             ComponentTypeDto::getExplain,
             ComponentTypeDto::getName,
-            ComponentTypeDto::getTypeCode
+            ComponentTypeDto::getTypeCode,
+            ComponentTypeDto::getPlatformScope
         )
         .containsExactly(
             request.getExplain(),
             request.getName(),
-            request.getTypeCode()
+            request.getTypeCode(),
+            request.getPlatformScope()
         );
+    assertComponentTypeDto(response);
+  }
+
+  @Test
+  @DisplayName("ComponentType 생성 시 플랫폼 구분(platformScope)을 지정할 수 있다")
+  void createComponentType_withAndroidPlatformScope_success() throws Exception {
+    // Given
+    ComponentTypeCreateRequest request = ComponentTypeCreateRequest.builder()
+        .explain("Android 전용 아이콘")
+        .name("android icon")
+        .typeCode(TypeCode.CHAT_ROOM_BACKGROUND_IMAGE)
+        .platformScope(PlatformScope.ANDROID)
+        .build();
+    // When
+    ComponentTypeDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<ComponentTypeCreateRequest, ComponentTypeDto>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.POST)
+            .path("/api/component-types")
+            .clientDto(TestClientDto.fromEntity(client))
+            .body(request)
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // Then
+    assertThat(response.getPlatformScope()).isEqualTo(PlatformScope.ANDROID);
     assertComponentTypeDto(response);
   }
 
@@ -194,6 +228,7 @@ public class ComponentTypeControllerTest {
         .explain("수정된 컴포넌트")
         .name("updated icon")
         .typeCode(TypeCode.PASSCODE_BACKGROUND_IMAGE)
+        .platformScope(PlatformScope.IOS)
         .build();
     // When
     ComponentTypeDto response = mockMvcUtils.doAuthRequest(
@@ -213,12 +248,14 @@ public class ComponentTypeControllerTest {
         .extracting(
             ComponentTypeDto::getExplain,
             ComponentTypeDto::getName,
-            ComponentTypeDto::getTypeCode
+            ComponentTypeDto::getTypeCode,
+            ComponentTypeDto::getPlatformScope
         )
         .containsExactly(
             updateRequest.getExplain(),
             updateRequest.getName(),
-            updateRequest.getTypeCode()
+            updateRequest.getTypeCode(),
+            updateRequest.getPlatformScope()
         );
     assertComponentTypeDto(response);
   }

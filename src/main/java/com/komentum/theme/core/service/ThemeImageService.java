@@ -58,7 +58,7 @@ public class ThemeImageService {
     Map<TypeCode, TypeCodeInfo> res = themeImages.stream()
         .collect(Collectors.toMap(
             ti -> ti.getComponentType().getTypeCode(),
-            ti -> TypeCodeInfo.of(ti.getDesignComponent())
+            ti -> TypeCodeInfo.of(ti.getDesignComponent(), ti.getComponentType().getPlatformScope())
         ));
     if (res.size() != TypeCode.values().length) {
       log.warn(

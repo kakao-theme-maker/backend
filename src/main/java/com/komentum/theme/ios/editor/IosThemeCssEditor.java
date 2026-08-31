@@ -175,7 +175,7 @@ public class IosThemeCssEditor {
       if (themeStyle == null) {
         continue;
       }
-      String color = normalizeCssColor(themeStyle.getColor(), platformColorStyle.getWeight());
+      String color = themeStyle.getColorWithAlphaRgba();
       if (color == null) {
         continue;
       }
@@ -256,26 +256,5 @@ public class IosThemeCssEditor {
       return themeComponent.getVersionName();
     }
     return themeComponent.getVersionNumber();
-  }
-
-  private String normalizeCssColor(String color, double weight) {
-    if (!RegexValidator.isValidHexColor(color)) {
-      return null;
-    }
-    String normalized = color.trim();
-    // 테마 내에서 6자리 hex color만 사용할 수 있음
-    // 6자리 색상이고 #이 없다면, 6자리 hex color로 변환
-    if (normalized.matches("[0-9a-fA-F]{6}")) {
-      normalized = "#" + normalized;
-    }
-    // 8자리 색상이고 #이 없으면, 6자리 hex color로 변환
-    else if (normalized.matches("[0-9a-fA-F]{8}")) {
-      normalized = "#" + normalized.substring(0, 6);
-    }
-    // 8자리 색상이면, 6자리 hex color로 변환
-    else if (normalized.matches("#[0-9a-fA-F]{8}")) {
-      normalized = normalized.substring(0, 7);
-    }
-    return ColorEditor.toDarkColor(normalized, weight);
   }
 }

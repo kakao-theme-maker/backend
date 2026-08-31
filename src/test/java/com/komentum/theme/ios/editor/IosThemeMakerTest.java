@@ -10,19 +10,29 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.komentum.designcomponent.enums.Platform;
+import com.komentum.designcomponent.domain.ColorStyle;
+import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.enums.PlatformScope;
+import com.komentum.designcomponent.enums.StyleCode;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.PlatformColorStyleRepository;
 import com.komentum.designcomponent.repository.PlatformComponentTypeRepository;
 import com.komentum.global.domain.policy.OwnerAdminPolicy;
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeImage;
+import com.komentum.theme.core.domain.ThemeStyle;
 import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.theme.core.service.ThemeStyleService;
+import com.komentum.theme.ios.dto.IosThemePackageResponse;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -146,5 +156,73 @@ class IosThemeMakerTest {
         iosThemeImageEditor,
         iosThemeSaver
     );
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void makeTheme_excludesDataExclusiveToOtherPlatforms() throws Exception {
+    // given
+    int themeComponentId = 9;
+    String ownerEmail = "owner@test.com";
+    ThemeComponent themeComponent = ThemeComponent.builder()
+        .themeComponentId(themeComponentId)
+        .userEmail(ownerEmail)
+        .build();
+    User themeOwner = User.builder()
+        .publicUserId("owner-public-id")
+        .userEmail(ownerEmail)
+        .build();
+    ColorStyle commonColorStyle = ColorStyle.builder()
+        .colorStyleId(1)
+        .styleCode(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR)
+        .platformScope(PlatformScope.COMMON)
+        .build();
+    ColorStyle iosColorStyle = ColorStyle.builder()
+        .colorStyleId(2)
+        .styleCode(StyleCode.FEATURE_STYLE_TEXT_COLOR)
+        .platformScope(PlatformScope.IOS)
+        .build();
+    ColorStyle androidOnlyColorStyle = ColorStyle.builder()
+        .colorStyleId(3)
+        .styleCode(StyleCode.TABBAR_STYLE_BACKGROUND_COLOR)
+        .platformScope(PlatformScope.ANDROID)
+        .build();
+    ThemeStyle commonStyle = ThemeStyle.builder().colorStyle(commonColorStyle).color("#111111")
+        .build();
+    ThemeStyle iosStyle = ThemeStyle.builder().colorStyle(iosColorStyle).color("#222222").build();
+    ThemeStyle androidOnlyStyle = ThemeStyle.builder().colorStyle(androidOnlyColorStyle)
+        .color("#333333").build();
+    ComponentType commonType = ComponentType.builder()
+        .componentTypeId(1)
+        .typeCode(TypeCode.PASSCODE_BACKGROUND_IMAGE)
+        .platformScope(PlatformScope.COMMON)
+        .build();
+    ComponentType androidOnlyType = ComponentType.builder()
+        .componentTypeId(2)
+        .typeCode(TypeCode.CHAT_ROOM_BACKGROUND_IMAGE)
+        .platformScope(PlatformScope.ANDROID)
+        .build();
+    ThemeImage commonImage = ThemeImage.builder().componentType(commonType).build();
+    ThemeImage androidOnlyImage = ThemeImage.builder().componentType(androidOnlyType).build();
+    // stub
+    when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
+    when(userEntityFinder.findUserEntityByEmail(ownerEmail)).thenReturn(themeOwner);
+    when(ownerAdminPolicy.validate(themeOwner)).thenReturn(true);
+    when(themeStyleService.fetchJoinThemeStylesByThemeComponentId(themeComponentId))
+        .thenReturn(List.of(commonStyle, iosStyle, androidOnlyStyle));
+    when(themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId))
+        .thenReturn(List.of(commonImage, androidOnlyImage));
+    when(iosThemeSaver.save(eq(themeComponentId), any()))
+        .thenReturn(IosThemePackageResponse.builder().themeComponentId(themeComponentId).build());
+    // when
+    iosThemeMaker.makeTheme(themeComponentId);
+    // then : Android 전용 데이터(androidOnlyStyle, androidOnlyImage)는 제외되고 공통 + iOS 전용 데이터만 iOS 에디터에 전달된다
+    ArgumentCaptor<List<ThemeStyle>> styleCaptor = ArgumentCaptor.forClass(List.class);
+    verify(iosThemeCssEditor).editCss(any(), eq(themeComponent), styleCaptor.capture(), any());
+    assertThat(styleCaptor.getValue()).containsExactlyInAnyOrder(commonStyle, iosStyle);
+
+    ArgumentCaptor<List<ThemeImage>> imageCaptor = ArgumentCaptor.forClass(List.class);
+    verify(iosThemeImageEditor).editImages(any(), imageCaptor.capture(), any());
+    assertThat(imageCaptor.getValue()).containsExactly(commonImage);
   }
 }
