@@ -9,9 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.komentum.designcomponent.enums.Platform;
 import com.komentum.designcomponent.domain.ColorStyle;
 import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.enums.Platform;
 import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.enums.TypeCode;
@@ -24,11 +24,9 @@ import com.komentum.theme.core.domain.ThemeStyle;
 import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.theme.core.service.ThemeStyleService;
-import com.komentum.theme.ios.dto.IosThemePackageResponse;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -87,7 +85,8 @@ class IosThemeMakerTest {
         .thenReturn(List.of());
     when(themeStyleService.fetchJoinThemeStylesByThemeComponentId(themeComponentId))
         .thenReturn(List.of());
-    when(platformComponentTypeRepository.fetchJoinAllByPlatform(Platform.IOS)).thenReturn(List.of());
+    when(platformComponentTypeRepository.fetchJoinAllByPlatform(Platform.IOS)).thenReturn(
+        List.of());
     when(platformColorStyleRepository.fetchJoinAllByPlatform(Platform.IOS)).thenReturn(List.of());
     when(iosThemeSaver.save(eq(themeComponentId), any(Path.class)))
         .thenReturn(packageUrl);
@@ -164,6 +163,7 @@ class IosThemeMakerTest {
     // given
     int themeComponentId = 9;
     String ownerEmail = "owner@test.com";
+    String expectedPackageUrl = "https://cdn.example.com/theme.ktheme";
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(themeComponentId)
         .userEmail(ownerEmail)
@@ -213,7 +213,7 @@ class IosThemeMakerTest {
     when(themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId))
         .thenReturn(List.of(commonImage, androidOnlyImage));
     when(iosThemeSaver.save(eq(themeComponentId), any()))
-        .thenReturn(IosThemePackageResponse.builder().themeComponentId(themeComponentId).build());
+        .thenReturn(expectedPackageUrl);
     // when
     iosThemeMaker.makeTheme(themeComponentId);
     // then : Android 전용 데이터(androidOnlyStyle, androidOnlyImage)는 제외되고 공통 + iOS 전용 데이터만 iOS 에디터에 전달된다
