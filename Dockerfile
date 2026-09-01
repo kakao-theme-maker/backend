@@ -6,7 +6,7 @@ WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends docker.io \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY build/libs/kakao-theme-maker.jar app.jar
 
