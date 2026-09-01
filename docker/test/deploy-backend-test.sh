@@ -10,6 +10,8 @@ TARGET_IMAGE="ghcr.io/kakao-theme-maker/backend@sha256:$(printf '2%.0s' {1..64})
 PREVIOUS_IMAGE="ghcr.io/kakao-theme-maker/backend@sha256:$(printf '1%.0s' {1..64})"
 readonly LEGACY_IMAGE="louie8821/kakao-theme-maker:v1-dev"
 readonly MUTABLE_GHCR_IMAGE="ghcr.io/kakao-theme-maker/backend:dev"
+BACKEND_CONFIG_SHA_MISMATCH="$(printf '0%.0s' {1..40})"
+readonly BACKEND_CONFIG_SHA_MISMATCH
 readonly TARGET_IMAGE PREVIOUS_IMAGE
 
 fail() {
@@ -101,8 +103,10 @@ shift
 [[ "$1" == "--env-file" ]] || exit 1
 [[ "$2" == "${FAKE_COMPOSE_ENV_FILE}" ]] || exit 1
 shift 2
-[[ "$1" == "-f" ]] || exit 1
-shift 2
+while [[ "$1" == "-f" ]]; do
+  [[ -n "${2:-}" ]] || exit 1
+  shift 2
+done
 
 case "$1" in
   ps)
@@ -132,11 +136,60 @@ FAKE_DOCKER
 
 new_case() {
   local case_dir="$1"
-  mkdir -p "${case_dir}/state"
+  mkdir -p "${case_dir}/state" "${case_dir}/backend_config/dev/monolithic"
   : >"${case_dir}/state/commands.log"
   : >"${case_dir}/docker-compose.yml"
-  : >"${case_dir}/backend.env"
+  : >"${case_dir}/docker-compose.deploy.yml"
+  : >"${case_dir}/docker-compose.deploy.prod.yml"
+  printf 'spring:\n  application:\n    name: test\n' \
+    >"${case_dir}/backend_config/dev/monolithic/application.yml"
+  printf 'spring:\n  config:\n    activate:\n      on-profile: dev\n' \
+    >"${case_dir}/backend_config/dev/monolithic/application-dev.yml"
+  printf 'spring:\n  config:\n    activate:\n      on-profile: prod\n' \
+    >"${case_dir}/backend_config/dev/monolithic/application-prod.yml"
+  git -C "${case_dir}/backend_config" init -q
+  git -C "${case_dir}/backend_config" config user.name test
+  git -C "${case_dir}/backend_config" config user.email test@example.com
+  git -C "${case_dir}/backend_config" config commit.gpgSign false
+  git -C "${case_dir}/backend_config" add dev
+  git -C "${case_dir}/backend_config" commit -qm 'test config'
+  cat >"${case_dir}/backend.env" <<EOF
+COMPOSE_PROJECT_NAME=test
+BACKEND_BIND_ADDRESS=127.0.0.1
+BACKEND_PORT=28080
+SPRING_PROFILES_ACTIVE=dev
+MYSQL_ROOT_PASSWORD=test
+MYSQL_DATABASE=test
+MYSQL_ROOT_HOST=%
+EOF
+  export BACKEND_CONFIG_DIR_OVERRIDE="${case_dir}/backend_config"
   create_fake_docker "${case_dir}/bin"
+}
+
+case_config_sha() {
+  git -C "$1/backend_config" rev-parse HEAD
+}
+
+set_case_profile() {
+  local case_dir="$1"
+  local profile="$2"
+  local env_tmp="${case_dir}/backend.env.tmp"
+
+  awk -v profile="${profile}" '
+    /^SPRING_PROFILES_ACTIVE=/ { print "SPRING_PROFILES_ACTIVE=" profile; next }
+    { print }
+  ' "${case_dir}/backend.env" >"${env_tmp}"
+  mv "${env_tmp}" "${case_dir}/backend.env"
+}
+
+remove_env_key() {
+  local case_dir="$1"
+  local key="$2"
+  local env_tmp="${case_dir}/backend.env.tmp"
+
+  awk -v key="${key}" 'index($0, key "=") != 1' \
+    "${case_dir}/backend.env" >"${env_tmp}"
+  mv "${env_tmp}" "${case_dir}/backend.env"
 }
 
 test_successful_deployment() {
@@ -155,7 +208,7 @@ test_successful_deployment() {
   HEALTH_POLL_INTERVAL_SECONDS=1 \
   DEPLOY_SEQUENCE=10 \
   DEPLOY_SEQUENCE_FILE="${case_dir}/deploy-sequence" \
-    "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}"
+    "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev "$(case_config_sha "${case_dir}")"
 
   [[ "$(<"${case_dir}/state/current-image")" == "${TARGET_IMAGE}" ]] \
     || fail "successful deployment did not keep the target image"
@@ -164,6 +217,11 @@ test_successful_deployment() {
   assert_file_contains "${case_dir}/state/commands.log" "ps --all -q backend"
   assert_file_contains "${case_dir}/state/commands.log" \
     "compose --env-file ${case_dir}/backend.env -f ${case_dir}/docker-compose.yml"
+  [[ "$(<"${case_dir}/state/commands.log")" != *"docker-compose.deploy.prod.yml"* ]] \
+    || fail "dev deployment must not use the production override"
+  if grep -q '^ps ' "${case_dir}/state/commands.log"; then
+    fail "backend lookup must remain scoped to the Compose project"
+  fi
   [[ "$(<"${case_dir}/deploy-sequence")" == "10" ]] \
     || fail "successful deployment did not record its sequence"
 }
@@ -182,10 +240,11 @@ test_default_compose_env_file_is_script_relative() {
   FAKE_COMPOSE_ENV_FILE="${case_dir}/backend.env" \
   HEALTH_TIMEOUT_SECONDS=1 \
   HEALTH_POLL_INTERVAL_SECONDS=1 \
-    "${case_dir}/deploy-backend.sh" "${TARGET_IMAGE}"
+    "${case_dir}/deploy-backend.sh" "${TARGET_IMAGE}" dev \
+      "$(case_config_sha "${case_dir}")"
 
   assert_file_contains "${case_dir}/state/commands.log" \
-    "compose --env-file ${case_dir}/backend.env -f ${case_dir}/docker-compose.yml"
+    "compose --env-file ${case_dir}/backend.env -f ${case_dir}/docker-compose.deploy.yml"
 }
 
 test_failed_deployment_rolls_back() {
@@ -207,7 +266,8 @@ test_failed_deployment_rolls_back() {
       HEALTH_POLL_INTERVAL_SECONDS=1 \
       DEPLOY_SEQUENCE=12 \
       DEPLOY_SEQUENCE_FILE="${case_dir}/deploy-sequence" \
-      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" 2>&1)"; then
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
     fail "a failed deployment must exit with a non-zero status"
   fi
 
@@ -242,7 +302,8 @@ test_failed_first_deployment_stops_backend() {
       COMPOSE_ENV_FILE="${case_dir}/backend.env" \
       HEALTH_TIMEOUT_SECONDS=1 \
       HEALTH_POLL_INTERVAL_SECONDS=1 \
-      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}"; then
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")"; then
     fail "a failed first deployment must exit with a non-zero status"
   fi
 
@@ -269,7 +330,8 @@ test_failed_rollback_start_stops_target() {
       COMPOSE_ENV_FILE="${case_dir}/backend.env" \
       HEALTH_TIMEOUT_SECONDS=1 \
       HEALTH_POLL_INTERVAL_SECONDS=1 \
-      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" 2>&1)"; then
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
     fail "a rollback start failure must exit with a non-zero status"
   fi
 
@@ -299,7 +361,8 @@ test_unhealthy_rollback_image_is_stopped() {
       COMPOSE_ENV_FILE="${case_dir}/backend.env" \
       HEALTH_TIMEOUT_SECONDS=1 \
       HEALTH_POLL_INTERVAL_SECONDS=1 \
-      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" 2>&1)"; then
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
     fail "an unhealthy rollback image must exit with a non-zero status"
   fi
 
@@ -324,7 +387,8 @@ test_failed_target_stop_failure_is_reported() {
       COMPOSE_ENV_FILE="${case_dir}/backend.env" \
       HEALTH_TIMEOUT_SECONDS=1 \
       HEALTH_POLL_INTERVAL_SECONDS=1 \
-      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" 2>&1)"; then
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
     fail "a target stop failure must exit with a non-zero status"
   fi
 
@@ -358,7 +422,8 @@ assert_failed_deployment_is_not_rolled_back() {
       COMPOSE_ENV_FILE="${case_dir}/backend.env" \
       HEALTH_TIMEOUT_SECONDS=1 \
       HEALTH_POLL_INTERVAL_SECONDS=1 \
-      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" 2>&1)"; then
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
     fail "${case_name}: an ineligible rollback must exit with a non-zero status"
   fi
 
@@ -374,7 +439,8 @@ assert_failed_deployment_is_not_rolled_back() {
 }
 
 test_mutable_tag_is_rejected() {
-  if "${DEPLOY_SCRIPT}" "ghcr.io/kakao-theme-maker/backend:dev" >/dev/null 2>&1; then
+  if "${DEPLOY_SCRIPT}" "ghcr.io/kakao-theme-maker/backend:dev" dev \
+      "${BACKEND_CONFIG_SHA_MISMATCH}" >/dev/null 2>&1; then
     fail "mutable image tags must be rejected"
   fi
 }
@@ -395,7 +461,8 @@ test_stale_deployment_is_skipped() {
       COMPOSE_ENV_FILE="${case_dir}/backend.env" \
       DEPLOY_SEQUENCE=10 \
       DEPLOY_SEQUENCE_FILE="${case_dir}/deploy-sequence" \
-      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}")"
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")")"
 
   [[ "${output}" == *"Skipping stale deployment sequence 10"* ]] \
     || fail "stale deployment was not reported"
@@ -403,6 +470,146 @@ test_stale_deployment_is_skipped() {
     || fail "stale deployment must not invoke Docker"
   [[ "$(<"${case_dir}/state/current-image")" == "${PREVIOUS_IMAGE}" ]] \
     || fail "stale deployment changed the running image"
+}
+
+test_prod_uses_compose_override() {
+  local case_dir="${TMP_DIR}/prod-override"
+  new_case "${case_dir}"
+  set_case_profile "${case_dir}" prod
+  printf '%s' "${PREVIOUS_IMAGE}" >"${case_dir}/state/current-image"
+
+  PATH="${case_dir}/bin:${ORIGINAL_PATH}" \
+  FAKE_DOCKER_STATE_DIR="${case_dir}/state" \
+  FAKE_DOCKER_MODE=success \
+  FAKE_TARGET_IMAGE="${TARGET_IMAGE}" \
+  FAKE_COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+  COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+  COMPOSE_PROD_FILE="${case_dir}/docker-compose.deploy.prod.yml" \
+  COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+  HEALTH_TIMEOUT_SECONDS=1 \
+  HEALTH_POLL_INTERVAL_SECONDS=1 \
+    "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" prod "$(case_config_sha "${case_dir}")"
+
+  assert_file_contains "${case_dir}/state/commands.log" \
+    "compose --env-file ${case_dir}/backend.env -f ${case_dir}/docker-compose.deploy.yml -f ${case_dir}/docker-compose.deploy.prod.yml"
+}
+
+test_profile_mismatch_is_rejected() {
+  local case_dir="${TMP_DIR}/profile-mismatch"
+  local output
+  new_case "${case_dir}"
+
+  if output="$(COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+      COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" prod \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
+    fail "profile mismatch must be rejected"
+  fi
+  [[ "${output}" == *"Expected Spring profile prod, but backend.env selects dev"* ]] \
+    || fail "profile mismatch reason was not reported"
+}
+
+test_unsupported_env_profile_is_rejected() {
+  local case_dir="${TMP_DIR}/unsupported-profile"
+  local output
+  new_case "${case_dir}"
+  set_case_profile "${case_dir}" test
+
+  if output="$(COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+      COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
+    fail "unsupported backend.env profile must be rejected"
+  fi
+  [[ "${output}" == *"SPRING_PROFILES_ACTIVE must contain exactly dev or prod"* ]] \
+    || fail "unsupported profile reason was not reported"
+}
+
+test_missing_isolation_value_is_rejected() {
+  local key
+  local case_dir
+  local output
+
+  for key in COMPOSE_PROJECT_NAME BACKEND_BIND_ADDRESS BACKEND_PORT; do
+    case_dir="${TMP_DIR}/missing-${key}"
+    new_case "${case_dir}"
+    remove_env_key "${case_dir}" "${key}"
+
+    if output="$(COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+        COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+        "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+          "$(case_config_sha "${case_dir}")" 2>&1)"; then
+      fail "missing ${key} must be rejected"
+    fi
+    [[ "${output}" == *"must contain exactly one ${key} entry"* ]] \
+      || fail "missing ${key} reason was not reported"
+    [[ ! -s "${case_dir}/state/commands.log" ]] \
+      || fail "missing ${key} must be rejected before Docker runs"
+  done
+}
+
+test_invalid_backend_port_is_rejected() {
+  local case_dir="${TMP_DIR}/invalid-backend-port"
+  local output
+  new_case "${case_dir}"
+  sed -i.bak 's/^BACKEND_PORT=.*/BACKEND_PORT=70000/' "${case_dir}/backend.env"
+
+  if output="$(COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+      COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
+    fail "invalid backend port must be rejected"
+  fi
+  [[ "${output}" == *"BACKEND_PORT must be an integer from 1 to 65535"* ]] \
+    || fail "invalid backend port reason was not reported"
+}
+
+test_backend_config_sha_mismatch_is_rejected() {
+  local case_dir="${TMP_DIR}/config-sha-mismatch"
+  local output
+  new_case "${case_dir}"
+
+  if output="$(COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+      COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "${BACKEND_CONFIG_SHA_MISMATCH}" 2>&1)"; then
+    fail "backend_config SHA mismatch must be rejected"
+  fi
+  [[ "${output}" == *"backend_config HEAD does not match the expected SHA"* ]] \
+    || fail "backend_config SHA mismatch reason was not reported"
+}
+
+test_dirty_backend_config_is_rejected() {
+  local case_dir="${TMP_DIR}/dirty-config"
+  local output
+  new_case "${case_dir}"
+  printf '\n# dirty\n' >>"${case_dir}/backend_config/dev/monolithic/application.yml"
+
+  if output="$(COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+      COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
+    fail "dirty backend_config checkout must be rejected"
+  fi
+  [[ "${output}" == *"backend_config checkout must be clean"* ]] \
+    || fail "dirty backend_config reason was not reported"
+}
+
+test_missing_profile_config_is_rejected() {
+  local case_dir="${TMP_DIR}/missing-profile-config"
+  local output
+  new_case "${case_dir}"
+  git -C "${case_dir}/backend_config" rm -q dev/monolithic/application-dev.yml
+  git -C "${case_dir}/backend_config" commit -qm 'remove dev config'
+
+  if output="$(COMPOSE_FILE="${case_dir}/docker-compose.deploy.yml" \
+      COMPOSE_ENV_FILE="${case_dir}/backend.env" \
+      "${DEPLOY_SCRIPT}" "${TARGET_IMAGE}" dev \
+        "$(case_config_sha "${case_dir}")" 2>&1)"; then
+    fail "missing profile config must be rejected"
+  fi
+  [[ "${output}" == *"backend_config common and dev application files must be readable"* ]] \
+    || fail "missing profile config reason was not reported"
 }
 
 TMP_DIR="$(mktemp -d)"
@@ -429,5 +636,13 @@ assert_failed_deployment_is_not_rolled_back \
   "previous container was not healthy before deployment"
 test_mutable_tag_is_rejected
 test_stale_deployment_is_skipped
+test_prod_uses_compose_override
+test_profile_mismatch_is_rejected
+test_unsupported_env_profile_is_rejected
+test_missing_isolation_value_is_rejected
+test_invalid_backend_port_is_rejected
+test_backend_config_sha_mismatch_is_rejected
+test_dirty_backend_config_is_rejected
+test_missing_profile_config_is_rejected
 
 echo "All deploy-backend tests passed."
