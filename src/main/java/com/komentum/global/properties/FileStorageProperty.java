@@ -21,6 +21,6 @@ public class FileStorageProperty {
   private final Storage storage;
 
   public static enum Storage {
-    S3, LOCAL;
+    S3, LOCAL, OCI;
   }
 }
