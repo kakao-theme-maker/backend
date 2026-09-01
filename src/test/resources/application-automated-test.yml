@@ -1,7 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: test
   datasource:
     url: jdbc:h2:mem:test;MODE=MySQL
     driver-class-name: org.h2.Driver
@@ -46,14 +43,17 @@ jwt:
   secret: dGVzdHRlc3R0ZXN0dGVzdHRlc3R0ZXN0dGVzdHRlc3R0ZXN0dGVzdHRlc3R0ZXN0dGVzdHRlc3R0ZXN0dGVzdA==
 
 security:
-  white-list:
-    - /allow/all
-    - /api/auth/local/sign-up
-    - /api/auth/local/sign-in
-    - /api/auth/reissue
-  white-list-get:
-    - /allow/get
-    - /actuator/health
+  permit-all:
+    GET:
+      - pattern: /actuator/health
+      - pattern: /api/theme-boards
+    POST:
+      - pattern: /api/auth/local/sign-up
+      - pattern: /api/auth/local/sign-in
+      - pattern: /api/auth/reissue
+  admin-only:
+    POST:
+      - pattern: /api/themes/default/seed
   allowed-origin-list:
     - http://localhost:3000
 

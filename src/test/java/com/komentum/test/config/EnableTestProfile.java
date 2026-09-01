@@ -11,7 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-@ActiveProfiles("test")
+@ActiveProfiles("automated-test")
 @Import({GlobalTestMockManager.class})
 public @interface EnableTestProfile {
 

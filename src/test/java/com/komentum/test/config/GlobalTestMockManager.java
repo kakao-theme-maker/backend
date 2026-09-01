@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 @TestConfiguration
-@Profile("test")
+@Profile("automated-test")
 public class GlobalTestMockManager {
 
   @Bean
