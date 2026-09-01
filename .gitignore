@@ -45,9 +45,9 @@ HELP.md
 gradle-app.setting
 
 # config files
-**/application.yml
-**/application-test.yml
+**/application*.yml
 !src/test/resources/application-test.yml
+!src/test/resources/application-automated-test.yml
 **/backend_config/
 **/common.yml
 
@@ -62,3 +62,8 @@ docker/docker_redis/
 
 keystore
 **/keystore/**
+
+# claude & code-review-graph
+.claude/
+.code-review-graph/
+.mcp.json

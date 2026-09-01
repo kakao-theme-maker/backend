@@ -1,6 +1,7 @@
 package com.komentum.designcomponent.domain;
 
 import com.komentum.designcomponent.dto.ColorStyleUpdateRequest;
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,6 +40,14 @@ public class ColorStyle {
   @Column(nullable = false)
   private StyleCode styleCode;
 
+  /**
+   * 이 color style이 공통으로 사용되는지, 특정 플랫폼 전용인지를 나타낸다.
+   */
+  @Enumerated(EnumType.STRING)
+  @Builder.Default
+  @Column(name = "platform_scope", nullable = false)
+  private PlatformScope platformScope = PlatformScope.COMMON;
+
   public void update(ColorStyleUpdateRequest colorStyle) {
     if (colorStyle.getExplain() != null) {
       this.explain = colorStyle.getExplain();
@@ -49,12 +58,16 @@ public class ColorStyle {
     if (colorStyle.getStyleCode() != null) {
       this.styleCode = colorStyle.getStyleCode();
     }
+    if (colorStyle.getPlatformScope() != null) {
+      this.platformScope = colorStyle.getPlatformScope();
+    }
   }
 
   public void replace(ColorStyle source) {
     this.explain = source.getExplain();
     this.styleCode = source.getStyleCode();
     this.name = source.getName();
+    this.platformScope = source.getPlatformScope();
   }
 
   public boolean isSame(ColorStyle other) {
@@ -63,6 +76,7 @@ public class ColorStyle {
     }
     return Objects.equals(this.explain, other.explain)
         && this.styleCode.equals(other.styleCode)
-        && this.name.equals(other.name);
+        && this.name.equals(other.name)
+        && this.platformScope == other.platformScope;
   }
 }

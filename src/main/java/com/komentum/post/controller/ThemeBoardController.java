@@ -6,8 +6,11 @@ import com.komentum.post.dto.ThemeBoardDto.ThemeBoardDetailDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardPreviewDto;
 import com.komentum.post.dto.ThemeBoardDto.ThemeBoardUpdateDto;
 import com.komentum.post.facade.ThemeBoardManagementFacade;
+import com.komentum.post.service.enums.PostSortType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -41,13 +44,27 @@ public class ThemeBoardController {
    * @return 조회한 게시글 목록 반환
    */
   @GetMapping
-  @Operation(summary = "인증된 사용자가 테마 게시글 목록을 조회한다")
+  @Operation(
+      summary = "인증된 사용자가 테마 게시글 목록을 조회한다",
+      parameters = {
+          @Parameter(name = "page", in = ParameterIn.QUERY, description = "페이지 번호 (0부터 시작)",
+              schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")),
+          @Parameter(name = "size", in = ParameterIn.QUERY, description = "페이지당 게시글 수",
+              schema = @Schema(type = "integer", defaultValue = "20", minimum = "1"))
+      })
   public ResponseEntity<List<ThemeBoardPreviewDto>> findThemeBoards(
       @Parameter(description = "게시글 제목/내용 검색어")
       @RequestParam(value = "keyword", required = false) String keyword,
-      @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable) {
+      @Parameter(
+          description = "정렬 기준",
+          schema = @Schema(
+              allowableValues = {"CREATED_ASC", "CREATED_DESC", "PREFER_ASC", "PREFER_DESC"},
+              defaultValue = "CREATED_DESC"))
+      @RequestParam(value = "sort_type", defaultValue = "CREATED_DESC")
+      PostSortType sortType,
+      @Parameter(hidden = true) @PageableDefault(size = 20) Pageable pageable) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword));
+        themeBoardManagementFacade.findThemeBoardPreviews(pageable, keyword, sortType));
   }
 
   /**
@@ -80,13 +97,15 @@ public class ThemeBoardController {
    * @param postId 게시글 ID
    * @return 게시글 상세 정보 반환
    */
-  @GetMapping("/{post_id}")
-  @Operation(summary = "인증된 사용자가 ID=post_id인 게시글을 상세 조회한다")
+  @GetMapping("/{postId}")
+  @Operation(summary = "인증된 사용자가 ID=postId인 게시글을 상세 조회한다")
   public ResponseEntity<ThemeBoardDetailDto> findThemeBoardByPostId(
-      @PathVariable("post_id") Long postId,
+      @PathVariable Long postId,
+      @RequestParam(value = "withImages", required = false) Boolean withImages,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
-        themeBoardManagementFacade.findThemeBoardDetail(postId, userDetails.getUsername()));
+        themeBoardManagementFacade.findThemeBoardDetail(postId, userDetails.getUsername(),
+            withImages));
   }
 
   @GetMapping("/details")
@@ -95,21 +114,22 @@ public class ThemeBoardController {
       description = """
           
           [동작 방식]
-          - pinned_post_id가 있는 경우
+          - pinnedPostId가 있는 경우
             - 첫 페이지(page=0)에서 해당 게시글을 최상단에 고정한다.
-            - pinned_post_id가 null이 아니라면, pinned_post 작성자의 게시글만 조회한다.
-            - pinned_post는 page=0일 때만 게시된다.
-          - pinned_post_id가 없는 경우
+            - pinnedPostId가 null이 아니라면, pinnedPost 작성자의 게시글만 조회한다.
+            - pinnedPost는 page=0일 때만 게시된다.
+          - pinnedPostId가 없는 경우
             - 일반적인 페이징 기반 조회로 동작한다.
           """)
   public ResponseEntity<List<ThemeBoardDetailDto>> findThemeBoardDetails(
       @Parameter(description = "첫 번째 페이지 최상단에 고정할 게시글 ID")
-      @RequestParam(value = "pinned_post_id", required = false) Long pinnedPostId,
+      @RequestParam(value = "pinnedPostId", required = false) Long pinnedPostId,
+      @RequestParam(value = "withImages", required = false) Boolean withImages,
       @PageableDefault(size = 20, sort = "createdAt") @ParameterObject Pageable pageable,
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
     List<ThemeBoardDetailDto> response = themeBoardManagementFacade.findThemeBoardDetails(pageable,
-        pinnedPostId, userDetails.getUsername());
+        pinnedPostId, userDetails.getUsername(), withImages);
     return ResponseEntity.ok(response);
   }
 
@@ -122,8 +142,8 @@ public class ThemeBoardController {
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "인증된 사용자가 테마 게시글을 생성한다")
   public ResponseEntity<ThemeBoardDetailDto> createPost(
-      @RequestPart(value = "board_info") ThemeBoardCreateDto createDto,
-      @RequestPart(value = "preview_image", required = false) MultipartFile profileImage,
+      @RequestPart(value = "boardInfo") ThemeBoardCreateDto createDto,
+      @RequestPart(value = "previewImage", required = false) MultipartFile profileImage,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
         themeBoardManagementFacade.createThemeBoard(createDto, profileImage,
@@ -136,11 +156,11 @@ public class ThemeBoardController {
    * @param postId    수정할 게시글 ID
    * @param updateDto 게시글 수정 정보
    */
-  @PutMapping(value = "/{post_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @Operation(summary = "인증된 사용자가 자신이 소유한 ID=post_id인 테마 게시글을 수정한다")
-  public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable("post_id") Long postId,
-      @RequestPart(value = "board_info") ThemeBoardUpdateDto updateDto,
-      @RequestPart(value = "preview_image", required = false) MultipartFile previewImage,
+  @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(summary = "인증된 사용자가 자신이 소유한 ID=postId인 테마 게시글을 수정한다")
+  public ResponseEntity<ThemeBoardDetailDto> updatePost(@PathVariable Long postId,
+      @RequestPart(value = "boardInfo") ThemeBoardUpdateDto updateDto,
+      @RequestPart(value = "previewImage", required = false) MultipartFile previewImage,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     return ResponseEntity.ok(
         themeBoardManagementFacade
@@ -152,9 +172,9 @@ public class ThemeBoardController {
    *
    * @param postId 삭제할 게시글 ID
    */
-  @DeleteMapping("/{post_id}")
-  @Operation(summary = "인증된 사용자가 자신이 소유한 ID=post_id인 테마 게시글을 삭제한다")
-  public ResponseEntity<Void> deletePost(@PathVariable("post_id") Long postId) {
+  @DeleteMapping("/{postId}")
+  @Operation(summary = "인증된 사용자가 자신이 소유한 ID=postId인 테마 게시글을 삭제한다")
+  public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
     themeBoardManagementFacade.deleteThemeBoard(postId);
     return ResponseEntity.noContent().build();
   }

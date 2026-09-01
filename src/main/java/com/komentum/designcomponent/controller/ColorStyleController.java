@@ -49,18 +49,18 @@ public class ColorStyleController {
     return ResponseEntity.ok(colorStyles);
   }
 
-  @GetMapping("/{color_style_id}")
-  @Operation(summary = "인증된 ID=color_style_id인 colorStyle을 조회한다")
+  @GetMapping("/{colorStyleId}")
+  @Operation(summary = "인증된 ID=colorStyleId인 colorStyle을 조회한다")
   public ResponseEntity<ColorStyleResponse> getColorStyleById(
-      @PathVariable("color_style_id") Integer colorStyleId) {
+      @PathVariable Integer colorStyleId) {
     ColorStyle colorStyle = colorStyleService.getColorStyleById(colorStyleId);
     return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(colorStyle));
   }
 
-  @PutMapping("/{color_style_id}")
-  @Operation(summary = "Admin 사용자가 ID=color_style_id인 color style을 수정한다")
+  @PutMapping("/{colorStyleId}")
+  @Operation(summary = "Admin 사용자가 ID=colorStyleId인 color style을 수정한다")
   public ResponseEntity<ColorStyleResponse> updateColorStyle(
-      @PathVariable("color_style_id") Integer colorStyleId,
+      @PathVariable Integer colorStyleId,
       @Valid @RequestBody ColorStyleUpdateRequest request) {
     ColorStyle updatedColorStyle = colorStyleService.updateColorStyle(colorStyleId, request);
     return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(updatedColorStyle));

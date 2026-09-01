@@ -2,10 +2,10 @@ package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
 import com.komentum.designcomponent.domain.ComponentType;
-import com.komentum.global.utils.FileManager;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
+import com.komentum.global.utils.FileManager;
 import com.komentum.user.domain.User;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +30,7 @@ public class DesignComponentSeeder {
 
   private DesignComponent generateOne(User owner, ComponentType componentType) {
     try {
-      ClassPathResource targetImage = new ClassPathResource("dev_resource/test.png");
+      ClassPathResource targetImage = new ClassPathResource("dev_resource/test-bubble.png");
       String fileName =
           "DesignComponent_" + UUID.randomUUID() + "_" + System.currentTimeMillis() + ".png";
       try (InputStream is = targetImage.getInputStream()) {

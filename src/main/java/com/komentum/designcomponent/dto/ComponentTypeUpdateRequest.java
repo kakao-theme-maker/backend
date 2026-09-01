@@ -1,5 +1,6 @@
 package com.komentum.designcomponent.dto;
 
+import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.TypeCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -28,4 +29,7 @@ public class ComponentTypeUpdateRequest {
   @NotNull(message = "타입 정보는 필수입니다")
   @Schema(description = "수정할 component type의 종류, not null")
   private TypeCode typeCode;
+
+  @Schema(description = "수정할 component type이 공통/Android/iOS 중 어디에 속하는지, null 허용")
+  private PlatformScope platformScope;
 }

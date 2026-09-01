@@ -2,6 +2,8 @@ package com.komentum.theme.core.domain;
 
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -44,11 +46,22 @@ public class ThemeImage {
   @JoinColumn(name = "component_type_id")
   private ComponentType componentType;
 
+  // inset 정보가 필요한 이미지만 imageInset을 가져도 됨
+  @Embedded
+  private ImageInset imageInset;
+
   public static ThemeImage copyOf(ThemeComponent targetTheme, ThemeImage sourceImage) {
     return ThemeImage.builder()
         .themeComponent(targetTheme)
         .designComponent(sourceImage.getDesignComponent())
         .componentType(sourceImage.getComponentType())
         .build();
+  }
+
+  public void update(DesignComponent designComponent, ThemeImageUpdateRequest updateRequest) {
+    this.designComponent = designComponent;
+    if (updateRequest.getInset() != null) {
+      this.imageInset = ImageInset.from(updateRequest.getInset());
+    }
   }
 }

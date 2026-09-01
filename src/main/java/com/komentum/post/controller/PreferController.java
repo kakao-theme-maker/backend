@@ -22,15 +22,15 @@ public class PreferController {
   private final PreferManagementFacade preferManagementFacade;
   private final PreferService preferService;
 
-  @GetMapping("/{post_id}/prefer")
-  @Operation(summary = "인증된 사용자가 ID=post_id인 게시글의 추천 수를 조회한다")
-  public ResponseEntity<Long> getPreferCount(@PathVariable("post_id") Long postId) {
+  @GetMapping("/{postId}/prefer")
+  @Operation(summary = "인증된 사용자가 ID=postId인 게시글의 추천 수를 조회한다")
+  public ResponseEntity<Long> getPreferCount(@PathVariable Long postId) {
     return ResponseEntity.ok(preferService.getPreferByPost(postId));
   }
 
-  @PostMapping("/{post_id}/prefer")
-  @Operation(summary = "인증된 사용자가 ID=post_id인 게시글을 추천한다")
-  public ResponseEntity<Void> savePrefer(@PathVariable("post_id") Long postId,
+  @PostMapping("/{postId}/prefer")
+  @Operation(summary = "인증된 사용자가 ID=postId인 게시글을 추천한다")
+  public ResponseEntity<Void> savePrefer(@PathVariable Long postId,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
     preferManagementFacade.addPreferToPost(postId, userDetails.getUsername());
     return ResponseEntity.ok().build();

@@ -1,5 +1,6 @@
 package com.komentum.user.service;
 
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.facade.BoardManagementHelper;
 import com.komentum.post.service.PostService;
@@ -8,7 +9,7 @@ import com.komentum.user.dto.UserBirthUpdateDto;
 import com.komentum.user.dto.UserGenderUpdateDto;
 import com.komentum.user.dto.UserNameUpdateDto;
 import com.komentum.user.dto.UserResponseDto;
-import com.komentum.user.repository.SubscriptionRepository;
+import com.komentum.user.repository.FollowRepository;
 import com.komentum.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -22,18 +23,18 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserService implements UserEntityFinder {
 
   private final UserRepository userRepository;
-  private final SubscriptionRepository subscriptionRepository;
+  private final FollowRepository followRepository;
   private final PostService postService;
   private final BoardManagementHelper boardManagementHelper;
   private final FileManager fileManager;
 
   public UserService(UserRepository userRepository,
-      SubscriptionRepository subscriptionRepository,
+      FollowRepository followRepository,
       PostService postService,
       BoardManagementHelper boardManagementHelper,
       FileManager fileManager) {
     this.userRepository = userRepository;
-    this.subscriptionRepository = subscriptionRepository;
+    this.followRepository = followRepository;
     this.postService = postService;
     this.boardManagementHelper = boardManagementHelper;
     this.fileManager = fileManager;
@@ -42,9 +43,9 @@ public class UserService implements UserEntityFinder {
   public UserResponseDto getUserByPublicId(String publicUserId) {
     User user = findUserEntityByPublicId(publicUserId);
     //팔로워 수
-    int followers = subscriptionRepository.countBySubscriber_publicUserId(publicUserId);
+    int followers = followRepository.countByFollowee_PublicUserId(publicUserId);
     //팔로잉 수
-    int following = subscriptionRepository.countByUser_publicUserId(publicUserId);
+    int following = followRepository.countByFollower_PublicUserId(publicUserId);
     //업로드 수
     int uploads = postService.countPost(publicUserId);
     return UserResponseDto.from(user, followers, following, uploads, user.getProfileImgUrl());
@@ -52,6 +53,11 @@ public class UserService implements UserEntityFinder {
 
   public User findUserEntity(String PublicUserId) {
     return userRepository.findByPublicUserId(PublicUserId)
+        .orElseThrow(() -> new ResourceNotFoundException("user not found"));
+  }
+
+  public User findUserEntityByEmail(String userEmail) {
+    return userRepository.findByUserEmail(userEmail)
         .orElseThrow(() -> new RuntimeException("user not found"));
   }
 
