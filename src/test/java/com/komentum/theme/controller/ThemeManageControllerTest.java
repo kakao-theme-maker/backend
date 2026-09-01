@@ -28,17 +28,9 @@ import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
 import com.komentum.user.domain.User;
-import java.io.ByteArrayInputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,8 +42,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
 @EnableTestProfile
@@ -189,7 +179,7 @@ class ThemeManageControllerTest {
         .styleCodes(Map.of(
             StyleCode.CHAT_ROOM_BACKGROUND_COLOR,
             ThemeStyleUpdateRequest.builder()
-                .color("#ffffff").build()
+                .color("#ffffff").alpha(50).build()
         ))
         .typeCodes(Map.of())
         .build();

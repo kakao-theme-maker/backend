@@ -2,9 +2,8 @@ package com.komentum.theme.core.dto;
 
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.enums.TypeCode;
-import io.swagger.v3.oas.annotations.media.Schema;
 import com.komentum.global.utils.RegexValidator;
-import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -87,9 +86,4 @@ public class ThemeUpdateRequest {
     @Max(100)
     Integer alpha;
   }
-
-  String themeName;
-  Map<TypeCode, ThemeImageUpdateRequest> typeCodes;
-  @Valid
-  Map<StyleCode, ThemeStyleUpdateRequest> styleCodes;
 }
