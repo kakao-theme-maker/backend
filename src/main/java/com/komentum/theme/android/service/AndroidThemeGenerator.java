@@ -48,6 +48,7 @@ public class AndroidThemeGenerator {
 
   public static final String DOCKER_THEME_DIRECTORY_NAME = "source";
   private static final String SAMPLE_THEME_PATH = "themeSample/android/sampleTheme.zip";
+  private static final String GRADLE_WRAPPER_FILE_NAME = "gradlew";
   // keystore const
   private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
   private static final String ENV_KEY_ALIAS = "KEY_ALIAS";
@@ -109,6 +110,10 @@ public class AndroidThemeGenerator {
   private Path prepareSourceTheme(Path destination) {
     try (InputStream is = new ClassPathResource(SAMPLE_THEME_PATH).getInputStream()) {
       CompressUtils.unzip(is, destination);
+      Path gradleWrapper = destination.resolve(GRADLE_WRAPPER_FILE_NAME);
+      if (!gradleWrapper.toFile().setExecutable(true)) {
+        throw new IOException("Failed to make Gradle wrapper executable: " + gradleWrapper);
+      }
       return destination;
     } catch (IOException e) {
       log.error("[AndroidThemeGenerator] Failed to copy and unzip sample theme zip.", e);
