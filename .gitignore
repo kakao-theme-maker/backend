@@ -46,11 +46,14 @@ gradle-app.setting
 
 # config files
 **/application*.yml
+!src/test/resources/application-test.yml
+!src/test/resources/application-automated-test.yml
 **/backend_config/
 **/common.yml
 
 # Docker
 .env
+docker/backend.env
 key.jks
 docker/docker_redis/
 

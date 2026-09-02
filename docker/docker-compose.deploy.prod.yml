@@ -1,0 +1,5 @@
+services:
+  backend:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp

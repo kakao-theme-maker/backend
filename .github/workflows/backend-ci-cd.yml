@@ -1,0 +1,429 @@
+name: Backend CI/CD
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - master
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
+  push:
+    branches:
+      - dev
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: ghcr.io/kakao-theme-maker/backend
+  ANDROID_BUILDER_IMAGE: louie8821/android-apk-builder
+  ANDROID_BUILDER_TAG: latest@sha256:80cbbfa894203da38404e052dd480e2f4b1f4aaf1f9f4d8614f912d886e1ebed
+
+jobs:
+  verify:
+    name: CI verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      THEME_ANDROID_DOCKER_IMAGE: louie8821/android-apk-builder
+      THEME_ANDROID_DOCKER_TAG: latest@sha256:80cbbfa894203da38404e052dd480e2f4b1f4aaf1f9f4d8614f912d886e1ebed
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: false
+
+      - name: Verify GitHub Actions workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          actionlint_archive="$RUNNER_TEMP/actionlint_1.7.12_linux_amd64.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$actionlint_archive" \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          printf '%s  %s\n' \
+            '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' \
+            "$actionlint_archive" \
+            | sha256sum --check
+          tar -xzf "$actionlint_archive" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" .github/workflows/backend-ci-cd.yml
+
+      - name: Verify deployment files
+        shell: bash
+        run: |
+          set -euo pipefail
+          shellcheck docker/deploy-backend.sh docker/test/deploy-backend-test.sh
+          bash docker/test/deploy-backend-test.sh
+
+          compose_test_dir="$RUNNER_TEMP/compose-config"
+          config_dir="$compose_test_dir/backend_config"
+          local_compose_dir="$compose_test_dir/local"
+          mkdir -p "$config_dir/dev/monolithic" "$local_compose_dir"
+          touch \
+            "$config_dir/dev/monolithic/application.yml" \
+            "$config_dir/dev/monolithic/application-dev.yml" \
+            "$config_dir/dev/monolithic/application-prod.yml"
+          cp docker/docker-compose.yml "$local_compose_dir/docker-compose.yml"
+          cp docker/backend.env.example "$local_compose_dir/.env"
+          printf '\nCI_BACKEND_ENV_SENTINEL=loaded-from-backend-env\n' >> "$local_compose_dir/.env"
+          cp docker/docker-compose.deploy.yml "$compose_test_dir/docker-compose.deploy.yml"
+          cp docker/docker-compose.deploy.prod.yml "$compose_test_dir/docker-compose.deploy.prod.yml"
+
+          docker compose \
+            --env-file "$local_compose_dir/.env" \
+            -f "$local_compose_dir/docker-compose.yml" \
+            config --format json > "$local_compose_dir/rendered.json"
+          jq --exit-status '
+            (.services.backend.environment.CI_BACKEND_ENV_SENTINEL ==
+              "loaded-from-backend-env") and
+            (.services.database.environment | keys | sort) ==
+              ["MYSQL_DATABASE", "MYSQL_ROOT_HOST", "MYSQL_ROOT_PASSWORD"] and
+            ([.services.database.ports[] |
+              select(.published == "23306" and .target == 3306)] | length == 1) and
+            ([.services.backend.volumes[].target] | sort) == ["/tmp", "/var/run/docker.sock"]
+          ' "$local_compose_dir/rendered.json" > /dev/null
+
+          for profile in dev prod; do
+            env_file="$compose_test_dir/backend-$profile.env"
+            compose_config="$compose_test_dir/rendered-$profile.json"
+            cp docker/backend.env.example "$env_file"
+            sed -i \
+              -e "s|^SPRING_PROFILES_ACTIVE=.*|SPRING_PROFILES_ACTIVE=$profile|" \
+              "$env_file"
+            # CI-only canary: prove backend.env is injected into backend, not database.
+            printf '\nCI_BACKEND_ENV_SENTINEL=loaded-from-backend-env\n' >> "$env_file"
+
+            compose_files=(-f "$compose_test_dir/docker-compose.deploy.yml")
+            if [[ "$profile" == "prod" ]]; then
+              compose_files+=(-f "$compose_test_dir/docker-compose.deploy.prod.yml")
+            fi
+
+            BACKEND_IMAGE="ghcr.io/kakao-theme-maker/backend@sha256:$(printf '0%.0s' {1..64})" \
+            BACKEND_CONFIG_DIR="$config_dir" \
+            COMPOSE_ENV_FILE="$env_file" \
+              docker compose \
+                --env-file "$env_file" \
+                "${compose_files[@]}" \
+                config --format json > "$compose_config"
+
+            jq --exit-status \
+              --arg profile "$profile" \
+              --arg config_dir "$config_dir" '
+              (.services.database.environment | keys | sort) ==
+                ["MYSQL_DATABASE", "MYSQL_ROOT_HOST", "MYSQL_ROOT_PASSWORD"] and
+              (.services.database | has("ports") | not) and
+              (.services.backend.environment.CI_BACKEND_ENV_SENTINEL ==
+                "loaded-from-backend-env") and
+              (.services.backend.environment.SPRING_PROFILES_ACTIVE == $profile) and
+              ([
+                "AUTH_OAUTH2_REDIRECT_URL",
+                "AUTH_WITH_HTTPS",
+                "FILE_BASE_URL",
+                "SECURITY_ALLOWED_ORIGIN_LIST",
+                "SERVER_EXTERNAL_DOMAIN",
+                "THEME_ANDROID_KEYSTORE_HOST_PATH",
+                "THEME_ANDROID_KEYSTORE_PASSWORD",
+                "THEME_ANDROID_KEY_ALIAS",
+                "THEME_ANDROID_KEY_PASSWORD"
+              ] - (.services.backend.environment | keys) | length == 0) and
+              ([.services.backend.volumes[] |
+                select(.source == ($config_dir + "/dev/monolithic/application.yml") and
+                  .target == "/app/config/application.yml" and
+                  .read_only == true and
+                  (.bind.create_host_path // false) == false)] | length == 1) and
+              ([.services.backend.volumes[] |
+                select(.source == ($config_dir + "/dev/monolithic/application-" +
+                    $profile + ".yml") and
+                  .target == ("/app/config/application-" + $profile + ".yml") and
+                  .read_only == true and
+                  (.bind.create_host_path // false) == false)] | length == 1) and
+              (if $profile == "prod" then
+                ([.services.backend.volumes[] |
+                  select(.target == "/var/run/docker.sock")] | length == 1) and
+                ([.services.backend.volumes[] |
+                  select(.target == "/tmp")] | length == 1)
+              else
+                ([.services.backend.volumes[] |
+                  select(.target == "/var/run/docker.sock" or .target == "/tmp")] |
+                  length == 0)
+              end)
+            ' "$compose_config" > /dev/null
+          done
+
+      - name: Set up Java 17
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+        with:
+          cache-provider: basic
+
+      - name: Restore Android builder Gradle cache
+        id: android-gradle-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .ci-cache/android-gradle
+          key: android-gradle-${{ runner.os }}-${{ runner.arch }}-80cbbfa894203da38404e052dd480e2f4b1f4aaf1f9f4d8614f912d886e1ebed-${{ hashFiles('src/main/resources/themeSample/android/sampleTheme.zip') }}
+
+      - name: Prepare APK integration test
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "x86_64"
+          keystore_path="$RUNNER_TEMP/android-signing"
+
+          mkdir -p .ci-cache/android-gradle uploads "$keystore_path"
+          sudo mkdir -p /data/uploads
+          sudo chown "$(id -u):$(id -g)" /data/uploads
+
+          keytool -genkeypair \
+            -alias release \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 1 \
+            -keystore "$keystore_path/release.jks" \
+            -storepass 123456 \
+            -keypass 123456 \
+            -dname "CN=CI, OU=CI, O=Komentum, L=Seoul, ST=Seoul, C=KR" \
+            -noprompt
+
+          echo "THEME_ANDROID_KEYSTORE_TEST_HOST_PATH=$keystore_path" >> "$GITHUB_ENV"
+
+          docker pull "$ANDROID_BUILDER_IMAGE:$ANDROID_BUILDER_TAG"
+          docker volume create \
+            --driver local \
+            --opt type=none \
+            --opt o=bind \
+            --opt device="$GITHUB_WORKSPACE/.ci-cache/android-gradle" \
+            gradle-cache
+
+          echo "Android Gradle cache hit: ${{ steps.android-gradle-cache.outputs.cache-hit }}"
+
+      - name: Test and build executable JAR
+        run: ./gradlew test bootJar --build-cache --no-daemon
+
+      - name: Verify deployable JAR contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          jar tf build/libs/kakao-theme-maker.jar > "$RUNNER_TEMP/jar-contents.txt"
+          if grep -Ei \
+            '(^|/)application[^/]*\.(yml|yaml|properties)$|(^|/)backend_config/' \
+            "$RUNNER_TEMP/jar-contents.txt"; then
+            echo "Deployable JAR contains application configuration." >&2
+            exit 1
+          fi
+          if grep -Ei \
+            '(^|/)keystore/|(^|/)[^/]*\.(jks|keystore|p12|pfx)$' \
+            "$RUNNER_TEMP/jar-contents.txt"; then
+            echo "Deployable JAR contains a keystore." >&2
+            exit 1
+          fi
+
+      - name: Make Android cache readable
+        if: always()
+        shell: bash
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" .ci-cache/android-gradle
+          docker volume rm gradle-cache || true
+
+      - name: Upload verified JAR for release
+        if: >-
+          (github.event_name == 'push' &&
+            (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master')) ||
+          github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'pull_request' &&
+            github.event.action == 'labeled' &&
+            github.event.label.name == 'deploy-test' &&
+            github.event.pull_request.head.repo.full_name == github.repository)
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: backend-jar-${{ github.sha }}
+          path: build/libs/kakao-theme-maker.jar
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-image:
+    name: Publish ARM64 image
+    if: >-
+      (github.event_name == 'push' &&
+        (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master')) ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+        github.event.action == 'labeled' &&
+        github.event.label.name == 'deploy-test' &&
+        github.event.pull_request.head.repo.full_name == github.repository)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: false
+
+      - name: Download verified JAR
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: backend-jar-${{ github.sha }}
+          path: build/libs
+
+      - name: Set up QEMU for ARM64
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push immutable ARM64 image
+        id: build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Verify image JAR and architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_ref="$IMAGE_NAME@${{ steps.build.outputs.digest }}"
+          image_jar="$RUNNER_TEMP/image-app.jar"
+
+          docker pull --platform linux/arm64 "$image_ref"
+          test "$(docker image inspect "$image_ref" --format '{{.Architecture}}')" = "arm64"
+
+          container_id="$(docker create --platform linux/arm64 "$image_ref")"
+          trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
+          docker cp "$container_id:/app/app.jar" "$image_jar"
+          cmp build/libs/kakao-theme-maker.jar "$image_jar"
+
+          artifact_sha="$(sha256sum build/libs/kakao-theme-maker.jar | cut -d ' ' -f 1)"
+          image_sha="$(sha256sum "$image_jar" | cut -d ' ' -f 1)"
+          echo "Artifact JAR SHA-256: $artifact_sha" >> "$GITHUB_STEP_SUMMARY"
+          echo "Image JAR SHA-256: $image_sha" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production' || 'development' }}
+    needs: publish-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production' || 'development' }}
+    concurrency:
+      group: backend-${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && 'production' || 'development' }}-deploy
+      cancel-in-progress: false
+    env:
+      IMAGE_REF: ghcr.io/kakao-theme-maker/backend@${{ needs.publish-image.outputs.image_digest }}
+      DEPLOY_PROFILE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
+      DEPLOY_SEQUENCE: ${{ github.run_number }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_SSH_PORT: ${{ vars.DEPLOY_SSH_PORT }}
+      DEPLOY_SSH_USER: ${{ vars.DEPLOY_SSH_USER }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+    steps:
+      - name: Check out deployment files
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: false
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          required_names=(
+            DEPLOY_HOST
+            DEPLOY_SSH_PORT
+            DEPLOY_SSH_USER
+            DEPLOY_PATH
+            DEPLOY_SSH_PRIVATE_KEY
+            DEPLOY_SSH_KNOWN_HOSTS
+          )
+          for name in "${required_names[@]}"; do
+            if [[ -z "${!name}" ]]; then
+              echo "$name is required." >&2
+              exit 1
+            fi
+          done
+
+          install -m 700 -d "$RUNNER_TEMP/ssh"
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/ssh/known_hosts"
+          chmod 600 "$RUNNER_TEMP/ssh/deploy_key" "$RUNNER_TEMP/ssh/known_hosts"
+
+      - name: Transfer and run digest deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            branch="${GITHUB_REF#refs/heads/}"
+            git fetch --no-tags --depth=1 origin "$branch"
+            if [[ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]]; then
+              echo "A newer $branch commit exists; skipping stale deployment."
+              exit 0
+            fi
+          fi
+
+          config_sha="$(git rev-parse HEAD:backend_config)"
+          if [[ ! "$config_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "backend_config must be a git submodule commit." >&2
+            exit 1
+          fi
+
+          ssh_options=(
+            -i "$RUNNER_TEMP/ssh/deploy_key"
+            -o BatchMode=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts"
+            -p "$DEPLOY_SSH_PORT"
+          )
+          ssh_target="$DEPLOY_SSH_USER@$DEPLOY_HOST"
+          printf -v quoted_deploy_path '%q' "$DEPLOY_PATH"
+          printf -v quoted_image_ref '%q' "$IMAGE_REF"
+          printf -v quoted_deploy_profile '%q' "$DEPLOY_PROFILE"
+          printf -v quoted_config_sha '%q' "$config_sha"
+          printf -v quoted_deploy_sequence '%q' "$DEPLOY_SEQUENCE"
+
+          # Remote arguments are intentionally expanded locally after printf %q escaping.
+          # shellcheck disable=SC2029
+          tar -C docker -cf - \
+            deploy-backend.sh \
+            docker-compose.deploy.yml \
+            docker-compose.deploy.prod.yml \
+            | ssh "${ssh_options[@]}" "$ssh_target" \
+                "mkdir -p -- $quoted_deploy_path && tar -C $quoted_deploy_path -xf -"
+
+          # Remote arguments are intentionally expanded locally after printf %q escaping.
+          # shellcheck disable=SC2029
+          ssh "${ssh_options[@]}" "$ssh_target" \
+            "cd $quoted_deploy_path && chmod 700 ./deploy-backend.sh && DEPLOY_SEQUENCE=$quoted_deploy_sequence ./deploy-backend.sh $quoted_image_ref $quoted_deploy_profile $quoted_config_sha"

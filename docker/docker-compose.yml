@@ -20,18 +20,18 @@ services:
       - "28080:8080"
     environment:
       <<: *common-variables
+
   database:
     image: mysql:8.0
     container_name: database
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_ROOT_HOST: ${MYSQL_ROOT_HOST}
     ports:
       - "23306:3306"
+
   redis:
     image: redis:6.2.6-alpine
     command: redis-server /usr/local/etc/redis/redis.conf
