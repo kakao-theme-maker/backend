@@ -1,8 +1,10 @@
 package com.komentum.theme.build.controller;
 
+import com.komentum.designcomponent.enums.Platform;
 import com.komentum.theme.build.dto.ThemeBuildStartRequest;
 import com.komentum.theme.build.dto.ThemeBuildStartResponse;
 import com.komentum.theme.build.dto.ThemeBuildStatusResponse;
+import com.komentum.theme.build.dto.ThemeDownloadResponse;
 import com.komentum.theme.build.service.ThemeBuildService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -42,5 +45,16 @@ public class ThemeBuildController {
       @PathVariable Long buildId
   ) {
     return ResponseEntity.ok(themeBuildService.findBuild(buildId));
+  }
+
+  @GetMapping("/themes/{themeComponentId}/download")
+  @Operation(summary = "완료된 테마 패키지의 다운로드 URL을 조회한다")
+  public ResponseEntity<ThemeDownloadResponse> getThemeDownloadUrl(
+      @Parameter(description = "다운로드할 테마 ID", example = "1")
+      @PathVariable Integer themeComponentId,
+      @Parameter(description = "다운로드할 플랫폼", example = "ANDROID | iOS")
+      @RequestParam Platform platform
+  ) {
+    return ResponseEntity.ok(themeBuildService.getDownloadUrl(themeComponentId, platform));
   }
 }

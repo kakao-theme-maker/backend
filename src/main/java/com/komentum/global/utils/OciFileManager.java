@@ -126,7 +126,7 @@ public class OciFileManager implements FileManager {
     String contentType = lowerCaseFileName.endsWith(".png")
         ? MediaType.IMAGE_PNG_VALUE
         : lowerCaseFileName.endsWith(".jpg") || lowerCaseFileName.endsWith(".jpeg")
-            ? MediaType.IMAGE_JPEG_VALUE
+          ? MediaType.IMAGE_JPEG_VALUE
             : MediaType.APPLICATION_OCTET_STREAM_VALUE;
     try (is) {
       PutObjectRequest request = PutObjectRequest.builder()

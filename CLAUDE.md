@@ -37,9 +37,8 @@
 - 구현 후 관련 테스트를 실행하고, 필요한 테스트가 없다면 적절한 테스트 추가하기
 - 너무 과한 경우에 대한 테스트는 작성하지 않기
 - 구현과 테스트가 완료된 후 Knowledge Graph(KG)를 갱신하기
-  - python venv 위치: {projectRoot}/../venv
-  - 실행 명령어: code-review-graph build
-  - KG 갱신은 최종 코드 변경과 테스트가 완료된 이후 마지막 단계에서 수행하기
+    - 실행 명령어: code-review-graph build
+    - KG 갱신은 최종 코드 변경과 테스트가 완료된 이후 마지막 단계에서 수행하기
 
 ### 테스트 규칙
 
@@ -76,7 +75,7 @@ gives you structural context (callers, dependents, test coverage) that file sear
 ### Key Tools
 
 | Tool                             | Use when                                               |
-| -------------------------------- | ------------------------------------------------------ |
+|----------------------------------|--------------------------------------------------------|
 | `detect_changes_tool`            | Reviewing code changes — gives risk-scored analysis    |
 | `get_review_context_tool`        | Need source snippets for review — token-efficient      |
 | `get_impact_radius_tool`         | Understanding blast radius of a change                 |
@@ -92,4 +91,5 @@ gives you structural context (callers, dependents, test coverage) that file sear
 2. Use `detect_changes_tool` for code review.
 3. Use `get_affected_flows_tool` to understand impact.
 4. Use `query_graph_tool` pattern="tests_for" to check coverage.
+
 <!-- /code-review-graph MCP tools -->
