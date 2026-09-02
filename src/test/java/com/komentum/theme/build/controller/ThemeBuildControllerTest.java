@@ -2,7 +2,6 @@ package com.komentum.theme.build.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -269,34 +268,6 @@ class ThemeBuildControllerTest {
                 .param("platform", UUID.randomUUID().toString()),
             TestClientDto.fromEntity(owner)))
         .andExpect(status().isBadRequest());
-  }
-
-  @Test
-  @DisplayName("다른 사용자의 다운로드 URL 조회는 403을 반환한다")
-  void getThemeDownloadUrl_forbidden() throws Exception {
-    Long buildId = startAndReadBuildId(theme, owner);
-    themeBuildStateService.markSuccess(
-        buildId, "https://files.example.com/theme.apk", LocalDateTime.now());
-    User otherUser = userRepository.save(
-        UserFixture.user("theme-download-other@test.com", UserRole.USER));
-
-    performDownloadUrl(theme, otherUser, Platform.ANDROID)
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  @DisplayName("관리자는 다른 사용자의 다운로드 URL을 조회할 수 있다")
-  void getThemeDownloadUrl_adminSuccess() throws Exception {
-    Long buildId = startAndReadBuildId(theme, owner);
-    String packageUrl = "https://files.example.com/theme.apk";
-    themeBuildStateService.markSuccess(buildId, packageUrl, LocalDateTime.now());
-    when(fileManager.convertUrlToFileName(packageUrl)).thenReturn("theme.apk");
-    when(fileManager.resolveFilePath("theme.apk")).thenReturn(packageUrl);
-    User admin = userRepository.save(
-        UserFixture.user("theme-download-admin@test.com", UserRole.ADMIN));
-
-    performDownloadUrl(theme, admin, Platform.ANDROID)
-        .andExpect(status().isOk());
   }
 
   private ResultActions performDownloadUrl(

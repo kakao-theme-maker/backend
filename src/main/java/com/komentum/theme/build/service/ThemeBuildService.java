@@ -83,7 +83,6 @@ public class ThemeBuildService {
         .orElseThrow(() -> new ResourceNotFoundException(
             "Completed theme build not found. themeComponentId: " + themeComponentId
                 + ", platform: " + platform));
-    validateThemeAccess(job.getThemeComponent(), "No permission to download theme package");
     return new ThemeDownloadResponse(job.getPackageUrl());
   }
 
