@@ -52,7 +52,7 @@ public class ThemeBuildController {
   public ResponseEntity<ThemeDownloadResponse> getThemeDownloadUrl(
       @Parameter(description = "다운로드할 테마 ID", example = "1")
       @PathVariable Integer themeComponentId,
-      @Parameter(description = "다운로드할 플랫폼", example = "ANDROID | iOS")
+      @Parameter(description = "다운로드할 플랫폼", example = "ANDROID | IOS")
       @RequestParam Platform platform
   ) {
     return ResponseEntity.ok(themeBuildService.getDownloadUrl(themeComponentId, platform));
