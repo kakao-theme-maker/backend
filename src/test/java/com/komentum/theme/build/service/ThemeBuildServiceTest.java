@@ -1,20 +1,23 @@
 package com.komentum.theme.build.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import com.komentum.designcomponent.enums.Platform;
 import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.global.security.UserRole;
+import com.komentum.global.utils.FileManager;
 import com.komentum.test.fixture.theme.ThemeBuildFixture;
 import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.theme.build.domain.ThemeBuildJob;
 import com.komentum.theme.build.domain.ThemeBuildStatus;
 import com.komentum.theme.build.dto.ThemeBuildStartResponse;
+import com.komentum.theme.build.dto.ThemeDownloadResponse;
 import com.komentum.theme.build.repository.ThemeBuildJobRepository;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
@@ -22,6 +25,7 @@ import com.komentum.theme.core.service.ThemeManageService;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -62,6 +66,10 @@ class ThemeBuildServiceTest {
   private PlatformTransactionManager transactionManager;
   @Autowired
   private EntityManager entityManager;
+  @Autowired
+  private ThemeBuildStateService themeBuildStateService;
+  @Autowired
+  private FileManager fileManager;
 
   @MockitoBean
   private ThemeBuildExecutionService themeBuildExecutionService;
@@ -182,6 +190,49 @@ class ThemeBuildServiceTest {
     } finally {
       executor.shutdownNow();
     }
+  }
+
+  @Test
+  @DisplayName("완료된 빌드가 있으면 FileManager로 조회한 다운로드 URL을 반환한다")
+  void getDownloadUrl_returnsResolvedUrl() {
+    // given
+    ThemeBuildJob build = themeBuildJobRepository.saveAndFlush(
+        ThemeBuildJob.createRunning(theme, Platform.ANDROID));
+    String packageUrl = fileManager.resolveFilePath("theme-download-test.apk");
+    themeBuildStateService.markSuccess(build.getBuildId(), packageUrl, LocalDateTime.now());
+    // when
+    ThemeDownloadResponse response = themeBuildService.getDownloadUrl(
+        theme.getThemeComponentId(), Platform.ANDROID);
+    // then
+    assertThat(response.downloadUrl()).isEqualTo(packageUrl);
+  }
+
+  @Test
+  @DisplayName("Android와 iOS의 다운로드 URL을 구분하여 조회한다")
+  void getDownloadUrl_distinguishesByPlatform() {
+    // given
+    ThemeBuildJob androidBuild = themeBuildJobRepository.saveAndFlush(
+        ThemeBuildJob.createRunning(theme, Platform.ANDROID));
+    ThemeBuildJob iosBuild = themeBuildJobRepository.saveAndFlush(
+        ThemeBuildJob.createRunning(theme, Platform.IOS));
+    String androidUrl = fileManager.resolveFilePath("theme-download-android.apk");
+    String iosUrl = fileManager.resolveFilePath("theme-download-ios.ktheme");
+    // when
+    themeBuildStateService.markSuccess(androidBuild.getBuildId(), androidUrl, LocalDateTime.now());
+    themeBuildStateService.markSuccess(iosBuild.getBuildId(), iosUrl, LocalDateTime.now());
+    // then
+    assertThat(themeBuildService.getDownloadUrl(theme.getThemeComponentId(), Platform.ANDROID)
+        .downloadUrl()).isEqualTo(androidUrl);
+    assertThat(themeBuildService.getDownloadUrl(theme.getThemeComponentId(), Platform.IOS)
+        .downloadUrl()).isEqualTo(iosUrl);
+  }
+
+  @Test
+  @DisplayName("완료된 빌드가 없으면 다운로드 URL 조회 시 예외를 던진다")
+  void getDownloadUrl_notFound() {
+    assertThatThrownBy(() -> themeBuildService.getDownloadUrl(
+        theme.getThemeComponentId(), Platform.ANDROID))
+        .isInstanceOf(ResourceNotFoundException.class);
   }
 
   @Test

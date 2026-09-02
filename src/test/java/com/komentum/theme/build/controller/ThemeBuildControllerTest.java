@@ -2,23 +2,24 @@ package com.komentum.theme.build.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.designcomponent.enums.Platform;
 import com.komentum.global.security.UserRole;
+import com.komentum.global.utils.FileManager;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.fixture.theme.ThemeBuildFixture;
 import com.komentum.test.fixture.user.UserFixture;
-import com.komentum.theme.build.domain.ThemeBuildStatus;
 import com.komentum.theme.build.dto.ThemeBuildStartRequest;
+import com.komentum.theme.build.dto.ThemeDownloadResponse;
 import com.komentum.theme.build.repository.ThemeBuildJobRepository;
 import com.komentum.theme.build.service.ThemeBuildExecutionService;
 import com.komentum.theme.build.service.ThemeBuildStateService;
@@ -27,6 +28,7 @@ import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -58,6 +60,8 @@ class ThemeBuildControllerTest {
   private ThemeBuildJobRepository themeBuildJobRepository;
   @Autowired
   private ThemeBuildStateService themeBuildStateService;
+  @Autowired
+  private FileManager fileManager;
 
   @MockitoBean
   private ThemeBuildExecutionService themeBuildExecutionService;
@@ -234,6 +238,48 @@ class ThemeBuildControllerTest {
         UserFixture.user("theme-build-admin@test.com", UserRole.ADMIN));
 
     assertStatusResponse(performFind(buildId, admin), "RUNNING", null);
+  }
+
+  @Test
+  @DisplayName("완료된 테마 다운로드 URL을 조회하면 200과 다운로드 URL을 반환한다")
+  void getThemeDownloadUrl_success() throws Exception {
+    Long buildId = startAndReadBuildId(theme, owner);
+    String packageUrl = "https://files.example.com/theme.apk";
+    themeBuildStateService.markSuccess(buildId, packageUrl, LocalDateTime.now());
+    ResultActions result = performDownloadUrl(theme, owner, Platform.ANDROID)
+        .andExpect(status().isOk());
+    ThemeDownloadResponse response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
+    });
+    assertThat(response.downloadUrl()).isEqualTo(packageUrl);
+  }
+
+  @Test
+  @DisplayName("완료된 빌드가 없는 테마의 다운로드 URL 조회는 404를 반환한다")
+  void getThemeDownloadUrl_notFound() throws Exception {
+    performDownloadUrl(theme, owner, Platform.ANDROID)
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("잘못된 플랫폼으로 다운로드 URL을 조회하면 400을 반환한다")
+  void getThemeDownloadUrl_invalidPlatform() throws Exception {
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/api/themes/{themeComponentId}/download", theme.getThemeComponentId())
+                .param("platform", UUID.randomUUID().toString()),
+            TestClientDto.fromEntity(owner)))
+        .andExpect(status().isBadRequest());
+  }
+
+  private ResultActions performDownloadUrl(
+      ThemeComponent targetTheme,
+      User client,
+      Platform platform
+  ) throws Exception {
+    return mockMvc.perform(mockMvcUtils.addAuthentication(
+        get("/api/themes/{themeComponentId}/download", targetTheme.getThemeComponentId())
+            .param("platform", platform.name()),
+        TestClientDto.fromEntity(client)
+    ));
   }
 
   private ResultActions performStart(
