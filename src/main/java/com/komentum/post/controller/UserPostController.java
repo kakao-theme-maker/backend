@@ -36,20 +36,6 @@ public class UserPostController {
         postManagementFacade.findMyPostsByUser(userDetails.getUsername(), postType, pageable));
   }
 
-  /**
-   * 사용자가 북마크에 추가한 게시글 목록 반환
-   */
-  @GetMapping("/me/bookmarked-posts")
-  @Operation(summary = "현재 인증된 사용자가 북마크에 추가한 게시글 목록을 조회한다")
-  public ResponseEntity<List<UserPostListResponseDto>> findBookmarkedPostList(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
-      @RequestParam(name = "postType", required = false) PostType postType,
-      @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
-    return ResponseEntity.ok(
-        postManagementFacade.findBookmarkedPostsByUser(userDetails.getUsername(), postType,
-            pageable));
-  }
-
   @GetMapping("/me/preferred-posts")
   @Operation(summary = "현재 인증된 사용자가 좋아요를 누른 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findPreferredPostList(
