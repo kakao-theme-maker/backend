@@ -12,8 +12,6 @@ import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -203,35 +201,4 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
         dto -> dto.getPublicUserId().equals(testUser.getPublicUserId()));
   }
 
-  @Test
-  @DisplayName("when send request, retrieve bookmarked design components")
-  public void findBookmarkedDesignComponent_success() throws Exception {
-    // given
-    // 유저당 3개의 design component
-    Map<User, List<DesignComponent>> designComponentMap = designComponentScenarioSupport
-        .builder(List.of(testUser))
-        .withCountPerUser(3)
-        .build()
-        .designComponents().stream()
-        .collect(Collectors.groupingBy(DesignComponent::getUser));
-    // 유저당 2개의 design boards를 생성하고, 모든 design board 북마크
-    // design board는 각각 3개의 design component를 갖는다
-    var postResult = postScenarioSupport.builder(List.of(testUser))
-        .withDesignBoardsPerUser(4, designComponentMap)
-        .withBookmarkRatio(1)
-        .build();
-    // when
-    List<DesignComponentDto> res = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<DesignComponentDto>>builder()
-            .mockMvc(mockMvc)
-            .httpMethod(HttpMethod.GET)
-            .path("/api/design-components/bookmarked")
-            .clientDto(TestClientDto.fromEntity(testUser))
-            .responseType(new TypeReference<>() {
-            })
-            .build()
-    );
-    // then
-    assertThat(res).hasSize(3);
-  }
 }

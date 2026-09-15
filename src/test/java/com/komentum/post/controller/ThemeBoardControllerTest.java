@@ -451,8 +451,6 @@ class ThemeBoardControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").exists())
         .andExpect(jsonPath("$.liked").value(false))
-        .andExpect(jsonPath("$.bookmarked").exists())
-        .andExpect(jsonPath("$.bookmarked").value(false))
         .andExpect(jsonPath("$.following").exists())
         .andExpect(jsonPath("$.following").value(false));
     ThemeBoardDetailDto response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
@@ -564,8 +562,6 @@ class ThemeBoardControllerTest {
       result
           .andExpect(jsonPath("$[" + i + "].liked").exists())
           .andExpect(jsonPath("$[" + i + "].liked").value(false))
-          .andExpect(jsonPath("$[" + i + "].bookmarked").exists())
-          .andExpect(jsonPath("$[" + i + "].bookmarked").value(false))
           .andExpect(jsonPath("$[" + i + "].following").exists())
           .andExpect(jsonPath("$[" + i + "].following").value(false));
     }

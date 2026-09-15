@@ -38,13 +38,4 @@ class PostRepositorySupportTest {
         .isSameAs(Expressions.FALSE);
   }
 
-  /**
-   * 조회 기준 사용자가 null이면 게시글 북마크 여부 표현식이 false 상수로 생성되는지 검증한다.
-   */
-  @Test
-  @DisplayName("현재 사용자가 null이면 게시글 북마크 여부는 false 상수식을 반환한다")
-  void isBookmarked_nullClientReturnsFalseExpression() {
-    assertThat(postRepositorySupport.isBookmarked(QPost.post, null))
-        .isSameAs(Expressions.FALSE);
-  }
 }

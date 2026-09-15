@@ -9,7 +9,6 @@ import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.enums.TypeCodeGroup;
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.domain.ThemeBoard;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
@@ -33,7 +32,6 @@ import com.komentum.theme.core.dto.ThemePreviewDto;
 import com.komentum.user.domain.User;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -294,59 +292,4 @@ class ThemeRetrieveControllerTest {
     }
   }
 
-  @Test
-  @DisplayName("when send request, retrieve themes that user bookmarked")
-  public void findBookmarkedThemes_success() throws Exception {
-    // 임시 : setUp 데이터 삭제 ( 시나리오 구현 어려움 )
-    testDataRemover.deleteAll();
-    // stub : 이미지 생성 시 Mock URL 사용
-    Mockito.when(fileManager.resolveFilePath(Mockito.any()))
-        .thenReturn("http://mocked-url/1234567890");
-    // given: 사용자 4명 생성
-    List<User> users = userScenarioSupport.builder()
-        .withUsers(4)
-        .build().users();
-    // given : design component 4개 생성
-    List<DesignComponent> designComponents = designComponentScenarioSupport.builder(users)
-        .withCountPerUser(1)
-        .build().designComponents();
-    // given: theme 4개 생성
-    List<ThemeComponent> themeComponents = themeComponentScenarioSupport.builder(users,
-            designComponents)
-        .withCountPerUser(1)
-        .build().themeComponents();
-    // given: theme board를 4개 생성하고, 그 중 2개를 저장한다
-    var postResult = postScenarioSupport.builder(users)
-        .withThemeBoards(themeComponents)
-        .withBookmarkRatio(0.5)
-        .build();
-    // when
-    User client = users.get(0);
-    List<ThemePreviewDto> response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<ThemePreviewDto>>builder()
-            .mockMvc(mockMvc)
-            .path("/api/themes/bookmarked")
-            .httpMethod(HttpMethod.GET)
-            .clientDto(TestClientDto.fromEntity(client))
-            .statusCode(200)
-            .responseType(new TypeReference<>() {
-            })
-            .build()
-    );
-    // then: 응답 데이터 크기 검증
-    Set<Long> bookmarkedPostIdSet = postResult.bookmarkMappings().stream()
-        .map(bm -> bm.getPost().getPostId())
-        .collect(Collectors.toSet());
-    Set<Integer> bookmarkedThemeIdSet = postResult.themeBoards().stream()
-        .filter(tb -> bookmarkedPostIdSet.contains(tb.getPost().getPostId()))
-        .map(ThemeBoard::getThemeComponent)
-        .map(ThemeComponent::getThemeComponentId)
-        .collect(Collectors.toSet());
-    assertThat(response).hasSize(bookmarkedThemeIdSet.size());
-    // then: 응답 데이터의 각 테마가 실제로 북마크 되어있는지 검증
-    assertThat(response).allSatisfy(dto -> {
-      assertThat(bookmarkedThemeIdSet).contains(dto.getThemeComponentId());
-      assertThemePreviewDto(dto);
-    });
-  }
 }
