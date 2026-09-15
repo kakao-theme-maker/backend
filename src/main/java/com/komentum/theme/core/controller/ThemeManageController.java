@@ -7,7 +7,6 @@ import com.komentum.theme.core.dto.ThemeDetailResponse;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
 import com.komentum.theme.core.facade.ThemeManagementFacade;
 import com.komentum.theme.core.service.ThemeManageService;
-import com.komentum.theme.core.service.seeder.DefaultThemeSeeder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,7 +31,6 @@ public class ThemeManageController {
 
   private final ThemeManageService themeManageService;
   private final ThemeManagementFacade themeManagementFacade;
-  private final DefaultThemeSeeder defaultThemeSeeder;
 
   @PostMapping
   @Operation(summary = "인증된 사용자가 새로운 테마를 생성한다")
@@ -71,16 +69,6 @@ public class ThemeManageController {
       @PathVariable("id") Integer id) {
     return ResponseEntity.ok(themeManageService.markAsDone(id));
   }
-
-  @PostMapping("/default/seed")
-  @Operation(summary = "root user가 디폴트 테마를 시딩한다")
-  public ResponseEntity<Void> seedDefaultTheme(
-      @AuthenticationPrincipal CustomUserDetails userDetails
-  ) {
-    defaultThemeSeeder.seedDefaultThemes(userDetails.getPublicUserId());
-    return ResponseEntity.ok().build();
-  }
-
   @PostMapping("/clone")
   @Operation(summary = "인증된 사용자가 요청 본문의 이미지/색상 정보를 기반으로 테마를 복제한다")
   public ResponseEntity<ThemeDetailResponse> cloneTheme(
