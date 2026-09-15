@@ -58,9 +58,6 @@ public class ThemeBoardDto {
     @Schema(description = "현재 사용자의 좋아요 여부 (비인증 사용자는 false)")
     private boolean liked;
 
-    @Schema(description = "현재 사용자의 북마크 저장 여부 (비인증 사용자는 false)")
-    private boolean bookmarked;
-
     @Schema(description = "현재 사용자의 게시글 작성자 팔로우 여부 (비인증 사용자는 false)")
     private boolean following;
 
