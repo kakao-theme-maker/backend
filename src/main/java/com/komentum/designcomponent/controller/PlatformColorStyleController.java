@@ -4,12 +4,14 @@ import com.komentum.designcomponent.dto.SeedResult;
 import com.komentum.designcomponent.service.seeder.PlatformColorStyleSeeder;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Profile("unused-api")
 @RequestMapping("/api/platform-color-styles")
 @RequiredArgsConstructor
 public class PlatformColorStyleController {

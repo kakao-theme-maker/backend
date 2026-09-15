@@ -5,6 +5,7 @@ import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.service.TagService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Profile("unused-api")
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class TagController {
