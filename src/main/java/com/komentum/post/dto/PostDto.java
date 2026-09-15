@@ -40,7 +40,7 @@ public class PostDto {
     boolean publicFlag;
   }
 
-  // 사용자가 작성 / 업로드 / 북마크 / 좋아요한 게시글 목록 조회 응답
+  // 사용자가 작성 / 업로드 / 좋아요한 게시글 목록 조회 응답
   @Getter
   @Setter
   @Builder
@@ -88,9 +88,6 @@ public class PostDto {
     @Schema(description = "현재 사용자의 좋아요 여부")
     boolean preferred;
 
-    @Schema(description = "현재 사용자의 북마크 여부")
-    boolean bookmarked;
-
     public static UserPostListResponseDto from(PostQuery.UserPostListRow row, List<Tag> tags,
         BoardManagementHelper boardManagementHelper) {
       List<TagResponse> tagResponses = tags.stream().map(TagResponse::from).toList();
@@ -112,7 +109,6 @@ public class PostDto {
           .prefers(row.getPrefers())
           .comments(row.getComments())
           .preferred(row.isPreferred())
-          .bookmarked(row.isBookmarked())
           .build();
     }
   }

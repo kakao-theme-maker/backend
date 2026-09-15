@@ -57,7 +57,6 @@ public class ThemeBoardQuery {
     private Long prefers;
     private Long comments;
     private boolean liked;
-    private boolean bookmarked;
     private boolean following;
     private String profileImage; // 사용자 프로필 이미지
 
@@ -74,7 +73,6 @@ public class ThemeBoardQuery {
         Long prefers,
         Long comments,
         boolean liked,
-        boolean bookmarked,
         boolean following,
         String profileImage) {
       this.postId = postId;
@@ -88,7 +86,6 @@ public class ThemeBoardQuery {
       this.prefers = prefers;
       this.comments = comments;
       this.liked = liked;
-      this.bookmarked = bookmarked;
       this.following = following;
       this.profileImage = profileImage;
     }

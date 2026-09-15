@@ -174,19 +174,6 @@ public class DesignComponentService {
     return designComponentRepositorySupport.findUploadedDesignComponents(client);
   }
 
-  @Transactional(readOnly = true)
-  public List<DesignComponentDto> findBookmarkedDesignComponents(String publicUserId) {
-    if (publicUserId == null) {
-      throw new IllegalArgumentException(
-          "[DesignComponentService] invalid client info : publicUserId is null");
-    }
-    List<DesignComponent> targetDesignComponents = designComponentRepositorySupport.findBookmarkedDesignComponents(
-        publicUserId);
-    return targetDesignComponents.stream()
-        .map(mapper::toDto)
-        .toList();
-  }
-
   // UPDATE
   public DesignComponentDto updateDesignComponent(Integer designComponentId,
       UpdateDesignComponentRequest request, MultipartFile image) {

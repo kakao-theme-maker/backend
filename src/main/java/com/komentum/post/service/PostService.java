@@ -128,13 +128,6 @@ public class PostService {
     return postRepository.countByUser_PublicUserId(publicUserId);
   }
 
-  // 사용자가 북마크에 추가한 게시글 목록 조회
-  @Transactional(readOnly = true)
-  public List<PostQuery.UserPostListRow> findBookmarkedPostsByUser(User user, PostType postType,
-      Pageable pageable) {
-    return postRepositorySupport.findBookmarkedPostsByUser(user, postType, pageable);
-  }
-
   @Transactional(readOnly = true)
   public List<PostQuery.UserPostListRow> findUserPreferredPosts(User user, PostType postType,
       Pageable pageable) {

@@ -1,14 +1,11 @@
 package com.komentum.test.data.scenario;
 
 import com.komentum.post.domain.Category;
-import com.komentum.post.domain.CategoryPost;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.domain.enums.PostType;
-import com.komentum.seed.seeder.BookmarkSeeder;
-import com.komentum.seed.seeder.BookmarkSeeder.BookmarkSeedResult;
 import com.komentum.seed.seeder.CategorySeeder;
 import com.komentum.seed.seeder.DesignBoardSeeder;
 import com.komentum.seed.seeder.PostSeeder;
@@ -36,7 +33,6 @@ public class PostScenarioSupport {
   private final PostSeeder postSeeder;
   private final PreferSeeder preferSeeder;
   private final CategorySeeder categorySeeder;
-  private final BookmarkSeeder bookmarkSeeder;
   private final ThemeBoardSeeder themeBoardSeeder;
   private final DesignBoardSeeder designBoardSeeder;
 
@@ -51,8 +47,6 @@ public class PostScenarioSupport {
       List<Post> posts,
       List<Prefer> prefers,
       List<Category> categories,
-      List<Category> bookmarks,
-      List<CategoryPost> bookmarkMappings,
       List<ThemeBoard> themeBoards,
       List<DesignBoard> designBoards
   ) {
@@ -68,8 +62,6 @@ public class PostScenarioSupport {
     private final List<Post> posts = new ArrayList<>();
     private final List<Prefer> prefers = new ArrayList<>();
     private final List<Category> categories = new ArrayList<>();
-    private final List<Category> bookmarks = new ArrayList<>();
-    private final List<CategoryPost> bookmarkMappings = new ArrayList<>();
     private final List<ThemeBoard> themeBoards = new ArrayList<>();
     private final List<DesignBoard> designBoards = new ArrayList<>();
 
@@ -167,24 +159,8 @@ public class PostScenarioSupport {
       return this;
     }
 
-    /**
-     * 사용자마다 전체 게시글 중 bookmarkRatio만큼 북마크에 게시글을 추가한다
-     * @param bookmarkRatio 전체 게시글 중 북마크에 추가할 비율 ( 0 ~ 1 )
-     * */
-    @Transactional
-    public PostScenarioBuilder withBookmarkRatio(double bookmarkRatio) {
-      if (bookmarkRatio < 0 || bookmarkRatio > 1) {
-        throw new IllegalArgumentException("bookmarkRatio must be between 0 and 1");
-      }
-      BookmarkSeedResult result = bookmarkSeeder.bookmarkByRatio(users, posts, bookmarkRatio);
-      bookmarks.addAll(result.bookmarks());
-      bookmarkMappings.addAll(result.bookmarkMappings());
-      return this;
-    }
-
     public Result build() {
-      return new Result(posts, prefers, categories, bookmarks, bookmarkMappings,
-          themeBoards, designBoards);
+      return new Result(posts, prefers, categories, themeBoards, designBoards);
     }
   }
 }

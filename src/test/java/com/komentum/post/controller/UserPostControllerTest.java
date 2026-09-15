@@ -3,7 +3,9 @@ package com.komentum.post.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,16 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.global.utils.DateUtils;
 import com.komentum.global.utils.FileManager;
-import com.komentum.post.domain.Category;
-import com.komentum.post.domain.CategoryPost;
-import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
-import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
-import com.komentum.post.repository.CategoryPostRepository;
-import com.komentum.post.repository.CategoryRepository;
-import com.komentum.post.service.enums.CategoryType;
+import com.komentum.post.repository.PostRepository;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
@@ -30,8 +26,10 @@ import com.komentum.test.data.scenario.PostScenarioSupport;
 import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.test.dto.TestParams;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -85,16 +83,12 @@ public class UserPostControllerTest {
   private PostScenarioSupport postScenarioSupport;
 
   @Autowired
-  private CategoryRepository categoryRepository;
-
-  @Autowired
-  private CategoryPostRepository categoryPostRepository;
+  private PostRepository postRepository;
 
   private User client;
-  private Post customCategoryOnlyPost;
+  private User otherUser;
   private PostScenarioSupport.Result postResult;
   private Map<Long, Post> postById;
-  private Set<Long> bookmarkedPostIds;
   private Set<Long> preferredPostIds;
 
   @BeforeEach
@@ -107,6 +101,7 @@ public class UserPostControllerTest {
         .build()
         .users();
     client = users.get(0);
+    otherUser = users.get(1);
 
     List<DesignComponent> designComponents = designComponentScenarioSupport.builder(users)
         .withCountPerUser(2)
@@ -131,7 +126,6 @@ public class UserPostControllerTest {
     postById = postResult.posts().stream()
         .collect(Collectors.toMap(Post::getPostId, Function.identity()));
     preferredPostIds = resolvePreferredPostIds();
-    bookmarkedPostIds = createBookmarkAndCustomCategory();
   }
 
   @AfterEach
@@ -151,17 +145,6 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("북마크한 게시글 목록은 post_type으로 필터링한다")
-  void findBookmarkedPostList_filtersByPostType() throws Exception {
-    assertEndpointFilters(
-        "/api/users/me/bookmarked-posts",
-        expectedBookmarkedPostIds(null),
-        expectedBookmarkedPostIds(PostType.THEME_BOARD),
-        expectedBookmarkedPostIds(PostType.DESIGN_BOARD)
-    );
-  }
-
-  @Test
   @DisplayName("좋아요한 게시글 목록은 post_type으로 필터링한다")
   void findPreferredPostList_filtersByPostType() throws Exception {
     assertEndpointFilters(
@@ -175,7 +158,7 @@ public class UserPostControllerTest {
   @Test
   @DisplayName("사용자 게시글 목록 응답은 camelCase 필드를 사용한다")
   void userPostListResponse_usesCamelCaseFields() throws Exception {
-    MvcResult result = performGet("/api/users/me/upload-posts", null);
+    MvcResult result = performGet("/api/users/me/upload-posts", null, client, null, null);
     JsonNode first = objectMapper.readTree(result.getResponse().getContentAsString()).get(0);
 
     assertThat(first.has("postId")).isTrue();
@@ -187,7 +170,7 @@ public class UserPostControllerTest {
     assertThat(first.has("authorName")).isTrue();
     assertThat(first.has("authorProfileImageUrl")).isTrue();
     assertThat(first.has("preferred")).isTrue();
-    assertThat(first.has("bookmarked")).isTrue();
+    assertThat(first.has("bookmarked")).isFalse();
     assertThat(first.get("createdAt").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
     assertThat(first.get("updatedAt").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
 
@@ -205,16 +188,104 @@ public class UserPostControllerTest {
   }
 
   @Test
-  @DisplayName("커스텀 카테고리에만 담긴 게시글은 북마크로 표시하지 않는다")
-  void customCategoryPost_isNotMarkedAsBookmarked() throws Exception {
-    List<UserPostListResponseDto> response = requestUserPosts("/api/users/me/upload-posts", null);
+  @DisplayName("좋아요한 게시글 목록은 좋아요 필드를 유지하고 북마크 필드를 제외한다")
+  void preferredPostListResponse_keepsPreferFieldsAndExcludesBookmark() throws Exception {
+    MvcResult result = performGet("/api/users/me/preferred-posts", null, client, null, null);
+    JsonNode first = objectMapper.readTree(result.getResponse().getContentAsString()).get(0);
 
-    UserPostListResponseDto customCategoryPostResponse = response.stream()
-        .filter(dto -> dto.getPostId().equals(customCategoryOnlyPost.getPostId()))
+    assertThat(first.get("prefers").asLong()).isEqualTo(1L);
+    assertThat(first.get("preferred").asBoolean()).isTrue();
+    assertThat(first.has("bookmarked")).isFalse();
+  }
+
+  @Test
+  @DisplayName("좋아요 등록과 취소는 좋아요한 게시글 목록과 좋아요 수에 반영된다")
+  void preferLifecycle_isReflectedInPreferredPostList() throws Exception {
+    Post targetPost = postResult.themeBoards().get(0).getPost();
+
+    performSavePrefer(targetPost, otherUser);
+    assertThat(requestPreferCount(targetPost)).isEqualTo(2L);
+    UserPostListResponseDto preferredPost = requestUserPosts(
+        "/api/users/me/preferred-posts", null, client).stream()
+        .filter(dto -> dto.getPostId().equals(targetPost.getPostId()))
         .findFirst()
         .orElseThrow();
+    assertThat(preferredPost.getPrefers()).isEqualTo(2L);
+    assertThat(preferredPost.isPreferred()).isTrue();
 
-    assertThat(customCategoryPostResponse.isBookmarked()).isFalse();
+    performDeletePrefer(targetPost, client);
+    assertThat(requestPreferCount(targetPost)).isEqualTo(1L);
+    assertThat(requestUserPosts("/api/users/me/preferred-posts", null, client))
+        .extracting(UserPostListResponseDto::getPostId)
+        .doesNotContain(targetPost.getPostId());
+
+    performDeletePrefer(targetPost, otherUser);
+    assertThat(requestPreferCount(targetPost)).isZero();
+    assertThat(requestUserPosts("/api/users/me/preferred-posts", null, otherUser)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("좋아요한 게시글 목록은 인증된 사용자의 좋아요만 반환한다")
+  void preferredPostList_isIsolatedByUser() throws Exception {
+    Post targetPost = postResult.themeBoards().get(0).getPost();
+    performDeletePrefer(targetPost, client);
+    performSavePrefer(targetPost, otherUser);
+
+    assertThat(requestUserPosts("/api/users/me/preferred-posts", null, client))
+        .extracting(UserPostListResponseDto::getPostId)
+        .doesNotContain(targetPost.getPostId());
+    assertThat(requestUserPosts("/api/users/me/preferred-posts", null, otherUser))
+        .singleElement()
+        .satisfies(dto -> {
+          assertThat(dto.getPostId()).isEqualTo(targetPost.getPostId());
+          assertThat(dto.getPrefers()).isEqualTo(1L);
+          assertThat(dto.isPreferred()).isTrue();
+        });
+  }
+
+  @Test
+  @DisplayName("좋아요한 게시글 목록은 생성일시와 게시글 ID 내림차순으로 결정적 페이징한다")
+  void preferredPostList_paginatesInDeterministicOrder() throws Exception {
+    LocalDateTime baseTime = LocalDateTime.of(2026, 1, 1, 0, 0);
+    List<Post> posts = postResult.posts();
+    for (int i = 0; i < posts.size(); i++) {
+      posts.get(i).setCreatedAt(baseTime.plusDays(i / 2));
+    }
+    postRepository.saveAllAndFlush(posts);
+
+    assertPreferredPostPages(null, 3);
+    assertPreferredPostPages(PostType.THEME_BOARD, 1);
+  }
+
+  private void assertPreferredPostPages(PostType postType, int pageSize) throws Exception {
+    List<Long> expectedPostIds = expectedPreferredPostIds(postType);
+    int lastPage = (expectedPostIds.size() - 1) / pageSize;
+    for (int page = 0; page <= lastPage + 1; page++) {
+      int fromIndex = Math.min(page * pageSize, expectedPostIds.size());
+      int toIndex = Math.min(fromIndex + pageSize, expectedPostIds.size());
+
+      assertThat(requestUserPosts(
+          "/api/users/me/preferred-posts", postType, client, page, pageSize))
+          .extracting(UserPostListResponseDto::getPostId)
+          .containsExactlyElementsOf(expectedPostIds.subList(fromIndex, toIndex));
+    }
+  }
+
+  @Test
+  @DisplayName("여러 디자인 에셋이 연결된 게시글도 좋아요 목록에서 한 행만 반환한다")
+  void preferredDesignPostList_returnsOneRowPerPost() throws Exception {
+    Map<Long, Long> designBoardCountByPostId = postResult.designBoards().stream()
+        .collect(Collectors.groupingBy(
+            designBoard -> designBoard.getPost().getPostId(),
+            Collectors.counting()));
+    assertThat(designBoardCountByPostId.values()).allMatch(count -> count > 1);
+
+    List<UserPostListResponseDto> response = requestUserPosts(
+        "/api/users/me/preferred-posts", PostType.DESIGN_BOARD);
+    assertThat(response)
+        .extracting(UserPostListResponseDto::getPostId)
+        .doesNotHaveDuplicates()
+        .containsExactlyElementsOf(expectedPreferredPostIds(PostType.DESIGN_BOARD));
   }
 
   private void assertEndpointFilters(String path, List<Long> allPostIds, List<Long> themePostIds,
@@ -245,13 +316,22 @@ public class UserPostControllerTest {
       assertThat(dto.getPrefers()).isEqualTo(1L);
       assertThat(dto.getComments()).isNotNull();
       assertThat(dto.isPreferred()).isEqualTo(preferredPostIds.contains(dto.getPostId()));
-      assertThat(dto.isBookmarked()).isEqualTo(bookmarkedPostIds.contains(dto.getPostId()));
     });
   }
 
   private List<UserPostListResponseDto> requestUserPosts(String path, PostType postType)
       throws Exception {
-    MvcResult result = performGet(path, postType);
+    return requestUserPosts(path, postType, client);
+  }
+
+  private List<UserPostListResponseDto> requestUserPosts(String path, PostType postType, User user)
+      throws Exception {
+    return requestUserPosts(path, postType, user, null, null);
+  }
+
+  private List<UserPostListResponseDto> requestUserPosts(String path, PostType postType, User user,
+      Integer page, Integer size) throws Exception {
+    MvcResult result = performGet(path, postType, user, page, size);
     return objectMapper.readValue(
         result.getResponse().getContentAsString(),
         new TypeReference<>() {
@@ -259,26 +339,45 @@ public class UserPostControllerTest {
     );
   }
 
-  private MvcResult performGet(String path, PostType postType) throws Exception {
+  private MvcResult performGet(String path, PostType postType, User user, Integer page, Integer size)
+      throws Exception {
     MockHttpServletRequestBuilder requestBuilder = get(path);
     if (postType != null) {
       requestBuilder.param("postType", postType.name());
     }
+    if (page != null && size != null) {
+      requestBuilder.params(TestParams.withPaging(page, size));
+    }
     return mockMvc.perform(
-            mockMvcUtils.addAuthentication(requestBuilder, TestClientDto.fromEntity(client)))
+            mockMvcUtils.addAuthentication(requestBuilder, TestClientDto.fromEntity(user)))
         .andExpect(status().isOk())
         .andReturn();
+  }
+
+  private void performSavePrefer(Post postToPrefer, User user) throws Exception {
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            post("/api/posts/{postId}/prefer", postToPrefer.getPostId()),
+            TestClientDto.fromEntity(user)))
+        .andExpect(status().isOk());
+  }
+
+  private void performDeletePrefer(Post postToUnprefer, User user) throws Exception {
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            delete("/api/posts/{postId}/prefer", postToUnprefer.getPostId()),
+            TestClientDto.fromEntity(user)))
+        .andExpect(status().isNoContent());
+  }
+
+  private long requestPreferCount(Post post) throws Exception {
+    MvcResult result = mockMvc.perform(get("/api/posts/{postId}/prefer", post.getPostId()))
+        .andExpect(status().isOk())
+        .andReturn();
+    return Long.parseLong(result.getResponse().getContentAsString());
   }
 
   private List<Long> expectedUploadedPostIds(PostType postType) {
     return orderedPostIds(postResult.posts().stream()
         .filter(post -> post.getUser().getUserId().equals(client.getUserId()))
-        .toList(), postType);
-  }
-
-  private List<Long> expectedBookmarkedPostIds(PostType postType) {
-    return orderedPostIds(postResult.posts().stream()
-        .filter(post -> bookmarkedPostIds.contains(post.getPostId()))
         .toList(), postType);
   }
 
@@ -301,46 +400,6 @@ public class UserPostControllerTest {
     return Comparator.comparing(Post::getCreatedAt)
         .reversed()
         .thenComparing(Post::getPostId, Comparator.reverseOrder());
-  }
-
-  private Set<Long> createBookmarkAndCustomCategory() {
-    Post bookmarkedThemePost = postResult.themeBoards().get(0).getPost();
-    Post bookmarkedDesignPost = postResult.designBoards().stream()
-        .min(Comparator.comparing(DesignBoard::getDesignBoardId))
-        .map(DesignBoard::getPost)
-        .orElseThrow();
-    Set<Long> bookmarkedIds = Set.of(bookmarkedThemePost.getPostId(),
-        bookmarkedDesignPost.getPostId());
-
-    Category bookmark = categoryRepository.save(Category.builder()
-        .owner(client)
-        .name("bookmark")
-        .categoryType(CategoryType.BOOKMARK)
-        .build());
-    categoryPostRepository.saveAll(List.of(bookmarkedThemePost, bookmarkedDesignPost).stream()
-        .map(post -> CategoryPost.builder()
-            .category(bookmark)
-            .post(post)
-            .build())
-        .toList());
-
-    customCategoryOnlyPost = postResult.themeBoards().stream()
-        .map(ThemeBoard::getPost)
-        .filter(post -> post.getUser().getUserId().equals(client.getUserId()))
-        .filter(post -> !bookmarkedIds.contains(post.getPostId()))
-        .findFirst()
-        .orElseThrow();
-    Category customCategory = categoryRepository.save(Category.builder()
-        .owner(client)
-        .name("custom")
-        .categoryType(CategoryType.CUSTOM)
-        .build());
-    categoryPostRepository.save(CategoryPost.builder()
-        .category(customCategory)
-        .post(customCategoryOnlyPost)
-        .build());
-
-    return bookmarkedIds;
   }
 
   private Set<Long> resolvePreferredPostIds() {

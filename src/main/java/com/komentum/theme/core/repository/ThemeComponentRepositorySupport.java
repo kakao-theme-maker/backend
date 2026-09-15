@@ -57,11 +57,6 @@ public class ThemeComponentRepositorySupport {
     if (sortTypes.contains(ThemeSortType.PREFER_DESC)) {
       withPost = true;
     }
-    // make boolean expression with bookmarked option
-    if (condition.getBookmarked()) {
-      withPost = true;
-      searchConditions.add(postRepositorySupport.isBookmarked(post, client));
-    }
     // make boolean expression with public user id
     if (condition.getPublicUserId() != null) {
       withUser = true;

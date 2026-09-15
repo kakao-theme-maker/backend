@@ -23,6 +23,5 @@ public class PostQuery {
     private Long prefers;
     private Long comments;
     private boolean preferred;
-    private boolean bookmarked;
   }
 }
