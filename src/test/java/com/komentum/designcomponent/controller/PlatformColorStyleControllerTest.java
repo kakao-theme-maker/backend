@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.designcomponent.dto.SeedResult;
 import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
 import com.komentum.test.MockMvcUtils;
-import com.komentum.test.config.GlobalTestMockManager;
+import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
 import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto;
@@ -18,14 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
-@ActiveProfiles({"test", "unused-api"})
-@Import(GlobalTestMockManager.class)
+@EnableTestProfile
 @AutoConfigureMockMvc
 class PlatformColorStyleControllerTest {
 

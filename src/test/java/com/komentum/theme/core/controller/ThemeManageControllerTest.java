@@ -15,7 +15,7 @@ import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.ColorStyleService;
 import com.komentum.designcomponent.service.ComponentTypeService;
 import com.komentum.test.MockMvcUtils;
-import com.komentum.test.config.GlobalTestMockManager;
+import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.TestDataRemover;
 import com.komentum.test.data.scenario.DesignComponentScenarioSupport;
 import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
@@ -47,16 +47,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
-@ActiveProfiles({"test", "unused-api"})
-@Import(GlobalTestMockManager.class)
+@EnableTestProfile
 @AutoConfigureMockMvc
 class ThemeManageControllerTest {
 
