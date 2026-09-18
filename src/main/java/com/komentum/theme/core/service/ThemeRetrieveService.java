@@ -44,12 +44,6 @@ public class ThemeRetrieveService {
   }
 
   @Transactional(readOnly = true)
-  public List<ThemeComponentDto> getThemesByUserEmail(String userEmail, Pageable pageable) {
-    return convertToDtosWithPreviewImages(themeComponentRepository.findByUserEmail(userEmail,
-        pageable));
-  }
-
-  @Transactional(readOnly = true)
   public List<ThemeComponentDto> findByPublicUserId(String publicUserId, Pageable pageable) {
     User client = userEntityFinder.findUserEntity(publicUserId);
     ThemeSearchCondition condition = new ThemeSearchCondition();
@@ -80,8 +74,8 @@ public class ThemeRetrieveService {
 
   @Transactional(readOnly = true)
   public List<ThemeComponentDto> getCompletedThemesByUser(String userEmail, Pageable pageable) {
-    List<ThemeComponent> completedThemes = themeComponentRepository.findByIsDoneTrueAndUserEmail(
-        userEmail, pageable);
+    List<ThemeComponent> completedThemes = themeComponentRepository
+        .findByIsDoneTrueAndUser_UserEmail(userEmail, pageable);
     return convertToDtosWithPreviewImages(completedThemes);
   }
 

@@ -143,7 +143,7 @@ public class IosThemeCssEditor {
     result = replaceCssProperty(result, MANIFEST_STYLE, THEME_VERSION,
         quote(resolveThemeVersion(themeComponent)));
     result = replaceCssProperty(result, MANIFEST_STYLE, AUTHOR_NAME,
-        quote(themeComponent.getUserEmail()));
+        quote(themeComponent.getUser().getUserEmail()));
     result = replaceCssProperty(result, MANIFEST_STYLE, THEME_ID,
         quote("com.komentum.theme.ios.t" + themeComponent.getThemeComponentId()));
     return result;

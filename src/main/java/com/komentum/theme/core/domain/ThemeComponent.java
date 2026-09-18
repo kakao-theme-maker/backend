@@ -2,15 +2,19 @@ package com.komentum.theme.core.domain;
 
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
 import com.komentum.theme.core.enums.ThemeType;
+import com.komentum.user.domain.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -46,8 +50,9 @@ public class ThemeComponent {
   @Column(name = "theme_component_id")
   private Integer themeComponentId;
 
-  @Column(name = "user_email", nullable = false)
-  private String userEmail;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
   @Column(name = "theme_code", nullable = false, unique = true)
   private String themeCode;

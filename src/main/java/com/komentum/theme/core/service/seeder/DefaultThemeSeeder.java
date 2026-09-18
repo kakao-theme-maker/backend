@@ -128,7 +128,7 @@ public class DefaultThemeSeeder {
           ThemeComponent.builder()
               .themeName(defaultThemeSheetInfo.themeName)
               .themeCode(defaultThemeSheetInfo.themeCode)
-              .userEmail(rootUser.getUserEmail())
+              .user(rootUser)
               .versionName(defaultThemeSheetInfo.themeCode + ".0.0.1")
               .versionNumber("0")
               .themeType(ThemeType.DEFAULT)

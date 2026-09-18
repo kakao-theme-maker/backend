@@ -10,7 +10,6 @@ import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.user.domain.User;
-import com.komentum.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ public class ThemeBoardSeeder {
 
   private final ThemeBoardRepository themeBoardRepository;
   private final ThemeImageRepository themeImageRepository;
-  private final UserRepository userRepository;
   private final PostSeeder postSeeder;
   private final FileManager fileManager;
   private final Faker faker;
@@ -50,9 +48,7 @@ public class ThemeBoardSeeder {
     int size = themeComponents.size();
     for (int i = 0; i < size; i++) {
       ThemeComponent component = themeComponents.get(i);
-      User author = userRepository.findByUserEmail(component.getUserEmail())
-          .orElseThrow(() -> new IllegalArgumentException(
-              "user with " + component.getUserEmail() + " doesn't exists"));
+      User author = component.getUser();
       String previewImage = themeImageService.findThemePreviewImageUrl(
           component.getThemeComponentId());
       Post post = postSeeder.createOne(

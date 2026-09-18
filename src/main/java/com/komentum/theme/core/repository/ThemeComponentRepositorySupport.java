@@ -73,7 +73,7 @@ public class ThemeComponentRepositorySupport {
           .join(themeBoard.post, post);
     }
     if (withUser) {
-      query.join(user).on(themeComponent.userEmail.eq(user.userEmail));
+      query.join(themeComponent.user, user);
     }
     // make query
     return query

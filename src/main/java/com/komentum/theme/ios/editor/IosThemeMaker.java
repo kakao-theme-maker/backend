@@ -16,8 +16,6 @@ import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.theme.core.service.ThemeStyleService;
 import com.komentum.theme.ios.utils.IosThemePathManager;
-import com.komentum.user.domain.User;
-import com.komentum.user.service.UserEntityFinder;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +33,6 @@ public class IosThemeMaker {
   private final ThemeStyleService themeStyleService;
   private final PlatformComponentTypeRepository platformComponentTypeRepository;
   private final PlatformColorStyleRepository platformColorStyleRepository;
-  private final UserEntityFinder userEntityFinder;
   private final OwnerAdminPolicy ownerAdminPolicy;
   private final IosThemeTemplateExtractor iosThemeTemplateExtractor;
   private final IosThemeCssEditor iosThemeCssEditor;
@@ -90,8 +87,7 @@ public class IosThemeMaker {
   }
 
   private void validateAccess(ThemeComponent themeComponent) {
-    User themeOwner = userEntityFinder.findUserEntityByEmail(themeComponent.getUserEmail());
-    if (!ownerAdminPolicy.validate(themeOwner)) {
+    if (!ownerAdminPolicy.validate(themeComponent.getUser())) {
       throw new AccessDeniedException("failed to make iOS theme package : invalid user or role");
     }
   }
