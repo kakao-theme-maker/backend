@@ -4,13 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.byLessThan;
 
 import com.komentum.designcomponent.enums.Platform;
+import com.komentum.global.security.UserRole;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.fixture.theme.ThemeBuildFixture;
+import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.theme.build.domain.ThemeBuildJob;
 import com.komentum.theme.build.domain.ThemeBuildStatus;
 import com.komentum.theme.build.repository.ThemeBuildJobRepository;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
+import com.komentum.user.domain.User;
+import com.komentum.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.AfterEach;
@@ -30,19 +34,23 @@ class ThemeBuildStateServiceTest {
   private ThemeBuildJobRepository themeBuildJobRepository;
   @Autowired
   private ThemeComponentRepository themeComponentRepository;
+  @Autowired
+  private UserRepository userRepository;
 
   private ThemeComponent theme;
 
   @BeforeEach
   void setUp() {
-    theme = themeComponentRepository.save(
-        ThemeBuildFixture.theme("theme-build-state@test.com"));
+    User owner = userRepository.save(
+        UserFixture.user("theme-build-state@test.com", UserRole.USER));
+    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner));
   }
 
   @AfterEach
   void tearDown() {
     themeBuildJobRepository.deleteAll();
     themeComponentRepository.deleteAll();
+    userRepository.deleteAll();
   }
 
   @Test

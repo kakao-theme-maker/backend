@@ -96,26 +96,6 @@ class ThemeRetrieveServiceTest {
   }
 
   @Test
-  @DisplayName("success test of retrieving theme by email")
-  void getThemeByEmail_success() {
-    System.out.println("---start theme by email");
-    // given
-    int pageNumber = 0;
-    int pageSize = 10;
-    Pageable pageable = PageRequest.of(pageNumber, pageSize);
-    String userEmail = themeDataGenerator.userEmail;
-    long counts = themeDataGenerator.initialThemes.stream()
-        .filter(theme -> theme.getUserEmail().equals(userEmail)).count();
-    // when
-    List<ThemeComponentDto> founded = themeRetrieveService.getThemesByUserEmail(userEmail,
-        pageable);
-    // then
-    assertThat(founded).hasSize((int) counts).allSatisfy(
-        themeComponentDto -> assertThat(themeComponentDto.getUserEmail()).isEqualTo(userEmail));
-    System.out.println("---end theme by email");
-  }
-
-  @Test
   @DisplayName("success test of retrieving public themes")
   void getPublicThemes_success() {
     System.out.println("---start public themes");
@@ -162,7 +142,7 @@ class ThemeRetrieveServiceTest {
     String userEmail = themeDataGenerator.userEmail;
     long counts = themeDataGenerator.initialThemes.stream()
         .filter(ThemeComponent::getIsDone)
-        .filter(theme -> theme.getUserEmail().equals(userEmail)).count();
+        .filter(theme -> theme.getUser().getUserEmail().equals(userEmail)).count();
     // when
     List<ThemeComponentDto> founded = themeRetrieveService.getCompletedThemesByUser(userEmail,
         pageable);

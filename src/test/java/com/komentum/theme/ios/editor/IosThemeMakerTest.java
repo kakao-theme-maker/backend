@@ -25,7 +25,6 @@ import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.theme.core.service.ThemeStyleService;
 import com.komentum.user.domain.User;
-import com.komentum.user.service.UserEntityFinder;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -50,8 +49,6 @@ class IosThemeMakerTest {
   @Mock
   private PlatformColorStyleRepository platformColorStyleRepository;
   @Mock
-  private UserEntityFinder userEntityFinder;
-  @Mock
   private OwnerAdminPolicy ownerAdminPolicy;
   @Mock
   private IosThemeTemplateExtractor iosThemeTemplateExtractor;
@@ -70,16 +67,15 @@ class IosThemeMakerTest {
     int themeComponentId = 7;
     String ownerEmail = "owner@test.com";
     String packageUrl = "https://cdn.example.com/theme.ktheme";
-    ThemeComponent themeComponent = ThemeComponent.builder()
-        .themeComponentId(themeComponentId)
-        .userEmail(ownerEmail)
-        .build();
     User themeOwner = User.builder()
         .publicUserId("owner-public-id")
         .userEmail(ownerEmail)
         .build();
+    ThemeComponent themeComponent = ThemeComponent.builder()
+        .themeComponentId(themeComponentId)
+        .user(themeOwner)
+        .build();
     when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
-    when(userEntityFinder.findUserEntityByEmail(ownerEmail)).thenReturn(themeOwner);
     when(ownerAdminPolicy.validate(themeOwner)).thenReturn(true);
     when(themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId))
         .thenReturn(List.of());
@@ -101,23 +97,21 @@ class IosThemeMakerTest {
     // given
     int themeComponentId = 7;
     String ownerEmail = "owner@test.com";
-    ThemeComponent themeComponent = ThemeComponent.builder()
-        .themeComponentId(themeComponentId)
-        .userEmail(ownerEmail)
-        .build();
     User themeOwner = User.builder()
         .publicUserId("owner-public-id")
         .userEmail(ownerEmail)
         .build();
+    ThemeComponent themeComponent = ThemeComponent.builder()
+        .themeComponentId(themeComponentId)
+        .user(themeOwner)
+        .build();
     when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
-    when(userEntityFinder.findUserEntityByEmail(ownerEmail)).thenReturn(themeOwner);
     when(ownerAdminPolicy.validate(themeOwner)).thenReturn(false);
 
     // when & then
     assertThatThrownBy(() -> iosThemeMaker.makeTheme(themeComponentId))
         .isInstanceOf(AccessDeniedException.class)
         .hasMessageContaining("invalid user or role");
-    verify(userEntityFinder).findUserEntityByEmail(ownerEmail);
     verify(ownerAdminPolicy).validate(themeOwner);
     verifyNoInteractions(
         iosThemeTemplateExtractor,
@@ -128,17 +122,23 @@ class IosThemeMakerTest {
   }
 
   @Test
-  void makeTheme_wrapsMissingOwnerAsPackageFailure() {
+  void makeTheme_wrapsUnexpectedFailureAsPackageFailure() {
     // given
     int themeComponentId = 7;
-    String ownerEmail = "missing-owner@test.com";
-    ThemeComponent themeComponent = ThemeComponent.builder()
-        .themeComponentId(themeComponentId)
+    String ownerEmail = "owner@test.com";
+    User themeOwner = User.builder()
+        .publicUserId("owner-public-id")
         .userEmail(ownerEmail)
         .build();
-    RuntimeException ownerLookupFailure = new RuntimeException("user not found");
+    ThemeComponent themeComponent = ThemeComponent.builder()
+        .themeComponentId(themeComponentId)
+        .user(themeOwner)
+        .build();
+    RuntimeException imageFetchFailure = new RuntimeException("failed to fetch theme images");
     when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
-    when(userEntityFinder.findUserEntityByEmail(ownerEmail)).thenThrow(ownerLookupFailure);
+    when(ownerAdminPolicy.validate(themeOwner)).thenReturn(true);
+    when(themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId))
+        .thenThrow(imageFetchFailure);
 
     // when
     Throwable thrown = catchThrowable(() -> iosThemeMaker.makeTheme(themeComponentId));
@@ -147,9 +147,8 @@ class IosThemeMakerTest {
     assertThat(thrown)
         .isInstanceOf(RuntimeException.class)
         .hasMessage("failed to make iOS theme package");
-    assertThat(thrown.getCause()).isSameAs(ownerLookupFailure);
+    assertThat(thrown.getCause()).isSameAs(imageFetchFailure);
     verifyNoInteractions(
-        ownerAdminPolicy,
         iosThemeTemplateExtractor,
         iosThemeCssEditor,
         iosThemeImageEditor,
@@ -164,13 +163,13 @@ class IosThemeMakerTest {
     int themeComponentId = 9;
     String ownerEmail = "owner@test.com";
     String expectedPackageUrl = "https://cdn.example.com/theme.ktheme";
-    ThemeComponent themeComponent = ThemeComponent.builder()
-        .themeComponentId(themeComponentId)
-        .userEmail(ownerEmail)
-        .build();
     User themeOwner = User.builder()
         .publicUserId("owner-public-id")
         .userEmail(ownerEmail)
+        .build();
+    ThemeComponent themeComponent = ThemeComponent.builder()
+        .themeComponentId(themeComponentId)
+        .user(themeOwner)
         .build();
     ColorStyle commonColorStyle = ColorStyle.builder()
         .colorStyleId(1)
@@ -206,7 +205,6 @@ class IosThemeMakerTest {
     ThemeImage androidOnlyImage = ThemeImage.builder().componentType(androidOnlyType).build();
     // stub
     when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
-    when(userEntityFinder.findUserEntityByEmail(ownerEmail)).thenReturn(themeOwner);
     when(ownerAdminPolicy.validate(themeOwner)).thenReturn(true);
     when(themeStyleService.fetchJoinThemeStylesByThemeComponentId(themeComponentId))
         .thenReturn(List.of(commonStyle, iosStyle, androidOnlyStyle));

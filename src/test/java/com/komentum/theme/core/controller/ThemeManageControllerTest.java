@@ -51,6 +51,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
 @EnableTestProfile
@@ -242,6 +243,7 @@ class ThemeManageControllerTest {
   }
 
   @Test
+  @Transactional
   @DisplayName("사용자는 이미지/색상 정보를 기반으로 테마를 복제할 수 있고, 복제된 테마의 제작자는 자기 자신이다")
   public void cloneTheme_success() throws Exception {
     // given
@@ -262,7 +264,7 @@ class ThemeManageControllerTest {
     assertThat(response.getStyleCodes()).hasSize(StyleCode.values().length);
     ThemeComponent clonedTheme = themeComponentRepository.findById(response.getThemeComponentId())
         .orElseThrow();
-    assertThat(clonedTheme.getUserEmail()).isEqualTo(testUser.getUserEmail());
+    assertThat(clonedTheme.getUser().getUserEmail()).isEqualTo(testUser.getUserEmail());
   }
 
   @Test

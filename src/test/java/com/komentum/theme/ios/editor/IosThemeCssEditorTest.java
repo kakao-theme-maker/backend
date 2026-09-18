@@ -13,6 +13,7 @@ import com.komentum.theme.core.domain.ImageInset;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.domain.ThemeStyle;
+import com.komentum.user.domain.User;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +50,7 @@ class IosThemeCssEditorTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(7)
         .themeName("My Theme")
-        .userEmail("owner@test.com")
+        .user(User.builder().userEmail("owner@test.com").build())
         .versionName("1.2.3")
         .versionNumber("12")
         .build();
@@ -102,7 +103,7 @@ class IosThemeCssEditorTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(7)
         .themeName("My Theme")
-        .userEmail("owner@test.com")
+        .user(User.builder().userEmail("owner@test.com").build())
         .versionName("1.2.3")
         .versionNumber("12")
         .build();
@@ -151,7 +152,7 @@ class IosThemeCssEditorTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(7)
         .themeName("My Theme")
-        .userEmail("owner@test.com")
+        .user(User.builder().userEmail("owner@test.com").build())
         .versionName("1.2.3")
         .versionNumber("12")
         .build();
@@ -201,7 +202,7 @@ class IosThemeCssEditorTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(7)
         .themeName("My Theme")
-        .userEmail("owner@test.com")
+        .user(User.builder().userEmail("owner@test.com").build())
         .versionName("1.2.3")
         .versionNumber("12")
         .build();
@@ -251,7 +252,7 @@ class IosThemeCssEditorTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(7)
         .themeName("My Theme")
-        .userEmail("owner@test.com")
+        .user(User.builder().userEmail("owner@test.com").build())
         .versionName("1.2.3")
         .versionNumber("12")
         .build();
@@ -302,7 +303,7 @@ class IosThemeCssEditorTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(7)
         .themeName("My Theme")
-        .userEmail("owner@test.com")
+        .user(User.builder().userEmail("owner@test.com").build())
         .versionName("1.2.3")
         .versionNumber("12")
         .build();
@@ -349,7 +350,7 @@ class IosThemeCssEditorTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(7)
         .themeName("My Theme")
-        .userEmail("owner@test.com")
+        .user(User.builder().userEmail("owner@test.com").build())
         .versionName("1.2.3")
         .versionNumber("12")
         .build();

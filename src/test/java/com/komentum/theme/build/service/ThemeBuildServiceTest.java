@@ -81,7 +81,7 @@ class ThemeBuildServiceTest {
   void setUp() {
     owner = userRepository.save(
         UserFixture.user("theme-build-service-owner@test.com", UserRole.USER));
-    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner.getUserEmail()));
+    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner));
     authenticate(owner);
   }
 

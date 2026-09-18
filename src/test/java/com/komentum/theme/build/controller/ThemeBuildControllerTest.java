@@ -73,7 +73,7 @@ class ThemeBuildControllerTest {
   void setUp() {
     owner = userRepository.save(
         UserFixture.user("theme-build-owner@test.com", UserRole.USER));
-    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner.getUserEmail()));
+    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner));
   }
 
   @AfterEach
