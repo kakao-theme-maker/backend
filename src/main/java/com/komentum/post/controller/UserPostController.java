@@ -5,6 +5,7 @@ import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostDto.UserPostListResponseDto;
 import com.komentum.post.facade.PostManagementFacade;
 import com.komentum.post.service.PostService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class UserPostController {
   /**
    * 사용자가 북마크에 추가한 게시글 목록 반환
    */
+  @Hidden
   @GetMapping("/me/bookmarked-posts")
   @Operation(summary = "현재 인증된 사용자가 북마크에 추가한 게시글 목록을 조회한다")
   public ResponseEntity<List<UserPostListResponseDto>> findBookmarkedPostList(

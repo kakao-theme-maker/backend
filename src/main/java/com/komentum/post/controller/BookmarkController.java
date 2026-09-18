@@ -2,6 +2,7 @@ package com.komentum.post.controller;
 
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.facade.BookmarkManagementFacade;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
 @RestController
 @RequestMapping("/api/bookmarks")
 @RequiredArgsConstructor

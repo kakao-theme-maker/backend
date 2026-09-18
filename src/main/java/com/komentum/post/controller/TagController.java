@@ -3,6 +3,7 @@ package com.komentum.post.controller;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
 import com.komentum.post.service.TagService;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Hidden
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class TagController {

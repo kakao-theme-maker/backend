@@ -5,6 +5,7 @@ import com.komentum.theme.core.dto.ThemeComponentDto;
 import com.komentum.theme.core.dto.ThemeDetailResponse;
 import com.komentum.theme.core.dto.ThemePreviewDto;
 import com.komentum.theme.core.service.ThemeRetrieveService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -89,6 +90,7 @@ public class ThemeRetrieveController {
     return ResponseEntity.ok(res);
   }
 
+  @Hidden
   @GetMapping("/bookmarked")
   @Operation(summary = "인증된 사용자가 현재 북마크한 테마 목록을 조회한다")
   public ResponseEntity<List<ThemePreviewDto>> findBookmarkedThemes(

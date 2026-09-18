@@ -8,6 +8,7 @@ import com.komentum.designcomponent.dto.SeedResult;
 import com.komentum.designcomponent.mapper.ColorStyleMapper;
 import com.komentum.designcomponent.service.ColorStyleService;
 import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -31,6 +32,7 @@ public class ColorStyleController {
   private final ColorStyleSeeder colorStyleSeeder;
   private final ColorStyleMapper colorStyleMapper;
 
+  @Hidden
   @PostMapping
   @Operation(summary = "Admin 사용자가 새로운 color style을 생성한다")
   public ResponseEntity<ColorStyleResponse> createColorStyle(
@@ -49,6 +51,7 @@ public class ColorStyleController {
     return ResponseEntity.ok(colorStyles);
   }
 
+  @Hidden
   @GetMapping("/{colorStyleId}")
   @Operation(summary = "인증된 ID=colorStyleId인 colorStyle을 조회한다")
   public ResponseEntity<ColorStyleResponse> getColorStyleById(
@@ -57,6 +60,7 @@ public class ColorStyleController {
     return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(colorStyle));
   }
 
+  @Hidden
   @PutMapping("/{colorStyleId}")
   @Operation(summary = "Admin 사용자가 ID=colorStyleId인 color style을 수정한다")
   public ResponseEntity<ColorStyleResponse> updateColorStyle(
@@ -66,6 +70,7 @@ public class ColorStyleController {
     return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(updatedColorStyle));
   }
 
+  @Hidden
   @PutMapping("/seed")
   @Operation(summary = "Admin 사용자가 시드 데이터를 기반으로 color style 정보를 수정/삽입한다")
   public ResponseEntity<SeedResult> upsertColorStyleBySeed() {
