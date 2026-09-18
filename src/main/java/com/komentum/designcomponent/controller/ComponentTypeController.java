@@ -4,8 +4,10 @@ import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.dto.ComponentTypeCreateRequest;
 import com.komentum.designcomponent.dto.ComponentTypeDto;
 import com.komentum.designcomponent.dto.ComponentTypeUpdateRequest;
+import com.komentum.designcomponent.dto.SeedResult;
 import com.komentum.designcomponent.mapper.ComponentTypeMapper;
 import com.komentum.designcomponent.service.ComponentTypeService;
+import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ComponentTypeController {
 
   private final ComponentTypeService componentTypeService;
+  private final ComponentTypeSeeder componentTypeSeeder;
   private final ComponentTypeMapper componentTypeMapper;
 
   @PostMapping
@@ -62,5 +65,12 @@ public class ComponentTypeController {
     ComponentType updatedComponentType = componentTypeService.updateComponentType(componentTypeId,
         request);
     return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(updatedComponentType));
+  }
+
+  @PutMapping("/seed")
+  @Operation(summary = "Admin 사용자가 시드 데이터를 기반으로 component type 정보를 수정/삽입한다")
+  public ResponseEntity<SeedResult> upsertComponentTypeWithSeed() {
+    SeedResult result = componentTypeSeeder.upsertComponentType();
+    return ResponseEntity.ok(result);
   }
 }

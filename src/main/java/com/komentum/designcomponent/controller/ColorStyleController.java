@@ -4,8 +4,10 @@ import com.komentum.designcomponent.domain.ColorStyle;
 import com.komentum.designcomponent.dto.ColorStyleCreateDto;
 import com.komentum.designcomponent.dto.ColorStyleResponse;
 import com.komentum.designcomponent.dto.ColorStyleUpdateRequest;
+import com.komentum.designcomponent.dto.SeedResult;
 import com.komentum.designcomponent.mapper.ColorStyleMapper;
 import com.komentum.designcomponent.service.ColorStyleService;
+import com.komentum.designcomponent.service.seeder.ColorStyleSeeder;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ColorStyleController {
 
   private final ColorStyleService colorStyleService;
+  private final ColorStyleSeeder colorStyleSeeder;
   private final ColorStyleMapper colorStyleMapper;
 
   @PostMapping
@@ -61,5 +64,12 @@ public class ColorStyleController {
       @Valid @RequestBody ColorStyleUpdateRequest request) {
     ColorStyle updatedColorStyle = colorStyleService.updateColorStyle(colorStyleId, request);
     return ResponseEntity.ok(colorStyleMapper.toColorStyleResponse(updatedColorStyle));
+  }
+
+  @PutMapping("/seed")
+  @Operation(summary = "Admin 사용자가 시드 데이터를 기반으로 color style 정보를 수정/삽입한다")
+  public ResponseEntity<SeedResult> upsertColorStyleBySeed() {
+    SeedResult result = colorStyleSeeder.upsertColorStyleSeed();
+    return ResponseEntity.ok(result);
   }
 }
