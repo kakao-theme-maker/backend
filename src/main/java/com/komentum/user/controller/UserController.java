@@ -9,6 +9,7 @@ import com.komentum.user.dto.UserNameUpdateDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.service.UserAuthService;
 import com.komentum.user.service.UserService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -94,6 +95,7 @@ public class UserController {
   }
 
   // 유저 성별 수정
+  @Hidden
   @PatchMapping("/me/gender")
   @Operation(summary = "현재 사용자의 성별을 수정한다")
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUserGender(
@@ -105,6 +107,7 @@ public class UserController {
   }
 
   // 유저 생년월일 수정
+  @Hidden
   @PatchMapping("/me/birth")
   @Operation(summary = "현재 사용자의 생년월일을 수정한다")
   public ResponseEntity<CustomResponse<UserResponseDto>> updateUserBirth(

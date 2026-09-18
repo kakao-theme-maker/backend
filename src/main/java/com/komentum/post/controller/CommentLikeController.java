@@ -3,6 +3,7 @@ package com.komentum.post.controller;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.facade.CommentLikeManagementFacade;
 import com.komentum.post.service.CommentLikeService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class CommentLikeController {
   private final CommentLikeManagementFacade commentLikeManagementFacade;
   private final CommentLikeService commentLikeService;
 
+  @Hidden
   @GetMapping("/{commentId}/like")
   @Operation(summary = "현재 인증된 사용자가 ID=commentId인 댓글의 좋아요 수를 조회한다")
   public ResponseEntity<Long> getLikeCount(@PathVariable Long commentId) {
