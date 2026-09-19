@@ -63,10 +63,10 @@ class IosThemeMakerTest {
   private IosThemeMaker iosThemeMaker;
 
   @Test
-  void makeTheme_returnsSavedPackageUrl() throws Exception {
+  void makeTheme_returnsSavedPackageFileName() throws Exception {
     int themeComponentId = 7;
     String ownerEmail = "owner@test.com";
-    String packageUrl = "https://cdn.example.com/theme.ktheme";
+    String packageFileName = "ios-theme-7.ktheme";
     User themeOwner = User.builder()
         .publicUserId("owner-public-id")
         .userEmail(ownerEmail)
@@ -85,11 +85,11 @@ class IosThemeMakerTest {
         List.of());
     when(platformColorStyleRepository.fetchJoinAllByPlatform(Platform.IOS)).thenReturn(List.of());
     when(iosThemeSaver.save(eq(themeComponentId), any(Path.class)))
-        .thenReturn(packageUrl);
+        .thenReturn(packageFileName);
 
     String result = iosThemeMaker.makeTheme(themeComponentId);
 
-    assertThat(result).isEqualTo(packageUrl);
+    assertThat(result).isEqualTo(packageFileName);
   }
 
   @Test
@@ -162,7 +162,7 @@ class IosThemeMakerTest {
     // given
     int themeComponentId = 9;
     String ownerEmail = "owner@test.com";
-    String expectedPackageUrl = "https://cdn.example.com/theme.ktheme";
+    String expectedPackageFileName = "ios-theme-9.ktheme";
     User themeOwner = User.builder()
         .publicUserId("owner-public-id")
         .userEmail(ownerEmail)
@@ -211,7 +211,7 @@ class IosThemeMakerTest {
     when(themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId))
         .thenReturn(List.of(commonImage, androidOnlyImage));
     when(iosThemeSaver.save(eq(themeComponentId), any()))
-        .thenReturn(expectedPackageUrl);
+        .thenReturn(expectedPackageFileName);
     // when
     iosThemeMaker.makeTheme(themeComponentId);
     // then : Android 전용 데이터(androidOnlyStyle, androidOnlyImage)는 제외되고 공통 + iOS 전용 데이터만 iOS 에디터에 전달된다

@@ -58,15 +58,15 @@ class ThemeBuildStateServiceTest {
   void markSuccess_success() {
     ThemeBuildJob job = saveRunningJob();
     LocalDateTime updatedAt = LocalDateTime.now();
-    String packageUrl = "https://files.example.com/theme.apk";
+    String fileName = "550e8400-e29b-41d4-a716-446655440000.apk";
 
     boolean updated = themeBuildStateService.markSuccess(
-        job.getBuildId(), packageUrl, updatedAt);
+        job.getBuildId(), fileName, updatedAt);
 
     ThemeBuildJob result = themeBuildJobRepository.findById(job.getBuildId()).orElseThrow();
     assertThat(updated).isTrue();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.SUCCESS);
-    assertThat(result.getPackageUrl()).isEqualTo(packageUrl);
+    assertThat(result.getFileName()).isEqualTo(fileName);
     assertThat(result.getUpdatedAt()).isCloseTo(updatedAt, byLessThan(2, ChronoUnit.SECONDS));
   }
 
@@ -80,7 +80,7 @@ class ThemeBuildStateServiceTest {
 
     ThemeBuildJob result = themeBuildJobRepository.findById(job.getBuildId()).orElseThrow();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.FAILED);
-    assertThat(result.getPackageUrl()).isNull();
+    assertThat(result.getFileName()).isNull();
     assertThat(result.getUpdatedAt()).isCloseTo(updatedAt, byLessThan(2, ChronoUnit.SECONDS));
   }
 
@@ -100,7 +100,7 @@ class ThemeBuildStateServiceTest {
     ThemeBuildJob result = themeBuildJobRepository.findById(job.getBuildId()).orElseThrow();
     assertThat(updated).isFalse();
     assertThat(result.getStatus()).isEqualTo(ThemeBuildStatus.FAILED);
-    assertThat(result.getPackageUrl()).isNull();
+    assertThat(result.getFileName()).isNull();
     assertThat(result.getUpdatedAt()).isCloseTo(failedAt, byLessThan(2, ChronoUnit.SECONDS));
   }
 

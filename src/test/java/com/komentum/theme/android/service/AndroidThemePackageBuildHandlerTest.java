@@ -36,14 +36,14 @@ class AndroidThemePackageBuildHandlerTest {
     ThemeComponent themeComponent = ThemeComponent.builder()
         .themeComponentId(themeComponentId)
         .build();
-    String packageUrl = "https://files.example.com/theme.apk";
+    String fileName = "theme.apk";
     when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
-    when(androidThemeGenerator.createAndSaveTheme(themeComponent)).thenReturn(packageUrl);
+    when(androidThemeGenerator.createAndSaveTheme(themeComponent)).thenReturn(fileName);
 
     String result = handler.build(themeComponentId);
 
     assertThat(handler.platform()).isEqualTo(Platform.ANDROID);
-    assertThat(result).isEqualTo(packageUrl);
+    assertThat(result).isEqualTo(fileName);
     verify(themeRetrieveService).getThemeEntityById(themeComponentId);
     verify(androidThemeGenerator).createAndSaveTheme(themeComponent);
   }

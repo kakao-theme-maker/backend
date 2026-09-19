@@ -52,10 +52,9 @@ class AndroidThemeGeneratorTest {
     // given
     ThemeComponent targetTheme = themeComponentResult.themeComponents().get(0);
     // when
-    String themeUrl = androidThemeGenerator.createAndSaveTheme(targetTheme);
+    String themeFileName = androidThemeGenerator.createAndSaveTheme(targetTheme);
     // then
-    String themeFileName = fileManager.convertUrlToFileName(themeUrl);
-    assertThat(themeUrl).isNotBlank();
+    assertThat(themeFileName).isNotBlank().endsWith(".apk");
     assertThat(fileManager.downloadFile(themeFileName)).isNotEmpty();
   }
 }
