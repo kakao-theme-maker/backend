@@ -58,7 +58,10 @@ public class ThemeBuildService {
     ThemeBuildJob job = themeBuildJobRepository.findById(buildId)
         .orElseThrow(() -> new ResourceNotFoundException("Theme build not found"));
     validateThemeAccess(job.getThemeComponent(), "No permission to access theme build");
-    return ThemeBuildStatusResponse.from(job);
+    String downloadUrl = job.getFileName() == null
+        ? null
+        : fileManager.resolveFilePath(job.getFileName());
+    return new ThemeBuildStatusResponse(job.getStatus(), downloadUrl);
   }
 
   /**
@@ -80,7 +83,7 @@ public class ThemeBuildService {
         .orElseThrow(() -> new ResourceNotFoundException(
             "Completed theme build not found. themeComponentId: " + themeComponentId
                 + ", platform: " + platform));
-    return new ThemeDownloadResponse(job.getPackageUrl());
+    return new ThemeDownloadResponse(fileManager.resolveFilePath(job.getFileName()));
   }
 
   private void validateThemeAccess(ThemeComponent themeComponent, String errorMessage) {

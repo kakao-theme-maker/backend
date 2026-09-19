@@ -57,8 +57,8 @@ public class ThemeBuildJob {
   @Column(name = "status", nullable = false)
   private ThemeBuildStatus status;
 
-  @Column(name = "package_url", length = 1024)
-  private String packageUrl;
+  @Column(name = "file_name")
+  private String fileName;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)

@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,10 +64,10 @@ public class AndroidThemeGenerator {
   private final FileManager fileManager;
 
   /**
-   * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 URL을 반환한다. 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
+   * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 파일명을 반환한다. 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
    *
    * @param themeComponent 테마 Entity
-   * @return 업로드된 APK의 URL
+   * @return 업로드된 APK의 파일명 (확장자 포함)
    */
   public String createAndSaveTheme(ThemeComponent themeComponent) {
     if (themeComponent == null || themeComponent.getThemeComponentId() == null) {
@@ -219,21 +218,21 @@ public class AndroidThemeGenerator {
   }
 
   /**
-   * 2-4. 생성된 APK를 업로드하고 업로드된 파일의 URL을 반환한다.
+   * 2-4. 생성된 APK를 업로드하고 업로드된 파일의 파일명(확장자 포함)을 반환한다.
    *
    * @param themeId 테마 식별자
-   * @return 업로드된 APK의 URL
+   * @return 업로드된 APK의 파일명
    */
   private String uploadTheme(Integer themeId) {
     Path outputApk = ThemePathManager.getAndroidThemeOutputPath(themeId.toString());
     try {
       long contentLength = Files.size(outputApk);
-      String themeUrl = fileManager.uploadFile(Files.newInputStream(outputApk), contentLength,
-          UUID.randomUUID() + ".apk");
-      if (themeUrl == null || themeUrl.isBlank()) {
-        throw new RuntimeException("uploaded themeUrl is null");
+      String themeFileName = fileManager.uploadAndGetFileName(Files.newInputStream(outputApk),
+          contentLength, null, "apk");
+      if (themeFileName == null || themeFileName.isBlank()) {
+        throw new RuntimeException("uploaded theme fileName is null");
       }
-      return themeUrl;
+      return themeFileName;
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

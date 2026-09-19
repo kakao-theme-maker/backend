@@ -18,10 +18,15 @@ public class IosThemeSaver {
 
   private final FileManager fileManager;
 
+  /**
+   * iOS 테마 패키지(.ktheme)를 생성하여 업로드하고, 업로드된 파일의 파일명(확장자 포함)을 반환한다.
+   *
+   * @return 업로드된 패키지의 파일명
+   */
   public String save(Integer themeComponentId, Path workDir) throws IOException {
     String fileName = resolveThemeName(themeComponentId);
     byte[] packageBytes = createPackageBytes(workDir);
-    return fileManager.uploadFile(packageBytes, fileName);
+    return fileManager.uploadAndGetFileName(packageBytes, fileName, "ktheme");
   }
 
   private String resolveThemeName(Integer themeComponentId) {

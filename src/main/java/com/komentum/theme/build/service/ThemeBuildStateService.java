@@ -17,10 +17,10 @@ public class ThemeBuildStateService {
   private final ThemeBuildJobRepository themeBuildJobRepository;
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public boolean markSuccess(Long buildId, String packageUrl, LocalDateTime updatedAt) {
+  public boolean markSuccess(Long buildId, String fileName, LocalDateTime updatedAt) {
     return themeBuildJobRepository.markSuccessIfRunning(
         buildId,
-        packageUrl,
+        fileName,
         updatedAt
     ) == 1;
   }
