@@ -38,8 +38,6 @@ class IosThemeImageEditorTest {
     FileManager fileManager = Mockito.mock(FileManager.class);
     IosThemeImageEditor editor = new IosThemeImageEditor(fileManager);
     byte[] imageBytes = createImageBytes(20, 10);
-    when(fileManager.convertUrlToFileName("https://cdn.example.com/source.png"))
-        .thenReturn("source.png");
     when(fileManager.downloadFile("source.png")).thenReturn(imageBytes);
 
     ComponentType componentType = ComponentType.builder()
@@ -51,7 +49,7 @@ class IosThemeImageEditorTest {
         .componentType(componentType)
         .designComponent(DesignComponent.builder()
             .designComponentId(1)
-            .imageUrl("https://cdn.example.com/source.png")
+            .fileName("source.png")
             .build())
         .build();
     PlatformComponentType twoX = PlatformComponentType.builder()
@@ -95,8 +93,6 @@ class IosThemeImageEditorTest {
     FileManager fileManager = Mockito.mock(FileManager.class);
     IosThemeImageEditor editor = new IosThemeImageEditor(fileManager);
     byte[] imageBytes = createImageBytes(20, 10);
-    when(fileManager.convertUrlToFileName("https://cdn.example.com/source.png"))
-        .thenReturn("source.png");
     when(fileManager.downloadFile("source.png")).thenReturn(imageBytes);
 
     ComponentType componentType = ComponentType.builder()
@@ -108,7 +104,7 @@ class IosThemeImageEditorTest {
         .componentType(componentType)
         .designComponent(DesignComponent.builder()
             .designComponentId(1)
-            .imageUrl("https://cdn.example.com/source.png")
+            .fileName("source.png")
             .build())
         .build();
     PlatformComponentType platformComponentType = PlatformComponentType.builder()
@@ -139,8 +135,6 @@ class IosThemeImageEditorTest {
     FileManager fileManager = Mockito.mock(FileManager.class);
     IosThemeImageEditor editor = new IosThemeImageEditor(fileManager);
     byte[] imageBytes = createImageBytes(20, 10);
-    when(fileManager.convertUrlToFileName("https://cdn.example.com/source.png"))
-        .thenReturn("source.png");
     when(fileManager.downloadFile("source.png")).thenReturn(imageBytes);
 
     ComponentType componentType = ComponentType.builder()
@@ -152,7 +146,7 @@ class IosThemeImageEditorTest {
         .componentType(componentType)
         .designComponent(DesignComponent.builder()
             .designComponentId(1)
-            .imageUrl("https://cdn.example.com/source.png")
+            .fileName("source.png")
             .build())
         .build();
     PlatformComponentType normal = PlatformComponentType.builder()
@@ -189,7 +183,7 @@ class IosThemeImageEditorTest {
   }
 
   @Test
-  void editImages_keepsTemplateImageWhenThemeImageUrlIsMissing() throws Exception {
+  void editImages_keepsTemplateImageWhenThemeImageFileNameIsMissing() throws Exception {
     // given
     Files.createDirectories(tempDir.resolve("Images"));
     FileManager fileManager = Mockito.mock(FileManager.class);
@@ -203,7 +197,7 @@ class IosThemeImageEditorTest {
         .componentType(componentType)
         .designComponent(DesignComponent.builder()
             .designComponentId(1)
-            .imageUrl(null)
+            .fileName(null)
             .build())
         .build();
     PlatformComponentType platformComponentType = PlatformComponentType.builder()
@@ -221,7 +215,7 @@ class IosThemeImageEditorTest {
 
     // then
     assertThat(tempDir.resolve("Images/maintabIcoFriends@2x.png")).doesNotExist();
-    verify(fileManager, never()).convertUrlToFileName(Mockito.any());
+    verify(fileManager, never()).downloadFile(Mockito.any());
   }
 
   @Test
@@ -234,7 +228,7 @@ class IosThemeImageEditorTest {
     assertThatThrownBy(() -> editor.editImages(tempDir, List.of(), List.of()))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("iOS platform component type seed is required");
-    verify(fileManager, never()).convertUrlToFileName(Mockito.any());
+    verify(fileManager, never()).downloadFile(Mockito.any());
   }
 
   private byte[] createImageBytes(int width, int height) throws Exception {

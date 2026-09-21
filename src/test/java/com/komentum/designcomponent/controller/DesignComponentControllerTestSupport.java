@@ -1,7 +1,6 @@
 package com.komentum.designcomponent.controller;
 
-import static com.komentum.test.fixture.component.DesignComponentRequestFixture.UPLOADED_IMAGE_URL;
-import static org.mockito.ArgumentMatchers.any;
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.imageUrlOf;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -104,6 +103,9 @@ abstract class DesignComponentControllerTestSupport {
     componentTypeA = createComponentType("comp-a");
     componentTypeB = createComponentType("comp-b");
 
+    when(fileManager.resolveFilePath(anyString()))
+        .thenAnswer(invocation -> imageUrlOf(invocation.getArgument(0, String.class)));
+
     authenticateAs(testUser);
   }
 
@@ -111,11 +113,6 @@ abstract class DesignComponentControllerTestSupport {
   void tearDownDesignComponentControllerTest() {
     SecurityContextHolder.clearContext();
     reset(fileManager);
-  }
-
-  protected void stubImageUpload() {
-    when(fileManager.uploadFile(any(byte[].class), anyString()))
-        .thenReturn(UPLOADED_IMAGE_URL);
   }
 
   protected <R> R doMultipartRequest(String path, HttpMethod httpMethod, int statusCode,
@@ -140,28 +137,28 @@ abstract class DesignComponentControllerTestSupport {
         .andReturn();
   }
 
-  protected DesignComponent testUserComponent(String imageUrl, boolean isPublic,
+  protected DesignComponent testUserComponent(String fileName, boolean isPublic,
       ComponentType... componentTypes) {
-    return componentForUser(testUser, imageUrl, isPublic, componentTypes);
+    return componentForUser(testUser, fileName, isPublic, componentTypes);
   }
 
   protected DesignComponent testUserComponent() {
     return designComponentDataGenerator.generateDesignComponent(testUser);
   }
 
-  protected DesignComponent otherUserComponent(String email, String imageUrl, boolean isPublic,
+  protected DesignComponent otherUserComponent(String email, String fileName, boolean isPublic,
       ComponentType... componentTypes) {
-    return componentForUser(createOtherUser(email), imageUrl, isPublic, componentTypes);
+    return componentForUser(createOtherUser(email), fileName, isPublic, componentTypes);
   }
 
   protected User createOtherUser(String email) {
     return userDataGenerator.generateTestUser(email);
   }
 
-  private DesignComponent componentForUser(User user, String imageUrl, boolean isPublic,
+  private DesignComponent componentForUser(User user, String fileName, boolean isPublic,
       ComponentType... componentTypes) {
     return designComponentDataGenerator.generateDesignComponent(
-        user, imageUrl, isPublic, List.of(componentTypes));
+        user, fileName, isPublic, List.of(componentTypes));
   }
 
   private void authenticateAs(User user) {

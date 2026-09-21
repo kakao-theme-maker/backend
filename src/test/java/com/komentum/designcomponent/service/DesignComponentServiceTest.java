@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.komentum.designcomponent.domain.ComponentType;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -97,9 +99,6 @@ class DesignComponentServiceTest {
     given(fileManager.uploadFile(any(byte[].class), anyString()))
         .willReturn("https://s3.example.com/first-upload.png")
         .willThrow(new RuntimeException("forced upload failure"));
-    given(fileManager.convertUrlToFileName(anyString()))
-        .willAnswer(invocation -> invocation.getArgument(0, String.class)
-            .replace("https://s3.example.com/", ""));
 
     assertThatThrownBy(
         () -> designComponentService.createDesignComponents(request, java.util.List.of(firstFile,
@@ -108,6 +107,9 @@ class DesignComponentServiceTest {
         .hasMessageContaining("forced upload failure");
 
     assertThat(designComponentRepository.count()).isZero();
-    verify(fileManager).deleteFile("first-upload.png");
+    // 첫 번째 파일 업로드에 사용된 파일명으로 정리(삭제)가 수행된다
+    ArgumentCaptor<String> uploadedFileNames = ArgumentCaptor.forClass(String.class);
+    verify(fileManager, times(2)).uploadFile(any(byte[].class), uploadedFileNames.capture());
+    verify(fileManager).deleteFile(uploadedFileNames.getAllValues().get(0));
   }
 }

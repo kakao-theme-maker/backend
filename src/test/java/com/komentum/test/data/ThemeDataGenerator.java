@@ -111,7 +111,7 @@ public class ThemeDataGenerator {
     List<DesignComponent> designComponents = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       designComponents.add(DesignComponent.builder()
-          .imageUrl(faker.internet().image())
+          .fileName(faker.internet().slug() + ".png")
           .user(userDataGenerator.generateTestUser(faker.internet().emailAddress()))
           .isPublic(faker.bool().bool())
           .build());

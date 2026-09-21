@@ -10,9 +10,16 @@ import org.springframework.mock.web.MockMultipartFile;
 
 public final class DesignComponentRequestFixture {
 
-  public static final String UPLOADED_IMAGE_URL = "https://s3.example.com/uploaded-image.png";
+  public static final String IMAGE_BASE_URL = "https://cdn.example.com/";
 
   private DesignComponentRequestFixture() {
+  }
+
+  /**
+   * FileManager.resolveFilePath 목 응답과 동일한 규칙으로 파일명에 대한 이미지 URL을 생성한다.
+   */
+  public static String imageUrlOf(String fileName) {
+    return IMAGE_BASE_URL + fileName;
   }
 
   public static CreateDesignComponentRequest publicCreateRequest(ComponentType... componentTypes) {
