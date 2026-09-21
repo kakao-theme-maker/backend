@@ -87,7 +87,7 @@ public class ThemeRetrieveService {
 
   private List<ThemeComponentDto> convertToDtosWithPreviewImages(
       List<ThemeComponent> themeComponents) {
-    Map<Integer, String> previewImages = themeImageService.findThemePreviewImages(
+    Map<Integer, String> previewImages = themeImageService.findThemePreviewImageUrls(
         themeComponents.stream()
             .map(ThemeComponent::getThemeComponentId)
             .toList());
@@ -137,7 +137,7 @@ public class ThemeRetrieveService {
     List<Integer> themeIds = themeComponents.stream()
         .map(ThemeComponent::getThemeComponentId)
         .toList();
-    Map<Integer, String> themeImageMap = themeImageService.findThemePreviewImages(themeIds);
+    Map<Integer, String> themeImageMap = themeImageService.findThemePreviewImageUrls(themeIds);
     return themeComponents.stream().map(tc -> {
       String previewImageUrl = themeImageMap.get(tc.getThemeComponentId());
       return ThemePreviewDto.from(tc, previewImageUrl);

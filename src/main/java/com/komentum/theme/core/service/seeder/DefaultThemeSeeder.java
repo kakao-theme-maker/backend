@@ -261,10 +261,10 @@ public class DefaultThemeSeeder {
       throws IOException {
     PlatformComponentType pct = platformComponentTypes.get(0);
     Path imagePath = ThemePathManager.getAndroidThemeImagePath(themeRootPath, pct.getPath());
-    String imageUrl = fileManager.uploadFile(Files.readAllBytes(imagePath),
-        UUID.randomUUID().toString());
+    String fileName = UUID.randomUUID().toString();
+    fileManager.uploadFile(Files.readAllBytes(imagePath), fileName);
     DesignComponent dc = DesignComponent.builder()
-        .imageUrl(imageUrl)
+        .fileName(fileName)
         .user(user)
         .isPublic(true)
         .build();

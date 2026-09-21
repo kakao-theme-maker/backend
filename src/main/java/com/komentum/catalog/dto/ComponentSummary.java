@@ -16,6 +16,6 @@ public class ComponentSummary {
 
   private Integer id;
   private ComponentType type;
-  private String previewImageUrl;
+  private String previewImageFileName;
   private LocalDateTime createdAt;
 }

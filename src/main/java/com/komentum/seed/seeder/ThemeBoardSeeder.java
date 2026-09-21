@@ -1,7 +1,6 @@
 package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
-import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.domain.enums.PostType;
@@ -23,7 +22,6 @@ public class ThemeBoardSeeder {
   private final ThemeBoardRepository themeBoardRepository;
   private final ThemeImageRepository themeImageRepository;
   private final PostSeeder postSeeder;
-  private final FileManager fileManager;
   private final Faker faker;
   private final ThemeImageService themeImageService;
 
@@ -49,11 +47,11 @@ public class ThemeBoardSeeder {
     for (int i = 0; i < size; i++) {
       ThemeComponent component = themeComponents.get(i);
       User author = component.getUser();
-      String previewImage = themeImageService.findThemePreviewImageUrl(
+      String previewImageFileName = themeImageService.findThemePreviewFileName(
           component.getThemeComponentId());
       Post post = postSeeder.createOne(
           author,
-          fileManager.convertUrlToFileName(previewImage),
+          previewImageFileName,
           PostType.THEME_BOARD
       );
       posts.add(post);

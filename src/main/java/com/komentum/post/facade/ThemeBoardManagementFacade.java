@@ -55,9 +55,8 @@ public class ThemeBoardManagementFacade {
       ThemeComponent themeComponent) {
     // previewImage가 유효하지 않으면, ThemeComponent의 이미지 사용
     if (previewImage == null || previewImage.isEmpty()) {
-      String themePreviewImageUrl = themeImageService.findThemePreviewImageUrl(
+      String fileName = themeImageService.findThemePreviewFileName(
           themeComponent.getThemeComponentId());
-      String fileName = fileManager.convertUrlToFileName(themePreviewImageUrl);
       byte[] previewImageBytes = fileManager.downloadFile(fileName);
       return boardManagementHelper
           .savePreviewImageIfPresent(Post.class, fileName, previewImageBytes);

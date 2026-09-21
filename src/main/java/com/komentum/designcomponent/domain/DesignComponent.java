@@ -38,7 +38,7 @@ public class DesignComponent {
   @JoinColumn(name = "user_id")
   private User user;
 
-  private String imageUrl;
+  private String fileName;
 
   @Column(name = "is_public")
   private Boolean isPublic;
@@ -54,9 +54,9 @@ public class DesignComponent {
   @UpdateTimestamp
   private LocalDateTime updatedAt;
 
-  public void update(String imageUrl, Boolean isPublic) {
-    if (imageUrl != null) {
-      this.imageUrl = imageUrl;
+  public void update(String fileName, Boolean isPublic) {
+    if (fileName != null) {
+      this.fileName = fileName;
     }
     if (isPublic != null) {
       this.isPublic = isPublic;

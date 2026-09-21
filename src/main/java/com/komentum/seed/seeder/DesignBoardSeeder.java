@@ -1,6 +1,5 @@
 package com.komentum.seed.seeder;
 
-import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.enums.PostType;
@@ -19,7 +18,6 @@ public class DesignBoardSeeder {
 
   private final DesignBoardRepository designBoardRepository;
   private final PostSeeder postSeeder;
-  private final FileManager fileManager;
 
   public record DesignBoardSeedResult(
       List<DesignBoard> designBoards,
@@ -65,8 +63,8 @@ public class DesignBoardSeeder {
     }
     List<DesignBoard> designBoards = new ArrayList<>();
     DesignComponent component = designComponents.get(0);
-    Post targetPost = postSeeder.createOne(author,
-        fileManager.convertUrlToFileName(component.getImageUrl()), PostType.DESIGN_BOARD);
+    Post targetPost = postSeeder.createOne(author, component.getFileName(),
+        PostType.DESIGN_BOARD);
     for (DesignComponent designComponent : designComponents) {
       designBoards.add(generateOne(designComponent, targetPost));
     }

@@ -22,11 +22,11 @@ public class ComponentCatalogResponse {
   @Schema(description = "테마 혹은 디자인 에셋의 생성 시간")
   private String createdAt;
 
-  public static ComponentCatalogResponse of(ComponentSummary summary) {
+  public static ComponentCatalogResponse of(ComponentSummary summary, String previewImageUrl) {
     return ComponentCatalogResponse.builder()
         .componentType(summary.getType())
         .componentId(summary.getId())
-        .previewImageUrl(summary.getPreviewImageUrl())
+        .previewImageUrl(previewImageUrl)
         .createdAt(summary.getCreatedAt().toString())
         .build();
   }

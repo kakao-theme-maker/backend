@@ -4,6 +4,7 @@ import com.komentum.catalog.dto.ComponentCatalogResponse;
 import com.komentum.catalog.dto.ComponentSummary;
 import com.komentum.catalog.dto.ComponentType;
 import com.komentum.catalog.repository.ComponentCatalogRepository;
+import com.komentum.global.utils.FileManager;
 import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
@@ -21,6 +22,7 @@ public class ComponentCatalogService {
   private final ComponentCatalogRepository componentCatalogRepository;
   private final ThemeImageService themeImageService;
   private final UserEntityFinder userEntityFinder;
+  private final FileManager fileManager;
 
   @Transactional(readOnly = true)
   public List<ComponentCatalogResponse> findComponentCatalogs(Pageable pageable,
@@ -30,7 +32,7 @@ public class ComponentCatalogService {
         componentCatalogRepository.findComponentSummaryByClient(pageable, client);
     // find theme preview image
     Map<Integer, String> themePreviewImageMap =
-        themeImageService.findThemePreviewImages(
+        themeImageService.findThemePreviewImageUrls(
             summaries.stream()
                 .filter(s -> s.getType() == ComponentType.THEME)
                 .map(ComponentSummary::getId)
@@ -39,11 +41,12 @@ public class ComponentCatalogService {
     // convert to response
     return summaries.stream()
         .map(s -> {
+          String imageUrl = s.getPreviewImageFileName() == null ? null
+              : fileManager.resolveFilePath(s.getPreviewImageFileName());
           String preview = s.getType() == ComponentType.THEME
               ? themePreviewImageMap.get(s.getId())
-              : s.getPreviewImageUrl();
-          s.setPreviewImageUrl(preview);
-          return ComponentCatalogResponse.of(s);
+              : imageUrl;
+          return ComponentCatalogResponse.of(s, preview);
         })
         .toList();
   }
