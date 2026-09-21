@@ -28,4 +28,7 @@ public interface ThemeComponentRepository extends JpaRepository<ThemeComponent, 
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select theme from ThemeComponent theme where theme.themeComponentId = :id")
   Optional<ThemeComponent> findByIdForUpdate(@Param("id") Integer id);
+
+  @Query("select theme from ThemeComponent theme join fetch theme.user where theme.themeComponentId = :id")
+  Optional<ThemeComponent> fetchJoinWithUserById(@Param("id") Integer id);
 }

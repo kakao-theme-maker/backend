@@ -67,6 +67,12 @@ public class ThemeRetrieveService {
   }
 
   @Transactional(readOnly = true)
+  public ThemeComponent fetchJoinWithUser(Integer id) {
+    return themeComponentRepository.fetchJoinWithUserById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Theme not found with id : " + id));
+  }
+
+  @Transactional(readOnly = true)
   public List<ThemeComponentDto> getCompletedThemes(Pageable pageable) {
     List<ThemeComponent> completedThemes = themeComponentRepository.findByIsDoneTrue(pageable);
     return convertToDtosWithPreviewImages(completedThemes);

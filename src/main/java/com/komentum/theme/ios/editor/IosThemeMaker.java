@@ -42,7 +42,7 @@ public class IosThemeMaker {
   public String makeTheme(Integer themeComponentId) {
     Path workDir = null;
     try {
-      ThemeComponent themeComponent = themeRetrieveService.getThemeEntityById(themeComponentId);
+      ThemeComponent themeComponent = themeRetrieveService.fetchJoinWithUser(themeComponentId);
       validateAccess(themeComponent);
       // 연관 엔티티를 fetch join으로 먼저 조회한 뒤,
       // 이미지 다운로드·파일 처리·업로드는 DB 트랜잭션 밖에서 수행한다.
