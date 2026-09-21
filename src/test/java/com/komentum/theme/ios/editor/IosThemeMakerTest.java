@@ -75,7 +75,7 @@ class IosThemeMakerTest {
         .themeComponentId(themeComponentId)
         .user(themeOwner)
         .build();
-    when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
+    when(themeRetrieveService.fetchJoinWithUser(themeComponentId)).thenReturn(themeComponent);
     when(ownerAdminPolicy.validate(themeOwner)).thenReturn(true);
     when(themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId))
         .thenReturn(List.of());
@@ -105,7 +105,7 @@ class IosThemeMakerTest {
         .themeComponentId(themeComponentId)
         .user(themeOwner)
         .build();
-    when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
+    when(themeRetrieveService.fetchJoinWithUser(themeComponentId)).thenReturn(themeComponent);
     when(ownerAdminPolicy.validate(themeOwner)).thenReturn(false);
 
     // when & then
@@ -135,7 +135,7 @@ class IosThemeMakerTest {
         .user(themeOwner)
         .build();
     RuntimeException imageFetchFailure = new RuntimeException("failed to fetch theme images");
-    when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
+    when(themeRetrieveService.fetchJoinWithUser(themeComponentId)).thenReturn(themeComponent);
     when(ownerAdminPolicy.validate(themeOwner)).thenReturn(true);
     when(themeImageService.fetchJoinThemeImagesByThemeComponentId(themeComponentId))
         .thenThrow(imageFetchFailure);
@@ -204,7 +204,7 @@ class IosThemeMakerTest {
     ThemeImage commonImage = ThemeImage.builder().componentType(commonType).build();
     ThemeImage androidOnlyImage = ThemeImage.builder().componentType(androidOnlyType).build();
     // stub
-    when(themeRetrieveService.getThemeEntityById(themeComponentId)).thenReturn(themeComponent);
+    when(themeRetrieveService.fetchJoinWithUser(themeComponentId)).thenReturn(themeComponent);
     when(ownerAdminPolicy.validate(themeOwner)).thenReturn(true);
     when(themeStyleService.fetchJoinThemeStylesByThemeComponentId(themeComponentId))
         .thenReturn(List.of(commonStyle, iosStyle, androidOnlyStyle));
