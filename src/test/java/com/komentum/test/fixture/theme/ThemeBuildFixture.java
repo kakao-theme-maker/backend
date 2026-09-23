@@ -1,15 +1,16 @@
 package com.komentum.test.fixture.theme;
 
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.user.domain.User;
 
 public final class ThemeBuildFixture {
 
   private ThemeBuildFixture() {
   }
 
-  public static ThemeComponent theme(String ownerEmail) {
+  public static ThemeComponent theme(User owner) {
     return ThemeComponent.builder()
-        .userEmail(ownerEmail)
+        .user(owner)
         .themeName("theme build test theme")
         .versionNumber("1")
         .versionName("1.0.0")

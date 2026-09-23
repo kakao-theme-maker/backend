@@ -60,7 +60,7 @@ public class DesignComponentService {
       designComponentRepository.flush();
       return mapper.toDto(saved);
     } catch (RuntimeException e) {
-      deleteUploadedImageQuietly(saved.getImageUrl());
+      deleteUploadedImageQuietly(saved.getFileName());
       throw e;
     }
   }
@@ -70,21 +70,21 @@ public class DesignComponentService {
     validateFiles(files);
     List<ComponentType> componentTypes = resolveComponentTypes(request.getComponentTypeIds());
     List<DesignComponent> savedComponents = new ArrayList<>();
-    List<String> uploadedImageUrls = new ArrayList<>();
+    List<String> uploadedFileNames = new ArrayList<>();
 
     try {
       for (MultipartFile file : files) {
         DesignComponent saved = createDesignComponentInternal(
             request, user, componentTypes, file);
         savedComponents.add(saved);
-        uploadedImageUrls.add(saved.getImageUrl());
+        uploadedFileNames.add(saved.getFileName());
       }
       designComponentRepository.flush();
       return savedComponents.stream()
           .map(mapper::toDto)
           .toList();
     } catch (RuntimeException e) {
-      uploadedImageUrls.forEach(this::deleteUploadedImageQuietly);
+      uploadedFileNames.forEach(this::deleteUploadedImageQuietly);
       throw e;
     }
   }
@@ -202,17 +202,17 @@ public class DesignComponentService {
       componentTypes = resolveComponentTypes(request.getComponentTypeIds());
     }
 
-    String imageUrl = (image != null) ? uploadImage(image) : null;
+    String fileName = (image != null) ? uploadImage(image) : null;
 
     try {
-      component.update(imageUrl, request.getIsPublic());
+      component.update(fileName, request.getIsPublic());
       if (componentTypes != null) {
         component.replaceComponentTypes(componentTypes);
       }
       designComponentRepository.flush();
       return mapper.toDto(component);
     } catch (RuntimeException e) {
-      deleteUploadedImageQuietly(imageUrl);
+      deleteUploadedImageQuietly(fileName);
       throw e;
     }
   }
@@ -227,11 +227,17 @@ public class DesignComponentService {
     designComponentRepository.delete(component);
   }
 
+  /**
+   * 이미지를 업로드하고, 저장소에 저장된 파일명을 반환한다.
+   *
+   * @throws RuntimeException 이미지 바이트를 읽거나 업로드하지 못한 경우
+   */
   private String uploadImage(MultipartFile image) {
     try {
       String fileName =
           "design-components_" + UUID.randomUUID() + "_" + image.getOriginalFilename();
-      return fileManager.uploadFile(image.getBytes(), fileName);
+      fileManager.uploadFile(image.getBytes(), fileName);
+      return fileName;
     } catch (IOException e) {
       throw new RuntimeException("Failed to upload image", e);
     }
@@ -240,14 +246,14 @@ public class DesignComponentService {
 
   private DesignComponent createDesignComponentInternal(CreateDesignComponentRequest request,
       User user, List<ComponentType> componentTypes, MultipartFile image) {
-    String imageUrl = uploadImage(image);
+    String fileName = uploadImage(image);
 
     try {
-      DesignComponent newComponent = mapper.toEntity(request, imageUrl, user);
+      DesignComponent newComponent = mapper.toEntity(request, fileName, user);
       newComponent.replaceComponentTypes(componentTypes);
       return designComponentRepository.save(newComponent);
     } catch (RuntimeException e) {
-      deleteUploadedImageQuietly(imageUrl);
+      deleteUploadedImageQuietly(fileName);
       throw e;
     }
   }
@@ -269,14 +275,14 @@ public class DesignComponentService {
     }
   }
 
-  private void deleteUploadedImageQuietly(String imageUrl) {
-    if (imageUrl == null) {
+  private void deleteUploadedImageQuietly(String fileName) {
+    if (fileName == null) {
       return;
     }
     try {
-      fileManager.deleteFile(fileManager.convertUrlToFileName(imageUrl));
+      fileManager.deleteFile(fileName);
     } catch (RuntimeException e) {
-      log.warn("failed to cleanup uploaded image after rollback: {}", imageUrl, e);
+      log.warn("failed to cleanup uploaded image after rollback: {}", fileName, e);
     }
   }
 

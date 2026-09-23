@@ -15,15 +15,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ThemeComponentRepository extends JpaRepository<ThemeComponent, Integer> {
 
-  List<ThemeComponent> findByUserEmail(String userEmail, Pageable pageable);
-
   List<ThemeComponent> findByIsPublicTrue(Pageable pageable);
 
   List<ThemeComponent> findByIsDoneTrue(Pageable pageable);
 
-  List<ThemeComponent> findByIsDoneTrueAndUserEmail(String userEmail, Pageable pageable);
-
-  List<ThemeComponent> findByUserEmailIn(List<String> userEmail);
+  List<ThemeComponent> findByIsDoneTrueAndUser_UserEmail(String userEmail, Pageable pageable);
 
   boolean existsByThemeCode(String themeCode);
 
@@ -32,4 +28,7 @@ public interface ThemeComponentRepository extends JpaRepository<ThemeComponent, 
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select theme from ThemeComponent theme where theme.themeComponentId = :id")
   Optional<ThemeComponent> findByIdForUpdate(@Param("id") Integer id);
+
+  @Query("select theme from ThemeComponent theme join fetch theme.user where theme.themeComponentId = :id")
+  Optional<ThemeComponent> fetchJoinWithUserById(@Param("id") Integer id);
 }

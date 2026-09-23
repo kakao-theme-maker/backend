@@ -43,7 +43,7 @@ public class ThemeComponentSeeder {
         .isDone(true)
         .isPublic(true)
         .themeType(themeType)
-        .userEmail(author.getUserEmail())
+        .user(author)
         .build();
   }
 

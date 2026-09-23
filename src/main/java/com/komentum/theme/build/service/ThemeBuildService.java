@@ -12,8 +12,6 @@ import com.komentum.theme.build.dto.ThemeDownloadResponse;
 import com.komentum.theme.build.repository.ThemeBuildJobRepository;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
-import com.komentum.user.domain.User;
-import com.komentum.user.service.UserEntityFinder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -27,7 +25,6 @@ public class ThemeBuildService {
 
   private final ThemeBuildJobRepository themeBuildJobRepository;
   private final ThemeComponentRepository themeComponentRepository;
-  private final UserEntityFinder userEntityFinder;
   private final OwnerAdminPolicy ownerAdminPolicy;
   private final ThemeBuildExecutionService themeBuildExecutionService;
   private final FileManager fileManager;
@@ -61,7 +58,10 @@ public class ThemeBuildService {
     ThemeBuildJob job = themeBuildJobRepository.findById(buildId)
         .orElseThrow(() -> new ResourceNotFoundException("Theme build not found"));
     validateThemeAccess(job.getThemeComponent(), "No permission to access theme build");
-    return ThemeBuildStatusResponse.from(job);
+    String downloadUrl = job.getFileName() == null
+        ? null
+        : fileManager.resolveFilePath(job.getFileName());
+    return new ThemeBuildStatusResponse(job.getStatus(), downloadUrl);
   }
 
   /**
@@ -83,12 +83,11 @@ public class ThemeBuildService {
         .orElseThrow(() -> new ResourceNotFoundException(
             "Completed theme build not found. themeComponentId: " + themeComponentId
                 + ", platform: " + platform));
-    return new ThemeDownloadResponse(job.getPackageUrl());
+    return new ThemeDownloadResponse(fileManager.resolveFilePath(job.getFileName()));
   }
 
   private void validateThemeAccess(ThemeComponent themeComponent, String errorMessage) {
-    User owner = userEntityFinder.findUserEntityByEmail(themeComponent.getUserEmail());
-    if (!ownerAdminPolicy.validate(owner)) {
+    if (!ownerAdminPolicy.validate(themeComponent.getUser())) {
       throw new AccessDeniedException(errorMessage);
     }
   }

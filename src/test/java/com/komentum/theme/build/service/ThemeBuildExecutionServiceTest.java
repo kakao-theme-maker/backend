@@ -47,15 +47,15 @@ class ThemeBuildExecutionServiceTest {
   }
 
   @Test
-  @DisplayName("플랫폼 handler가 반환한 URL로 성공 상태를 저장한다")
+  @DisplayName("플랫폼 handler가 반환한 파일명으로 성공 상태를 저장한다")
   void dispatch_success() {
-    String packageUrl = "https://files.example.com/theme.apk";
+    String fileName = "theme.apk";
     given(themeBuildStateService.loadRunningBuild(BUILD_ID))
         .willReturn(runningBuild(THEME_COMPONENT_ID, Platform.ANDROID));
-    given(androidHandler.build(THEME_COMPONENT_ID)).willReturn(packageUrl);
+    given(androidHandler.build(THEME_COMPONENT_ID)).willReturn(fileName);
     given(themeBuildStateService.markSuccess(
         eq(BUILD_ID),
-        eq(packageUrl),
+        eq(fileName),
         any(LocalDateTime.class)
     )).willReturn(true);
 
@@ -64,21 +64,21 @@ class ThemeBuildExecutionServiceTest {
     verify(androidHandler).build(THEME_COMPONENT_ID);
     verify(themeBuildStateService).markSuccess(
         eq(BUILD_ID),
-        eq(packageUrl),
+        eq(fileName),
         any(LocalDateTime.class)
     );
   }
 
   @Test
-  @DisplayName("iOS 제작 작업은 iOS handler가 반환한 URL로 성공 상태를 저장한다")
+  @DisplayName("iOS 제작 작업은 iOS handler가 반환한 파일명으로 성공 상태를 저장한다")
   void dispatch_iosSuccess() {
-    String packageUrl = "https://files.example.com/theme.ktheme";
+    String fileName = "theme.ktheme";
     given(themeBuildStateService.loadRunningBuild(BUILD_ID))
         .willReturn(runningBuild(THEME_COMPONENT_ID, Platform.IOS));
-    given(iosHandler.build(THEME_COMPONENT_ID)).willReturn(packageUrl);
+    given(iosHandler.build(THEME_COMPONENT_ID)).willReturn(fileName);
     given(themeBuildStateService.markSuccess(
         eq(BUILD_ID),
-        eq(packageUrl),
+        eq(fileName),
         any(LocalDateTime.class)
     )).willReturn(true);
 
@@ -88,7 +88,7 @@ class ThemeBuildExecutionServiceTest {
     verify(androidHandler, never()).build(THEME_COMPONENT_ID);
     verify(themeBuildStateService).markSuccess(
         eq(BUILD_ID),
-        eq(packageUrl),
+        eq(fileName),
         any(LocalDateTime.class)
     );
   }
@@ -96,13 +96,13 @@ class ThemeBuildExecutionServiceTest {
   @Test
   @DisplayName("이미 확정된 작업에는 성공 결과가 상태를 다시 변경하지 않는다")
   void dispatch_alreadyFinalized_doesNotMarkFailed() {
-    String packageUrl = "https://files.example.com/theme.apk";
+    String fileName = "theme.apk";
     given(themeBuildStateService.loadRunningBuild(BUILD_ID))
         .willReturn(runningBuild(THEME_COMPONENT_ID, Platform.ANDROID));
-    given(androidHandler.build(THEME_COMPONENT_ID)).willReturn(packageUrl);
+    given(androidHandler.build(THEME_COMPONENT_ID)).willReturn(fileName);
     given(themeBuildStateService.markSuccess(
         eq(BUILD_ID),
-        eq(packageUrl),
+        eq(fileName),
         any(LocalDateTime.class)
     )).willReturn(false);
 
@@ -110,7 +110,7 @@ class ThemeBuildExecutionServiceTest {
 
     verify(themeBuildStateService).markSuccess(
         eq(BUILD_ID),
-        eq(packageUrl),
+        eq(fileName),
         any(LocalDateTime.class)
     );
     verify(themeBuildStateService, never()).markFailed(
@@ -141,8 +141,8 @@ class ThemeBuildExecutionServiceTest {
   }
 
   @Test
-  @DisplayName("플랫폼 handler가 빈 다운로드 URL을 반환하면 작업을 실패 처리한다")
-  void dispatch_blankPackageUrl_marksFailed() {
+  @DisplayName("플랫폼 handler가 빈 파일명을 반환하면 작업을 실패 처리한다")
+  void dispatch_blankFileName_marksFailed() {
     given(themeBuildStateService.loadRunningBuild(BUILD_ID))
         .willReturn(runningBuild(THEME_COMPONENT_ID, Platform.ANDROID));
     given(androidHandler.build(THEME_COMPONENT_ID)).willReturn(" ");

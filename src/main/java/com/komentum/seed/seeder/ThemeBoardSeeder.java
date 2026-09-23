@@ -1,7 +1,6 @@
 package com.komentum.seed.seeder;
 
 import com.github.javafaker.Faker;
-import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.post.domain.enums.PostType;
@@ -10,7 +9,6 @@ import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.service.ThemeImageService;
 import com.komentum.user.domain.User;
-import com.komentum.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +21,7 @@ public class ThemeBoardSeeder {
 
   private final ThemeBoardRepository themeBoardRepository;
   private final ThemeImageRepository themeImageRepository;
-  private final UserRepository userRepository;
   private final PostSeeder postSeeder;
-  private final FileManager fileManager;
   private final Faker faker;
   private final ThemeImageService themeImageService;
 
@@ -50,14 +46,12 @@ public class ThemeBoardSeeder {
     int size = themeComponents.size();
     for (int i = 0; i < size; i++) {
       ThemeComponent component = themeComponents.get(i);
-      User author = userRepository.findByUserEmail(component.getUserEmail())
-          .orElseThrow(() -> new IllegalArgumentException(
-              "user with " + component.getUserEmail() + " doesn't exists"));
-      String previewImage = themeImageService.findThemePreviewImageUrl(
+      User author = component.getUser();
+      String previewImageFileName = themeImageService.findThemePreviewFileName(
           component.getThemeComponentId());
       Post post = postSeeder.createOne(
           author,
-          fileManager.convertUrlToFileName(previewImage),
+          previewImageFileName,
           PostType.THEME_BOARD
       );
       posts.add(post);

@@ -32,14 +32,16 @@ public class ThemeDesignAssetDto {
 
   /**
    * Entity로부터 ThemeDesignAssetDto를 생성한다
+   *
+   * @param imageUrl FileManager를 통해 designComponent의 fileName으로부터 생성한 이미지 URL
    * */
   public static ThemeDesignAssetDto from(ComponentType componentType,
-      DesignComponent designComponent) {
+      DesignComponent designComponent, String imageUrl) {
     return ThemeDesignAssetDto.builder()
         .designComponentId(designComponent.getDesignComponentId())
         .typeCodeGroup(componentType.getTypeCode().getTypeCodeGroup())
         .typeCodeGroupName(componentType.getTypeCode().getTypeCodeGroup().getDescription())
-        .imageUrl(designComponent.getImageUrl())
+        .imageUrl(imageUrl)
         .typeCode(componentType.getTypeCode())
         .build();
   }

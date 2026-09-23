@@ -67,7 +67,8 @@ public class DesignBoardTransactionService {
         helper.findPreviewImageUrl(targetPost.getPreviewImageName());
     List<DesignBoard> designBoards = designBoardService.findWithDesignComponentsByPostId(postId);
     List<String> designImageUrls = designBoards.stream()
-        .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+        .map(designBoard -> helper.findPreviewImageUrl(
+            designBoard.getDesignComponent().getFileName()))
         .toList();
     List<String> previewImageUrls = Stream.concat(
             Stream.ofNullable(previewImageUrl),

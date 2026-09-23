@@ -73,7 +73,7 @@ class ThemeBuildControllerTest {
   void setUp() {
     owner = userRepository.save(
         UserFixture.user("theme-build-owner@test.com", UserRole.USER));
-    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner.getUserEmail()));
+    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner));
   }
 
   @AfterEach
@@ -128,13 +128,14 @@ class ThemeBuildControllerTest {
 
     assertStatusResponse(performFind(runningBuildId, owner), "RUNNING", null);
 
-    String packageUrl = "https://files.example.com/theme.apk";
+    String fileName = "theme.apk";
     assertThat(themeBuildStateService.markSuccess(
         runningBuildId,
-        packageUrl,
+        fileName,
         LocalDateTime.now()
     )).isTrue();
-    assertStatusResponse(performFind(runningBuildId, owner), "SUCCESS", packageUrl);
+    assertStatusResponse(performFind(runningBuildId, owner), "SUCCESS",
+        fileManager.resolveFilePath(fileName));
 
     Long failedBuildId = startAndReadBuildId(theme, owner);
     themeBuildStateService.markFailed(
@@ -244,13 +245,13 @@ class ThemeBuildControllerTest {
   @DisplayName("완료된 테마 다운로드 URL을 조회하면 200과 다운로드 URL을 반환한다")
   void getThemeDownloadUrl_success() throws Exception {
     Long buildId = startAndReadBuildId(theme, owner);
-    String packageUrl = "https://files.example.com/theme.apk";
-    themeBuildStateService.markSuccess(buildId, packageUrl, LocalDateTime.now());
+    String fileName = "theme.apk";
+    themeBuildStateService.markSuccess(buildId, fileName, LocalDateTime.now());
     ResultActions result = performDownloadUrl(theme, owner, Platform.ANDROID)
         .andExpect(status().isOk());
     ThemeDownloadResponse response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
     });
-    assertThat(response.downloadUrl()).isEqualTo(packageUrl);
+    assertThat(response.downloadUrl()).isEqualTo(fileManager.resolveFilePath(fileName));
   }
 
   @Test

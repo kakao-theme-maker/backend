@@ -36,10 +36,9 @@ public class DesignComponentSeeder {
       try (InputStream is = targetImage.getInputStream()) {
         fileManager.uploadFile(is.readAllBytes(), fileName);
       }
-      String fileUrl = fileManager.resolveFilePath(fileName);
       DesignComponent designComponent = DesignComponent.builder()
           .user(owner)
-          .imageUrl(fileUrl)
+          .fileName(fileName)
           .isPublic(true)
           .build();
       if (componentType != null) {

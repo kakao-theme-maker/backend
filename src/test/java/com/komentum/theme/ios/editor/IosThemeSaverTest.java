@@ -3,6 +3,7 @@ package com.komentum.theme.ios.editor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.endsWith;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.komentum.global.utils.FileManager;
@@ -32,18 +33,19 @@ class IosThemeSaverTest {
     Files.write(tempDir.resolve("Images/sample.png"), new byte[]{1, 2, 3});
     Files.writeString(tempDir.resolve(".DS_Store"), "ignored", StandardCharsets.UTF_8);
     FileManager fileManager = Mockito.mock(FileManager.class);
-    when(fileManager.uploadFile(any(byte[].class), endsWith(".ktheme")))
-        .thenReturn("https://cdn.example.com/theme.ktheme");
+    when(fileManager.uploadAndGetFileName(any(byte[].class), endsWith(".ktheme"), eq("ktheme")))
+        .thenReturn("ios-theme-3.ktheme");
     IosThemeSaver saver = new IosThemeSaver(fileManager);
 
     // when
-    String themeUrl = saver.save(3, tempDir);
+    String themeFileName = saver.save(3, tempDir);
 
     // then
     ArgumentCaptor<byte[]> packageCaptor = ArgumentCaptor.forClass(byte[].class);
     ArgumentCaptor<String> fileNameCaptor = ArgumentCaptor.forClass(String.class);
-    Mockito.verify(fileManager).uploadFile(packageCaptor.capture(), fileNameCaptor.capture());
-    assertThat(themeUrl).isEqualTo("https://cdn.example.com/theme.ktheme");
+    Mockito.verify(fileManager)
+        .uploadAndGetFileName(packageCaptor.capture(), fileNameCaptor.capture(), eq("ktheme"));
+    assertThat(themeFileName).isEqualTo("ios-theme-3.ktheme");
     assertThat(fileNameCaptor.getValue()).startsWith("ios-theme-3-").endsWith(".ktheme");
     assertThat(readZipEntries(packageCaptor.getValue()))
         .containsExactly("Images/sample.png", "KakaoTalkTheme.css");

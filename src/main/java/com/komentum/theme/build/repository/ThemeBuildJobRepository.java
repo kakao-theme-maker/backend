@@ -28,14 +28,14 @@ public interface ThemeBuildJobRepository extends JpaRepository<ThemeBuildJob, Lo
   @Query("""
       update ThemeBuildJob job
       set job.status = com.komentum.theme.build.domain.ThemeBuildStatus.SUCCESS,
-          job.packageUrl = :packageUrl,
+          job.fileName = :fileName,
           job.updatedAt = :updatedAt
       where job.buildId = :buildId
         and job.status = com.komentum.theme.build.domain.ThemeBuildStatus.RUNNING
       """)
   int markSuccessIfRunning(
       @Param("buildId") Long buildId,
-      @Param("packageUrl") String packageUrl,
+      @Param("fileName") String fileName,
       @Param("updatedAt") LocalDateTime updatedAt
   );
 

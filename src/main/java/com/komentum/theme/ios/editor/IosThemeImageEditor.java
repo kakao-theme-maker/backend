@@ -71,11 +71,7 @@ public class IosThemeImageEditor {
   }
 
   private BufferedImage readThemeImage(ThemeImage themeImage) throws IOException {
-    String imageUrl = themeImage.getDesignComponent().getImageUrl();
-    if (imageUrl == null || imageUrl.isBlank()) {
-      return null;
-    }
-    String fileName = fileManager.convertUrlToFileName(imageUrl);
+    String fileName = themeImage.getDesignComponent().getFileName();
     if (fileName == null || fileName.isBlank()) {
       return null;
     }
@@ -85,7 +81,7 @@ public class IosThemeImageEditor {
     }
     BufferedImage source = ImageIO.read(new ByteArrayInputStream(imageBytes));
     if (source == null) {
-      throw new IOException("failed to read theme image: " + imageUrl);
+      throw new IOException("failed to read theme image: " + fileName);
     }
     return source;
   }

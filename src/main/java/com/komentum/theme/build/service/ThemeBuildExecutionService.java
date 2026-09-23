@@ -72,14 +72,15 @@ public class ThemeBuildExecutionService {
     }
 
     try {
-      String packageUrl = handler.build(context.themeComponentId());
-      if (packageUrl == null || packageUrl.isBlank()) {
-        log.warn("[ThemeBuildExecutionService] Build returned an empty URL. buildId={}", buildId);
+      String fileName = handler.build(context.themeComponentId());
+      if (fileName == null || fileName.isBlank()) {
+        log.warn("[ThemeBuildExecutionService] Build returned an empty file name. buildId={}",
+            buildId);
         themeBuildStateService.markFailed(buildId, LocalDateTime.now());
         return;
       }
 
-      if (!themeBuildStateService.markSuccess(buildId, packageUrl, LocalDateTime.now())) {
+      if (!themeBuildStateService.markSuccess(buildId, fileName, LocalDateTime.now())) {
         log.warn("[ThemeBuildExecutionService] Build status was already finalized. buildId={}",
             buildId);
       }

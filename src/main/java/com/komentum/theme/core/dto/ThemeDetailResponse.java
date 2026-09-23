@@ -53,12 +53,15 @@ public class ThemeDetailResponse {
     @Schema(description = "이미지 인셋 정보 ( 인셋이 없으면 NULL )")
     InsetResponseDto inset;
 
+    /**
+     * @param imageUrl FileManager를 통해 designComponent의 fileName으로부터 생성한 이미지 URL
+     */
     public static TypeCodeInfo of(DesignComponent designComponent, ComponentType componentType,
-        ImageInset inset) {
+        ImageInset inset, String imageUrl) {
       TypeCode typeCode = componentType.getTypeCode();
       return TypeCodeInfo.builder()
           .designComponentId(designComponent.getDesignComponentId())
-          .imageUrl(designComponent.getImageUrl())
+          .imageUrl(imageUrl)
           .platformScope(componentType.getPlatformScope())
           .typeCodeGroup(typeCode.getTypeCodeGroup())
           .typeCodeGroupName(typeCode.getTypeCodeGroup().getDescription())

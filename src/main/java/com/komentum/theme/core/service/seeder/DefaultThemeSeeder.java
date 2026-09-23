@@ -128,7 +128,7 @@ public class DefaultThemeSeeder {
           ThemeComponent.builder()
               .themeName(defaultThemeSheetInfo.themeName)
               .themeCode(defaultThemeSheetInfo.themeCode)
-              .userEmail(rootUser.getUserEmail())
+              .user(rootUser)
               .versionName(defaultThemeSheetInfo.themeCode + ".0.0.1")
               .versionNumber("0")
               .themeType(ThemeType.DEFAULT)
@@ -261,10 +261,10 @@ public class DefaultThemeSeeder {
       throws IOException {
     PlatformComponentType pct = platformComponentTypes.get(0);
     Path imagePath = ThemePathManager.getAndroidThemeImagePath(themeRootPath, pct.getPath());
-    String imageUrl = fileManager.uploadFile(Files.readAllBytes(imagePath),
-        UUID.randomUUID().toString());
+    String fileName = UUID.randomUUID().toString();
+    fileManager.uploadFile(Files.readAllBytes(imagePath), fileName);
     DesignComponent dc = DesignComponent.builder()
-        .imageUrl(imageUrl)
+        .fileName(fileName)
         .user(user)
         .isPublic(true)
         .build();

@@ -1,7 +1,7 @@
 package com.komentum.designcomponent.controller;
 
-import static com.komentum.test.fixture.component.DesignComponentRequestFixture.UPLOADED_IMAGE_URL;
 import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequestPart;
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.imageUrlOf;
 import static com.komentum.test.fixture.component.DesignComponentRequestFixture.updateRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -17,6 +17,7 @@ import com.komentum.designcomponent.dto.UpdateDesignComponentRequest;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -26,9 +27,8 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
   @Test
   @DisplayName("DesignComponent 수정 테스트")
   void updateDesignComponent() throws Exception {
-    stubImageUpload();
     DesignComponent savedComponent = testUserComponent(
-        "http://example.com/image.png", false, componentTypeA);
+        "image.png", false, componentTypeA);
     UpdateDesignComponentRequest updateRequest = updateRequest(true, componentTypeB);
     MockMultipartFile requestPart = createRequestPart(updateRequest);
     MockMultipartFile image = multipartFixture.imagePart("updated.png");
@@ -46,9 +46,12 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
     assertThat(response.getDesignComponentId()).isEqualTo(savedComponent.getDesignComponentId());
     assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
     assertThat(response.getIsPublic()).isTrue();
-    assertThat(response.getImageUrl()).isNotBlank();
-    assertThat(response.getImageUrl()).isNotEqualTo("http://example.com/image.png");
-    assertThat(response.getImageUrl()).isEqualTo(UPLOADED_IMAGE_URL);
+    ArgumentCaptor<String> fileNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(fileManager).uploadFile(any(byte[].class), fileNameCaptor.capture());
+    String uploadedFileName = fileNameCaptor.getValue();
+    // 갱신된 이미지가 요청에 사용된 이미지의 URL과 동일한지 확인
+    assertThat(response.getImageUrl()).isEqualTo(imageUrlOf(uploadedFileName));
+    assertThat(response.getImageUrl()).isNotEqualTo(imageUrlOf("image.png"));
     assertThat(response.getCreatedAt()).isNotNull();
     assertThat(response.getUpdatedAt()).isNotNull();
     assertThat(response.getComponentTypes())
@@ -57,6 +60,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
 
     DesignComponent updated = designComponentRepository.findByDesignComponentId(
         savedComponent.getDesignComponentId()).orElseThrow();
+    assertThat(updated.getFileName()).isEqualTo(uploadedFileName);
     assertThat(updated.getComponentTypes())
         .extracting(ComponentType::getComponentTypeId)
         .containsExactly(componentTypeB.getComponentTypeId());
@@ -66,7 +70,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
   @DisplayName("다른 사용자의 DesignComponent 수정 실패 테스트")
   void updateDesignComponentByOtherUser() throws Exception {
     DesignComponent savedComponent = otherUserComponent(
-        "other@test.com", "http://example.com/image.png", false, componentTypeA);
+        "other@test.com", "image.png", false, componentTypeA);
     UpdateDesignComponentRequest updateRequest = updateRequest(true, componentTypeB);
     MockMultipartFile requestPart = createRequestPart(updateRequest);
     MockMultipartFile image = multipartFixture.imagePart("updated.png");
@@ -83,7 +87,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
 
     DesignComponent afterComponent = designComponentRepository.findById(
         savedComponent.getDesignComponentId()).orElseThrow();
-    assertThat(afterComponent.getImageUrl()).isEqualTo("http://example.com/image.png");
+    assertThat(afterComponent.getFileName()).isEqualTo("image.png");
     assertThat(afterComponent.getIsPublic()).isFalse();
     assertThat(afterComponent.getComponentTypes())
         .extracting(ComponentType::getComponentTypeId)
@@ -94,7 +98,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
   @DisplayName("DesignComponent 수정 시 존재하지 않는 componentTypeId 검증")
   void updateDesignComponent_withUnknownComponentTypeId() throws Exception {
     DesignComponent savedComponent = testUserComponent(
-        "http://example.com/image.png", false, componentTypeA);
+        "image.png", false, componentTypeA);
     UpdateDesignComponentRequest updateRequest = updateRequest(true, List.of(999999));
     MockMultipartFile requestPart = createRequestPart(updateRequest);
     MockMultipartFile image = multipartFixture.imagePart("updated.png");

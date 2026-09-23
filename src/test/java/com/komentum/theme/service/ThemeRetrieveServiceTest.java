@@ -1,7 +1,10 @@
 package com.komentum.theme.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
+import com.komentum.global.utils.FileManager;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
 import com.komentum.test.data.UserDataGenerator;
@@ -24,24 +27,24 @@ import org.springframework.data.domain.Pageable;
 @EnableTestProfile
 class ThemeRetrieveServiceTest {
 
+  private final int initialThemeCount = 10;
   @Autowired
   private ThemeRetrieveService themeRetrieveService;
-
   @Autowired
   private ThemeImageService themeImageService;
-
   @Autowired
   private ThemeDataGenerator themeDataGenerator;
-
   @Autowired
   private UserDataGenerator userDataGenerator;
-
-  private final int initialThemeCount = 10;
+  @Autowired
+  private FileManager fileManager;
   private int initialStylePerTheme = 5;
   private int initialImagePerTheme = 4;
 
   @BeforeEach
   void setUp() {
+    when(fileManager.resolveFilePath(anyString()))
+        .thenAnswer(invocation -> "https://cdn.example.com/" + invocation.getArgument(0));
     themeDataGenerator.deleteTestData();
     userDataGenerator.deleteAllUsers();
     themeDataGenerator.generateTestData(initialThemeCount);
@@ -96,26 +99,6 @@ class ThemeRetrieveServiceTest {
   }
 
   @Test
-  @DisplayName("success test of retrieving theme by email")
-  void getThemeByEmail_success() {
-    System.out.println("---start theme by email");
-    // given
-    int pageNumber = 0;
-    int pageSize = 10;
-    Pageable pageable = PageRequest.of(pageNumber, pageSize);
-    String userEmail = themeDataGenerator.userEmail;
-    long counts = themeDataGenerator.initialThemes.stream()
-        .filter(theme -> theme.getUserEmail().equals(userEmail)).count();
-    // when
-    List<ThemeComponentDto> founded = themeRetrieveService.getThemesByUserEmail(userEmail,
-        pageable);
-    // then
-    assertThat(founded).hasSize((int) counts).allSatisfy(
-        themeComponentDto -> assertThat(themeComponentDto.getUserEmail()).isEqualTo(userEmail));
-    System.out.println("---end theme by email");
-  }
-
-  @Test
   @DisplayName("success test of retrieving public themes")
   void getPublicThemes_success() {
     System.out.println("---start public themes");
@@ -162,7 +145,7 @@ class ThemeRetrieveServiceTest {
     String userEmail = themeDataGenerator.userEmail;
     long counts = themeDataGenerator.initialThemes.stream()
         .filter(ThemeComponent::getIsDone)
-        .filter(theme -> theme.getUserEmail().equals(userEmail)).count();
+        .filter(theme -> theme.getUser().getUserEmail().equals(userEmail)).count();
     // when
     List<ThemeComponentDto> founded = themeRetrieveService.getCompletedThemesByUser(userEmail,
         pageable);
@@ -175,7 +158,7 @@ class ThemeRetrieveServiceTest {
   }
 
   private Map<Integer, String> findPreviewImageMap(List<ThemeComponentDto> themeComponents) {
-    return themeImageService.findThemePreviewImages(
+    return themeImageService.findThemePreviewImageUrls(
         themeComponents.stream()
             .map(ThemeComponentDto::getThemeComponentId)
             .toList());

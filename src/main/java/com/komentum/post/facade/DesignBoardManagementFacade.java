@@ -52,7 +52,7 @@ public class DesignBoardManagementFacade {
       DesignComponent designComponent
   ) {
     if (previewImage == null || previewImage.isEmpty()) {
-      String fileName = fileManager.convertUrlToFileName(designComponent.getImageUrl());
+      String fileName = designComponent.getFileName();
       byte[] previewImageBytes = fileManager.downloadFile(fileName);
       return boardManagementHelper.savePreviewImageIfPresent(Post.class, fileName,
           previewImageBytes);
@@ -147,7 +147,8 @@ public class DesignBoardManagementFacade {
     return Stream.concat(
         Stream.ofNullable(postPreviewImageUrl),
         designBoards.stream()
-            .map(designBoard -> designBoard.getDesignComponent().getImageUrl())
+            .map(designBoard -> boardManagementHelper.findPreviewImageUrl(
+                designBoard.getDesignComponent().getFileName()))
     ).toList();
   }
 

@@ -48,9 +48,9 @@ public class AndroidThemeImageEditor {
     Path tempImagePath = imagePath.resolveSibling(imagePath.getFileName() + ".temp");
     Files.createDirectories(tempImagePath.getParent());
     // 이미지 다운로드 후 임시 파일에 복사
-    String imageFileName = fileManager.convertUrlToFileName(component.getImageUrl());
     try (
-        InputStream is = NinePatchConverter.convertIfNeeded(fileManager.download(imageFileName),
+        InputStream is = NinePatchConverter.convertIfNeeded(
+            fileManager.download(component.getImageFileName()),
             component.getFileExtension(), component.getImageInset());
         OutputStream os = Files.newOutputStream(tempImagePath,
             StandardOpenOption.CREATE,

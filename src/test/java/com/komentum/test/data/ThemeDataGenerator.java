@@ -17,6 +17,7 @@ import com.komentum.theme.core.dto.ThemeStyleRequest;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
+import com.komentum.user.domain.User;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,7 @@ public class ThemeDataGenerator {
   private UserDataGenerator userDataGenerator;
 
   private final Faker faker = new Faker();
+  public User user;
   public String userEmail = "test@test.com";
   public List<ThemeComponent> initialThemes = new ArrayList<>();
   public List<ColorStyle> initialColorStyles = new ArrayList<>();
@@ -60,6 +62,8 @@ public class ThemeDataGenerator {
   public List<DesignComponent> initialDesignComponents = new ArrayList<>();
 
   public void generateTestData(int themeCount) {
+    user = userDataGenerator.generateTestUser(faker.internet().emailAddress());
+    userEmail = user.getUserEmail();
     initialColorStyles = generateColorStyles();
     initialComponentTypes = generateComponentTypes();
     initialDesignComponents = generateDesignComponents(initialComponentTypes.size());
@@ -107,7 +111,7 @@ public class ThemeDataGenerator {
     List<DesignComponent> designComponents = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       designComponents.add(DesignComponent.builder()
-          .imageUrl(faker.internet().image())
+          .fileName(faker.internet().slug() + ".png")
           .user(userDataGenerator.generateTestUser(faker.internet().emailAddress()))
           .isPublic(faker.bool().bool())
           .build());
@@ -153,7 +157,7 @@ public class ThemeDataGenerator {
     for (int i = 0; i < amount; i++) {
       ThemeComponent themeComponent = ThemeComponent.builder()
           .themeName(faker.name().fullName())
-          .userEmail(userEmail)
+          .user(user)
           .versionName(faker.name().fullName())
           .versionNumber(Integer.toString(faker.number().numberBetween(1, 100)))
           .isDone(i % 2 == 0)

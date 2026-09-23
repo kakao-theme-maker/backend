@@ -8,6 +8,7 @@ import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.ComponentTypeService;
 import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.global.exception.ResourceNotFoundException;
+import com.komentum.global.utils.FileManager;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.dto.ThemeDesignAssetDto;
@@ -38,24 +39,50 @@ public class ThemeImageService {
   private final ThemeImageRepository themeImageRepository;
   private final DesignComponentService designComponentService;
   private final ComponentTypeService componentTypeService;
+  private final FileManager fileManager;
 
+  /**
+   * themeComponent ID별 테마 대표 이미지의 파일명을 조회한다.
+   *
+   */
   @Transactional(readOnly = true)
-  public Map<Integer, String> findThemePreviewImages(List<Integer> themeComponentIds) {
+  public Map<Integer, String> findThemePreviewFileNames(List<Integer> themeComponentIds) {
     List<ThemeImage> themeImageList = themeImageRepository.fetchJoinByThemeComponentAndTypeCode(
         themeComponentIds,
         TypeCode.COMMON_ICO_THEME
     );
     return themeImageList.stream()
+        .filter(ti -> ti.getDesignComponent().getFileName() != null)
         .collect(Collectors.toMap(
             ti -> ti.getThemeComponent().getThemeComponentId(),
-            ti -> ti.getDesignComponent().getImageUrl(),
+            ti -> ti.getDesignComponent().getFileName(),
             (v1, v2) -> v1
         ));
   }
 
   @Transactional(readOnly = true)
+  public String findThemePreviewFileName(Integer themeComponentId) {
+    return findThemePreviewFileNames(List.of(themeComponentId)).get(themeComponentId);
+  }
+
+  /**
+   * themeComponent ID별 테마 대표 이미지의 URL을 조회한다. URL은 FileManager를 통해 생성한다.
+   *
+   */
+  @Transactional(readOnly = true)
+  public Map<Integer, String> findThemePreviewImageUrls(List<Integer> themeComponentIds) {
+    return findThemePreviewFileNames(themeComponentIds).entrySet().stream()
+        .collect(Collectors.toMap(
+            Entry::getKey,
+            entry -> fileManager.resolveFilePath(entry.getValue())
+        ));
+  }
+
+  /*
+   * */
+  @Transactional(readOnly = true)
   public String findThemePreviewImageUrl(Integer themeComponentId) {
-    return findThemePreviewImages(List.of(themeComponentId)).get(themeComponentId);
+    return findThemePreviewImageUrls(List.of(themeComponentId)).get(themeComponentId);
   }
 
   @Transactional(readOnly = true)
@@ -66,7 +93,7 @@ public class ThemeImageService {
         .collect(Collectors.toMap(
             ti -> ti.getComponentType().getTypeCode(),
             ti -> TypeCodeInfo.of(ti.getDesignComponent(), ti.getComponentType(),
-                ti.getImageInset())
+                ti.getImageInset(), resolveImageUrl(ti.getDesignComponent()))
         ));
     if (res.size() != TypeCode.values().length) {
       log.warn(
@@ -80,18 +107,20 @@ public class ThemeImageService {
   }
 
   /**
-   * themeComponent ID를 기반으로 ThemeImage 목록을 조회한다.
-   * 연관 엔티티(ThemeComponent, designComponent, componentType)이 함께 조회된다.
-   * */
+   * themeComponent ID를 기반으로 ThemeImage 목록을 조회한다. 연관 엔티티(ThemeComponent, designComponent,
+   * componentType)이 함께 조회된다.
+   *
+   */
   @Transactional(readOnly = true)
   public List<ThemeImage> fetchJoinThemeImagesByThemeComponentId(Integer themeComponentId) {
     return fetchJoinThemeImageMapByThemeIds(List.of(themeComponentId)).get(themeComponentId);
   }
 
   /**
-   * themeComponent ID 목록을 기반으로 ThemeComponentId - ThemeImage 맵을 조회한다.
-   * 연관 엔티티(ThemeComponent, designComponent, componentType)이 함께 조회된다.
-   * */
+   * themeComponent ID 목록을 기반으로 ThemeComponentId - ThemeImage 맵을 조회한다. 연관 엔티티(ThemeComponent,
+   * designComponent, componentType)이 함께 조회된다.
+   *
+   */
   @Transactional(readOnly = true)
   public Map<Integer, List<ThemeImage>> fetchJoinThemeImageMapByThemeIds(
       Collection<Integer> themeIds) {
@@ -104,7 +133,8 @@ public class ThemeImageService {
 
   /**
    * theme ID 리스트를 기반으로 테마별 ThemeDesignAssetDto 리스트를 조회한다
-   * */
+   *
+   */
   @Transactional(readOnly = true)
   public Map<Integer, List<ThemeDesignAssetDto>> findThemeDesignAssetMap(
       Collection<Integer> themeIds) {
@@ -114,10 +144,20 @@ public class ThemeImageService {
             entry -> entry.getValue().stream()
                 .map(themeImage -> ThemeDesignAssetDto.from(
                     themeImage.getComponentType(),
-                    themeImage.getDesignComponent()
+                    themeImage.getDesignComponent(),
+                    resolveImageUrl(themeImage.getDesignComponent())
                 ))
                 .toList()
         ));
+  }
+
+  /**
+   * designComponent의 fileName을 FileManager를 통해 이미지 URL로 변환한다. fileName이 없으면 null을 반환한다.
+   *
+   */
+  private String resolveImageUrl(DesignComponent designComponent) {
+    String fileName = designComponent.getFileName();
+    return fileName == null ? null : fileManager.resolveFilePath(fileName);
   }
 
   @Transactional
@@ -134,14 +174,15 @@ public class ThemeImageService {
   }
 
   /**
-   * typeCode별 이미지 정보로 새로운 ThemeImage들을 생성하여 targetTheme에 추가한다.
-   * platformScope=COMMON인 TypeCode는 요청에 반드시 포함되어야 하며, 특정 플랫폼 전용(ANDROID/IOS) TypeCode는
-   * 요청에 없어도 된다. 요청에 포함된 TypeCode는 targetTheme에 아직 이미지가 없는 상태여야 한다.
+   * typeCode별 이미지 정보로 새로운 ThemeImage들을 생성하여 targetTheme에 추가한다. platformScope=COMMON인 TypeCode는 요청에
+   * 반드시 포함되어야 하며, 특정 플랫폼 전용(ANDROID/IOS) TypeCode는 요청에 없어도 된다. 요청에 포함된 TypeCode는 targetTheme에 아직
+   * 이미지가 없는 상태여야 한다.
    *
    * @param targetTheme 이미지를 추가할 대상 테마
    * @param typeCodes   typeCode별 이미지 정보 맵, 존재하는 값은 null이 아니어야 한다
-   * @throws ResponseStatusException    platformScope=COMMON인 TypeCode가 요청에 누락된 경우 (400 Bad Request)
-   * @throws ResourceNotFoundException typeCode에 대응하는 ComponentType이나 designComponentId에 대응하는 DesignComponent가 존재하지 않는 경우
+   * @throws ResponseStatusException   platformScope=COMMON인 TypeCode가 요청에 누락된 경우 (400 Bad Request)
+   * @throws ResourceNotFoundException typeCode에 대응하는 ComponentType이나 designComponentId에 대응하는
+   *                                   DesignComponent가 존재하지 않는 경우
    */
   @Transactional
   public void createThemeImages(
@@ -177,8 +218,8 @@ public class ThemeImageService {
   }
 
   /**
-   * platformScope=COMMON인 TypeCode가 요청에 누락 없이 포함되어 있는지 검증한다.
-   * 특정 플랫폼 전용(ANDROID/IOS) TypeCode는 검증 대상이 아니다.
+   * platformScope=COMMON인 TypeCode가 요청에 누락 없이 포함되어 있는지 검증한다. 특정 플랫폼 전용(ANDROID/IOS) TypeCode는 검증
+   * 대상이 아니다.
    *
    * @throws ResponseStatusException 누락된 COMMON TypeCode가 있는 경우 (400 Bad Request)
    */

@@ -20,23 +20,22 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
   private final EntityManager em;
 
   @Override
-  public List<ComponentSummary> findComponentSummaryByClient(Pageable pageable, User client,
-      String clientEmail) {
+  public List<ComponentSummary> findComponentSummaryByClient(Pageable pageable, User client) {
     String query = """
-        SELECT id, type, preview_image_url, created_at
+        SELECT id, type, preview_image_file_name, created_at
         FROM (
           SELECT
             tc.theme_component_id as id,
             'THEME' as type,
-            NULL as preview_image_url,
+            NULL as preview_image_file_name,
             tc.created_at as created_at
           FROM theme_component tc
-          WHERE tc.user_email = :clientEmail
+          WHERE tc.user_id = :userId
           UNION ALL
           SELECT
             dc.design_component_id as id,
             'DESIGN' as type,
-            dc.image_url as preview_image_url,
+            dc.file_name as preview_image_file_name,
             dc.created_at as created_at
           FROM design_component dc
           WHERE dc.user_id = :userId
@@ -50,7 +49,6 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
         .setParameter("limit", pageable.getPageSize())
         .setParameter("offset", pageable.getOffset())
         .setParameter("userId", client.getUserId())
-        .setParameter("clientEmail", clientEmail)
         .getResultList();
     // convert to ComponentSummary
     List<ComponentSummary> summaries = rows.stream()
@@ -71,15 +69,15 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
             throw new IllegalArgumentException(
                 "ComponentSummary mapping failed: Unknown ComponentType: " + row[1]);
           }
-          // 3. previewImageUrl (nullable)
-          String previewImageUrl = (String) row[2];
+          // 3. previewImageFileName (nullable)
+          String previewImageFileName = (String) row[2];
           // 4. createdAt (not null)
           if (row[3] == null) {
             throw new IllegalStateException(
                 "ComponentSummary mapping failed: createdAt(row[3]) is null");
           }
           LocalDateTime createdAt = ((Timestamp) row[3]).toLocalDateTime();
-          return new ComponentSummary(id, type, previewImageUrl, createdAt);
+          return new ComponentSummary(id, type, previewImageFileName, createdAt);
         })
         .toList();
     return summaries;

@@ -1,5 +1,6 @@
 package com.komentum.designcomponent.controller;
 
+import static com.komentum.test.fixture.component.DesignComponentRequestFixture.imageUrlOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,7 +28,7 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
   @DisplayName("DesignComponent 조회 테스트")
   void getDesignComponent() throws Exception {
     DesignComponent savedComponent = testUserComponent(
-        "http://example.com/image.png", false, componentTypeA, componentTypeB);
+        "image.png", false, componentTypeA, componentTypeB);
 
     MockHttpServletRequestBuilder requestBuilder = get("/api/design-components/{id}",
         savedComponent.getDesignComponentId());
@@ -39,7 +40,7 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     assertThat(response.getDesignComponentId()).isEqualTo(savedComponent.getDesignComponentId());
     assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
     assertThat(response.getIsPublic()).isFalse();
-    assertThat(response.getImageUrl()).isEqualTo("http://example.com/image.png");
+    assertThat(response.getImageUrl()).isEqualTo(imageUrlOf("image.png"));
     assertThat(response.getCreatedAt()).isNotNull();
     assertThat(response.getUpdatedAt()).isNotNull();
     assertThat(response.getComponentTypes())
@@ -66,10 +67,10 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
   @DisplayName("componentTypeId로 DesignComponent 목록 조회 테스트")
   void getDesignComponentsByComponentTypeId() throws Exception {
     DesignComponent componentAOnly = testUserComponent(
-        "http://example.com/image-a.png", true, componentTypeA);
+        "image-a.png", true, componentTypeA);
     DesignComponent componentAAndB = testUserComponent(
-        "http://example.com/image-ab.png", true, componentTypeA, componentTypeB);
-    testUserComponent("http://example.com/image-b.png", true, componentTypeB);
+        "image-ab.png", true, componentTypeA, componentTypeB);
+    testUserComponent("image-b.png", true, componentTypeB);
 
     MockHttpServletRequestBuilder requestBuilder = get(
         "/api/design-components/component-types/{componentTypeId}",
@@ -106,7 +107,7 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
   @Test
   @DisplayName("componentType에 속한 DesignComponent가 없으면 빈 리스트 반환")
   void getDesignComponentsByComponentTypeId_emptyResult() throws Exception {
-    testUserComponent("http://example.com/image-b.png", true, componentTypeB);
+    testUserComponent("image-b.png", true, componentTypeB);
 
     MockHttpServletRequestBuilder requestBuilder = get(
         "/api/design-components/component-types/{componentTypeId}",
@@ -124,14 +125,14 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
   void getDesignComponentsByPublicUserId() throws Exception {
     User otherUser = createOtherUser("other@test.com");
 
-    testUserComponent("http://example.com/image1.png", true, componentTypeA);
-    testUserComponent("http://example.com/image2.png", true, componentTypeA);
-    testUserComponent("http://example.com/image3.png", true, componentTypeB);
+    testUserComponent("image1.png", true, componentTypeA);
+    testUserComponent("image2.png", true, componentTypeA);
+    testUserComponent("image3.png", true, componentTypeB);
 
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "http://example.com/other1.png", true, List.of(componentTypeA));
+        "other1.png", true, List.of(componentTypeA));
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "http://example.com/other2.png", true, List.of(componentTypeB));
+        "other2.png", true, List.of(componentTypeB));
 
     MockHttpServletRequestBuilder requestBuilder = get(
         "/api/design-components/user/{publicUserId}",
@@ -149,9 +150,9 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     assertThat(components)
         .extracting(DesignComponentDto::getImageUrl)
         .containsExactlyInAnyOrder(
-            "http://example.com/image1.png",
-            "http://example.com/image2.png",
-            "http://example.com/image3.png"
+            imageUrlOf("image1.png"),
+            imageUrlOf("image2.png"),
+            imageUrlOf("image3.png")
         );
     assertThat(components).allMatch(
         dto -> dto.getPublicUserId().equals(testUser.getPublicUserId()));
@@ -163,14 +164,14 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     // given
     User otherUser = createOtherUser("other@test.com");
 
-    testUserComponent("http://example.com/image1.png", true, componentTypeA);
-    testUserComponent("http://example.com/image2.png", true, componentTypeA);
-    testUserComponent("http://example.com/image3.png", true, componentTypeB);
+    testUserComponent("image1.png", true, componentTypeA);
+    testUserComponent("image2.png", true, componentTypeA);
+    testUserComponent("image3.png", true, componentTypeB);
 
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "http://example.com/other1.png", true, List.of(componentTypeA));
+        "other1.png", true, List.of(componentTypeA));
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "http://example.com/other2.png", true, List.of(componentTypeB));
+        "other2.png", true, List.of(componentTypeB));
 
     // when
     List<DesignComponentDto> res = mockMvcUtils.doAuthRequest(
@@ -189,15 +190,15 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     assertThat(res)
         .extracting(DesignComponentDto::getImageUrl)
         .containsExactlyInAnyOrder(
-            "http://example.com/image1.png",
-            "http://example.com/image2.png",
-            "http://example.com/image3.png"
+            imageUrlOf("image1.png"),
+            imageUrlOf("image2.png"),
+            imageUrlOf("image3.png")
         );
     assertThat(res)
         .extracting(DesignComponentDto::getImageUrl)
         .doesNotContain(
-            "http://example.com/other1.png",
-            "http://example.com/other2.png"
+            imageUrlOf("other1.png"),
+            imageUrlOf("other2.png")
         );
     assertThat(res).allMatch(
         dto -> dto.getPublicUserId().equals(testUser.getPublicUserId()));

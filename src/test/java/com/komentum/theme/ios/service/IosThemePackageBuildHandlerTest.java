@@ -30,13 +30,13 @@ class IosThemePackageBuildHandlerTest {
   @DisplayName("iOS handler는 기존 테마 제작기에 위임하고 URL을 반환한다")
   void build_delegatesToExistingMaker() {
     Integer themeComponentId = 1;
-    String packageUrl = "https://files.example.com/theme.ktheme";
-    when(iosThemeMaker.makeTheme(themeComponentId)).thenReturn(packageUrl);
+    String fileName = "theme.ktheme";
+    when(iosThemeMaker.makeTheme(themeComponentId)).thenReturn(fileName);
 
     String result = handler.build(themeComponentId);
 
     assertThat(handler.platform()).isEqualTo(Platform.IOS);
-    assertThat(result).isEqualTo(packageUrl);
+    assertThat(result).isEqualTo(fileName);
     verify(iosThemeMaker).makeTheme(themeComponentId);
   }
 }

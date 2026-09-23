@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AndroidComponentDto {
 
-  String imageUrl;
+  String imageFileName;
   String imageFilePath;
   ImageInset imageInset;
   Integer sizeX;
@@ -25,7 +25,7 @@ public class AndroidComponentDto {
   public static AndroidComponentDto fromEntity(PlatformComponentType platformComponentType,
       DesignComponent designComponent, ImageInset imageInset) {
     return AndroidComponentDto.builder()
-        .imageUrl(designComponent.getImageUrl())
+        .imageFileName(designComponent.getFileName())
         .imageFilePath(platformComponentType.getPath())
         .imageInset(imageInset)
         .sizeX(platformComponentType.getWidth())

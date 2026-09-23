@@ -58,7 +58,7 @@ public class DesignComponentDataGenerator {
       for (int j = 0; j < componentPerUser; j++) {
         DesignComponent designComponent = DesignComponent.builder()
             .user(user)
-            .imageUrl(faker.internet().image())
+            .fileName(faker.internet().slug() + ".png")
             .isPublic(j % 2 == 0) // 짝수일 때는 public 홀수일때는 private
             .build();
         designComponent.replaceComponentTypes(componentTypes);
@@ -73,19 +73,19 @@ public class DesignComponentDataGenerator {
    * 단일 DesignComponent 생성
    *
    * @param user     소유자
-   * @param imageUrl 이미지 URL
+   * @param fileName 이미지 파일명
    * @param isPublic 공개 여부
    * @return 생성된 DesignComponent
    */
-  public DesignComponent generateDesignComponent(User user, String imageUrl, Boolean isPublic) {
-    return generateDesignComponent(user, imageUrl, isPublic, List.of());
+  public DesignComponent generateDesignComponent(User user, String fileName, Boolean isPublic) {
+    return generateDesignComponent(user, fileName, isPublic, List.of());
   }
 
-  public DesignComponent generateDesignComponent(User user, String imageUrl, Boolean isPublic,
+  public DesignComponent generateDesignComponent(User user, String fileName, Boolean isPublic,
       List<ComponentType> componentTypes) {
     DesignComponent designComponent = DesignComponent.builder()
         .user(user)
-        .imageUrl(imageUrl)
+        .fileName(fileName)
         .isPublic(isPublic)
         .build();
     designComponent.replaceComponentTypes(componentTypes);
@@ -99,7 +99,7 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent
    */
   public DesignComponent generateDesignComponent(User user) {
-    return generateDesignComponent(user, faker.internet().image(), true, List.of());
+    return generateDesignComponent(user, faker.internet().slug() + ".png", true, List.of());
   }
 
 

@@ -44,12 +44,6 @@ public class ThemeRetrieveService {
   }
 
   @Transactional(readOnly = true)
-  public List<ThemeComponentDto> getThemesByUserEmail(String userEmail, Pageable pageable) {
-    return convertToDtosWithPreviewImages(themeComponentRepository.findByUserEmail(userEmail,
-        pageable));
-  }
-
-  @Transactional(readOnly = true)
   public List<ThemeComponentDto> findByPublicUserId(String publicUserId, Pageable pageable) {
     User client = userEntityFinder.findUserEntity(publicUserId);
     ThemeSearchCondition condition = new ThemeSearchCondition();
@@ -73,6 +67,12 @@ public class ThemeRetrieveService {
   }
 
   @Transactional(readOnly = true)
+  public ThemeComponent fetchJoinWithUser(Integer id) {
+    return themeComponentRepository.fetchJoinWithUserById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Theme not found with id : " + id));
+  }
+
+  @Transactional(readOnly = true)
   public List<ThemeComponentDto> getCompletedThemes(Pageable pageable) {
     List<ThemeComponent> completedThemes = themeComponentRepository.findByIsDoneTrue(pageable);
     return convertToDtosWithPreviewImages(completedThemes);
@@ -80,8 +80,8 @@ public class ThemeRetrieveService {
 
   @Transactional(readOnly = true)
   public List<ThemeComponentDto> getCompletedThemesByUser(String userEmail, Pageable pageable) {
-    List<ThemeComponent> completedThemes = themeComponentRepository.findByIsDoneTrueAndUserEmail(
-        userEmail, pageable);
+    List<ThemeComponent> completedThemes = themeComponentRepository
+        .findByIsDoneTrueAndUser_UserEmail(userEmail, pageable);
     return convertToDtosWithPreviewImages(completedThemes);
   }
 
@@ -93,7 +93,7 @@ public class ThemeRetrieveService {
 
   private List<ThemeComponentDto> convertToDtosWithPreviewImages(
       List<ThemeComponent> themeComponents) {
-    Map<Integer, String> previewImages = themeImageService.findThemePreviewImages(
+    Map<Integer, String> previewImages = themeImageService.findThemePreviewImageUrls(
         themeComponents.stream()
             .map(ThemeComponent::getThemeComponentId)
             .toList());
@@ -143,7 +143,7 @@ public class ThemeRetrieveService {
     List<Integer> themeIds = themeComponents.stream()
         .map(ThemeComponent::getThemeComponentId)
         .toList();
-    Map<Integer, String> themeImageMap = themeImageService.findThemePreviewImages(themeIds);
+    Map<Integer, String> themeImageMap = themeImageService.findThemePreviewImageUrls(themeIds);
     return themeComponents.stream().map(tc -> {
       String previewImageUrl = themeImageMap.get(tc.getThemeComponentId());
       return ThemePreviewDto.from(tc, previewImageUrl);

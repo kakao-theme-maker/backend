@@ -81,7 +81,7 @@ class ThemeBuildServiceTest {
   void setUp() {
     owner = userRepository.save(
         UserFixture.user("theme-build-service-owner@test.com", UserRole.USER));
-    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner.getUserEmail()));
+    theme = themeComponentRepository.save(ThemeBuildFixture.theme(owner));
     authenticate(owner);
   }
 
@@ -198,13 +198,13 @@ class ThemeBuildServiceTest {
     // given
     ThemeBuildJob build = themeBuildJobRepository.saveAndFlush(
         ThemeBuildJob.createRunning(theme, Platform.ANDROID));
-    String packageUrl = fileManager.resolveFilePath("theme-download-test.apk");
-    themeBuildStateService.markSuccess(build.getBuildId(), packageUrl, LocalDateTime.now());
+    String fileName = "theme-download-test.apk";
+    themeBuildStateService.markSuccess(build.getBuildId(), fileName, LocalDateTime.now());
     // when
     ThemeDownloadResponse response = themeBuildService.getDownloadUrl(
         theme.getThemeComponentId(), Platform.ANDROID);
     // then
-    assertThat(response.downloadUrl()).isEqualTo(packageUrl);
+    assertThat(response.downloadUrl()).isEqualTo(fileManager.resolveFilePath(fileName));
   }
 
   @Test
@@ -215,16 +215,17 @@ class ThemeBuildServiceTest {
         ThemeBuildJob.createRunning(theme, Platform.ANDROID));
     ThemeBuildJob iosBuild = themeBuildJobRepository.saveAndFlush(
         ThemeBuildJob.createRunning(theme, Platform.IOS));
-    String androidUrl = fileManager.resolveFilePath("theme-download-android.apk");
-    String iosUrl = fileManager.resolveFilePath("theme-download-ios.ktheme");
+    String androidFileName = "theme-download-android.apk";
+    String iosFileName = "theme-download-ios.ktheme";
     // when
-    themeBuildStateService.markSuccess(androidBuild.getBuildId(), androidUrl, LocalDateTime.now());
-    themeBuildStateService.markSuccess(iosBuild.getBuildId(), iosUrl, LocalDateTime.now());
+    themeBuildStateService.markSuccess(androidBuild.getBuildId(), androidFileName,
+        LocalDateTime.now());
+    themeBuildStateService.markSuccess(iosBuild.getBuildId(), iosFileName, LocalDateTime.now());
     // then
     assertThat(themeBuildService.getDownloadUrl(theme.getThemeComponentId(), Platform.ANDROID)
-        .downloadUrl()).isEqualTo(androidUrl);
+        .downloadUrl()).isEqualTo(fileManager.resolveFilePath(androidFileName));
     assertThat(themeBuildService.getDownloadUrl(theme.getThemeComponentId(), Platform.IOS)
-        .downloadUrl()).isEqualTo(iosUrl);
+        .downloadUrl()).isEqualTo(fileManager.resolveFilePath(iosFileName));
   }
 
   @Test
