@@ -1,19 +1,24 @@
 package com.komentum.global.utils;
 
-import com.komentum.config.WebConfig;
-import com.komentum.global.properties.FileStorageProperty;
 import com.komentum.global.properties.OciObjectStorageProperty;
 import com.oracle.bmc.objectstorage.ObjectStorage;
+import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
+import com.oracle.bmc.objectstorage.model.PreauthenticatedRequest;
+import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.requests.GetObjectRequest;
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
+import com.oracle.bmc.objectstorage.responses.CreatePreauthenticatedRequestResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -29,17 +34,17 @@ public class OciFileManager implements FileManager {
 
   private final ObjectStorage objectStorage;
   private final OciObjectStorageProperty property;
-  private final FileStorageProperty fileStorageProperty;
 
   /**
-   * OCI 객체에 접근할 때 사용할 파일 URL 접두사를 생성한다.
+   * OCI 공개 이미지 객체에 접근할 때 사용할 고정 URL 접두사를 생성한다.
    *
    * @return 정규화된 파일 URL 접두사
    */
   private String resolveFilePathPrefix() {
-    String normalizedBaseUrl = StringUtils.removeTrailingSlash(fileStorageProperty.getBaseUrl());
-    String normalizedUploadUrlPrefix = StringUtils.trimSlash(WebConfig.UPLOAD_URL_PREFIX);
-    return normalizedBaseUrl + "/" + normalizedUploadUrlPrefix + "/";
+    return StringUtils.removeTrailingSlash(property.getEndpoint())
+        + "/n/" + property.getNamespace()
+        + "/b/" + property.getPublicImageBucketName()
+        + "/o/";
   }
 
   /**
@@ -55,7 +60,7 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * OCI 객체 이름을 URL 인코딩된 파일 접근 URL로 변환한다.
+   * 공개 이미지 객체 이름을 URL 인코딩된 고정 URL로 변환한다.
    *
    * @param fileName OCI 객체 이름
    * @return 파일 접근 URL
@@ -65,6 +70,38 @@ public class OciFileManager implements FileManager {
   public String resolveFilePath(String fileName) {
     validateFileName(fileName);
     return resolveFilePathPrefix() + UriUtils.encodePath(fileName, StandardCharsets.UTF_8);
+  }
+
+  /**
+   * 비공개 테마 패키지 객체에 대한 읽기 전용 PAR URL을 생성한다.
+   *
+   * @param fileName OCI 객체 이름
+   * @return 설정된 TTL 동안 유효한 다운로드 URL
+   * @throws IllegalArgumentException 파일명이 null이거나 비어 있는 경우
+   * @throws IllegalStateException OCI가 유효한 PAR을 반환하지 않은 경우
+   */
+  @Override
+  public String createDownloadUrl(String fileName) {
+    validateFileName(fileName);
+    CreatePreauthenticatedRequestDetails details = CreatePreauthenticatedRequestDetails.builder()
+        .name("theme-download-" + UUID.randomUUID())
+        .objectName(fileName)
+        .accessType(CreatePreauthenticatedRequestDetails.AccessType.ObjectRead)
+        .timeExpires(Date.from(Instant.now().plus(property.getParTtl())))
+        .build();
+    CreatePreauthenticatedRequestRequest request = CreatePreauthenticatedRequestRequest.builder()
+        .namespaceName(property.getNamespace())
+        .bucketName(property.getPrivateBucketName())
+        .createPreauthenticatedRequestDetails(details)
+        .build();
+    CreatePreauthenticatedRequestResponse response =
+        objectStorage.createPreauthenticatedRequest(request);
+    PreauthenticatedRequest par = response == null ? null : response.getPreauthenticatedRequest();
+    if (par == null || par.getAccessUri() == null || par.getAccessUri().isBlank()) {
+      throw new IllegalStateException("preauthenticated request is null or empty");
+    }
+    return StringUtils.removeTrailingSlash(property.getEndpoint()) + "/"
+        + StringUtils.trimSlash(par.getAccessUri());
   }
 
   /**
@@ -92,7 +129,7 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * 바이트 배열을 OCI Object Storage에 업로드하고 파일 접근 URL을 반환한다.
+   * 바이트 배열을 OCI 공개 이미지 버킷에 업로드하고 고정 URL을 반환한다.
    *
    * @param fileBytes 업로드할 파일 데이터
    * @param fileName OCI 객체 이름
@@ -108,7 +145,7 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * 입력 스트림을 OCI Object Storage에 업로드하고 스트림을 닫은 뒤 파일 접근 URL을 반환한다.
+   * 입력 스트림을 OCI 공개 이미지 버킷에 업로드하고 스트림을 닫은 뒤 고정 URL을 반환한다.
    *
    * @param is 업로드할 파일 입력 스트림
    * @param contentLength 파일 크기
@@ -120,6 +157,49 @@ public class OciFileManager implements FileManager {
    */
   @Override
   public String uploadFile(InputStream is, long contentLength, String fileName) {
+    uploadToBucket(is, contentLength, fileName, property.getPublicImageBucketName());
+    return resolveFilePath(fileName);
+  }
+
+  @Override
+  public String uploadAndGetFileName(byte[] fileBytes, String fileName, String fileExtension) {
+    Objects.requireNonNull(fileBytes, "fileBytes is null");
+    return uploadAndGetFileName(new ByteArrayInputStream(fileBytes), fileBytes.length,
+        fileName, fileExtension);
+  }
+
+  @Override
+  public String uploadAndGetFileName(InputStream is, long contentLength, String fileName,
+      String fileExtension) {
+    String resolvedFileName = resolveUploadFileName(fileName, fileExtension);
+    uploadToBucket(is, contentLength, resolvedFileName, property.getPrivateBucketName());
+    return resolvedFileName;
+  }
+
+  private String resolveUploadFileName(String fileName, String fileExtension) {
+    if (fileExtension == null || fileExtension.isBlank()) {
+      throw new IllegalArgumentException(
+          "failed to resolve upload file name : fileExtension is empty");
+    }
+    String extension = fileExtension.startsWith(".") ? fileExtension.substring(1) : fileExtension;
+    String suffix = "." + extension;
+    if (fileName == null || fileName.isBlank()) {
+      return UUID.randomUUID() + suffix;
+    }
+    return fileName.toLowerCase(Locale.ROOT).endsWith(suffix.toLowerCase(Locale.ROOT))
+        ? fileName : fileName + suffix;
+  }
+
+  /**
+   * 지정한 OCI 버킷에 객체를 업로드하고 입력 스트림을 닫는다.
+   *
+   * @param is 업로드할 파일 입력 스트림
+   * @param contentLength 파일 크기
+   * @param fileName OCI 객체 이름
+   * @param bucketName 대상 버킷 이름
+   */
+  private void uploadToBucket(InputStream is, long contentLength, String fileName,
+      String bucketName) {
     Objects.requireNonNull(is, "inputStream is null");
     validateFileName(fileName);
     String lowerCaseFileName = fileName.toLowerCase(Locale.ROOT);
@@ -131,7 +211,7 @@ public class OciFileManager implements FileManager {
     try (is) {
       PutObjectRequest request = PutObjectRequest.builder()
           .namespaceName(property.getNamespace())
-          .bucketName(property.getBucketName())
+          .bucketName(bucketName)
           .objectName(fileName)
           .contentLength(contentLength)
           .contentType(contentType)
@@ -141,7 +221,6 @@ public class OciFileManager implements FileManager {
     } catch (IOException e) {
       throw new UncheckedIOException("failed to close upload stream : " + fileName, e);
     }
-    return resolveFilePath(fileName);
   }
 
   /**
@@ -155,7 +234,7 @@ public class OciFileManager implements FileManager {
     validateFileName(fileName);
     DeleteObjectRequest request = DeleteObjectRequest.builder()
         .namespaceName(property.getNamespace())
-        .bucketName(property.getBucketName())
+        .bucketName(property.getPublicImageBucketName())
         .objectName(fileName)
         .build();
     objectStorage.deleteObject(request);
@@ -190,7 +269,7 @@ public class OciFileManager implements FileManager {
     validateFileName(fileName);
     GetObjectRequest request = GetObjectRequest.builder()
         .namespaceName(property.getNamespace())
-        .bucketName(property.getBucketName())
+        .bucketName(property.getPublicImageBucketName())
         .objectName(fileName)
         .build();
     return objectStorage.getObject(request).getInputStream();
