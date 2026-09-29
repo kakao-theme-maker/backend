@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,7 @@ public class AndroidThemeGenerator {
   private final AndroidColorStyleEditor androidColorStyleEditor;
   private final AndroidMetaDataEditor androidMetaDataEditor;
   private final FileManager fileManager;
+  private final ThemePathManager themePathManager;
 
   /**
    * Android 테마를 생성하여 APK를 빌드한 뒤 업로드하고, 업로드된 APK의 파일명을 반환한다. 작업이 종료되면 성공 여부와 관계없이 임시 작업 디렉토리를 정리한다.
@@ -75,23 +77,25 @@ public class AndroidThemeGenerator {
           "[AndroidThemeGenerator] ThemeComponent or ID cannot be null");
     }
     Integer themeId = themeComponent.getThemeComponentId();
+    String buildIdentifier = UUID.randomUUID().toString();
     try {
       // 1. 임시 테마를 임시 디렉토리에 만든다
       Path sourceThemePath = prepareSourceTheme(
-          ThemePathManager.getThemeSourceDir(themeId.toString()));
+          themePathManager.getThemeSourceDir(buildIdentifier));
       // 2. 임시 테마의 요소들을 수정한다
-      applyThemeImages(themeId);
-      applyThemeStyles(themeId);
+      applyThemeImages(themeId, buildIdentifier);
+      applyThemeStyles(themeId, buildIdentifier);
       // 3. 임시 테마 메타 데이터 수정
-      androidMetaDataEditor.editThemeName(themeId.toString(), themeComponent.getThemeName());
+      androidMetaDataEditor.editThemeName(buildIdentifier, themeComponent.getThemeName());
       // 3. 리소스가 수정된 임시 테마를 Docker 호스트 볼륨 마운트를 통해 빌드한다
+      // 빌드 시 themeIdentifier는 테마별로 고유하고 일정하게 유지해야 한다. (테마 버전 관리 및 업데이트에 사용)
       ProcessBuilder pb = createProcessBuilderForApkBuild(sourceThemePath,
           themeComponent.getThemeCode(), themeComponent.getVersionNumber());
       dockerProcessRunner.runDockerProcess(pb);
       // 4. Docker 호스트 볼륨 마운트를 통해 빌드한 결과물을 FileManager로 업로드 및 반환한다
-      return uploadTheme(themeId);
+      return uploadTheme(buildIdentifier);
     } finally {
-      FileSystemUtils.deleteRecursively(ThemePathManager.getThemeDir(themeId.toString()).toFile());
+      FileSystemUtils.deleteRecursively(themePathManager.getThemeDir(buildIdentifier).toFile());
     }
   }
 
@@ -120,7 +124,7 @@ public class AndroidThemeGenerator {
    *
    * @param themeId 테마 식별자
    */
-  private void applyThemeImages(Integer themeId) {
+  private void applyThemeImages(Integer themeId, String buildIdentifier) {
     // themeImage, platformComponentType 조회
     List<ThemeImage> themeImageList = themeImageRepository.fetchJoinAllByThemeComponentId(themeId)
         .stream()
@@ -148,7 +152,7 @@ public class AndroidThemeGenerator {
       }
     }
     // 이미지 파일을 테마에 저장
-    androidThemeImageEditor.editImages(themeId.toString(), androidImageList);
+    androidThemeImageEditor.editImages(themeId.toString(), buildIdentifier, androidImageList);
   }
 
   /**
@@ -156,7 +160,7 @@ public class AndroidThemeGenerator {
    *
    * @param themeId 테마 식별자
    */
-  private void applyThemeStyles(Integer themeId) {
+  private void applyThemeStyles(Integer themeId, String buildIdentifier) {
     // themeImage, platformColorStyle 조회
     List<ThemeStyle> themeStyleList = themeStyleRepository.fetchJoinAllByThemeComponentId(themeId)
         .stream()
@@ -182,7 +186,7 @@ public class AndroidThemeGenerator {
       }
     }
     // 색상 적용
-    androidColorStyleEditor.editColors(themeId.toString(), androidColorList);
+    androidColorStyleEditor.editColors(buildIdentifier, androidColorList);
   }
 
   /**
@@ -220,11 +224,11 @@ public class AndroidThemeGenerator {
   /**
    * 2-4. 생성된 APK를 업로드하고 업로드된 파일의 파일명(확장자 포함)을 반환한다.
    *
-   * @param themeId 테마 식별자
+   * @param buildIdentifier 테마 빌드 식별자
    * @return 업로드된 APK의 파일명
    */
-  private String uploadTheme(Integer themeId) {
-    Path outputApk = ThemePathManager.getAndroidThemeOutputPath(themeId.toString());
+  private String uploadTheme(String buildIdentifier) {
+    Path outputApk = themePathManager.getAndroidThemeOutputPath(buildIdentifier);
     try {
       long contentLength = Files.size(outputApk);
       String themeFileName = fileManager.uploadAndGetFileName(Files.newInputStream(outputApk),

@@ -30,6 +30,7 @@ public class AndroidThemeImageEditor {
   private final FileManager fileManager;
   private final ExecutorService executorService = Executors.newFixedThreadPool(
       IMAGE_EDITOR_THREAD_POOL_SIZE);
+  private final ThemePathManager themePathManager;
 
   @PreDestroy
   public void shutdown() {
@@ -42,9 +43,10 @@ public class AndroidThemeImageEditor {
    * @param themeId   theme id
    * @param component theme's component info
    */
-  private void editImage(String themeId, AndroidComponentDto component) throws IOException {
+  private void editImage(String themeId, String buildIdentifier, AndroidComponentDto component)
+      throws IOException {
     // 이미지 복사를 위한 임시 파일 생성
-    Path imagePath = ThemePathManager.getAndroidThemeImagePath(themeId, component);
+    Path imagePath = themePathManager.getAndroidThemeImagePath(buildIdentifier, component);
     Path tempImagePath = imagePath.resolveSibling(imagePath.getFileName() + ".temp");
     Files.createDirectories(tempImagePath.getParent());
     // 이미지 다운로드 후 임시 파일에 복사
@@ -72,11 +74,12 @@ public class AndroidThemeImageEditor {
    * @param themeId    theme id
    * @param components theme's component info list
    */
-  public void editImages(String themeId, List<AndroidComponentDto> components) {
+  public void editImages(String themeId, String buildIdentifier,
+      List<AndroidComponentDto> components) {
     List<CompletableFuture<Void>> futures = components.stream()
         .map(component -> CompletableFuture.runAsync(() -> {
           try {
-            editImage(themeId, component);
+            editImage(themeId, buildIdentifier, component);
           } catch (IOException e) {
             log.error(
                 "[AndroidThemeImageEditor] Failed to save image on theme: {}",
