@@ -58,14 +58,12 @@ public class ThemeBuildService {
     ThemeBuildJob job = themeBuildJobRepository.findById(buildId)
         .orElseThrow(() -> new ResourceNotFoundException("Theme build not found"));
     validateThemeAccess(job.getThemeComponent(), "No permission to access theme build");
-    String downloadUrl = job.getFileName() == null
-        ? null
-        : fileManager.resolveFilePath(job.getFileName());
-    return new ThemeBuildStatusResponse(job.getStatus(), downloadUrl);
+    return new ThemeBuildStatusResponse(job.getStatus(), null);
   }
 
   /**
-   * themeComponentId와 platform으로 가장 최근에 완료된 테마 빌드의 다운로드 URL을 조회한다. URL은 FileManager를 통해 조회한다.
+   * themeComponentId와 platform으로 가장 최근에 완료된 테마 빌드의 다운로드 URL을
+   * FileManager를 통해 생성한다.
    *
    * @param themeComponentId 다운로드할 테마 ID
    * @param platform         다운로드할 플랫폼
@@ -83,7 +81,7 @@ public class ThemeBuildService {
         .orElseThrow(() -> new ResourceNotFoundException(
             "Completed theme build not found. themeComponentId: " + themeComponentId
                 + ", platform: " + platform));
-    return new ThemeDownloadResponse(fileManager.resolveFilePath(job.getFileName()));
+    return new ThemeDownloadResponse(fileManager.createDownloadUrl(job.getFileName()));
   }
 
   private void validateThemeAccess(ThemeComponent themeComponent, String errorMessage) {
