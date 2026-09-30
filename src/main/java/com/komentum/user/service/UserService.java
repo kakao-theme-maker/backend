@@ -7,7 +7,7 @@ import com.komentum.post.service.PostService;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserBirthUpdateDto;
 import com.komentum.user.dto.UserGenderUpdateDto;
-import com.komentum.user.dto.UserNameUpdateDto;
+import com.komentum.user.dto.UserProfileUpdateDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.repository.FollowRepository;
 import com.komentum.user.repository.UserRepository;
@@ -66,11 +66,16 @@ public class UserService implements UserEntityFinder {
         .orElseThrow(() -> new RuntimeException("user not found"));
   }
 
-  // 유저 이름 수정
+  // 유저 프로필 수정
   @Transactional
-  public UserResponseDto updateUserName(String publicUserId, UserNameUpdateDto updateDto) {
+  public UserResponseDto updateUserProfile(String publicUserId, UserProfileUpdateDto updateDto) {
     User user = findUserEntityByPublicId(publicUserId);
-    user.setName(updateDto.getName());
+    if (updateDto.getName() != null) {
+      user.setName(updateDto.getName());
+    }
+    if (updateDto.getIntroduce() != null) {
+      user.setIntroduce(updateDto.getIntroduce());
+    }
     return getUserByPublicId(publicUserId);
   }
 

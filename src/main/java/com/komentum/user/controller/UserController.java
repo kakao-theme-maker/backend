@@ -5,7 +5,7 @@ import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
 import com.komentum.user.dto.UserBirthUpdateDto;
 import com.komentum.user.dto.UserGenderUpdateDto;
-import com.komentum.user.dto.UserNameUpdateDto;
+import com.komentum.user.dto.UserProfileUpdateDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.service.UserAuthService;
 import com.komentum.user.service.UserService;
@@ -72,13 +72,13 @@ public class UserController {
     return ResponseEntity.ok("success");
   }
 
-  // 유저 이름 수정
-  @PatchMapping("/me/name")
-  @Operation(summary = "현재 사용자의 이름을 수정한다")
-  public ResponseEntity<CustomResponse<UserResponseDto>> updateUserName(
-      @Valid @RequestBody UserNameUpdateDto updateDto,
+  // 유저 프로필 수정
+  @PatchMapping("/me")
+  @Operation(summary = "현재 사용자의 이름과 한줄소개를 수정한다")
+  public ResponseEntity<CustomResponse<UserResponseDto>> updateUserProfile(
+      @Valid @RequestBody UserProfileUpdateDto updateDto,
       @AuthenticationPrincipal CustomUserDetails userDetails) {
-    UserResponseDto updatedUser = userService.updateUserName(
+    UserResponseDto updatedUser = userService.updateUserProfile(
         userDetails.getPublicUserId(), updateDto);
     return ResponseEntity.ok(CustomResponse.ok(updatedUser));
   }
