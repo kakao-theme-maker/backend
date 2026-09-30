@@ -3,6 +3,7 @@ package com.komentum.post.controller;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.post.facade.PreferManagementFacade;
 import com.komentum.post.service.PreferService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class PreferController {
   private final PreferManagementFacade preferManagementFacade;
   private final PreferService preferService;
 
+  @Hidden
   @GetMapping("/{postId}/prefer")
   @Operation(summary = "인증된 사용자가 ID=postId인 게시글의 추천 수를 조회한다")
   public ResponseEntity<Long> getPreferCount(@PathVariable Long postId) {

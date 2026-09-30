@@ -5,6 +5,7 @@ import com.komentum.post.dto.CategoryDto.CategoryCreateDto;
 import com.komentum.post.dto.CategoryDto.CategoryResponseDto;
 import com.komentum.post.dto.CategoryDto.CategoryUpdateDto;
 import com.komentum.post.facade.CategoryManagementFacade;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
