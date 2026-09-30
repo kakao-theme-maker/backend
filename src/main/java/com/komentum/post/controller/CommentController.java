@@ -10,6 +10,7 @@ import com.komentum.post.service.CommentLikeService;
 import com.komentum.post.service.CommentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +58,7 @@ public class CommentController {
             .toList());
   }
 
+  @Hidden
   @GetMapping("/comments/{commentId}")
   @Operation(summary = "현재 인증된 사용자가 ID=commentId인 특정 댓글을 조회한다 (현재 사용자 기준 좋아요 여부 포함)")
   public ResponseEntity<CommentResponse> getComment(

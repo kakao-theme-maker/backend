@@ -6,6 +6,7 @@ import com.komentum.designcomponent.dto.DesignComponentDto;
 import com.komentum.designcomponent.dto.UpdateDesignComponentRequest;
 import com.komentum.designcomponent.facade.DesignComponentFacade;
 import com.komentum.designcomponent.service.DesignComponentService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -118,6 +119,7 @@ public class DesignComponentController {
     return ResponseEntity.ok(res);
   }
 
+  @Hidden
   @GetMapping("/bookmarked")
   @Operation(summary = "북마크한 게시글들의 design component 목록을 조회한다")
   public ResponseEntity<List<DesignComponentDto>> findBookmarkedDesignComponents(

@@ -8,6 +8,7 @@ import com.komentum.designcomponent.dto.SeedResult;
 import com.komentum.designcomponent.mapper.ComponentTypeMapper;
 import com.komentum.designcomponent.service.ComponentTypeService;
 import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -31,6 +32,7 @@ public class ComponentTypeController {
   private final ComponentTypeSeeder componentTypeSeeder;
   private final ComponentTypeMapper componentTypeMapper;
 
+  @Hidden
   @PostMapping
   @Operation(summary = "Admin 사용자가 새로운 component type 생성")
   public ResponseEntity<ComponentTypeDto> createComponentType(
@@ -39,6 +41,7 @@ public class ComponentTypeController {
     return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(createdComponentType));
   }
 
+  @Hidden
   @GetMapping("/{componentTypeId}")
   @Operation(summary = "인증된 사용자가 ID=componentTypeId인 component type 조회")
   public ResponseEntity<ComponentTypeDto> getComponentTypeById(
@@ -57,6 +60,7 @@ public class ComponentTypeController {
     return ResponseEntity.ok(componentTypes);
   }
 
+  @Hidden
   @PutMapping("/{componentTypeId}")
   @Operation(summary = "Admin 사용자가 ID=componentTypeId인 component type 수정")
   public ResponseEntity<ComponentTypeDto> updateComponentType(
@@ -67,6 +71,7 @@ public class ComponentTypeController {
     return ResponseEntity.ok(componentTypeMapper.toComponentTypeDto(updatedComponentType));
   }
 
+  @Hidden
   @PutMapping("/seed")
   @Operation(summary = "Admin 사용자가 시드 데이터를 기반으로 component type 정보를 수정/삽입한다")
   public ResponseEntity<SeedResult> upsertComponentTypeWithSeed() {

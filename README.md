@@ -270,6 +270,21 @@ Docker 이미지 빌드 시 Gradle이 `backend_config`의 설정 파일을 복�
 | `PUT` | `/api/platform-component-types/seeds` | 플랫폼별 컴포넌트 타입 seed 반영 |
 | `PUT` | `/api/platform-color-styles/seeds` | 플랫폼별 색상 스타일 seed 반영 |
 
+### Swagger 미노출 API
+
+다음 API는 호출 기능은 유지하지만, `@Hidden`을 적용해 Swagger/OpenAPI 문서에서는 제외합니다.
+
+| 영역 | 미노출 API |
+| --- | --- |
+| Color Style | `POST /api/color-styles`<br>`GET, PUT /api/color-styles/{colorStyleId}`<br>`PUT /api/color-styles/seed` |
+| Component Type | `POST /api/component-types`<br>`GET, PUT /api/component-types/{componentTypeId}`<br>`PUT /api/component-types/seed` |
+| Platform Seed | `PUT /api/platform-color-styles/seeds`<br>`PUT /api/platform-component-types/seeds` |
+| Comment / Prefer | `GET /api/posts/comments/{commentId}`<br>`GET /api/comments/{commentId}/like`<br>`GET /api/posts/{postId}/prefer` |
+| Tag | `GET /api/posts/{postId}/tags`<br>`PUT, DELETE /api/posts/tags/{tagId}` |
+| Category | `GET, POST /api/categories`<br>`PATCH, DELETE /api/categories/{categoryId}`<br>`PUT, DELETE /api/categories/{categoryId}/posts/{postId}` |
+| Bookmark | `PUT, DELETE /api/bookmarks/posts/{postId}`<br>`GET /api/users/me/bookmarked-posts`<br>`GET /api/design-components/bookmarked`<br>`GET /api/themes/bookmarked` |
+| User | `PATCH /api/users/me/gender`<br>`PATCH /api/users/me/birth` |
+
 ## 운영 및 보안 메모
 
 - JWT secret, Kakao OAuth client secret, AWS access key, DB password는 코드와 README에 직접 기록하지 않습니다.
