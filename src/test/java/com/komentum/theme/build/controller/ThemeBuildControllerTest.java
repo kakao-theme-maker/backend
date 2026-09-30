@@ -1,9 +1,14 @@
 package com.komentum.theme.build.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,7 +66,7 @@ class ThemeBuildControllerTest {
   private ThemeBuildJobRepository themeBuildJobRepository;
   @Autowired
   private ThemeBuildStateService themeBuildStateService;
-  @Autowired
+  @MockitoBean
   private FileManager fileManager;
 
   @MockitoBean
@@ -122,11 +128,11 @@ class ThemeBuildControllerTest {
   }
 
   @Test
-  @DisplayName("polling 응답은 RUNNING, SUCCESS, FAILED 상태와 downloadUrl을 제공한다")
+  @DisplayName("polling 응답은 PAR을 생성하지 않고 RUNNING, SUCCESS, FAILED 상태를 제공한다")
   void findThemeBuild_returnsAllTerminalStates() throws Exception {
     Long runningBuildId = startAndReadBuildId(theme, owner);
 
-    assertStatusResponse(performFind(runningBuildId, owner), "RUNNING", null);
+    assertStatusResponse(performFind(runningBuildId, owner), "RUNNING");
 
     String fileName = "theme.apk";
     assertThat(themeBuildStateService.markSuccess(
@@ -134,15 +140,15 @@ class ThemeBuildControllerTest {
         fileName,
         LocalDateTime.now()
     )).isTrue();
-    assertStatusResponse(performFind(runningBuildId, owner), "SUCCESS",
-        fileManager.resolveFilePath(fileName));
+    assertStatusResponse(performFind(runningBuildId, owner), "SUCCESS");
 
     Long failedBuildId = startAndReadBuildId(theme, owner);
     themeBuildStateService.markFailed(
         failedBuildId,
         LocalDateTime.now()
     );
-    assertStatusResponse(performFind(failedBuildId, owner), "FAILED", null);
+    assertStatusResponse(performFind(failedBuildId, owner), "FAILED");
+    verifyNoInteractions(fileManager);
   }
 
   @Test
@@ -238,20 +244,36 @@ class ThemeBuildControllerTest {
     User admin = userRepository.save(
         UserFixture.user("theme-build-admin@test.com", UserRole.ADMIN));
 
-    assertStatusResponse(performFind(buildId, admin), "RUNNING", null);
+    assertStatusResponse(performFind(buildId, admin), "RUNNING");
   }
 
   @Test
-  @DisplayName("완료된 테마 다운로드 URL을 조회하면 200과 다운로드 URL을 반환한다")
+  @DisplayName("다른 로그인 사용자도 최신 성공 테마 다운로드 URL을 조회하면 200과 no-store를 반환한다")
   void getThemeDownloadUrl_success() throws Exception {
     Long buildId = startAndReadBuildId(theme, owner);
     String fileName = "theme.apk";
+    String downloadUrl = "https://objectstorage.example.com/latest-theme-par";
     themeBuildStateService.markSuccess(buildId, fileName, LocalDateTime.now());
-    ResultActions result = performDownloadUrl(theme, owner, Platform.ANDROID)
-        .andExpect(status().isOk());
+    given(fileManager.createDownloadUrl(fileName)).willReturn(downloadUrl);
+    User otherUser = userRepository.save(
+        UserFixture.user("theme-download-reader@test.com", UserRole.USER));
+    ResultActions result = performDownloadUrl(theme, otherUser, Platform.ANDROID)
+        .andExpect(status().isOk())
+        .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
     ThemeDownloadResponse response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
     });
-    assertThat(response.downloadUrl()).isEqualTo(fileManager.resolveFilePath(fileName));
+    assertThat(response.downloadUrl()).isEqualTo(downloadUrl);
+    verify(fileManager).createDownloadUrl(fileName);
+  }
+
+  @Test
+  @DisplayName("인증하지 않은 사용자는 최신 성공 테마 다운로드 URL을 조회할 수 없다")
+  void getThemeDownloadUrl_unauthorized() throws Exception {
+    mockMvc.perform(get("/api/themes/{themeComponentId}/download", theme.getThemeComponentId())
+            .param("platform", Platform.ANDROID.name()))
+        .andExpect(status().isUnauthorized());
+
+    verify(fileManager, never()).createDownloadUrl(anyString());
   }
 
   @Test
@@ -311,19 +333,14 @@ class ThemeBuildControllerTest {
 
   private void assertStatusResponse(
       ResultActions result,
-      String expectedStatus,
-      String expectedDownloadUrl
+      String expectedStatus
   ) throws Exception {
     result.andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(expectedStatus));
     JsonNode body = readBody(result);
     assertThat(body.size()).isEqualTo(2);
     assertThat(body.has("downloadUrl")).isTrue();
-    if (expectedDownloadUrl == null) {
-      assertThat(body.get("downloadUrl").isNull()).isTrue();
-    } else {
-      assertThat(body.get("downloadUrl").asText()).isEqualTo(expectedDownloadUrl);
-    }
+    assertThat(body.get("downloadUrl").isNull()).isTrue();
   }
 
   private JsonNode readBody(ResultActions result) throws Exception {
