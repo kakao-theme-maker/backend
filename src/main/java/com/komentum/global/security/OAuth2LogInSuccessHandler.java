@@ -2,10 +2,8 @@ package com.komentum.global.security;
 
 import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomOAuth2User;
-import com.komentum.global.properties.AuthProperty;
 import com.komentum.global.security.cookie.TokenCookieManager;
 import com.komentum.user.service.TokenService;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -19,13 +17,13 @@ import org.springframework.stereotype.Component;
 public class OAuth2LogInSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
   private final JwtUtils jwtUtils;
-  private final AuthProperty authProperty;
+  private final OAuth2RedirectUriResolver oAuth2RedirectUriResolver;
   private final TokenCookieManager tokenCookieManager;
   private final TokenService tokenService;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-      Authentication authentication) throws IOException, ServletException {
+      Authentication authentication) throws IOException {
     CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
 
     String accessToken = jwtUtils.generateAccessToken(oAuth2User.getUserIdentifier());
@@ -33,7 +31,7 @@ public class OAuth2LogInSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     tokenCookieManager.addTokenOnCookie(response, accessToken, refreshToken);
     tokenService.saveAccessAndRefreshToken(oAuth2User.getUserIdentifier(), accessToken,
         refreshToken);
-    String redirectUrl = authProperty.getOauth2RedirectUrl();
+    String redirectUrl = oAuth2RedirectUriResolver.resolve(request);
     response.sendRedirect(redirectUrl);
   }
 }

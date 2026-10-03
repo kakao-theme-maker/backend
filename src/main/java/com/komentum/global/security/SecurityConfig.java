@@ -53,6 +53,10 @@ public class SecurityConfig {
 
   private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
+  private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
+
+  private final RedirectAwareAuthorizationRequestRepository redirectAwareAuthorizationRequestRepository;
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
@@ -86,7 +90,10 @@ public class SecurityConfig {
         })
         // oauth2 설정
         .oauth2Login(oauth -> {
-          oauth.userInfoEndpoint(c -> c
+          oauth.authorizationEndpoint(endpoint -> endpoint
+                  .authorizationRequestResolver(customAuthorizationRequestResolver)
+                  .authorizationRequestRepository(redirectAwareAuthorizationRequestRepository))
+              .userInfoEndpoint(c -> c
                   .userService(customOauth2UserService))
               .successHandler(oAuth2LogInSuccessHandler)
               .failureHandler(oAuth2LoginFailureHandler);
