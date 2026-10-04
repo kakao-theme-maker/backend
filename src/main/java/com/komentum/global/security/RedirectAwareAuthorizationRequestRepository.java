@@ -22,7 +22,6 @@ public class RedirectAwareAuthorizationRequestRepository implements
 
   /**
    * HttpServletRequest의 OAuth2AuthorizationRequest를 추출 및 반환한다
-   * 디폴트 AuthorizationRequestRepository에 역할 위임 ( 인터페이스 구현 목적 )
    * */
   @Override
   public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -31,7 +30,6 @@ public class RedirectAwareAuthorizationRequestRepository implements
 
   /**
    * HttpServletRequest와 HttpServletResponse에 authorizationRequest를 저장한다
-   * 디폴트 AuthorizationRequestRepository에 역할 위임 ( 인터페이스 구현 목적 )
    * */
   @Override
   public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest,
@@ -39,6 +37,9 @@ public class RedirectAwareAuthorizationRequestRepository implements
     delegate.saveAuthorizationRequest(authorizationRequest, request, response);
   }
 
+  /**
+   * OAuth2AuthorizationRequest를 삭제 및 추출하고, HttpSerlvetRequest에 FE의 redirect uri를 저장한다
+   * */
   @Override
   public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
       HttpServletResponse response) {
