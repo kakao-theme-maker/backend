@@ -48,7 +48,7 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * OCI 객체 이름으로 사용할 파일명이 유효한지 검증한다.
+   * 파일명이 null이거나 공백이면 예외를 던진다.
    *
    * @param fileName 검증할 파일명
    * @throws IllegalArgumentException 파일명이 null이거나 비어 있는 경우
@@ -105,9 +105,9 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * 파일 접근 URL에서 URL 디코딩된 OCI 객체 이름을 추출한다.
+   * OCI 공개 이미지 객체의 고정 URL에서 URL 디코딩된 객체 이름을 추출한다.
    *
-   * @param fileUrl 파일 접근 URL
+   * @param fileUrl 공개 이미지 객체의 고정 URL
    * @return OCI 객체 이름
    * @throws IllegalArgumentException URL이 비어 있거나 접두사와 일치하지 않거나 객체 이름이 없는 경우
    */
@@ -161,6 +161,9 @@ public class OciFileManager implements FileManager {
     return resolveFilePath(fileName);
   }
 
+  /**
+   * 바이트 배열을 OCI 비공개 테마 패키지 버킷에 업로드하고 URL이 아닌 객체 이름(확장자 포함)을 반환한다.
+   */
   @Override
   public String uploadAndGetFileName(byte[] fileBytes, String fileName, String fileExtension) {
     Objects.requireNonNull(fileBytes, "fileBytes is null");
@@ -168,6 +171,9 @@ public class OciFileManager implements FileManager {
         fileName, fileExtension);
   }
 
+  /**
+   * 입력 스트림을 OCI 비공개 테마 패키지 버킷에 업로드하고 닫은 뒤 URL이 아닌 객체 이름(확장자 포함)을 반환한다.
+   */
   @Override
   public String uploadAndGetFileName(InputStream is, long contentLength, String fileName,
       String fileExtension) {
@@ -176,6 +182,9 @@ public class OciFileManager implements FileManager {
     return resolvedFileName;
   }
 
+  /**
+   * 파일명이 없으면 UUID를 사용하고, 요청한 확장자로 끝나지 않으면 확장자를 덧붙인다.
+   */
   private String resolveUploadFileName(String fileName, String fileExtension) {
     if (fileExtension == null || fileExtension.isBlank()) {
       throw new IllegalArgumentException(
@@ -224,7 +233,7 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * 파일명에 해당하는 OCI 객체를 삭제한다.
+   * OCI 공개 이미지 버킷에서 파일명에 해당하는 객체를 삭제한다.
    *
    * @param fileName 삭제할 OCI 객체 이름
    * @throws IllegalArgumentException 파일명이 null이거나 비어 있는 경우
@@ -241,7 +250,7 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * 파일명에 해당하는 OCI 객체를 바이트 배열로 다운로드한다.
+   * OCI 공개 이미지 버킷에서 파일명에 해당하는 객체를 바이트 배열로 다운로드한다.
    *
    * @param fileName 다운로드할 OCI 객체 이름
    * @return 다운로드한 파일 데이터
@@ -258,7 +267,7 @@ public class OciFileManager implements FileManager {
   }
 
   /**
-   * 파일명에 해당하는 OCI 객체의 응답 스트림을 반환한다.
+   * OCI 공개 이미지 버킷에서 파일명에 해당하는 객체의 응답 스트림을 반환한다.
    *
    * @param fileName 다운로드할 OCI 객체 이름
    * @return 호출자가 닫아야 하는 OCI 객체 응답 스트림
