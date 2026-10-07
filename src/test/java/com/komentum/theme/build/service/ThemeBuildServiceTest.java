@@ -3,6 +3,7 @@ package com.komentum.theme.build.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -68,7 +69,7 @@ class ThemeBuildServiceTest {
   private EntityManager entityManager;
   @Autowired
   private ThemeBuildStateService themeBuildStateService;
-  @Autowired
+  @MockitoBean
   private FileManager fileManager;
 
   @MockitoBean
@@ -193,18 +194,21 @@ class ThemeBuildServiceTest {
   }
 
   @Test
-  @DisplayName("완료된 빌드가 있으면 FileManager로 조회한 다운로드 URL을 반환한다")
-  void getDownloadUrl_returnsResolvedUrl() {
+  @DisplayName("완료된 빌드가 있으면 FileManager로 생성한 다운로드 URL을 반환한다")
+  void getDownloadUrl_returnsCreatedUrl() {
     // given
     ThemeBuildJob build = themeBuildJobRepository.saveAndFlush(
         ThemeBuildJob.createRunning(theme, Platform.ANDROID));
     String fileName = "theme-download-test.apk";
+    String downloadUrl = "https://objectstorage.example.com/theme-download-par";
     themeBuildStateService.markSuccess(build.getBuildId(), fileName, LocalDateTime.now());
+    given(fileManager.createDownloadUrl(fileName)).willReturn(downloadUrl);
     // when
     ThemeDownloadResponse response = themeBuildService.getDownloadUrl(
         theme.getThemeComponentId(), Platform.ANDROID);
     // then
-    assertThat(response.downloadUrl()).isEqualTo(fileManager.resolveFilePath(fileName));
+    assertThat(response.downloadUrl()).isEqualTo(downloadUrl);
+    verify(fileManager).createDownloadUrl(fileName);
   }
 
   @Test
@@ -217,15 +221,19 @@ class ThemeBuildServiceTest {
         ThemeBuildJob.createRunning(theme, Platform.IOS));
     String androidFileName = "theme-download-android.apk";
     String iosFileName = "theme-download-ios.ktheme";
+    String androidDownloadUrl = "https://objectstorage.example.com/android-par";
+    String iosDownloadUrl = "https://objectstorage.example.com/ios-par";
     // when
     themeBuildStateService.markSuccess(androidBuild.getBuildId(), androidFileName,
         LocalDateTime.now());
     themeBuildStateService.markSuccess(iosBuild.getBuildId(), iosFileName, LocalDateTime.now());
+    given(fileManager.createDownloadUrl(androidFileName)).willReturn(androidDownloadUrl);
+    given(fileManager.createDownloadUrl(iosFileName)).willReturn(iosDownloadUrl);
     // then
     assertThat(themeBuildService.getDownloadUrl(theme.getThemeComponentId(), Platform.ANDROID)
-        .downloadUrl()).isEqualTo(fileManager.resolveFilePath(androidFileName));
+        .downloadUrl()).isEqualTo(androidDownloadUrl);
     assertThat(themeBuildService.getDownloadUrl(theme.getThemeComponentId(), Platform.IOS)
-        .downloadUrl()).isEqualTo(fileManager.resolveFilePath(iosFileName));
+        .downloadUrl()).isEqualTo(iosDownloadUrl);
   }
 
   @Test

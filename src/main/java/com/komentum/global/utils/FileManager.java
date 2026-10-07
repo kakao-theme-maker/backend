@@ -23,6 +23,13 @@ public interface FileManager {
   String uploadFile(InputStream is, long contentLength, String fileName);
 
   /**
+   * 다운로드용 URL을 생성한다. 만료 URL이 필요 없는 구현체는 기존 파일 URL을 반환한다.
+   */
+  default String createDownloadUrl(String fileName) {
+    return resolveFilePath(fileName);
+  }
+
+  /**
    * 파일을 업로드하고, 저장소에 저장된 파일명(항상 확장자 포함)을 반환한다.
    * fileName이 null이거나 공백이면 UUID + fileExtension 형식(예: 550e8400-....apk)으로 생성한다.
    * fileName이 지정되었지만 fileExtension으로 끝나지 않으면 확장자를 덧붙인다.
