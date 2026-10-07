@@ -236,7 +236,7 @@ public class DesignComponentService {
     try {
       String fileName =
           "design-components_" + UUID.randomUUID() + "_" + image.getOriginalFilename();
-      fileManager.uploadFile(image.getBytes(), fileName);
+      fileManager.uploadPublicFile(image.getBytes(), fileName);
       return fileName;
     } catch (IOException e) {
       throw new RuntimeException("Failed to upload image", e);

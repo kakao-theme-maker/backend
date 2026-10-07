@@ -6,31 +6,33 @@ import java.util.UUID;
 public interface FileManager {
 
   /**
-   * 파일명을 파일 URL로 변환한다
+   * 공개 파일명을 고정 파일 URL로 변환한다
    * */
-  String resolveFilePath(String fileName);
+  String resolvePublicFileUrl(String fileName);
 
   /**
-   * 파일 URL을 파일명으로 변환한다
+   * 공개 파일 URL을 파일명으로 변환한다
    * */
   String convertUrlToFileName(String url);
 
   /**
-   * 파일을 업로드하고, URL을 반환한다
+   * 공개 파일을 업로드하고, 고정 URL을 반환한다
    * */
-  String uploadFile(byte[] fileBytes, String fileName);
+  String uploadPublicFile(byte[] fileBytes, String fileName);
 
-  String uploadFile(InputStream is, long contentLength, String fileName);
+  String uploadPublicFile(InputStream is, long contentLength, String fileName);
 
   /**
-   * 다운로드용 URL을 생성한다. 만료 URL이 필요 없는 구현체는 기존 파일 URL을 반환한다.
+   * 테마 패키지 다운로드용 URL을 생성한다.
+   * 기본 구현은 공개 파일의 고정 URL을 반환하고, OCI 구현은 비공개 객체의 읽기 전용 PAR URL을 발급한다.
    */
-  default String createDownloadUrl(String fileName) {
-    return resolveFilePath(fileName);
+  default String createThemePackageDownloadUrl(String fileName) {
+    return resolvePublicFileUrl(fileName);
   }
 
   /**
-   * 파일을 업로드하고, 저장소에 저장된 파일명(항상 확장자 포함)을 반환한다.
+   * 테마 패키지를 업로드하고, 저장소에 저장된 파일명(항상 확장자 포함)을 반환한다.
+   * 기본 구현은 공개 저장소에 업로드하고, OCI 구현은 비공개 버킷에 업로드한다.
    * fileName이 null이거나 공백이면 UUID + fileExtension 형식(예: 550e8400-....apk)으로 생성한다.
    * fileName이 지정되었지만 fileExtension으로 끝나지 않으면 확장자를 덧붙인다.
    *
@@ -38,20 +40,21 @@ public interface FileManager {
    * @param fileExtension 파일 확장자 ("apk" 또는 ".apk"), 필수
    * @throws IllegalArgumentException fileExtension이 비어 있는 경우
    * */
-  default String uploadAndGetFileName(byte[] fileBytes, String fileName, String fileExtension) {
+  default String uploadThemePackageAndGetFileName(byte[] fileBytes, String fileName,
+      String fileExtension) {
     String resolvedFileName = resolveUploadFileName(fileName, fileExtension);
-    uploadFile(fileBytes, resolvedFileName);
+    uploadPublicFile(fileBytes, resolvedFileName);
     return resolvedFileName;
   }
 
   /**
-   * 파일을 업로드하고, 저장소에 저장된 파일명(확장자 포함)을 반환한다.
-   * 파일명 생성 규칙은 {@link #uploadAndGetFileName(byte[], String, String)}과 동일하다.
+   * 테마 패키지를 업로드하고, 저장소에 저장된 파일명(확장자 포함)을 반환한다.
+   * 저장 위치와 파일명 생성 규칙은 {@link #uploadThemePackageAndGetFileName(byte[], String, String)}과 동일하다.
    * */
-  default String uploadAndGetFileName(InputStream is, long contentLength, String fileName,
-      String fileExtension) {
+  default String uploadThemePackageAndGetFileName(InputStream is, long contentLength,
+      String fileName, String fileExtension) {
     String resolvedFileName = resolveUploadFileName(fileName, fileExtension);
-    uploadFile(is, contentLength, resolvedFileName);
+    uploadPublicFile(is, contentLength, resolvedFileName);
     return resolvedFileName;
   }
 

@@ -53,7 +53,7 @@ public class BoardManagementHelper {
     String extension = extractExtension(originFileName);
     String previewImageFileName = generateUniqueFileName(entity, extension);
     try {
-      String imageUrl = fileManager.uploadFile(previewImage, previewImageFileName);
+      String imageUrl = fileManager.uploadPublicFile(previewImage, previewImageFileName);
       if (imageUrl == null) {
         throw new RuntimeException("Failed to upload preview image file");
       }
@@ -68,7 +68,7 @@ public class BoardManagementHelper {
     if (fileName == null) {
       return null;
     }
-    return fileManager.resolveFilePath(fileName);
+    return fileManager.resolvePublicFileUrl(fileName);
   }
 
   public void deleteFileSilently(String fileName, String errorMessage) {

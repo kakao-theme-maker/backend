@@ -67,7 +67,7 @@ public class OciFileManager implements FileManager {
    * @throws IllegalArgumentException 파일명이 null이거나 비어 있는 경우
    */
   @Override
-  public String resolveFilePath(String fileName) {
+  public String resolvePublicFileUrl(String fileName) {
     validateFileName(fileName);
     return resolveFilePathPrefix() + UriUtils.encodePath(fileName, StandardCharsets.UTF_8);
   }
@@ -81,7 +81,7 @@ public class OciFileManager implements FileManager {
    * @throws IllegalStateException OCI가 유효한 PAR을 반환하지 않은 경우
    */
   @Override
-  public String createDownloadUrl(String fileName) {
+  public String createThemePackageDownloadUrl(String fileName) {
     validateFileName(fileName);
     CreatePreauthenticatedRequestDetails details = CreatePreauthenticatedRequestDetails.builder()
         .name("theme-download-" + UUID.randomUUID())
@@ -139,9 +139,9 @@ public class OciFileManager implements FileManager {
    * @throws UncheckedIOException 업로드 스트림을 닫지 못한 경우
    */
   @Override
-  public String uploadFile(byte[] fileBytes, String fileName) {
+  public String uploadPublicFile(byte[] fileBytes, String fileName) {
     Objects.requireNonNull(fileBytes, "fileBytes is null");
-    return uploadFile(new ByteArrayInputStream(fileBytes), fileBytes.length, fileName);
+    return uploadPublicFile(new ByteArrayInputStream(fileBytes), fileBytes.length, fileName);
   }
 
   /**
@@ -156,18 +156,19 @@ public class OciFileManager implements FileManager {
    * @throws UncheckedIOException 업로드 스트림을 닫지 못한 경우
    */
   @Override
-  public String uploadFile(InputStream is, long contentLength, String fileName) {
+  public String uploadPublicFile(InputStream is, long contentLength, String fileName) {
     uploadToBucket(is, contentLength, fileName, property.getPublicImageBucketName());
-    return resolveFilePath(fileName);
+    return resolvePublicFileUrl(fileName);
   }
 
   /**
    * 바이트 배열을 OCI 비공개 테마 패키지 버킷에 업로드하고 URL이 아닌 객체 이름(확장자 포함)을 반환한다.
    */
   @Override
-  public String uploadAndGetFileName(byte[] fileBytes, String fileName, String fileExtension) {
+  public String uploadThemePackageAndGetFileName(byte[] fileBytes, String fileName,
+      String fileExtension) {
     Objects.requireNonNull(fileBytes, "fileBytes is null");
-    return uploadAndGetFileName(new ByteArrayInputStream(fileBytes), fileBytes.length,
+    return uploadThemePackageAndGetFileName(new ByteArrayInputStream(fileBytes), fileBytes.length,
         fileName, fileExtension);
   }
 
@@ -175,8 +176,8 @@ public class OciFileManager implements FileManager {
    * 입력 스트림을 OCI 비공개 테마 패키지 버킷에 업로드하고 닫은 뒤 URL이 아닌 객체 이름(확장자 포함)을 반환한다.
    */
   @Override
-  public String uploadAndGetFileName(InputStream is, long contentLength, String fileName,
-      String fileExtension) {
+  public String uploadThemePackageAndGetFileName(InputStream is, long contentLength,
+      String fileName, String fileExtension) {
     String resolvedFileName = resolveUploadFileName(fileName, fileExtension);
     uploadToBucket(is, contentLength, resolvedFileName, property.getPrivateBucketName());
     return resolvedFileName;

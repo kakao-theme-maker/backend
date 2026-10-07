@@ -50,7 +50,7 @@ public class LocalFileManager implements FileManager {
   }
 
   @Override
-  public String resolveFilePath(String fileName) {
+  public String resolvePublicFileUrl(String fileName) {
     return resolveFilePathPrefix() + fileName;
   }
 
@@ -68,7 +68,7 @@ public class LocalFileManager implements FileManager {
   }
 
   @Override
-  public String uploadFile(byte[] fileBytes, String fileName) {
+  public String uploadPublicFile(byte[] fileBytes, String fileName) {
     String fileLocation = resolveFileLocation(fileName);
     try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
       Files.copy(inputStream, Paths.get(fileLocation));
@@ -76,11 +76,11 @@ public class LocalFileManager implements FileManager {
       log.error("failed to upload file : {}", fileLocation, e);
       throw new UncheckedIOException("failed to upload file : " + fileLocation, e);
     }
-    return resolveFilePath(fileName);
+    return resolvePublicFileUrl(fileName);
   }
 
   @Override
-  public String uploadFile(InputStream is, long contentLength, String fileName) {
+  public String uploadPublicFile(InputStream is, long contentLength, String fileName) {
     String fileLocation = resolveFileLocation(fileName);
     try (is) {
       Files.copy(is, Paths.get(fileLocation));
@@ -88,7 +88,7 @@ public class LocalFileManager implements FileManager {
       log.error("failed to upload file : {}", fileLocation, e);
       throw new UncheckedIOException("failed to upload file : " + fileLocation, e);
     }
-    return resolveFilePath(fileName);
+    return resolvePublicFileUrl(fileName);
   }
 
   @Override

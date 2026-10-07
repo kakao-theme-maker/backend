@@ -42,7 +42,7 @@ public class ComponentCatalogService {
     return summaries.stream()
         .map(s -> {
           String imageUrl = s.getPreviewImageFileName() == null ? null
-              : fileManager.resolveFilePath(s.getPreviewImageFileName());
+              : fileManager.resolvePublicFileUrl(s.getPreviewImageFileName());
           String preview = s.getType() == ComponentType.THEME
               ? themePreviewImageMap.get(s.getId())
               : imageUrl;

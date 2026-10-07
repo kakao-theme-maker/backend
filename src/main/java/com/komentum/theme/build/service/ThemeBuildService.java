@@ -81,7 +81,7 @@ public class ThemeBuildService {
         .orElseThrow(() -> new ResourceNotFoundException(
             "Completed theme build not found. themeComponentId: " + themeComponentId
                 + ", platform: " + platform));
-    return new ThemeDownloadResponse(fileManager.createDownloadUrl(job.getFileName()));
+    return new ThemeDownloadResponse(fileManager.createThemePackageDownloadUrl(job.getFileName()));
   }
 
   private void validateThemeAccess(ThemeComponent themeComponent, String errorMessage) {
