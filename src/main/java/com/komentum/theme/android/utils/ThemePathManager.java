@@ -1,68 +1,70 @@
 package com.komentum.theme.android.utils;
 
 import com.komentum.theme.android.dto.AndroidComponentDto;
+import com.komentum.theme.android.properties.AndroidThemeProperties;
 import com.komentum.theme.android.service.AndroidThemeGenerator;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ThemePathManager {
+
+  private final AndroidThemeProperties androidThemeProperties;
 
   /**
    * get a root directory path of the theme
    */
-  private static String getBasePath() {
-    String os = System.getProperty("os.name");
-    if (os.toLowerCase().startsWith("win")) {
-      return "C:\\tmp";
-    } else {
-      return "/tmp";
-    }
+  private Path getBasePath() {
+    Path path = Paths.get("").toAbsolutePath();
+    return path.resolve(androidThemeProperties.getBasePath());
   }
 
-  public static Path getDefaultThemeDir(Integer themeComponentId) {
-    return Path.of(getBasePath())
+  public Path getDefaultThemeDir(String buildIdentifier) {
+    return getBasePath()
         .resolve("theme")
         .resolve("default")
-        .resolve(themeComponentId.toString());
+        .resolve(buildIdentifier);
   }
 
   /**
    * get a specific theme's directory
    */
-  public static Path getThemeDir(String themeId) {
-    return Path.of(getBasePath())
+  public Path getThemeDir(String buildIdentifier) {
+    return getBasePath()
         .resolve("theme")
         .resolve("android")
-        .resolve(themeId);
+        .resolve(buildIdentifier);
   }
 
   /**
    * get a specific theme's sample source apk directory
    */
-  public static Path getThemeSourceDir(String themeId) {
-    return getThemeDir(themeId)
+  public Path getThemeSourceDir(String buildIdentifier) {
+    return getThemeDir(buildIdentifier)
         .resolve("source");
   }
 
-  public static Path getAndroidThemeImagePath(String themeId, AndroidComponentDto component) {
-    Path themeSourcePath = getThemeSourceDir(themeId);
+  public Path getAndroidThemeImagePath(String buildIdentifier, AndroidComponentDto component) {
+    Path themeSourcePath = getThemeSourceDir(buildIdentifier);
     return getAndroidThemeImagePath(themeSourcePath, component.getImageFilePath());
   }
 
-  public static Path getAndroidThemeImagePath(Path themeSourcePath, String imageFilePath) {
+  public Path getAndroidThemeImagePath(Path themeSourcePath, String imageFilePath) {
     return themeSourcePath
         .resolve("src")
         .resolve("main")
         .resolve(imageFilePath);
   }
 
-  public static Path getAndroidColorSheetPath(String themeId) {
-    Path themeSourcePath = getThemeSourceDir(themeId);
+  public Path getAndroidColorSheetPath(String buildIdentifier) {
+    Path themeSourcePath = getThemeSourceDir(buildIdentifier);
     return getAndroidColorSheetPath(themeSourcePath);
   }
 
-  public static Path getAndroidColorSheetPath(Path themeSourcePath) {
+  public Path getAndroidColorSheetPath(Path themeSourcePath) {
     return themeSourcePath
         .resolve("src")
         .resolve("main")
@@ -71,24 +73,19 @@ public class ThemePathManager {
         .resolve("colors.xml");
   }
 
-  public static Path getAndroidResourcePath(String themeId) {
-    return getThemeSourceDir(themeId)
+  public Path getAndroidResourcePath(String buildIdentifier) {
+    return getThemeSourceDir(buildIdentifier)
         .resolve("src")
         .resolve("main")
         .resolve("theme");
-  }
-
-  public static Path getAndroidBuildGradlePath(String themeId) {
-    return getThemeSourceDir(themeId)
-        .resolve("build.gradle.kts");
   }
 
   /**
    * <p>테마 폴더의 빌드 결과물에 있는 빌드 결과물 경로를 반환한다.</p>
    * <p>빌드 결과물의 이름은 docker 내 테마 폴더 이름을 따라간다.</p>
    * */
-  public static Path getAndroidThemeOutputPath(String themeId) {
-    return getThemeSourceDir(themeId)
+  public Path getAndroidThemeOutputPath(String buildIdentifier) {
+    return getThemeSourceDir(buildIdentifier)
         .resolve("build")
         .resolve("outputs")
         .resolve("apk")

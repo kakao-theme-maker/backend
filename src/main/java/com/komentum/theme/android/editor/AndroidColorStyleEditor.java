@@ -24,6 +24,8 @@ public class AndroidColorStyleEditor {
   private final static String COLOR_TAG_NAME = "color";
   private final static String ELEMENT_PROPS_NAME = "name";
 
+  private final ThemePathManager themePathManager;
+
   /**
    * get the first element with a specific attribute name from the node list
    *
@@ -44,11 +46,11 @@ public class AndroidColorStyleEditor {
   /**
    * edit all color with theme's color info list
    *
-   * @param themeId      theme's id
+   * @param buildIdentifier      theme's id
    * @param colorDtoList information list about theme's color
    */
-  public void editColors(String themeId, List<AndroidColorDto> colorDtoList) {
-    Path colorSheetPath = ThemePathManager.getAndroidColorSheetPath(themeId);
+  public void editColors(String buildIdentifier, List<AndroidColorDto> colorDtoList) {
+    Path colorSheetPath = themePathManager.getAndroidColorSheetPath(buildIdentifier);
     Document document = xmlEditor.loadDocument(colorSheetPath.toString());
     NodeList colorList = document.getElementsByTagName(COLOR_TAG_NAME);
     for (AndroidColorDto colorDto : colorDtoList) {

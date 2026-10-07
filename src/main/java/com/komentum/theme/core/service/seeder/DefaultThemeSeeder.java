@@ -72,6 +72,7 @@ public class DefaultThemeSeeder {
   private final PlatformComponentTypeService platformComponentTypeService;
   private final PlatformColorStyleService platformColorStyleService;
   private final XmlEditor xmlEditor;
+  private final ThemePathManager themePathManager;
 
   private static final String THEME_CODE_JSON_PATH = "defaultThemes/themeCode.json";
   private static final String DEFAULT_THEME_INFO_LIST_KEY = "defaultThemeInfoList";
@@ -137,8 +138,8 @@ public class DefaultThemeSeeder {
               .build()
       );
       // 3. DefaultTheme를 압축해제한다.
-      Path defaultThemeRootPath = ThemePathManager.getDefaultThemeDir(
-          themeComponent.getThemeComponentId());
+      String buildIdentifier = UUID.randomUUID().toString();
+      Path defaultThemeRootPath = themePathManager.getDefaultThemeDir(buildIdentifier);
       try (InputStream is = new ClassPathResource(
           defaultThemeSheetInfo.getResourcePath()).getInputStream()
       ) {
@@ -260,7 +261,7 @@ public class DefaultThemeSeeder {
       ComponentType componentType, List<PlatformComponentType> platformComponentTypes)
       throws IOException {
     PlatformComponentType pct = platformComponentTypes.get(0);
-    Path imagePath = ThemePathManager.getAndroidThemeImagePath(themeRootPath, pct.getPath());
+    Path imagePath = themePathManager.getAndroidThemeImagePath(themeRootPath, pct.getPath());
     String fileName = UUID.randomUUID().toString();
     fileManager.uploadFile(Files.readAllBytes(imagePath), fileName);
     DesignComponent dc = DesignComponent.builder()
@@ -279,7 +280,7 @@ public class DefaultThemeSeeder {
   private void seedDefaultThemeStyles(ThemeComponent theme, Path themeRootPath,
       DefaultThemeContext context) {
     StyleCode[] styleCodes = StyleCode.values();
-    Path colorSheetPath = ThemePathManager.getAndroidColorSheetPath(themeRootPath);
+    Path colorSheetPath = themePathManager.getAndroidColorSheetPath(themeRootPath);
     // android는 resourceGroup이 color로 동일, resourceName은 고유값을 갖는다
     Map<String, ColorResourceInfo> colorResourceInfoMap = readColorSheet(colorSheetPath).stream()
         .collect(Collectors.toMap(

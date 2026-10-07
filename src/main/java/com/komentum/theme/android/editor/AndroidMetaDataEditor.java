@@ -14,6 +14,7 @@ import org.w3c.dom.Document;
 public class AndroidMetaDataEditor {
 
   private final XmlEditor xmlEditor;
+  private final ThemePathManager themePathManager;
 
   // strings.xml constants
   private final static String THEME_METADATA_XML_NAME = "strings.xml";
@@ -23,8 +24,8 @@ public class AndroidMetaDataEditor {
   private final static String THEME_APP_NAME_PROPS_VALUE = "app_name";
   private final static String THEME_TITLE_PROPS_VALUE = "theme_title";
 
-  public void editThemeName(String themeId, String themeName) {
-    Path themeMetaDataPath = ThemePathManager.getAndroidResourcePath(themeId);
+  public void editThemeName(String buildIdentifier, String themeName) {
+    Path themeMetaDataPath = themePathManager.getAndroidResourcePath(buildIdentifier);
     for (String themeNameFileDirectory : THEME_METADATA_DIRECTORIES) {
       Path themeNameXmlPath = themeMetaDataPath.resolve(themeNameFileDirectory)
           .resolve(THEME_METADATA_XML_NAME);
