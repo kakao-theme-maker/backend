@@ -30,6 +30,9 @@ public class UserResponseDto {
   @Schema(description = "사용자 이름", example = "홍길동")
   private String name;
 
+  @Schema(description = "사용자 한줄소개", example = "안녕하세요.\n반갑습니다.")
+  private String introduce;
+
   @Schema(description = "사용자 공개 ID", example = "UUID")
   private String publicUserId;
 
@@ -53,6 +56,7 @@ public class UserResponseDto {
     return UserResponseDto.builder()
         .userEmail(user.getUserEmail())
         .name(user.getName())
+        .introduce(user.getIntroduce())
         .gender(user.getGender())
         .birth(user.getBirth())
         .publicUserId(user.getPublicUserId())
