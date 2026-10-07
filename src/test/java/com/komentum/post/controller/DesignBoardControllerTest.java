@@ -167,10 +167,10 @@ public class DesignBoardControllerTest {
   }
 
   private void stubImageUploadAndRetrieve(String expectedImageUrl) {
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(expectedImageUrl);
     Mockito.when(
-            fileManager.uploadFile(any(byte[].class), anyString()))
+            fileManager.uploadPublicFile(any(byte[].class), anyString()))
         .thenReturn(expectedImageUrl);
   }
 

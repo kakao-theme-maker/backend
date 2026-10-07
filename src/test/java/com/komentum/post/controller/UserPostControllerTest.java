@@ -99,7 +99,7 @@ public class UserPostControllerTest {
 
   @BeforeEach
   void setUp() {
-    given(fileManager.resolveFilePath(any())).willReturn(PREVIEW_IMAGE_URL);
+    given(fileManager.resolvePublicFileUrl(any())).willReturn(PREVIEW_IMAGE_URL);
     given(fileManager.convertUrlToFileName(any())).willReturn(PREVIEW_IMAGE_NAME);
 
     List<User> users = userScenarioSupport.builder()

@@ -254,7 +254,7 @@ class ThemeBuildControllerTest {
     String fileName = "theme.apk";
     String downloadUrl = "https://objectstorage.example.com/latest-theme-par";
     themeBuildStateService.markSuccess(buildId, fileName, LocalDateTime.now());
-    given(fileManager.createDownloadUrl(fileName)).willReturn(downloadUrl);
+    given(fileManager.createThemePackageDownloadUrl(fileName)).willReturn(downloadUrl);
     User otherUser = userRepository.save(
         UserFixture.user("theme-download-reader@test.com", UserRole.USER));
     ResultActions result = performDownloadUrl(theme, otherUser, Platform.ANDROID)
@@ -263,7 +263,7 @@ class ThemeBuildControllerTest {
     ThemeDownloadResponse response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
     });
     assertThat(response.downloadUrl()).isEqualTo(downloadUrl);
-    verify(fileManager).createDownloadUrl(fileName);
+    verify(fileManager).createThemePackageDownloadUrl(fileName);
   }
 
   @Test
@@ -273,7 +273,7 @@ class ThemeBuildControllerTest {
             .param("platform", Platform.ANDROID.name()))
         .andExpect(status().isUnauthorized());
 
-    verify(fileManager, never()).createDownloadUrl(anyString());
+    verify(fileManager, never()).createThemePackageDownloadUrl(anyString());
   }
 
   @Test

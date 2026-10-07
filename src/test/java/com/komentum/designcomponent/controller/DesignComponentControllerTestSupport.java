@@ -103,7 +103,7 @@ abstract class DesignComponentControllerTestSupport {
     componentTypeA = createComponentType("comp-a");
     componentTypeB = createComponentType("comp-b");
 
-    when(fileManager.resolveFilePath(anyString()))
+    when(fileManager.resolvePublicFileUrl(anyString()))
         .thenAnswer(invocation -> imageUrlOf(invocation.getArgument(0, String.class)));
 
     authenticateAs(testUser);

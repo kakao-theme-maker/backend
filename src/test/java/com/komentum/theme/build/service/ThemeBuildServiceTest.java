@@ -202,13 +202,13 @@ class ThemeBuildServiceTest {
     String fileName = "theme-download-test.apk";
     String downloadUrl = "https://objectstorage.example.com/theme-download-par";
     themeBuildStateService.markSuccess(build.getBuildId(), fileName, LocalDateTime.now());
-    given(fileManager.createDownloadUrl(fileName)).willReturn(downloadUrl);
+    given(fileManager.createThemePackageDownloadUrl(fileName)).willReturn(downloadUrl);
     // when
     ThemeDownloadResponse response = themeBuildService.getDownloadUrl(
         theme.getThemeComponentId(), Platform.ANDROID);
     // then
     assertThat(response.downloadUrl()).isEqualTo(downloadUrl);
-    verify(fileManager).createDownloadUrl(fileName);
+    verify(fileManager).createThemePackageDownloadUrl(fileName);
   }
 
   @Test
@@ -227,8 +227,8 @@ class ThemeBuildServiceTest {
     themeBuildStateService.markSuccess(androidBuild.getBuildId(), androidFileName,
         LocalDateTime.now());
     themeBuildStateService.markSuccess(iosBuild.getBuildId(), iosFileName, LocalDateTime.now());
-    given(fileManager.createDownloadUrl(androidFileName)).willReturn(androidDownloadUrl);
-    given(fileManager.createDownloadUrl(iosFileName)).willReturn(iosDownloadUrl);
+    given(fileManager.createThemePackageDownloadUrl(androidFileName)).willReturn(androidDownloadUrl);
+    given(fileManager.createThemePackageDownloadUrl(iosFileName)).willReturn(iosDownloadUrl);
     // then
     assertThat(themeBuildService.getDownloadUrl(theme.getThemeComponentId(), Platform.ANDROID)
         .downloadUrl()).isEqualTo(androidDownloadUrl);

@@ -111,8 +111,8 @@ class ThemeBoardControllerTest {
   private ThemeComponentScenarioResult themeComponentScenarioResult;
 
   void stubFileManager() {
-    Mockito.when(fileManager.uploadFile(any(), any())).thenReturn(UUID.randomUUID().toString());
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.uploadPublicFile(any(), any())).thenReturn(UUID.randomUUID().toString());
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     Mockito.when(fileManager.convertUrlToFileName(anyString()))
         .thenReturn(UUID.randomUUID().toString());
@@ -228,7 +228,7 @@ class ThemeBoardControllerTest {
       posts.get(i).setCreatedAt(baseTime.plusDays(i));
     }
     postRepository.saveAll(posts);
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     MultiValueMap<String, String> params = TestParams.withPaging(0,
         postScenarioResult.themeBoards().size());
@@ -249,7 +249,7 @@ class ThemeBoardControllerTest {
   void findThemeBoards_defaultSort() throws Exception {
     // given
     User client = testClient;
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     MultiValueMap<String, String> defaultParams = TestParams.withPaging(0, 5);
     MultiValueMap<String, String> blankParams = TestParams.withPaging(0, 5);
@@ -296,7 +296,7 @@ class ThemeBoardControllerTest {
     int pageSize = 3;
     String requestPath = "/api/theme-boards";
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
@@ -323,7 +323,7 @@ class ThemeBoardControllerTest {
     int pageNumber = 0;
     int pageSize = 3;
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
@@ -355,7 +355,7 @@ class ThemeBoardControllerTest {
     int pageNumber = 0;
     int pageSize = 3;
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardPreviewDto> response = mockMvcUtils.doAuthRequest(
@@ -417,7 +417,7 @@ class ThemeBoardControllerTest {
     ThemeBoard targetThemeBoard = postScenarioResult.themeBoards().get(0);
     Long postId = targetThemeBoard.getPost().getPostId();
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     ThemeBoardDetailDto response = mockMvcUtils.doAuthRequest(
@@ -504,7 +504,7 @@ class ThemeBoardControllerTest {
     MultiValueMap<String, String> params = TestParams.withPaging(0, 10);
     params.add("pinnedPostId", pinnedPost.getPostId().toString());
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
@@ -524,7 +524,7 @@ class ThemeBoardControllerTest {
     int pageSize = 3;
     MultiValueMap<String, String> params = TestParams.withPaging(0, pageSize);
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
@@ -614,7 +614,7 @@ class ThemeBoardControllerTest {
     MultiValueMap<String, String> params = TestParams.withPaging(1, 1);
     params.add("pinnedPostId", pinnedPost.getPostId().toString());
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
@@ -651,7 +651,7 @@ class ThemeBoardControllerTest {
     int pageSize = 2;
     MultiValueMap<String, String> params = TestParams.withPaging(0, pageSize);
     // stub
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when
     List<ThemeBoardDetailDto> response = requestThemeBoardDetails(params, testClient);
@@ -677,7 +677,7 @@ class ThemeBoardControllerTest {
     contentMatchedPost.setTitle("content-match-only-" + UUID.randomUUID());
     contentMatchedPost.setContent(keyword);
     postRepository.saveAll(List.of(targetPost, contentMatchedPost));
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     MultiValueMap<String, String> firstPageParams = TestParams.withPaging(0, 1);
     firstPageParams.add("keyword", keyword);
@@ -701,7 +701,7 @@ class ThemeBoardControllerTest {
   @DisplayName("테마 게시글 목록 응답에 component_types를 포함하지 않는다.")
   void findThemeBoards_excludesComponentTypes() throws Exception {
     // given
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     MultiValueMap<String, String> params = TestParams.withPaging(0, 5);
     // when & then
@@ -716,7 +716,7 @@ class ThemeBoardControllerTest {
   void findThemeBoardByPostId_excludesComponentTypes() throws Exception {
     // given
     ThemeBoard targetThemeBoard = postScenarioResult.themeBoards().get(0);
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(UUID.randomUUID().toString());
     // when & then
     mockMvc.perform(mockMvcUtils.addAuthentication(
@@ -761,9 +761,9 @@ class ThemeBoardControllerTest {
         .generateJsonFormData("boardInfo", createDto);
     List<MockMultipartFile> formDataList = List.of(testPreviewImage, boardInfo);
     // stub
-    Mockito.when(fileManager.uploadFile(any(), any()))
+    Mockito.when(fileManager.uploadPublicFile(any(), any()))
         .thenReturn(testPreviewImage.getOriginalFilename());
-    Mockito.when(fileManager.resolveFilePath(any()))
+    Mockito.when(fileManager.resolvePublicFileUrl(any()))
         .thenReturn(testPreviewImageUrl);
     // when
     ThemeBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
@@ -853,9 +853,9 @@ class ThemeBoardControllerTest {
         .generateJsonFormData("boardInfo", updateDto);
     List<MockMultipartFile> formDataList = List.of(testPreviewImage, boardInfo);
     // stub
-    Mockito.when(fileManager.uploadFile(any(), any()))
+    Mockito.when(fileManager.uploadPublicFile(any(), any()))
         .thenReturn(testPreviewImage.getOriginalFilename());
-    Mockito.when(fileManager.resolveFilePath(any()))
+    Mockito.when(fileManager.resolvePublicFileUrl(any()))
         .thenReturn(testPreviewImageUrl);
     // when
     ThemeBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(

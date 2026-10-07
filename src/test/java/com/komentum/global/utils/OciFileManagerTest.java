@@ -67,14 +67,14 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("공백, 한글, 경로 구분자가 포함된 공개 객체명을 인코딩하고 복원한다")
-  void resolveAndConvertFilePath_koreanSpaceAndSlash_success() {
+  void resolveAndConvertPublicFileUrl_koreanSpaceAndSlash_success() {
     String fileName = "테마 이미지/미리 보기 파일.png";
     String encodedFileName =
         "%ED%85%8C%EB%A7%88%20%EC%9D%B4%EB%AF%B8%EC%A7%80/"
             + "%EB%AF%B8%EB%A6%AC%20%EB%B3%B4%EA%B8%B0%20%ED%8C%8C%EC%9D%BC.png";
 
-    String firstFileUrl = ociFileManager.resolveFilePath(fileName);
-    String secondFileUrl = ociFileManager.resolveFilePath(fileName);
+    String firstFileUrl = ociFileManager.resolvePublicFileUrl(fileName);
+    String secondFileUrl = ociFileManager.resolvePublicFileUrl(fileName);
 
     assertThat(firstFileUrl).isEqualTo(PUBLIC_FILE_URL_PREFIX + encodedFileName);
     assertThat(secondFileUrl).isEqualTo(firstFileUrl);
@@ -92,8 +92,8 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("빈 객체명과 null URL을 거부한다")
-  void resolveAndConvertFilePath_nullOrBlank_throwsException() {
-    assertThatThrownBy(() -> ociFileManager.resolveFilePath("  "))
+  void resolveAndConvertPublicFileUrl_nullOrBlank_throwsException() {
+    assertThatThrownBy(() -> ociFileManager.resolvePublicFileUrl("  "))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> ociFileManager.convertUrlToFileName(null))
         .isInstanceOf(IllegalArgumentException.class);
@@ -105,11 +105,11 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("공개 이미지 byte 배열을 공개 버킷에 업로드하고 고정 URL을 반환한다")
-  void uploadFile_byteArray_success() throws IOException {
+  void uploadPublicFile_byteArray_success() throws IOException {
     byte[] fileBytes = "file-content".getBytes(StandardCharsets.UTF_8);
     String fileName = "themes/file.png";
 
-    String fileUrl = ociFileManager.uploadFile(fileBytes, fileName);
+    String fileUrl = ociFileManager.uploadPublicFile(fileBytes, fileName);
 
     ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
     verify(objectStorage).putObject(captor.capture());
@@ -127,8 +127,8 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("JPEG 확장자는 image/jpeg Content-Type으로 업로드한다")
-  void uploadFile_jpegContentType_success() {
-    ociFileManager.uploadFile(new byte[] {1}, "themes/file.JPEG");
+  void uploadPublicFile_jpegContentType_success() {
+    ociFileManager.uploadPublicFile(new byte[] {1}, "themes/file.JPEG");
 
     ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
     verify(objectStorage).putObject(captor.capture());
@@ -137,12 +137,12 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("공개 InputStream 업로드에 기본 MIME type을 적용하고 stream을 닫는다")
-  void uploadFile_inputStream_success() throws IOException {
+  void uploadPublicFile_inputStream_success() throws IOException {
     byte[] fileBytes = "stream-content".getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = spy(new ByteArrayInputStream(fileBytes));
     String fileName = "themes/theme.html";
 
-    ociFileManager.uploadFile(inputStream, fileBytes.length, fileName);
+    ociFileManager.uploadPublicFile(inputStream, fileBytes.length, fileName);
 
     ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
     verify(objectStorage).putObject(captor.capture());
@@ -155,11 +155,12 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("패키지 byte 배열은 private 버킷에 업로드하고 파일명만 반환한다")
-  void uploadAndGetFileName_byteArray_usesPrivateBucket() throws IOException {
+  void uploadThemePackageAndGetFileName_byteArray_usesPrivateBucket() throws IOException {
     byte[] fileBytes = "private-content".getBytes(StandardCharsets.UTF_8);
     String fileName = "themes/private.APK";
 
-    String uploadedFileName = ociFileManager.uploadAndGetFileName(fileBytes, fileName, "apk");
+    String uploadedFileName = ociFileManager.uploadThemePackageAndGetFileName(
+        fileBytes, fileName, "apk");
 
     ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
     verify(objectStorage).putObject(captor.capture());
@@ -177,11 +178,11 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("패키지 스트림은 private 버킷에 UUID 파일명으로 업로드하고 스트림을 닫는다")
-  void uploadAndGetFileName_inputStream_generatesNameAndClosesStream() throws IOException {
+  void uploadThemePackageAndGetFileName_inputStream_generatesNameAndClosesStream() throws IOException {
     byte[] fileBytes = "stream-content".getBytes(StandardCharsets.UTF_8);
     InputStream inputStream = spy(new ByteArrayInputStream(fileBytes));
 
-    String uploadedFileName = ociFileManager.uploadAndGetFileName(
+    String uploadedFileName = ociFileManager.uploadThemePackageAndGetFileName(
         inputStream, fileBytes.length, " ", ".apk");
 
     ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
@@ -200,7 +201,7 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("private 객체용 ObjectRead PAR을 설정된 48시간 TTL로 생성한다")
-  void createDownloadUrl_success() {
+  void createThemePackageDownloadUrl_success() {
     String fileName = "themes/private.ktheme";
     String accessUri = "/p/token/n/test-namespace/b/private-packages/o/themes/private.ktheme";
     given(objectStorage.createPreauthenticatedRequest(
@@ -212,7 +213,7 @@ class OciFileManagerTest {
             .build());
     Instant beforeCreation = Instant.now();
 
-    String downloadUrl = ociFileManager.createDownloadUrl(fileName);
+    String downloadUrl = ociFileManager.createThemePackageDownloadUrl(fileName);
 
     Instant afterCreation = Instant.now();
     ArgumentCaptor<CreatePreauthenticatedRequestRequest> captor =
@@ -234,11 +235,11 @@ class OciFileManagerTest {
 
   @Test
   @DisplayName("OCI가 유효한 PAR을 반환하지 않으면 다운로드 URL 생성을 실패한다")
-  void createDownloadUrl_emptyResponse_throwsException() {
+  void createThemePackageDownloadUrl_emptyResponse_throwsException() {
     given(objectStorage.createPreauthenticatedRequest(
         any(CreatePreauthenticatedRequestRequest.class))).willReturn(null);
 
-    assertThatThrownBy(() -> ociFileManager.createDownloadUrl("themes/private.apk"))
+    assertThatThrownBy(() -> ociFileManager.createThemePackageDownloadUrl("themes/private.apk"))
         .isInstanceOf(IllegalStateException.class);
   }
 

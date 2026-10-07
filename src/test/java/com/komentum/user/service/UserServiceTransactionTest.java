@@ -110,9 +110,9 @@ class UserServiceTransactionTest {
   }
 
   private void stubFileManager() {
-    given(fileManager.uploadFile(any(byte[].class), anyString()))
+    given(fileManager.uploadPublicFile(any(byte[].class), anyString()))
         .willAnswer(invocation -> buildImageUrl(invocation.getArgument(1, String.class)));
-    given(fileManager.resolveFilePath(anyString()))
+    given(fileManager.resolvePublicFileUrl(anyString()))
         .willAnswer(invocation -> buildImageUrl(invocation.getArgument(0, String.class)));
   }
 

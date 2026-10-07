@@ -224,9 +224,9 @@ public class UserControllerTest {
     );
     String expectedImageUrl = "https://test.com/test-image.png";
 
-    Mockito.when(fileManager.uploadFile(any(byte[].class), anyString()))
+    Mockito.when(fileManager.uploadPublicFile(any(byte[].class), anyString()))
         .thenReturn(expectedImageUrl);
-    Mockito.when(fileManager.resolveFilePath(anyString()))
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
         .thenReturn(expectedImageUrl);
 
     // when
@@ -257,9 +257,9 @@ public class UserControllerTest {
     assertThat(updatedUser.getProfileImgName()).isNotEqualTo(oldImageFileName);
 
     // FileManager 호출 검증
-    Mockito.verify(fileManager).uploadFile(any(byte[].class), contains("User"));
+    Mockito.verify(fileManager).uploadPublicFile(any(byte[].class), contains("User"));
     Mockito.verify(fileManager, Mockito.times(1)).deleteFile(oldImageFileName);
-    Mockito.verify(fileManager).resolveFilePath(updatedUser.getProfileImgName());
+    Mockito.verify(fileManager).resolvePublicFileUrl(updatedUser.getProfileImgName());
   }
 
   @Test

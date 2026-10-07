@@ -16,7 +16,7 @@ public final class DesignComponentRequestFixture {
   }
 
   /**
-   * FileManager.resolveFilePath 목 응답과 동일한 규칙으로 파일명에 대한 이미지 URL을 생성한다.
+   * FileManager.resolvePublicFileUrl 목 응답과 동일한 규칙으로 파일명에 대한 이미지 URL을 생성한다.
    */
   public static String imageUrlOf(String fileName) {
     return IMAGE_BASE_URL + fileName;
