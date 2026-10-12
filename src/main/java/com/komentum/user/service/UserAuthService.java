@@ -5,6 +5,7 @@ import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.exception.UnauthorizedException;
 import com.komentum.global.properties.AuthProperty;
 import com.komentum.global.security.CustomUserDetailsService;
+import com.komentum.global.security.UserRole;
 import com.komentum.user.client.KakaoAuthHttpClient;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
@@ -12,12 +13,16 @@ import com.komentum.user.dto.PasswordChangeRequsetDto;
 import com.komentum.user.dto.SignUpRequestDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
+import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+@Slf4j
 @Service
 public class UserAuthService {
 
@@ -132,5 +137,37 @@ public class UserAuthService {
       throw new UnauthorizedException("[token reissue failed] refresh token is already reused");
     }
     return new UserAuthResponse(newAccessToken, newRefreshToken);
+  }
+
+  /**
+   * <b>게스트 토큰을 생성한다.</b>
+   * <p>1. 사용자 인증 정보가 없으면, 게스트 사용자를 생성하고 토큰을 발급 한다.</p>
+   * <p>2. 사용자 인증 정보가 있고 DB에 없으면, 게스트 사용자를 재생성하고 토큰을 재발급한다.</p>
+   * <p>3. 사용자 인증 정보가 있고 DB에 있지만 GUEST 권한이 아니라면, 예외를 던진다.</p>
+   * @return 게스트 사용자 토큰
+   * */
+  @Transactional
+  public String createGuestToken(UserDetails userDetails) {
+    if (userDetails == null) { // 인증 정보가 없으면, 게스트 사용자 정보 생성 및 게스트 토큰 반환
+      return createNewGuestAndReturnToken();
+    } else {
+      return userRepository.findByPublicUserId(userDetails.getUsername()).map(user -> {
+        if (!user.getRole().equals(UserRole.GUEST)) {
+          log.warn("[Guest Token] 사용자가 이미 게스트보다 높은 권한으로 등록되어 있음");
+          throw new RuntimeException("[Guest Token] 사용자가 이미 게스트보다 높은 권한으로 등록되어 있음");
+        }
+        return jwtUtils.generateAccessToken(user.getPublicUserId());
+      }).orElseGet(this::createNewGuestAndReturnToken);
+    }
+  }
+
+  /**
+   * 게스트 사용자를 생성하고, 게스트 토큰을 발급한다
+   * */
+  private String createNewGuestAndReturnToken() {
+    String publicUserId = UUID.randomUUID().toString();
+    User guestUser = User.createGuest(publicUserId);
+    userRepository.save(guestUser);
+    return jwtUtils.generateAccessToken(publicUserId);
   }
 }

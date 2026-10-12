@@ -52,6 +52,15 @@ public class TokenCookieManager {
   }
 
   /**
+   * 쿠키에 게스트 토큰을 추가한다
+   * */
+  public void addGuestTokenOnCookie(HttpServletResponse response, String guestToken) {
+    ResponseCookie accessTokenCookie = generateAccessTokenCookie(guestToken,
+        authProperty.getAccessTokenExpiresIn());
+    response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+  }
+
+  /**
    * 로그아웃 시 쿠키에서 토큰을 제거한다
    * */
   public void removeTokenOnCookie(HttpServletResponse response) {

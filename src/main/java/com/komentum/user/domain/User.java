@@ -71,4 +71,15 @@ public class User {
   public boolean matchPassword(String rawPassword, PasswordEncoder passwordEncoder) {
     return passwordEncoder.matches(rawPassword, this.encryptedPassword);
   }
+
+  /**
+   * 게스트 사용자 비영속 엔티티를 생성한다
+   * */
+  public static User createGuest(String publicUserId) {
+    return User.builder()
+        .publicUserId(publicUserId)
+        .role(UserRole.GUEST)
+        .userEmail(publicUserId + "@guest.com")
+        .build();
+  }
 }
