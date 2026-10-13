@@ -44,6 +44,10 @@ public class DesignComponent {
   private Boolean isPublic;
 
   @Builder.Default
+  @Column(name = "is_active", nullable = false)
+  private Boolean isActive = true;
+
+  @Builder.Default
   @OneToMany(mappedBy = "designComponent", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<DesignComponentComponentType> componentTypeMappings = new ArrayList<>();
 
@@ -61,6 +65,14 @@ public class DesignComponent {
     if (isPublic != null) {
       this.isPublic = isPublic;
     }
+  }
+
+  /**
+   * 컴포넌트를 비활성 상태로 전환하고 파일명과 타입 매핑은 유지한다.
+   * 이미 비활성인 경우에도 상태는 그대로 유지한다.
+   */
+  public void deactivate() {
+    this.isActive = false;
   }
 
   public List<ComponentType> getComponentTypes() {

@@ -19,7 +19,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
       "componentTypeMappings.componentType"})
   Optional<DesignComponent> findByDesignComponentId(Integer designComponentId);
 
-  @Query("select dc.designComponentId from DesignComponent dc")
+  @Query("select dc.designComponentId from DesignComponent dc where dc.isActive = true")
   Page<Integer> findDesignComponentIdPage(Pageable pageable);
 
   @Query("""
@@ -27,6 +27,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
       from DesignComponent dc
       join dc.componentTypeMappings componentTypeMapping
       where componentTypeMapping.componentType.componentTypeId = :componentTypeId
+      and dc.isActive = true
       order by dc.createdAt desc, dc.designComponentId desc
       """)
   List<Integer> findDesignComponentIdsByComponentTypeId(
@@ -38,7 +39,7 @@ public interface DesignComponentRepository extends JpaRepository<DesignComponent
 
   @EntityGraph(attributePaths = {"user", "componentTypeMappings",
       "componentTypeMappings.componentType"})
-  List<DesignComponent> findByUser_PublicUserId(String userPublicUserId);
+  List<DesignComponent> findByUser_PublicUserIdAndIsActiveTrue(String userPublicUserId);
 
   List<DesignComponent> findByUser_UserEmailIn(List<String> userEmails);
 }

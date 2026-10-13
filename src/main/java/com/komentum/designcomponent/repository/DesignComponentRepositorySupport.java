@@ -34,7 +34,7 @@ public class DesignComponentRepositorySupport {
         .selectFrom(designComponent).distinct()
         .leftJoin(designComponent.componentTypeMappings, designComponentComponentType).fetchJoin()
         .leftJoin(designComponentComponentType.componentType, componentType).fetchJoin()
-        .where(designComponent.user.eq(client))
+        .where(designComponent.user.eq(client), designComponent.isActive.isTrue())
         .orderBy(designComponent.createdAt.desc())
         .fetch();
   }
@@ -57,7 +57,8 @@ public class DesignComponentRepositorySupport {
         .join(designComponent.user, user).fetchJoin()
         .where(
             category.owner.publicUserId.eq(publicUserId),
-            categoryPost.category.categoryType.eq(CategoryType.BOOKMARK)
+            categoryPost.category.categoryType.eq(CategoryType.BOOKMARK),
+            designComponent.isActive.isTrue()
         )
         .orderBy(designComponent.createdAt.desc())
         .fetch();

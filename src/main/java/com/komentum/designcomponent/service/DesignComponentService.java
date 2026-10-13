@@ -93,7 +93,23 @@ public class DesignComponentService {
   @Transactional(readOnly = true)
   public DesignComponentDto getDesignComponentById(Integer designComponentId) {
     DesignComponent component = getEntityById(designComponentId);
+    requireActiveComponents(List.of(component));
     return mapper.toDto(component);
+  }
+
+  /**
+   * 전달된 컴포넌트의 활성 값이 모두 true인지 검사한다.
+   * 조회 결과를 걸러내거나 컴포넌트 상태를 변경하지 않는다.
+   *
+   * @throws ResourceNotFoundException 활성 값이 false 또는 null인 컴포넌트가 있는 경우
+   */
+  public void requireActiveComponents(Collection<DesignComponent> components) {
+    for (DesignComponent component : components) {
+      if (!Boolean.TRUE.equals(component.getIsActive())) {
+        throw new ResourceNotFoundException(
+            "DesignComponent not found with id: " + component.getDesignComponentId());
+      }
+    }
   }
 
   @Transactional(readOnly = true)
@@ -127,7 +143,7 @@ public class DesignComponentService {
 
   @Transactional(readOnly = true)
   public List<DesignComponentDto> getByPublicUserId(String publicUserId) {
-    return designComponentRepository.findByUser_PublicUserId(publicUserId).stream()
+    return designComponentRepository.findByUser_PublicUserIdAndIsActiveTrue(publicUserId).stream()
         .map(mapper::toDto).toList();
   }
 
@@ -196,6 +212,7 @@ public class DesignComponentService {
     if (!designComponentPolicy.canUpdate(component)) {
       throw new AccessDeniedException("failed to update designComponent : invalid user or role");
     }
+    requireActiveComponents(List.of(component));
 
     List<ComponentType> componentTypes = null;
     if (request.getComponentTypeIds() != null) {
@@ -224,7 +241,7 @@ public class DesignComponentService {
     if (!designComponentPolicy.canDelete(component)) {
       throw new AccessDeniedException("failed to delete designComponent : invalid user or role");
     }
-    designComponentRepository.delete(component);
+    component.deactivate();
   }
 
   /**
