@@ -9,6 +9,7 @@ import com.komentum.post.domain.QPrefer;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.post.dto.query.PostQuery;
+import com.komentum.post.repository.predicate.PostPredicate;
 import com.komentum.post.service.enums.CategoryType;
 import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QFollow;
@@ -107,7 +108,8 @@ public class PostRepositorySupport {
         .where(
             category.owner.eq(client),
             category.categoryType.eq(CategoryType.BOOKMARK),
-            postTypeEq(post, postType)
+            postTypeEq(post, postType),
+            PostPredicate.visibleDesignPost(post)
         )
         .orderBy(post.createdAt.desc(), post.postId.desc())
         .offset(pageable.getOffset())
@@ -129,7 +131,8 @@ public class PostRepositorySupport {
         .join(post.user, user)
         .where(
             prefer.user.eq(client),
-            postTypeEq(post, postType)
+            postTypeEq(post, postType),
+            PostPredicate.visibleDesignPost(post)
         )
         .orderBy(post.createdAt.desc(), post.postId.desc())
         .offset(pageable.getOffset())
@@ -149,7 +152,8 @@ public class PostRepositorySupport {
         .join(post.user, user)
         .where(
             post.user.eq(client),
-            postTypeEq(post, postType)
+            postTypeEq(post, postType),
+            PostPredicate.visibleDesignPost(post)
         )
         .orderBy(post.createdAt.desc(), post.postId.desc())
         .offset(pageable.getOffset())

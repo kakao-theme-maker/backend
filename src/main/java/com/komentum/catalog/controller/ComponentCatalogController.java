@@ -23,7 +23,10 @@ public class ComponentCatalogController {
   private final ComponentCatalogService componentCatalogService;
 
   @GetMapping("/users/me/custom-components")
-  @Operation(summary = "현재 사용자가 생성한 디자인 에셋과 테마 목록을 생성일 기준 내림차순으로 페이징 조회한다")
+  @Operation(
+      summary = "현재 사용자가 생성한 디자인 에셋과 테마 목록을 생성일 기준 내림차순으로 페이징 조회한다",
+      description = "DESIGN은 활성 디자인 에셋만 반환합니다. "
+          + "THEME은 연결된 디자인 에셋의 활성 여부와 관계없이 조회됩니다.")
   public ResponseEntity<List<ComponentCatalogResponse>> findCustomComponents(
       @PageableDefault(size = 20) @ParameterObject Pageable pageable,
       @AuthenticationPrincipal CustomUserDetails userDetails

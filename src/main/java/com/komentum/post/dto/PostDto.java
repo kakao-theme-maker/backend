@@ -92,10 +92,9 @@ public class PostDto {
     boolean bookmarked;
 
     public static UserPostListResponseDto from(PostQuery.UserPostListRow row, List<Tag> tags,
-        BoardManagementHelper boardManagementHelper) {
+        BoardManagementHelper boardManagementHelper, String previewImageName) {
       List<TagResponse> tagResponses = tags.stream().map(TagResponse::from).toList();
-      String previewImageUrl = boardManagementHelper.findPreviewImageUrl(
-          row.getPreviewImageName());
+      String previewImageUrl = boardManagementHelper.findPreviewImageUrl(previewImageName);
       List<String> previewImageUrls =
           previewImageUrl == null ? List.of() : List.of(previewImageUrl);
       return UserPostListResponseDto.builder()

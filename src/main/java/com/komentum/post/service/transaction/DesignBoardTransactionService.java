@@ -1,7 +1,7 @@
 package com.komentum.post.service.transaction;
 
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.service.DesignComponentService;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
@@ -22,7 +22,6 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -43,7 +42,6 @@ public class DesignBoardTransactionService {
   private final DesignBoardService designBoardService;
   private final TagService tagService;
   private final DesignBoardRepository designBoardRepository;
-  private final DesignComponentService designComponentService;
 
   /**
    * 게시글 ID로 디자인 에셋 게시글 상세 정보를 조회한다.
@@ -55,18 +53,23 @@ public class DesignBoardTransactionService {
   @Transactional(readOnly = true)
   public DesignBoardDetailDto findDesignBoardDetail(Long postId, String userIdentifier) {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
-      throw new EntityNotFoundException("cannot find design board with post id = " + postId);
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
     }
     User client = userIdentifier == null ? null : userEntityFinder.findUserEntity(userIdentifier);
     DesignBoardQuery.Detail detail = designBoardRepositorySupport
         .findDetailByPostId(postId, client);
+    if (detail == null) {
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
+    }
     List<Tag> tags = tagService.findAllByPostId(postId);
     // generate preview image url list
     Post targetPost = postService.getPostByPostId(postId);
-    String previewImageUrl =
-        helper.findPreviewImageUrl(targetPost.getPreviewImageName());
     List<DesignBoard> designBoards = designBoardService.findWithDesignComponentsByPostId(postId);
+    String previewImageUrl =
+        helper.findPreviewImageUrl(designBoardService.resolveVisiblePreviewImageName(
+            targetPost.getPreviewImageName(), designBoards));
     List<String> designImageUrls = designBoards.stream()
+        .filter(board -> Boolean.TRUE.equals(board.getDesignComponent().getIsActive()))
         .map(designBoard -> helper.findPreviewImageUrl(
             designBoard.getDesignComponent().getFileName()))
         .toList();
@@ -106,10 +109,11 @@ public class DesignBoardTransactionService {
   public String updateDesignBoardAndGetOldFileName(
       Long postId,
       DesignBoardUpdateDto updateDto,
-      String previewImageName
+      String previewImageName,
+      List<DesignComponent> requestedComponents
   ) {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
-      throw new EntityNotFoundException("cannot find design board with post id = " + postId);
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
     }
     // update post info
     PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, previewImageName);
@@ -121,9 +125,7 @@ public class DesignBoardTransactionService {
       tagService.synchronizeTags(targetPost, updateDto.getPostTags());
     }
     // synchronize design boards
-    if (updateDto.getDesignComponentIds() != null && !updateDto.getDesignComponentIds().isEmpty()) {
-      List<DesignComponent> requestedComponents = designComponentService.findByIdIn(
-          updateDto.getDesignComponentIds());
+    if (requestedComponents != null && !requestedComponents.isEmpty()) {
       designBoardService.synchronizeDesignBoards(targetPost, requestedComponents);
     }
     // retrieve old file name

@@ -45,6 +45,8 @@ public class DesignBoardController {
   @GetMapping
   @Operation(
       summary = "현재 인증된 사용자가 디자인 에셋 게시글 목록을 조회힌다",
+      description = "활성 에셋의 ID·타입만 노출하고, 활성 에셋이 없는 게시글은 목록에서 제외합니다. "
+          + "일부 에셋이 비활성인 게시글의 대표 이미지는 ID가 가장 작은 활성 에셋의 이미지로 대체합니다.",
       parameters = {
           @Parameter(name = "page", in = ParameterIn.QUERY, description = "페이지 번호 (0부터 시작)",
               schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")),
@@ -75,7 +77,10 @@ public class DesignBoardController {
    * @param userDetails 인증된 사용자 정보 (비인증 요청은 null)
    */
   @GetMapping("/{postId}")
-  @Operation(summary = "인증 여부와 관계없이 ID=postId인 특정 디자인 에셋 게시글을 조회한다")
+  @Operation(
+      summary = "인증 여부와 관계없이 ID=postId인 특정 디자인 에셋 게시글을 조회한다",
+      description = "비활성 에셋의 이미지·타입은 제외하며, 일부만 비활성인 경우 대표 이미지는 ID가 가장 작은 활성 에셋의 이미지로 대체합니다. "
+          + "게시글이 없거나 활성 에셋이 하나도 없으면 404를 반환합니다.")
   public ResponseEntity<DesignBoardDetailDto> findDesignBoardDetail(
       @PathVariable Long postId,
       @AuthenticationPrincipal CustomUserDetails userDetails
@@ -97,10 +102,12 @@ public class DesignBoardController {
   @Operation(
       summary = "인증 여부와 관계없이 디자인 에셋 게시글 상세 목록을 조회한다",
       description = """
-          
+          비활성 에셋의 이미지·타입을 제외하고, 활성 에셋이 없는 게시글은 목록에서 제외합니다.
+          일부 에셋이 비활성인 게시글의 대표 이미지는 ID가 가장 작은 활성 에셋의 이미지로 대체합니다.
+
           [동작 방식]
           - pinnedPostId가 있는 경우
-            - 첫 페이지(page=0)에서 해당 게시글을 최상단에 고정한다.
+            - 활성 에셋이 남아 있는 경우 첫 페이지(page=0)에서 해당 게시글을 최상단에 고정한다.
             - pinnedPostId가 null이 아니라면, pinnedPost 작성자의 게시글만 조회한다.
             - pinnedPost는 page=0일 때만 게시된다.
           - pinnedPostId가 없는 경우

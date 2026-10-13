@@ -22,6 +22,9 @@ public class DesignBoardMapperSupport {
   public List<BoardComponentTypeDto> toComponentTypeDtos(List<DesignBoard> designBoards) {
     Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
     for (DesignBoard designBoard : designBoards) {
+      if (!Boolean.TRUE.equals(designBoard.getDesignComponent().getIsActive())) {
+        continue;
+      }
       for (ComponentType componentType : designBoard.getDesignComponent().getComponentTypes()) {
         componentTypeMap.putIfAbsent(componentType.getTypeCode(),
             BoardComponentTypeDto.from(componentType));
@@ -33,13 +36,14 @@ public class DesignBoardMapperSupport {
   public DesignBoardPreviewDto toDesignBoardPreviewDto(
       DesignBoardQuery.Preview preview,
       BoardManagementHelper helper,
-      List<BoardComponentTypeDto> componentTypes
+      List<BoardComponentTypeDto> componentTypes,
+      String previewImageName
   ) {
     return DesignBoardPreviewDto.builder()
         .postId(preview.getPostId())
         .designComponentId(preview.getDesignComponentId())
         .title(preview.getTitle())
-        .previewImageUrl(helper.findPreviewImageUrl(preview.getPreviewImageName()))
+        .previewImageUrl(helper.findPreviewImageUrl(previewImageName))
         .userEmail(preview.getUserEmail())
         .createdAt(DateUtils.convertToDateString(preview.getCreatedAt()))
         .prefers(preview.getPrefers())
