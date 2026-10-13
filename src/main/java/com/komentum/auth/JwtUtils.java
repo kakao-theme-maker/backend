@@ -75,7 +75,7 @@ public class JwtUtils {
   }
 
   /**
-   * get userId from token
+   * get public user ID from token
    */
   public String getUserId(String token) {
     try {

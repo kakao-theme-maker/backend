@@ -97,4 +97,21 @@ public class User {
     this.name = name;
     this.role = UserRole.USER;
   }
+
+  /**
+   * 게스트 사용자를 소셜 로그인 일반 사용자(USER)로 승격한다. 기존 ID(userId, publicUserId)는 유지된다.
+   *
+   * @throws IllegalStateException 현재 사용자가 GUEST 권한이 아닌 경우
+   */
+  public void promoteToSocialUser(String userEmail, String name, String profileImgUrl,
+      AuthProvider authProvider) {
+    if (this.role != UserRole.GUEST) {
+      throw new IllegalStateException("[User Promotion] 게스트 사용자만 일반 사용자로 승격할 수 있습니다");
+    }
+    this.userEmail = userEmail;
+    this.name = name;
+    this.profileImgUrl = profileImgUrl;
+    this.authProvider = authProvider;
+    this.role = UserRole.USER;
+  }
 }
