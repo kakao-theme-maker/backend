@@ -72,13 +72,16 @@ public class SecurityConfig {
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         // 요청 인증 / 인가 설정
         .authorizeHttpRequests(auth -> {
-          // white list request matchers 추가
+          // permit-all RequestMatchers 추가
           auth.requestMatchers(createRequestMatchers(securityProperties.getPermitAll()))
               .permitAll();
           if (securityProfileProperties.getPermitAll() != null) {
             auth.requestMatchers(createRequestMatchers(securityProfileProperties.getPermitAll()))
                 .permitAll();
           }
+          // guest request matchers 추가
+          auth.requestMatchers(createRequestMatchers(securityProperties.getGuest()))
+              .hasRole(UserRole.GUEST.name());
           // admin only request matchers 추가
           auth.requestMatchers(createRequestMatchers(securityProperties.getAdminOnly()))
               .hasRole(UserRole.ADMIN.name());
@@ -90,7 +93,7 @@ public class SecurityConfig {
           if (fileStorageProperty.getStorage() == Storage.LOCAL) {
             auth.requestMatchers(HttpMethod.GET, WebConfig.UPLOAD_URL_PREFIX + "/**").permitAll();
           }
-          auth.anyRequest().authenticated();
+          auth.anyRequest().hasRole(UserRole.USER.name());
         })
         // oauth2 설정
         .oauth2Login(oauth -> {

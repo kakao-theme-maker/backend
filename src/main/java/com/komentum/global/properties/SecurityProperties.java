@@ -14,6 +14,7 @@ import org.springframework.http.HttpMethod;
 public class SecurityProperties {
 
   private final Map<HttpMethod, List<SecurityRule>> permitAll;
+  private final Map<HttpMethod, List<SecurityRule>> guest;
   private final Map<HttpMethod, List<SecurityRule>> adminOnly;
   private final String[] allowedOriginList;
 
