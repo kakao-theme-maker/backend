@@ -2,6 +2,7 @@ package com.komentum.user.service;
 
 import com.komentum.auth.JwtUtils;
 import com.komentum.global.dto.CustomUserDetails;
+import com.komentum.global.exception.DuplicateResourceException;
 import com.komentum.global.exception.UnauthorizedException;
 import com.komentum.global.properties.AuthProperty;
 import com.komentum.global.security.CustomUserDetailsService;
@@ -61,12 +62,47 @@ public class UserAuthService {
   }
 
 
-  // 로컬 회원가입
-  public void processLocalSignUp(SignUpRequestDto dto) {
-    User user = userRepository.findByUserEmail(dto.getEmail()).orElse(null);
-    if (user == null) {
-      userRepository.save(dto.toEntity(bCryptPasswordEncoder));
+  /**
+   * <b>로컬 회원가입을 진행한다.</b>
+   * <p>1. 가입하려는 이메일의 사용자가 이미 존재하면, 예외를 던진다.</p>
+   * <p>2. 인증 정보가 있고 DB에 존재하는 게스트 사용자라면, 기존 사용자를 일반 사용자로 승격한다. (ID 및 리소스 소유권 유지)</p>
+   * <p>3. 인증 정보가 없거나 DB에 사용자가 없다면, 새로운 일반 사용자를 생성한다.</p>
+   *
+   * @param userDetails 현재 요청의 인증 정보 (없으면 null)
+   * @throws DuplicateResourceException 이미 가입된 이메일인 경우
+   * @throws RuntimeException 인증된 사용자가 GUEST 권한이 아닌 경우
+   */
+  @Transactional
+  public void processLocalSignUp(SignUpRequestDto dto, UserDetails userDetails) {
+    // 이미 존재하는 사용자면 예외처리
+    if (userRepository.findByUserEmail(dto.getEmail()).isPresent()) {
+      throw new DuplicateResourceException("[Local Sign UP] 이미 존재하는 이메일입니다");
     }
+    if (userDetails == null) { // 승격할 게스트 정보가 없으면, 신규 일반 사용자 생성
+      userRepository.save(dto.toEntity(bCryptPasswordEncoder));
+      return;
+    }
+    userRepository.findByPublicUserId(userDetails.getUsername()).ifPresentOrElse(
+        user -> promoteGuestToUser(user, dto),
+        () -> userRepository.save(dto.toEntity(bCryptPasswordEncoder))
+    );
+  }
+
+  /**
+   * 기존 게스트 사용자를 일반 사용자로 승격한다. 사용자 ID는 그대로 유지된다.
+   *
+   * @throws RuntimeException 사용자가 GUEST 권한이 아닌 경우
+   */
+  private void promoteGuestToUser(User user, SignUpRequestDto dto) {
+    if (!user.getRole().equals(UserRole.GUEST)) {
+      log.warn("[Local Sign Up] 사용자가 이미 게스트보다 높은 권한으로 등록되어 있음");
+      throw new RuntimeException("[Local Sign Up] 사용자가 이미 게스트보다 높은 권한으로 등록되어 있음");
+    }
+    user.promoteToUser(
+        dto.getEmail(),
+        bCryptPasswordEncoder.encode(dto.getPassword()),
+        "user" + UUID.randomUUID()
+    );
   }
 
   // 로컬 로그인

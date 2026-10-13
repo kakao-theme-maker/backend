@@ -82,4 +82,12 @@ public class GlobalExceptionHandler {
     errors.put("message", ex.getMessage());
     return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
   }
+
+  @ExceptionHandler(DuplicateResourceException.class)
+  public ResponseEntity<Map<String, String>> handleDuplicateResourceException(
+      DuplicateResourceException ex) {
+    Map<String, String> errors = new HashMap<>();
+    errors.put("message", ex.getMessage());
+    return new ResponseEntity<>(errors, HttpStatus.CONFLICT);
+  }
 }

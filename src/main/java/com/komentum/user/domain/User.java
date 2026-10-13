@@ -82,4 +82,19 @@ public class User {
         .userEmail(publicUserId + "@guest.com")
         .build();
   }
+
+  /**
+   * 게스트 사용자를 일반 사용자(USER)로 승격한다. 기존 ID(userId, publicUserId)는 유지된다.
+   *
+   * @throws IllegalStateException 현재 사용자가 GUEST 권한이 아닌 경우
+   */
+  public void promoteToUser(String userEmail, String encryptedPassword, String name) {
+    if (this.role != UserRole.GUEST) {
+      throw new IllegalStateException("[User Promotion] 게스트 사용자만 일반 사용자로 승격할 수 있습니다");
+    }
+    this.userEmail = userEmail;
+    this.encryptedPassword = encryptedPassword;
+    this.name = name;
+    this.role = UserRole.USER;
+  }
 }
