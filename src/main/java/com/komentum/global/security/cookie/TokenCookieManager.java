@@ -56,7 +56,7 @@ public class TokenCookieManager {
    * */
   public void addGuestTokenOnCookie(HttpServletResponse response, String guestToken) {
     ResponseCookie accessTokenCookie = generateAccessTokenCookie(guestToken,
-        authProperty.getAccessTokenExpiresIn());
+        authProperty.getGuestTokenExpiresIn());
     response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
   }
 

@@ -62,6 +62,13 @@ public class JwtUtils {
   }
 
   /**
+   * 게스트 토큰을 생성한다
+   * */
+  public String generateGuestToken(String publicUserId) {
+    return generateToken(publicUserId, authProperty.getGuestTokenExpiresIn(), TokenType.ACCESS);
+  }
+
+  /**
    * validate token
    */
   public boolean validateToken(String token) {

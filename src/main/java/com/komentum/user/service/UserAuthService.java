@@ -192,7 +192,7 @@ public class UserAuthService {
           log.warn("[Guest Token] 사용자가 이미 게스트보다 높은 권한으로 등록되어 있음");
           throw new RuntimeException("[Guest Token] 사용자가 이미 게스트보다 높은 권한으로 등록되어 있음");
         }
-        return jwtUtils.generateAccessToken(user.getPublicUserId());
+        return jwtUtils.generateGuestToken(user.getPublicUserId());
       }).orElseGet(this::createNewGuestAndReturnToken);
     }
   }
@@ -204,6 +204,6 @@ public class UserAuthService {
     String publicUserId = UUID.randomUUID().toString();
     User guestUser = User.createGuest(publicUserId);
     userRepository.save(guestUser);
-    return jwtUtils.generateAccessToken(publicUserId);
+    return jwtUtils.generateGuestToken(publicUserId);
   }
 }
