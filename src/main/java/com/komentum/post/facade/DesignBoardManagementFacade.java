@@ -1,6 +1,7 @@
 package com.komentum.post.facade;
 
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
@@ -23,7 +24,10 @@ import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,6 +105,8 @@ public class DesignBoardManagementFacade {
         .map(p ->
             designBoardMapperSupport.toDesignBoardPreviewDto(p, boardManagementHelper,
                 designBoardMapperSupport.toComponentTypeDtos(
+                    designBoardMap.getOrDefault(p.getPostId(), List.of())),
+                designBoardService.resolveVisiblePreviewImageName(p.getPreviewImageName(),
                     designBoardMap.getOrDefault(p.getPostId(), List.of()))))
         .toList();
   }
@@ -143,10 +149,12 @@ public class DesignBoardManagementFacade {
   private List<String> resolvePreviewImageUrls(DesignBoardQuery.Detail detail,
       List<DesignBoard> designBoards) {
     String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(
-        detail.getPostPreviewImageName());
+        designBoardService.resolveVisiblePreviewImageName(detail.getPostPreviewImageName(),
+            designBoards));
     return Stream.concat(
         Stream.ofNullable(postPreviewImageUrl),
         designBoards.stream()
+            .filter(board -> Boolean.TRUE.equals(board.getDesignComponent().getIsActive()))
             .map(designBoard -> boardManagementHelper.findPreviewImageUrl(
                 designBoard.getDesignComponent().getFileName()))
     ).toList();
@@ -165,6 +173,7 @@ public class DesignBoardManagementFacade {
     // 이미지 저장
     List<DesignComponent> designComponents = designComponentService.findByIdIn(
         createDto.getDesignComponentIds());
+    designComponentService.requireActiveComponents(designComponents);
     String previewImageName = uploadOrReusePreviewImage(previewImage, designComponents.get(0));
     // DB 작업 수행
     User author = userEntityFinder.findUserEntity(authorId);
@@ -193,15 +202,46 @@ public class DesignBoardManagementFacade {
       DesignBoardUpdateDto updateDto,
       MultipartFile previewImage,
       String userIdentifier) {
+    List<DesignBoard> existingBoards = designBoardService.findWithDesignComponentsByPostId(postId);
+    if (existingBoards.isEmpty()) {
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
+    }
+    List<DesignComponent> requestedComponents = null;
+    if (updateDto.getDesignComponentIds() != null && !updateDto.getDesignComponentIds().isEmpty()) {
+      requestedComponents = designComponentService.findByIdIn(updateDto.getDesignComponentIds());
+      Set<Integer> existingIds = existingBoards
+          .stream().map(board -> board.getDesignComponent().getDesignComponentId())
+          .collect(Collectors.toSet());
+      designComponentService.requireActiveComponents(requestedComponents.stream()
+          .filter(component -> !existingIds.contains(component.getDesignComponentId()))
+          .toList());
+    }
+    List<DesignComponent> visibleComponents = requestedComponents == null
+        ? existingBoards.stream().map(DesignBoard::getDesignComponent).toList()
+        : requestedComponents;
+    if (visibleComponents.stream()
+        .noneMatch(component -> Boolean.TRUE.equals(component.getIsActive()))) {
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
+    }
     // DB 쓰기 작업보다 파일 작업을 먼저 처리해야하므로 파일 작업 우선 처리
     String newImageName = boardManagementHelper.savePreviewImageIfPresent(DesignComponent.class,
         previewImage);
+    if (newImageName == null && requestedComponents != null
+        && existingBoards.stream()
+            .anyMatch(board -> !Boolean.TRUE.equals(board.getDesignComponent().getIsActive()))
+        && requestedComponents.stream()
+            .allMatch(component -> Boolean.TRUE.equals(component.getIsActive()))) {
+      DesignComponent previewComponent = requestedComponents.stream()
+          .min(Comparator.comparing(DesignComponent::getDesignComponentId)).orElseThrow();
+      newImageName = uploadOrReusePreviewImage(null, previewComponent);
+    }
     // DB 작업 커밋 + 기존 이미지 삭제
     try {
       String oldImageName = designBoardTransactionService.updateDesignBoardAndGetOldFileName(
           postId,
           updateDto,
-          newImageName
+          newImageName,
+          requestedComponents
       );
       if (newImageName != null && oldImageName != null) {
         boardManagementHelper.deleteFileSilently(oldImageName, "Design Board의 이전 파일 삭제 실패");

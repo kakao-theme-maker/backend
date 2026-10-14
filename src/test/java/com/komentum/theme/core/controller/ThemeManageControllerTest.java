@@ -37,6 +37,7 @@ import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
 import com.komentum.user.domain.User;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,6 +45,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -125,6 +128,127 @@ class ThemeManageControllerTest {
     assertThat(response.getStyleCodes()).isNotEmpty();
   }
 
+  @Test
+  @DisplayName("비활성 에셋이 포함된 기본 테마를 복사할 수 없고 새 테마가 남지 않는다")
+  void createNewTheme_failWhenDefaultThemeContainsInactiveComponent() throws Exception {
+    themeComponentScenarioSupport.builder(List.of(testUser),
+            List.of(designComponentList.get(0)))
+        .withCountPerUser(1)
+        .withDefaultTheme()
+        .build();
+    deactivateComponent(designComponentList.get(0).getDesignComponentId());
+    long themeCount = themeComponentRepository.count();
+    long imageCount = themeImageRepository.count();
+    long styleCount = themeStyleRepository.count();
+
+    mockMvcUtils.performAuthRequest(MockMvcRequestBuilders.post("/api/themes"),
+            ExecutionContext.builder()
+                .mockMvc(mockMvc)
+                .clientDto(TestClientDto.fromEntity(testUser))
+                .build())
+        .andExpect(status().isNotFound());
+
+    assertThat(themeComponentRepository.count()).isEqualTo(themeCount);
+    assertThat(themeImageRepository.count()).isEqualTo(imageCount);
+    assertThat(themeStyleRepository.count()).isEqualTo(styleCount);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("완성 또는 작성 중 테마에서 기존 비활성 에셋을 유지하면서 inset을 수정할 수 있다")
+  void updateTheme_successWhenRetainingInactiveComponent(boolean isDone) throws Exception {
+    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
+    targetTheme.setIsDone(isDone);
+    themeComponentRepository.saveAndFlush(targetTheme);
+    ThemeImage existingImage = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).get(0);
+    Integer componentId = existingImage.getDesignComponent().getDesignComponentId();
+    TypeCode typeCode = existingImage.getComponentType().getTypeCode();
+    deactivateComponent(componentId);
+    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
+        .typeCodes(Map.of(typeCode, ThemeImageUpdateRequest.builder()
+            .designComponentId(componentId)
+            .inset(new InsetUpdateDto(10, 20, 50, 40, 60, 70))
+            .build()))
+        .build();
+
+    doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto, testUser)
+        .andExpect(status().isNoContent());
+
+    ThemeImage updatedImage = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
+        .filter(image -> image.getComponentType().getTypeCode() == typeCode)
+        .findFirst().orElseThrow();
+    assertThat(updatedImage.getDesignComponent().getDesignComponentId()).isEqualTo(componentId);
+    assertThat(updatedImage.getDesignComponent().getIsActive()).isFalse();
+    assertThat(updatedImage.getImageInset().getEdgeInsetTop()).isEqualTo(10);
+    assertThat(updatedImage.getImageInset().getEdgeInsetBottom()).isEqualTo(50);
+  }
+
+  @Test
+  @DisplayName("새 비활성 에셋으로 교체하면 테마 메타데이터와 기존 연결도 유지된다")
+  void updateTheme_failWhenReplacingWithInactiveComponent() throws Exception {
+    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
+    ThemeImage existingImage = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).get(0);
+    Integer existingComponentId = existingImage.getDesignComponent().getDesignComponentId();
+    Integer inactiveComponentId = designComponentList.get(1).getDesignComponentId();
+    deactivateComponent(inactiveComponentId);
+    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
+        .themeName("must not persist")
+        .typeCodes(Map.of(existingImage.getComponentType().getTypeCode(),
+            ThemeImageUpdateRequest.builder().designComponentId(inactiveComponentId).build()))
+        .build();
+
+    doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto, testUser)
+        .andExpect(status().isNotFound());
+
+    ThemeComponent unchangedTheme = themeComponentRepository
+        .findById(targetTheme.getThemeComponentId()).orElseThrow();
+    assertThat(unchangedTheme.getThemeName()).isEqualTo(targetTheme.getThemeName());
+    assertThat(unchangedTheme.getVersionNumber()).isEqualTo(targetTheme.getVersionNumber());
+    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(
+            targetTheme.getThemeComponentId()))
+        .allSatisfy(image -> assertThat(image.getDesignComponent().getDesignComponentId())
+            .isEqualTo(existingComponentId));
+  }
+
+  @Test
+  @DisplayName("다른 슬롯에 쓰던 비활성 에셋을 재사용할 수 없고 다른 수정도 롤백한다")
+  void updateTheme_failWhenReusingInactiveComponentForAnotherTypeCode() throws Exception {
+    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
+    List<ThemeImage> existingImages = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId());
+    ThemeImage retainedImage = existingImages.get(0);
+    ThemeImage replacedImage = existingImages.get(1);
+    Integer inactiveComponentId = retainedImage.getDesignComponent().getDesignComponentId();
+    Integer activeComponentId = designComponentList.get(1).getDesignComponentId();
+    replacedImage.setDesignComponent(designComponentList.get(1));
+    themeImageRepository.saveAndFlush(replacedImage);
+    deactivateComponent(inactiveComponentId);
+    Map<TypeCode, ThemeImageUpdateRequest> typeCodes = new LinkedHashMap<>();
+    typeCodes.put(retainedImage.getComponentType().getTypeCode(), ThemeImageUpdateRequest.builder()
+        .designComponentId(inactiveComponentId)
+        .inset(new InsetUpdateDto(10, 20, 50, 40, 60, 70))
+        .build());
+    typeCodes.put(existingImages.get(2).getComponentType().getTypeCode(), null);
+    typeCodes.put(replacedImage.getComponentType().getTypeCode(), ThemeImageUpdateRequest.builder()
+        .designComponentId(inactiveComponentId).build());
+    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder().typeCodes(typeCodes).build();
+
+    doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto, testUser)
+        .andExpect(status().isNotFound());
+
+    Map<TypeCode, ThemeImage> unchangedImages = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
+        .collect(Collectors.toMap(image -> image.getComponentType().getTypeCode(), image -> image));
+    assertThat(unchangedImages).hasSize(existingImages.size());
+    assertThat(unchangedImages.get(retainedImage.getComponentType().getTypeCode()).getImageInset())
+        .usingRecursiveComparison().isEqualTo(retainedImage.getImageInset());
+    assertThat(unchangedImages.get(replacedImage.getComponentType().getTypeCode())
+        .getDesignComponent().getDesignComponentId()).isEqualTo(activeComponentId);
+  }
+
 
   @Test
   @DisplayName("사용자는 테마 이미지를 수정할 수 있다")
@@ -157,12 +281,18 @@ class ThemeManageControllerTest {
   }
 
   @Test
-  @DisplayName("테마 이미지에 null을 넣으면 해당 이미지를 삭제한다")
+  @DisplayName("비활성 에셋을 사용하던 테마 이미지도 null을 넣으면 삭제한다")
   public void updateTheme_deleteImageWhenImageIsNull() throws Exception {
     // given
     ThemeComponent targetTheme = themeComponentScenarioSupport
         .builder(List.of(testUser), designComponentList)
         .withCountPerUser(1).build().themeComponents().get(0);
+    ThemeImage inactiveImage = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
+        .filter(image -> image.getComponentType().getTypeCode()
+            == TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
+        .findFirst().orElseThrow();
+    deactivateComponent(inactiveImage.getDesignComponent().getDesignComponentId());
     Map<TypeCode, ThemeImageUpdateRequest> updateMap = new HashMap<>();
     updateMap.put(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE, null);
     ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
@@ -180,6 +310,41 @@ class ThemeManageControllerTest {
             .equals(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE))
         .findFirst().orElse(null);
     assertThat(updatedThemeImage).isNull();
+  }
+
+  @Test
+  @DisplayName("테마 이미지를 모두 제거한 뒤 비활성 에셋을 다시 연결할 수 없다")
+  void updateTheme_failWhenReattachingInactiveComponentAfterRemovingAllImages() throws Exception {
+    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
+    Integer themeId = targetTheme.getThemeComponentId();
+    Integer componentId = designComponentList.get(0).getDesignComponentId();
+    List<ThemeImage> existingImages = themeImageRepository.fetchJoinAllByThemeComponentId(themeId);
+    TypeCode previousTypeCode = existingImages.get(0).getComponentType().getTypeCode();
+    deactivateComponent(componentId);
+    Map<TypeCode, ThemeImageUpdateRequest> removals = new HashMap<>();
+    existingImages.forEach(image -> removals.put(image.getComponentType().getTypeCode(), null));
+
+    doThemeUpdateRequest(themeId, ThemeUpdateRequest.builder().typeCodes(removals).build(), testUser)
+        .andExpect(status().isNoContent());
+    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(themeId)).isEmpty();
+    String versionAfterRemoval = themeComponentRepository.findById(themeId).orElseThrow()
+        .getVersionNumber();
+    ResultActions detailResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/themes/{id}",
+            themeId))
+        .andExpect(status().isOk());
+    ThemeDetailResponse detail = mockMvcUtils.parseResponse(detailResult, new TypeReference<>() {
+    });
+    assertThat(detail.getTypeCodes()).isEmpty();
+
+    ThemeUpdateRequest reattachment = ThemeUpdateRequest.builder()
+        .typeCodes(Map.of(previousTypeCode, ThemeImageUpdateRequest.builder()
+            .designComponentId(componentId).build()))
+        .build();
+    doThemeUpdateRequest(themeId, reattachment, testUser).andExpect(status().isNotFound());
+
+    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(themeId)).isEmpty();
+    assertThat(themeComponentRepository.findById(themeId).orElseThrow().getVersionNumber())
+        .isEqualTo(versionAfterRemoval);
   }
 
   @Test
@@ -265,6 +430,24 @@ class ThemeManageControllerTest {
     ThemeComponent clonedTheme = themeComponentRepository.findById(response.getThemeComponentId())
         .orElseThrow();
     assertThat(clonedTheme.getUser().getUserEmail()).isEqualTo(testUser.getUserEmail());
+  }
+
+  @Test
+  @DisplayName("비활성 에셋이 포함된 테마는 복제할 수 없고 새 테마가 남지 않는다")
+  void cloneTheme_failWhenComponentIsInactive() throws Exception {
+    ThemeComponent sourceTheme = createThemeUsing(designComponentList.get(0));
+    ThemeCloneRequest cloneRequest = buildCloneRequestFromTheme(sourceTheme.getThemeComponentId(),
+        "cloned theme");
+    deactivateComponent(designComponentList.get(0).getDesignComponentId());
+    long themeCount = themeComponentRepository.count();
+    long imageCount = themeImageRepository.count();
+    long styleCount = themeStyleRepository.count();
+
+    doThemeCloneRequest(cloneRequest, testUser).andExpect(status().isNotFound());
+
+    assertThat(themeComponentRepository.count()).isEqualTo(themeCount);
+    assertThat(themeImageRepository.count()).isEqualTo(imageCount);
+    assertThat(themeStyleRepository.count()).isEqualTo(styleCount);
   }
 
   @Test
@@ -404,6 +587,21 @@ class ThemeManageControllerTest {
     assertThat(themeImageRepository.count()).isEqualTo(TypeCode.values().length);
     assertThat(themeStyleRepository.count()).isEqualTo(StyleCode.values().length);
     resultActions.andExpect(status().isOk());
+  }
+
+  private ThemeComponent createThemeUsing(DesignComponent component) {
+    return themeComponentScenarioSupport.builder(List.of(testUser), List.of(component))
+        .withCountPerUser(1).build().themeComponents().get(0);
+  }
+
+  private void deactivateComponent(Integer componentId) throws Exception {
+    mockMvcUtils.performAuthRequest(
+            MockMvcRequestBuilders.delete("/api/design-components/{id}", componentId),
+            ExecutionContext.builder()
+                .mockMvc(mockMvc)
+                .clientDto(TestClientDto.fromEntity(testUser))
+                .build())
+        .andExpect(status().isNoContent());
   }
 
   private ThemeCloneRequest buildCloneRequestFromTheme(Integer themeComponentId, String themeName) {

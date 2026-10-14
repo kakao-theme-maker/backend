@@ -26,6 +26,7 @@ public abstract class DesignComponentMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "componentTypeMappings", ignore = true)
+  @Mapping(target = "isActive", ignore = true)
   @Mapping(target = "user", source = "user")
   @Mapping(target = "fileName", source = "fileName")
   public abstract DesignComponent toEntity(CreateDesignComponentRequest request, String fileName,

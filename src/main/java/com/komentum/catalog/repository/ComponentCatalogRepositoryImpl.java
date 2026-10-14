@@ -38,7 +38,7 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
             dc.file_name as preview_image_file_name,
             dc.created_at as created_at
           FROM design_component dc
-          WHERE dc.user_id = :userId
+          WHERE dc.user_id = :userId AND dc.is_active = true
         ) combined
         ORDER BY created_at DESC
         LIMIT :limit

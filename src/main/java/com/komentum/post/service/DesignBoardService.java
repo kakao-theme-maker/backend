@@ -13,6 +13,7 @@ import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,6 +82,27 @@ public class DesignBoardService {
   @Transactional(readOnly = true)
   public List<DesignBoard> findWithDesignComponentsByPostId(Long postId) {
     return findWithDesignComponentsByPostIdIn(List.of(postId));
+  }
+
+  /**
+   * 비활성 에셋이 포함된 게시글의 대표 이미지를 활성 에셋 중 ID가 가장 작은 에셋의 파일명으로 대체한다.
+   *
+   * @param designBoards 비활성 에셋을 포함한 게시글의 전체 연결 목록
+   * @return 모두 활성이거나 목록이 비어 있으면 기존 파일명, 일부 비활성이면 가장 작은 활성 ID의 파일명,
+   *     비활성만 있으면 null
+   */
+  public String resolveVisiblePreviewImageName(String previewImageName,
+      List<DesignBoard> designBoards) {
+    if (designBoards.stream()
+        .allMatch(board -> Boolean.TRUE.equals(board.getDesignComponent().getIsActive()))) {
+      return previewImageName;
+    }
+    return designBoards.stream()
+        .map(DesignBoard::getDesignComponent)
+        .filter(component -> Boolean.TRUE.equals(component.getIsActive()))
+        .min(Comparator.comparing(DesignComponent::getDesignComponentId))
+        .map(DesignComponent::getFileName)
+        .orElse(null);
   }
 
   @Transactional(readOnly = true)

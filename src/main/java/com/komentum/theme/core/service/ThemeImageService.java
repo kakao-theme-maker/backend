@@ -113,7 +113,8 @@ public class ThemeImageService {
    */
   @Transactional(readOnly = true)
   public List<ThemeImage> fetchJoinThemeImagesByThemeComponentId(Integer themeComponentId) {
-    return fetchJoinThemeImageMapByThemeIds(List.of(themeComponentId)).get(themeComponentId);
+    return fetchJoinThemeImageMapByThemeIds(List.of(themeComponentId))
+        .getOrDefault(themeComponentId, List.of());
   }
 
   /**
@@ -165,6 +166,9 @@ public class ThemeImageService {
       ThemeComponent sourceTheme) {
     List<ThemeImage> targetThemeImages = new ArrayList<>();
     Set<ThemeImage> sourceThemeImages = sourceTheme.getThemeImages();
+    designComponentService.requireActiveComponents(sourceThemeImages.stream()
+        .map(ThemeImage::getDesignComponent)
+        .toList());
     for (ThemeImage sourceThemeImage : sourceThemeImages) {
       ThemeImage targetThemeImage = ThemeImage.copyOf(targetTheme, sourceThemeImage);
       targetThemeImages.add(targetThemeImage);
@@ -195,6 +199,7 @@ public class ThemeImageService {
         typeCodes.values().stream()
             .map(ThemeImageUpdateRequest::getDesignComponentId)
             .collect(Collectors.toSet()));
+    designComponentService.requireActiveComponents(designComponentMap.values());
     List<ThemeImage> themeImages = new ArrayList<>();
     typeCodes.forEach((typeCode, imageRequest) -> {
       ComponentType componentType = componentTypeMap.get(typeCode);
@@ -262,6 +267,17 @@ public class ThemeImageService {
             ti -> ti.getComponentType().getTypeCode(),
             Functions.identity()
         ));
+    List<DesignComponent> newComponents = typeCodes.entrySet().stream()
+        .filter(entry -> entry.getValue() != null)
+        .filter(entry -> {
+          ThemeImage existingImage = themeImages.get(entry.getKey());
+          return existingImage == null || !Objects.equals(
+              existingImage.getDesignComponent().getDesignComponentId(),
+              entry.getValue().getDesignComponentId());
+        })
+        .map(entry -> requestedImageMap.get(entry.getValue().getDesignComponentId()))
+        .toList();
+    designComponentService.requireActiveComponents(newComponents);
     // 요청 데이터 기반으로 기존 theme image 수정
     typeCodes.forEach((typeCode, updateRequest) -> {
       // updateRequest가 null이면 기존 ThemeImage를 삭제한다

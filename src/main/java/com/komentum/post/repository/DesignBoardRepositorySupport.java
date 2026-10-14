@@ -59,7 +59,8 @@ public class DesignBoardRepositorySupport {
         .from(designBoard)
         .join(designBoard.designComponent, designComponent)
         .join(designBoard.post, post)
-        .join(post.user, user);
+        .join(post.user, user)
+        .where(designComponent.isActive.isTrue());
   }
 
   public DesignBoardQuery.Detail findDetailByPostId(Long postId, User client) {
@@ -137,6 +138,7 @@ public class DesignBoardRepositorySupport {
         .join(post.user, user)
         .leftJoin(prefer).on(prefer.post.eq(post))
         .where(
+            designComponent.isActive.isTrue(),
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
         )
         .groupBy(

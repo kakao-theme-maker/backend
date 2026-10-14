@@ -16,6 +16,7 @@ import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.user.domain.User;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -46,6 +47,9 @@ class ComponentCatalogControllerTest {
 
   @Autowired
   private ThemeComponentScenarioSupport themeComponentScenarioSupport;
+
+  @Autowired
+  private DesignComponentRepository designComponentRepository;
 
   @Autowired
   private MockMvcUtils mockMvcUtils;
@@ -103,5 +107,41 @@ class ComponentCatalogControllerTest {
     for (ComponentCatalogResponse res : response) {
       assertUserPostListResponseDto(res);
     }
+  }
+
+  @Test
+  @DisplayName("비활성 디자인 컴포넌트는 제외하고 이를 참조하는 테마는 카탈로그에 보존한다")
+  void findCustomComponents_excludesInactiveDesignsAndKeepsThemes() throws Exception {
+    BDDMockito.given(fileManager.resolveFilePath(BDDMockito.anyString()))
+        .willReturn("http://mocked-url/image.png");
+    User client = userScenarioSupport.builder().withUsers(1).build().getFirstUser();
+    List<DesignComponent> components = designComponentScenarioSupport.builder(List.of(client))
+        .withCountPerUser(2).build().designComponents();
+    var themes = themeComponentScenarioSupport.builder(List.of(client), components)
+        .withCountPerUser(1).build().themeComponents();
+    DesignComponent inactive = components.get(0);
+    inactive.deactivate();
+    designComponentRepository.saveAndFlush(inactive);
+
+    List<ComponentCatalogResponse> response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, List<ComponentCatalogResponse>>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/users/me/custom-components")
+            .clientDto(TestClientDto.fromEntity(client))
+            .params(TestParams.withPaging(0, 10))
+            .responseType(new TypeReference<>() {
+            })
+            .build());
+
+    assertThat(response).hasSize(2);
+    assertThat(response.stream().filter(item -> item.getComponentType() == ComponentType.DESIGN))
+        .extracting(ComponentCatalogResponse::getComponentId)
+        .containsExactly(components.get(1).getDesignComponentId());
+    assertThat(response.stream().filter(item -> item.getComponentType() == ComponentType.THEME))
+        .singleElement().satisfies(item -> {
+          assertThat(item.getComponentId()).isEqualTo(themes.get(0).getThemeComponentId());
+          assertThat(item.getPreviewImageUrl()).isEqualTo("http://mocked-url/image.png");
+        });
   }
 }

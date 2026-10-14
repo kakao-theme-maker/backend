@@ -10,13 +10,18 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.dto.CreateDesignComponentRequest;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.test.data.UserDataGenerator;
 import com.komentum.user.domain.User;
+import jakarta.persistence.EntityManager;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -46,6 +52,9 @@ class DesignComponentServiceTest {
 
   @Autowired
   private UserDataGenerator userDataGenerator;
+
+  @Autowired
+  private EntityManager entityManager;
 
   @MockitoBean
   private FileManager fileManager;
@@ -111,5 +120,34 @@ class DesignComponentServiceTest {
     ArgumentCaptor<String> uploadedFileNames = ArgumentCaptor.forClass(String.class);
     verify(fileManager, times(2)).uploadFile(any(byte[].class), uploadedFileNames.capture());
     verify(fileManager).deleteFile(uploadedFileNames.getAllValues().get(0));
+  }
+
+  @Test
+  @Transactional
+  @DisplayName("기존 참조용 원시 조회는 비활성 컴포넌트를 보존하고 신규 사용 검증은 거부한다")
+  void inactiveComponents_remainAvailableToHistoricalLookups() {
+    DesignComponent inactive = DesignComponent.builder()
+        .user(user).fileName("image.png").isPublic(true).build();
+    inactive.replaceComponentTypes(List.of(componentType));
+    inactive.deactivate();
+    Integer componentId = designComponentRepository.saveAndFlush(inactive).getDesignComponentId();
+    entityManager.clear();
+
+    DesignComponent retained = designComponentService.getEntityById(componentId);
+    assertThat(retained.getIsActive()).isFalse();
+    assertThat(retained.getComponentTypes()).extracting(ComponentType::getComponentTypeId)
+        .containsExactly(componentType.getComponentTypeId());
+    assertThat(designComponentService.findByIdIn(List.of(componentId)))
+        .extracting(DesignComponent::getDesignComponentId).containsExactly(componentId);
+    assertThat(designComponentService.findMapByIdIn(Set.of(componentId)))
+        .containsKey(componentId);
+    designComponentService.requireActiveComponents(List.of());
+    DesignComponent active = DesignComponent.builder().build();
+    assertThat(active.getIsActive()).isTrue();
+    designComponentService.requireActiveComponents(List.of(active));
+    assertThatThrownBy(() -> designComponentService.requireActiveComponents(
+        List.of(active, retained)))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessageContaining(componentId.toString());
   }
 }
