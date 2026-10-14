@@ -1,6 +1,7 @@
 package com.komentum.user.controller;
 
 import com.komentum.auth.JwtUtils;
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.properties.AuthProperty;
 import com.komentum.global.security.cookie.TokenCookieManager;
 import com.komentum.user.dto.LocalLoginRequestDto;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,10 +31,17 @@ public class UserAuthController {
 
   // Local 회원가입 기능
   @PostMapping("/local/sign-up")
-  @Operation(summary = "인증되지 않은 사용자가 로컬 회원가입을 진행한다")
+  @Operation(summary = "인증되지 않은 사용자 혹은 게스트 사용자가 로컬 회원가입을 진행한다", description = """
+      <b>로컬 회원가입을 진행한다.</b>
+      <p>1. 가입하려는 이메일의 사용자가 이미 존재하면, 409 응답을 반환한다.</p>
+      <p>2. 게스트 인증 정보가 있고 DB에 존재하면, 기존 게스트 사용자를 일반 사용자로 승격한다. (ID 유지)</p>
+      <p>3. 인증 정보가 없거나 DB에 사용자가 없다면, 새로운 일반 사용자를 생성한다.</p>
+      <p>4. 인증된 사용자가 GUEST 권한이 아니라면, 예외를 던진다.</p>
+      """)
   public ResponseEntity<String> singUpLocal(
-      @RequestBody SignUpRequestDto signUpRequestDto) {
-    userAuthService.processLocalSignUp(signUpRequestDto);
+      @RequestBody SignUpRequestDto signUpRequestDto,
+      @AuthenticationPrincipal CustomUserDetails userDetails) {
+    userAuthService.processLocalSignUp(signUpRequestDto, userDetails);
     return ResponseEntity.ok("signup success");
   }
 

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.komentum.global.dto.OAuth2UserInfo;
+import com.komentum.user.domain.AuthProvider;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
 import java.util.Optional;
@@ -48,7 +49,7 @@ class CustomOauth2UserServiceTest {
     given(userRepository.findByUserEmail(userEmail))
         .willReturn(Optional.of(user));
     // when
-    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo);
+    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo, null);
     // then
     assertThat(res).isEqualTo(user);
     verify(userRepository, times(1)).findByUserEmail(userEmail);
@@ -67,7 +68,7 @@ class CustomOauth2UserServiceTest {
     given(userRepository.save(user))
         .willReturn(user);
     // when
-    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo);
+    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo, null);
     // then
     assertThat(res).isEqualTo(user);
     verify(userRepository, times(1)).findByUserEmail(userEmail);
@@ -87,10 +88,63 @@ class CustomOauth2UserServiceTest {
     given(userRepository.save(user))
         .willThrow(new DataIntegrityViolationException("exception"));
     // when
-    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo);
+    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo, null);
     // then
     assertThat(res).isEqualTo(user);
     verify(userRepository, times(2)).findByUserEmail(userEmail);
     verify(userRepository, times(1)).save(user);
+  }
+
+  @Test
+  @DisplayName("게스트 사용자 ID가 주어지고 DB의 사용자가 GUEST라면, 새로 생성하지 않고 기존 사용자를 승격한다")
+  void createOrRetrieveUser_whenGuestExists_promoteGuest() {
+    // given
+    User guest = User.createGuest("guest-public-id");
+    given(oauth2UserInfo.getName()).willReturn("kakaoUser");
+    given(oauth2UserInfo.getProfileImageUrl()).willReturn("https://profile");
+    given(oauth2UserInfo.getAuthProvider()).willReturn(AuthProvider.KAKAO);
+    given(userRepository.findByUserEmail(userEmail)).willReturn(Optional.empty());
+    given(userRepository.findByPublicUserId("guest-public-id")).willReturn(Optional.of(guest));
+    // when
+    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo, "guest-public-id");
+    // then
+    assertThat(res).isSameAs(guest);
+    assertThat(res.getPublicUserId()).isEqualTo("guest-public-id");
+    assertThat(res.getRole()).isEqualTo(UserRole.USER);
+    assertThat(res.getUserEmail()).isEqualTo(userEmail);
+    assertThat(res.getAuthProvider()).isEqualTo(AuthProvider.KAKAO);
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("카카오 이메일로 가입된 사용자가 있으면, 게스트 사용자 ID를 무시하고 기존 사용자를 반환한다")
+  void createOrRetrieveUser_whenUserExistsWithGuest_returnExistingUser() {
+    // given
+    User user = User.builder().role(UserRole.USER).build();
+    given(userRepository.findByUserEmail(userEmail)).willReturn(Optional.of(user));
+    // when
+    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo, "guest-public-id");
+    // then
+    assertThat(res).isEqualTo(user);
+    verify(userRepository, never()).findByPublicUserId(any());
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("토큰의 사용자가 GUEST가 아니고 가입된 사용자도 아니라면, 새로운 사용자를 생성한다")
+  void createOrRetrieveUser_whenTokenUserIsNotGuest_createNewUser() {
+    // given
+    User otherUser = User.builder().publicUserId("user-public-id").role(UserRole.USER).build();
+    User newUser = User.builder().build();
+    given(oauth2UserInfo.toEntity()).willReturn(newUser);
+    given(userRepository.findByUserEmail(userEmail)).willReturn(Optional.empty());
+    given(userRepository.findByPublicUserId("user-public-id")).willReturn(Optional.of(otherUser));
+    given(userRepository.save(newUser)).willReturn(newUser);
+    // when
+    User res = customOauth2UserService.createOrRetrieveUser(oauth2UserInfo, "user-public-id");
+    // then
+    assertThat(res).isEqualTo(newUser);
+    assertThat(otherUser.getRole()).isEqualTo(UserRole.USER);
+    verify(userRepository, times(1)).save(newUser);
   }
 }
