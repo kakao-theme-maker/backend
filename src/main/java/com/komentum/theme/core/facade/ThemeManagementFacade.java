@@ -62,16 +62,15 @@ public class ThemeManagementFacade {
    */
   public void updateTheme(Integer themeComponentId, ThemeUpdateRequest request,
       Map<TypeCode, MultipartFile> imageFiles) {
-    // Entity 소유자가 아니고, Admin 사용자도 아니라면 403 예외를 던진다
-    ThemeComponent targetTheme = themeRetrieveService.getThemeEntityById(themeComponentId);
-    if (!ownerAdminPolicy.validate(targetTheme.getUser())) {
-      throw new AccessDeniedException("failed to update theme : invalid user");
-    }
+    // 업로드 전에 수정 권한을 검증한다 ( 트랜잭션 안에서 조회해야 lazy 로딩 가능 )
+    transactionTemplate.executeWithoutResult(status -> getUpdatableTheme(themeComponentId));
     // 새 이미지 업로드 ( 실패 시 이번에 업로드한 파일은 서비스에서 삭제 )
     Map<TypeCode, String> uploadedFileNames = designComponentService.uploadImages(imageFiles);
     // DB 처리 + 커밋, 실패 시 업로드한 파일 롤백
     try {
       transactionTemplate.executeWithoutResult(status -> {
+        // 트랜잭션 안에서 다시 조회해야 변경 감지가 동작한다
+        ThemeComponent targetTheme = getUpdatableTheme(themeComponentId);
         // update theme meta data
         targetTheme.update(request);
         // update theme images
@@ -83,6 +82,20 @@ public class ThemeManagementFacade {
       designComponentService.deleteUploadedImages(uploadedFileNames.values());
       throw e;
     }
+  }
+
+  /**
+   * 수정할 테마를 조회하고 수정 권한을 검증한다. 트랜잭션 안에서 호출해야 한다.
+   *
+   * @throws AccessDeniedException 테마 소유자도, Admin 사용자도 아닌 경우 (403 Forbidden)
+   */
+  private ThemeComponent getUpdatableTheme(Integer themeComponentId) {
+    ThemeComponent targetTheme = themeRetrieveService.getThemeEntityById(themeComponentId);
+    // Entity 소유자가 아니고, Admin 사용자도 아니라면 403 예외를 던진다
+    if (!ownerAdminPolicy.validate(targetTheme.getUser())) {
+      throw new AccessDeniedException("failed to update theme : invalid user");
+    }
+    return targetTheme;
   }
 
   /**

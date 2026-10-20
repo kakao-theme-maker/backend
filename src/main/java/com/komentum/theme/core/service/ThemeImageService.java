@@ -15,7 +15,6 @@ import com.komentum.theme.core.dto.ThemeCloneRequest.ThemeImageCloneRequest;
 import com.komentum.theme.core.dto.ThemeDesignAssetDto;
 import com.komentum.theme.core.dto.ThemeDetailResponse.TypeCodeInfo;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
-import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -291,11 +290,7 @@ public class ThemeImageService {
           newThemeImages.add(themeImage);
           themeImages.put(typeCode, themeImage);
         }
-        // inset 정보 수정
-        ThemeImageUpdateRequest updateRequest = request.getTypeCodes().get(typeCode);
-        if (updateRequest != null && updateRequest.getInset() != null) {
-          themeImage.update(designComponent, updateRequest.getInset());
-        }
+        themeImage.update(designComponent, null);
       });
       themeImageRepository.saveAll(newThemeImages);
     }
