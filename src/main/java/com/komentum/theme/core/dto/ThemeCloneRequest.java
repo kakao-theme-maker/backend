@@ -25,11 +25,11 @@ public class ThemeCloneRequest {
   private String themeName;
 
   @NotEmpty
-  @Schema(description = "typeCode별 이미지 정보, platformScope=common인 TypeCode를 반드시 포함해야 한다")
+  @Schema(description = "typeCode별 이미지 정보, platformScope=common인 TypeCode를 반드시 포함해야 한다. 사용 가능한 typeCode는 Schemas의 TypeCode 참고")
   private Map<TypeCode, ThemeImageCloneRequest> typeCodes;
 
   @NotEmpty
-  @Schema(description = "styleCode별 색상 정보, ThemeUpdateRequest와 동일한 구조를 사용하며 platformScope=common인 StyleCode를 반드시 포함해야 한다")
+  @Schema(description = "styleCode별 색상 정보, ThemeUpdateRequest와 동일한 구조를 사용하며 platformScope=common인 StyleCode를 반드시 포함해야 한다. 사용 가능한 styleCode는 Schemas의 StyleCode 참고")
   private Map<StyleCode, ThemeStyleUpdateRequest> styleCodes;
 
   @Getter

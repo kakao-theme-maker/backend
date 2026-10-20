@@ -27,10 +27,10 @@ public class ThemeUpdateRequest {
   @Schema(description = "변경할 테마의 이름")
   String themeName;
 
-  @Schema(description = "변경할 이미지 정보에 대한 typeCode:이미지 정보 맵, 이미지 파일은 typeCode 이름의 part로 전달한다")
+  @Schema(description = "변경할 이미지 정보에 대한 typeCode:이미지 정보 맵, 이미지 파일은 typeCode 이름의 part로 전달한다. 사용 가능한 typeCode는 Schemas의 TypeCode 참고")
   Map<TypeCode, ThemeImageUpdateRequest> typeCodes;
 
-  @Schema(description = "변경할 색상에 대한 styleCode:색상 맵")
+  @Schema(description = "변경할 색상에 대한 styleCode:색상 맵. 사용 가능한 styleCode는 Schemas의 StyleCode 참고")
   Map<StyleCode, ThemeStyleUpdateRequest> styleCodes;
 
   @Schema(description = "제거할 이미지의 typeCode 목록")
