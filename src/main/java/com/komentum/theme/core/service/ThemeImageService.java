@@ -11,6 +11,7 @@ import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.global.utils.FileManager;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
+import com.komentum.theme.core.dto.ThemeCloneRequest.ThemeImageCloneRequest;
 import com.komentum.theme.core.dto.ThemeDesignAssetDto;
 import com.komentum.theme.core.dto.ThemeDetailResponse.TypeCodeInfo;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
@@ -187,13 +188,13 @@ public class ThemeImageService {
   @Transactional
   public void createThemeImages(
       ThemeComponent targetTheme,
-      Map<TypeCode, ThemeImageUpdateRequest> typeCodes
+      Map<TypeCode, ThemeImageCloneRequest> typeCodes
   ) {
     Map<TypeCode, ComponentType> componentTypeMap = componentTypeService.findComponentTypeMap();
     validateCommonTypeCodesPresent(componentTypeMap, typeCodes);
     Map<Integer, DesignComponent> designComponentMap = designComponentService.findMapByIdIn(
         typeCodes.values().stream()
-            .map(ThemeImageUpdateRequest::getDesignComponentId)
+            .map(ThemeImageCloneRequest::getDesignComponentId)
             .collect(Collectors.toSet()));
     List<ThemeImage> themeImages = new ArrayList<>();
     typeCodes.forEach((typeCode, imageRequest) -> {
