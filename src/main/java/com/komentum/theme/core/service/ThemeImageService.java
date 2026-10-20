@@ -210,7 +210,7 @@ public class ThemeImageService {
           .themeComponent(targetTheme)
           .componentType(componentType)
           .build();
-      themeImage.update(designComponent, imageRequest);
+      themeImage.update(designComponent, imageRequest.getInset());
       themeImages.add(themeImage);
       targetTheme.addThemeImage(themeImage);
     });
@@ -225,7 +225,7 @@ public class ThemeImageService {
    */
   private void validateCommonTypeCodesPresent(
       Map<TypeCode, ComponentType> componentTypeMap,
-      Map<TypeCode, ThemeImageUpdateRequest> typeCodes
+      Map<TypeCode, ThemeImageCloneRequest> typeCodes
   ) {
     Set<TypeCode> missingCommonTypeCodes = componentTypeMap.entrySet().stream()
         .filter(entry -> entry.getValue().getPlatformScope() == PlatformScope.COMMON)
@@ -238,23 +238,23 @@ public class ThemeImageService {
     }
   }
 
+  /**
+   * 테마 수정 요청에 따라 TypeCode별 이미지를 수정한다. 업로드 파일이 전달된 TypeCode는 새 DesignComponent로 교체(기존 이미지가 없으면
+   * 생성)하고, deleteTypeCodes에 포함된 TypeCode는 제거하며, 둘 다 아닌 TypeCode는 기존 이미지를 유지한다. 교체·제거된 기존
+   * DesignComponent는 다른 테마·게시글과 공유될 수 있으므로 삭제하지 않는다.
+   *
+   * @param targetTheme       수정할 테마
+   * @param request           이미지 정보(inset)와 제거할 TypeCode 목록이 담긴 수정 요청
+   * @param uploadedFileNames TypeCode별 이미 업로드된 파일명 맵
+   * @throws ResourceNotFoundException TypeCode에 대응하는 ComponentType이 존재하지 않는 경우
+   */
   @Transactional
   public void updateThemeImages(
-      int themeComponentId,
-      ThemeUpdateRequest request
+      ThemeComponent targetTheme,
+      ThemeUpdateRequest request,
+      Map<TypeCode, String> uploadedFileNames
   ) {
-    // 요청으로 받은 TypeCode : ThemeImage 정보 맵 추출
-    Map<TypeCode, ThemeImageUpdateRequest> typeCodes = request.getTypeCodes();
-    if (typeCodes == null || typeCodes.isEmpty()) {
-      return;
-    }
-    // 요청으로 받은 design component 목록 조회
-    Map<Integer, DesignComponent> requestedImageMap = designComponentService.findMapByIdIn(
-        typeCodes.values()
-            .stream()
-            .filter(Objects::nonNull)
-            .map(ThemeImageUpdateRequest::getDesignComponentId)
-            .collect(Collectors.toSet()));
+    Integer themeComponentId = targetTheme.getThemeComponentId();
     // 기존 theme image 목록 조회
     Map<TypeCode, ThemeImage> themeImages = fetchJoinThemeImagesByThemeComponentId(
         themeComponentId).stream()
@@ -262,21 +262,50 @@ public class ThemeImageService {
             ti -> ti.getComponentType().getTypeCode(),
             Functions.identity()
         ));
-    // 요청 데이터 기반으로 기존 theme image 수정
-    typeCodes.forEach((typeCode, updateRequest) -> {
-      // updateRequest가 null이면 기존 ThemeImage를 삭제한다
-      if (updateRequest == null) {
+    // deleteTypeCodes에 포함된 ThemeImage를 삭제한다
+    if (request.getDeleteTypeCodes() != null) {
+      request.getDeleteTypeCodes().stream().filter(Objects::nonNull).forEach(typeCode -> {
         themeImageRepository.deleteByThemeComponentIdAndTypeCode(themeComponentId, typeCode);
-      }
-      // 값이 모두 존재하면, 기존 ThemeImage를 갱신한다
-      else {
-        ThemeImage themeImage = themeImages.get(typeCode);
-        DesignComponent requestedImage = requestedImageMap.get(
-            updateRequest.getDesignComponentId());
-        if (themeImage != null && requestedImage != null) {
-          themeImage.update(requestedImage, updateRequest);
+        themeImages.remove(typeCode);
+      });
+    }
+    // 업로드 파일이 전달된 ThemeImage를 새 DesignComponent로 교체한다
+    if (uploadedFileNames != null && !uploadedFileNames.isEmpty()) {
+      Map<TypeCode, ComponentType> componentTypeMap = componentTypeService.findComponentTypeMap();
+      List<ThemeImage> newThemeImages = new ArrayList<>();
+      uploadedFileNames.forEach((typeCode, fileName) -> {
+        ComponentType componentType = componentTypeMap.get(typeCode);
+        if (componentType == null) {
+          throw new ResourceNotFoundException("ComponentType not found for typeCode: " + typeCode);
         }
-      }
-    });
+        DesignComponent designComponent = designComponentService.createDesignComponent(
+            targetTheme.getUser(), fileName, componentType);
+        ThemeImage themeImage = themeImages.get(typeCode);
+        if (themeImage == null) {
+          themeImage = ThemeImage.builder()
+              .themeComponent(targetTheme)
+              .componentType(componentType)
+              .build();
+          targetTheme.addThemeImage(themeImage);
+          newThemeImages.add(themeImage);
+          themeImages.put(typeCode, themeImage);
+        }
+        // inset 정보 수정
+        ThemeImageUpdateRequest updateRequest = request.getTypeCodes().get(typeCode);
+        if (updateRequest != null && updateRequest.getInset() != null) {
+          themeImage.update(designComponent, updateRequest.getInset());
+        }
+      });
+      themeImageRepository.saveAll(newThemeImages);
+    }
+    // 이미지 정보(inset)를 갱신한다
+    if (request.getTypeCodes() != null) {
+      request.getTypeCodes().forEach((typeCode, imageRequest) -> {
+        ThemeImage themeImage = themeImages.get(typeCode);
+        if (themeImage != null && imageRequest != null) {
+          themeImage.update(null, imageRequest.getInset());
+        }
+      });
+    }
   }
 }

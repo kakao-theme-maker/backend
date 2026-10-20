@@ -6,16 +6,21 @@ import com.komentum.designcomponent.domain.policy.DesignComponentPolicy;
 import com.komentum.designcomponent.dto.CreateDesignComponentRequest;
 import com.komentum.designcomponent.dto.DesignComponentDto;
 import com.komentum.designcomponent.dto.UpdateDesignComponentRequest;
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.mapper.DesignComponentMapper;
 import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepositorySupport;
+import com.komentum.global.enums.FileExtension;
 import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.utils.ImageUtils;
 import com.komentum.user.domain.User;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +37,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -87,6 +93,65 @@ public class DesignComponentService {
       uploadedFileNames.forEach(this::deleteUploadedImageQuietly);
       throw e;
     }
+  }
+
+  /**
+   * 이미 업로드된 이미지 파일로 비공개 DesignComponent를 생성한다. 파일 업로드와 업로드 파일 정리는 호출자가 책임진다.
+   *
+   * @param owner         DesignComponent 소유자
+   * @param fileName      저장소에 업로드된 파일명
+   * @param componentType 이미지가 사용될 ComponentType
+   * @return 저장된 DesignComponent
+   * @throws IllegalArgumentException 파라미터가 null이거나 fileName이 공백인 경우
+   */
+  public DesignComponent createDesignComponent(User owner, String fileName,
+      ComponentType componentType) {
+    if (owner == null || componentType == null || fileName == null || fileName.isBlank()) {
+      throw new IllegalArgumentException(
+          "failed to create design component : owner, fileName, componentType are required");
+    }
+    DesignComponent newComponent = mapper.toEntity(
+        CreateDesignComponentRequest.builder().isPublic(true).build(), fileName, owner);
+    newComponent.replaceComponentTypes(List.of(componentType));
+    return designComponentRepository.save(newComponent);
+  }
+
+  /**
+   * TypeCode별 이미지를 업로드하고 TypeCode별 업로드 파일명을 반환한다. 트랜잭션 없이 수행되며, 모든 파일의 실제 포맷(매직 바이트)을 먼저
+   * 검증한 뒤 업로드한다. 업로드 도중 하나라도 실패하면 이번에 업로드한 파일을 모두 삭제하고 예외를 다시 던진다.
+   *
+   * @param images TypeCode별 업로드할 이미지, null이면 빈 맵을 반환한다
+   * @return TypeCode별 저장소에 업로드된 파일명 맵
+   * @throws ResponseStatusException 지원하지 않는 이미지 포맷인 경우 (400 Bad Request, INVALID_IMAGE_FORMAT)
+   * @throws RuntimeException        파일을 읽거나 업로드하지 못한 경우
+   */
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
+  public Map<TypeCode, String> uploadImages(Map<TypeCode, MultipartFile> images) {
+    Map<TypeCode, String> uploadedFileNames = new EnumMap<>(TypeCode.class);
+    if (images == null || images.isEmpty()) {
+      return uploadedFileNames;
+    }
+    Map<TypeCode, String> extensions = new EnumMap<>(TypeCode.class);
+    images.forEach((typeCode, image) -> extensions.put(typeCode, detectImageExtension(image)));
+    try {
+      images.forEach((typeCode, image) ->
+          uploadedFileNames.put(typeCode, uploadImage(image, extensions.get(typeCode))));
+      return uploadedFileNames;
+    } catch (RuntimeException e) {
+      deleteUploadedImages(uploadedFileNames.values());
+      throw e;
+    }
+  }
+
+  /**
+   * 업로드한 이미지 파일들을 삭제한다. 보상 처리용이므로 삭제 실패는 로그만 남긴다.
+   */
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
+  public void deleteUploadedImages(Collection<String> fileNames) {
+    if (fileNames == null) {
+      return;
+    }
+    fileNames.forEach(this::deleteUploadedImageQuietly);
   }
 
   // READ
@@ -242,6 +307,38 @@ public class DesignComponentService {
       throw new RuntimeException("Failed to upload image", e);
     }
 
+  }
+
+  /**
+   * 실제 포맷 기준 확장자로 이미지를 업로드하고, 저장소에 저장된 파일명을 반환한다.
+   *
+   * @throws RuntimeException 이미지를 읽거나 업로드하지 못한 경우
+   */
+  private String uploadImage(MultipartFile image, String extension) {
+    try {
+      return fileManager.uploadAndGetFileName(image.getInputStream(), image.getSize(),
+          "design-components_" + UUID.randomUUID(), extension);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to upload image", e);
+    }
+  }
+
+  /**
+   * 이미지의 실제 포맷(매직 바이트)을 판별해 저장 확장자를 반환한다. Content-Type 헤더나 파일 확장자는 신뢰하지 않으며, 테마 빌드에서
+   * 사용하는 FileExtension 포맷(PNG)만 허용한다.
+   *
+   * @throws ResponseStatusException 지원하지 않는 이미지 포맷인 경우 (400 Bad Request)
+   * @throws RuntimeException        이미지를 읽지 못한 경우
+   */
+  private String detectImageExtension(MultipartFile image) {
+    try (InputStream is = image.getInputStream()) {
+      return ImageUtils.detectImageExtension(is)
+          .map(FileExtension::getExtension)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+              "INVALID_IMAGE_FORMAT: unsupported image format : " + image.getName()));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read image", e);
+    }
   }
 
   private DesignComponent createDesignComponentInternal(CreateDesignComponentRequest request,
