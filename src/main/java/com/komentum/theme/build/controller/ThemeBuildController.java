@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +40,7 @@ public class ThemeBuildController {
   }
 
   @GetMapping("/theme-builds/{buildId}")
-  @Operation(summary = "테마 패키지 제작 작업 상태를 조회한다")
+  @Operation(summary = "특정 테마 패키지 제작 작업의 상태를 조회한다")
   public ResponseEntity<ThemeBuildStatusResponse> findThemeBuild(
       @Parameter(description = "조회할 제작 작업 ID", example = "1")
       @PathVariable Long buildId
@@ -48,13 +49,15 @@ public class ThemeBuildController {
   }
 
   @GetMapping("/themes/{themeComponentId}/download")
-  @Operation(summary = "완료된 테마 패키지의 다운로드 URL을 조회한다")
+  @Operation(summary = "테마와 플랫폼의 최신 성공 패키지 다운로드 URL을 조회한다")
   public ResponseEntity<ThemeDownloadResponse> getThemeDownloadUrl(
       @Parameter(description = "다운로드할 테마 ID", example = "1")
       @PathVariable Integer themeComponentId,
       @Parameter(description = "다운로드할 플랫폼", example = "ANDROID | IOS")
       @RequestParam Platform platform
   ) {
-    return ResponseEntity.ok(themeBuildService.getDownloadUrl(themeComponentId, platform));
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.noStore())
+        .body(themeBuildService.getDownloadUrl(themeComponentId, platform));
   }
 }

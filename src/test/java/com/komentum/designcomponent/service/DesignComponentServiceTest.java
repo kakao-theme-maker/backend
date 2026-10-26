@@ -96,7 +96,7 @@ class DesignComponentServiceTest {
         "second-file".getBytes()
     );
 
-    given(fileManager.uploadFile(any(byte[].class), anyString()))
+    given(fileManager.uploadPublicFile(any(byte[].class), anyString()))
         .willReturn("https://s3.example.com/first-upload.png")
         .willThrow(new RuntimeException("forced upload failure"));
 
@@ -109,7 +109,7 @@ class DesignComponentServiceTest {
     assertThat(designComponentRepository.count()).isZero();
     // 첫 번째 파일 업로드에 사용된 파일명으로 정리(삭제)가 수행된다
     ArgumentCaptor<String> uploadedFileNames = ArgumentCaptor.forClass(String.class);
-    verify(fileManager, times(2)).uploadFile(any(byte[].class), uploadedFileNames.capture());
+    verify(fileManager, times(2)).uploadPublicFile(any(byte[].class), uploadedFileNames.capture());
     verify(fileManager).deleteFile(uploadedFileNames.getAllValues().get(0));
   }
 }

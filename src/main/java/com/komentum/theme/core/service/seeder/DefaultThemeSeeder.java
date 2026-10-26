@@ -263,7 +263,7 @@ public class DefaultThemeSeeder {
     PlatformComponentType pct = platformComponentTypes.get(0);
     Path imagePath = themePathManager.getAndroidThemeImagePath(themeRootPath, pct.getPath());
     String fileName = UUID.randomUUID().toString();
-    fileManager.uploadFile(Files.readAllBytes(imagePath), fileName);
+    fileManager.uploadPublicFile(Files.readAllBytes(imagePath), fileName);
     DesignComponent dc = DesignComponent.builder()
         .fileName(fileName)
         .user(user)

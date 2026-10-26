@@ -37,7 +37,7 @@ public class UserSeeder {
     String fileName =
         "user_" + UUID.randomUUID() + "_" + System.currentTimeMillis() + ".png";
     try (InputStream is = sampleProfileImage.getInputStream()) {
-      fileManager.uploadFile(is.readAllBytes(), fileName);
+      fileManager.uploadPublicFile(is.readAllBytes(), fileName);
     } catch (IOException e) {
       throw new RuntimeException("failed to load sample image");
     }
@@ -57,7 +57,7 @@ public class UserSeeder {
             faker.number().randomDigit() % 2 == 0 ?
                 Gender.male :
                 Gender.female)
-        .profileImgUrl(fileManager.resolveFilePath(profileImageName))
+        .profileImgUrl(fileManager.resolvePublicFileUrl(profileImageName))
         .profileImgName(profileImageName)
         .introduce(faker.lorem().word())
         .build();
@@ -76,7 +76,7 @@ public class UserSeeder {
           .role(UserRole.ADMIN)
           .birth(DateUtils.toLocalDate(faker.date().birthday()))
           .gender(Gender.male)
-          .profileImgUrl(fileManager.resolveFilePath(profileImageName))
+          .profileImgUrl(fileManager.resolvePublicFileUrl(profileImageName))
           .profileImgName(profileImageName)
           .introduce(faker.lorem().word())
           .build());

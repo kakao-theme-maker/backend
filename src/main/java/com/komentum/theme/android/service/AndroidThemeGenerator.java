@@ -231,8 +231,8 @@ public class AndroidThemeGenerator {
     Path outputApk = themePathManager.getAndroidThemeOutputPath(buildIdentifier);
     try {
       long contentLength = Files.size(outputApk);
-      String themeFileName = fileManager.uploadAndGetFileName(Files.newInputStream(outputApk),
-          contentLength, null, "apk");
+      String themeFileName = fileManager.uploadThemePackageAndGetFileName(
+          Files.newInputStream(outputApk), contentLength, null, "apk");
       if (themeFileName == null || themeFileName.isBlank()) {
         throw new RuntimeException("uploaded theme fileName is null");
       }
