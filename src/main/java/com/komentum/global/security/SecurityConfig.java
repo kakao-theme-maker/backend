@@ -17,6 +17,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -53,6 +57,10 @@ public class SecurityConfig {
 
   private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
+  private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
+
+  private final RedirectAwareAuthorizationRequestRepository redirectAwareAuthorizationRequestRepository;
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
@@ -64,13 +72,16 @@ public class SecurityConfig {
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         // 요청 인증 / 인가 설정
         .authorizeHttpRequests(auth -> {
-          // white list request matchers 추가
+          // permit-all RequestMatchers 추가
           auth.requestMatchers(createRequestMatchers(securityProperties.getPermitAll()))
               .permitAll();
           if (securityProfileProperties.getPermitAll() != null) {
             auth.requestMatchers(createRequestMatchers(securityProfileProperties.getPermitAll()))
                 .permitAll();
           }
+          // guest request matchers 추가
+          auth.requestMatchers(createRequestMatchers(securityProperties.getGuest()))
+              .hasRole(UserRole.GUEST.name());
           // admin only request matchers 추가
           auth.requestMatchers(createRequestMatchers(securityProperties.getAdminOnly()))
               .hasRole(UserRole.ADMIN.name());
@@ -82,11 +93,14 @@ public class SecurityConfig {
           if (fileStorageProperty.getStorage() == Storage.LOCAL) {
             auth.requestMatchers(HttpMethod.GET, WebConfig.UPLOAD_URL_PREFIX + "/**").permitAll();
           }
-          auth.anyRequest().authenticated();
+          auth.anyRequest().hasRole(UserRole.USER.name());
         })
         // oauth2 설정
         .oauth2Login(oauth -> {
-          oauth.userInfoEndpoint(c -> c
+          oauth.authorizationEndpoint(endpoint -> endpoint
+                  .authorizationRequestResolver(customAuthorizationRequestResolver)
+                  .authorizationRequestRepository(redirectAwareAuthorizationRequestRepository))
+              .userInfoEndpoint(c -> c
                   .userService(customOauth2UserService))
               .successHandler(oAuth2LogInSuccessHandler)
               .failureHandler(oAuth2LoginFailureHandler);
@@ -117,6 +131,22 @@ public class SecurityConfig {
     source.registerCorsConfiguration("/dev/users/auth", devCorsConfiguration);
     source.registerCorsConfiguration("/**", configuration);
     return source;
+  }
+
+  @Bean
+  public RoleHierarchy roleHierarchy() {
+    return RoleHierarchyImpl.withDefaultRolePrefix()
+        .role(UserRole.ADMIN.name()).implies(UserRole.USER.name())
+        .role(UserRole.USER.name()).implies(UserRole.GUEST.name())
+        .build();
+  }
+
+  @Bean
+  public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
+      RoleHierarchy roleHierarchy) {
+    DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+    handler.setRoleHierarchy(roleHierarchy);
+    return handler;
   }
 
   @Bean

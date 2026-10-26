@@ -38,6 +38,7 @@
 - 너무 과한 경우에 대한 테스트는 작성하지 않기
 - 구현과 테스트가 완료된 후 Knowledge Graph(KG)를 갱신하기
     - 실행 명령어: code-review-graph build
+    - CLI가 PATH에 없으면 MCP `build_or_update_graph_tool`(full_rebuild=true)로 대신 수행하기
     - KG 갱신은 최종 코드 변경과 테스트가 완료된 이후 마지막 단계에서 수행하기
 
 ### 테스트 규칙
@@ -71,6 +72,10 @@ gives you structural context (callers, dependents, test coverage) that file sear
 - When the graph and the source disagree, the source wins. The graph may be stale or may not
   model that relationship.
 - An empty graph result can mean "not indexed" or "not statically visible", not "does not exist".
+- `tests_for` / `detect_changes_tool` test gaps miss MockMvc integration tests (endpoints called by
+  URL string). Before concluding a test is missing, grep `src/test` for the endpoint URL.
+- Config files (`application*.yml`, etc.) are not indexed. Read them directly for security
+  (permit-all) or property questions.
 
 ### Key Tools
 
@@ -87,7 +92,9 @@ gives you structural context (callers, dependents, test coverage) that file sear
 
 ### Workflow
 
-1. The graph auto-updates on file changes (via hooks).
+1. The graph auto-updates on file changes (via hooks in `.claude/settings.json`). The hooks need the
+   `code-review-graph` CLI; if SessionStart prints "CLI not found", auto-update is off and the graph
+   may be stale.
 2. Use `detect_changes_tool` for code review.
 3. Use `get_affected_flows_tool` to understand impact.
 4. Use `query_graph_tool` pattern="tests_for" to check coverage.

@@ -10,15 +10,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HttpHeaders;
 import com.komentum.auth.JwtUtils;
 import com.komentum.global.properties.AuthProperty;
+import com.komentum.global.security.UserRole;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.LocalLoginRequestDto;
 import com.komentum.user.dto.PasswordChangeRequsetDto;
+import com.komentum.user.dto.SignUpRequestDto;
 import com.komentum.user.dto.UserAuthResponse;
 import com.komentum.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -79,10 +83,10 @@ class UserAuthControllerTest {
   private UserAuthController userAuthController;
 
   @Test
-  @DisplayName("회원가입")
+  @DisplayName("인증 정보 없이 회원가입하면, 새로운 일반 사용자가 생성된다")
   void signUpWithLocalTest() throws Exception {
     //given
-    String signUpEmail = "admin1@gmail.com";
+    String signUpEmail = "newuser@gmail.com";
     String signUpPassword = "qwer123!";
     LocalLoginRequestDto localLoginRequestDto
         = LocalLoginRequestDto.builder()
@@ -97,7 +101,71 @@ class UserAuthControllerTest {
     mockMvc.perform(request)
         .andExpect(status().is2xxSuccessful())
         .andReturn().getResponse().getContentAsString();
-    assertThat(userRepository.findByUserEmail(email)).isPresent();
+    User signedUpUser = userRepository.findByUserEmail(signUpEmail).orElseThrow();
+    assertThat(signedUpUser.getRole()).isEqualTo(UserRole.USER);
+  }
+
+  @Test
+  @DisplayName("이미 존재하는 이메일로 회원가입하면, 409 응답을 반환한다")
+  void signUpWithDuplicatedEmail() throws Exception {
+    //given
+    SignUpRequestDto signUpRequestDto = new SignUpRequestDto(email, password);
+    long userCount = userRepository.count();
+    //when & then
+    mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/local/sign-up")
+            .content(objectMapper.writeValueAsString(signUpRequestDto))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isConflict());
+    assertThat(userRepository.count()).isEqualTo(userCount);
+  }
+
+  @Test
+  @DisplayName("게스트 인증 정보로 회원가입하면, 기존 게스트 사용자가 동일한 ID로 일반 사용자로 승격된다")
+  void signUpWithGuestToken_promoteGuest() throws Exception {
+    //given
+    User guest = userRepository.save(User.createGuest(UUID.randomUUID().toString()));
+    String guestToken = jwtUtils.generateAccessToken(guest.getPublicUserId());
+    String signUpEmail = "guest-promoted@gmail.com";
+    SignUpRequestDto signUpRequestDto = new SignUpRequestDto(signUpEmail, "qwer123!");
+    long userCount = userRepository.count();
+    //when
+    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+        .post("/api/auth/local/sign-up")
+        .content(objectMapper.writeValueAsString(signUpRequestDto))
+        .contentType(MediaType.APPLICATION_JSON);
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
+        TestClientDto.fromEntity(guest));
+    mockMvc.perform(requestBuilder)
+        .andExpect(status().isOk());
+    //then
+    User promoted = userRepository.findByUserEmail(signUpEmail).orElseThrow();
+    assertThat(promoted.getUserId()).isEqualTo(guest.getUserId());
+    assertThat(promoted.getPublicUserId()).isEqualTo(guest.getPublicUserId());
+    assertThat(promoted.getRole()).isEqualTo(UserRole.USER);
+    assertThat(promoted.matchPassword("qwer123!", passwordEncoder)).isTrue();
+    assertThat(userRepository.count()).isEqualTo(userCount);
+  }
+
+  @Test
+  @DisplayName("게스트가 아닌 사용자의 인증 정보로 회원가입하면, 예외가 발생하고 권한은 변경되지 않는다")
+  void signUpWithUserToken_fail() throws Exception {
+    //given
+    String signUpEmail = "another@gmail.com";
+    SignUpRequestDto signUpRequestDto = new SignUpRequestDto(signUpEmail, "qwer123!");
+    //when
+    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+        .post("/api/auth/local/sign-up")
+        .content(objectMapper.writeValueAsString(signUpRequestDto))
+        .contentType(MediaType.APPLICATION_JSON);
+    requestBuilder = mockMvcUtils.addAuthentication(requestBuilder,
+        TestClientDto.fromEntity(user));
+    mockMvc.perform(requestBuilder)
+        .andExpect(status().is5xxServerError());
+    //then
+    User unchanged = userRepository.findByPublicUserId(user.getPublicUserId()).orElseThrow();
+    assertThat(unchanged.getRole()).isEqualTo(UserRole.USER);
+    assertThat(unchanged.getUserEmail()).isEqualTo(email);
+    assertThat(userRepository.findByUserEmail(signUpEmail)).isEmpty();
   }
 
   @Test
