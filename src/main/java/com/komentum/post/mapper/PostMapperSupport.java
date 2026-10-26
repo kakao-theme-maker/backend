@@ -22,6 +22,10 @@ public class PostMapperSupport {
   private final TagService tagService;
   private final DesignBoardService designBoardService;
 
+  /**
+   * 사용자 게시글 목록에 태그를 결합하고 디자인 게시글의 대표 이미지에 활성 에셋 정책을 적용한다.
+   * 테마 게시글은 과거 에셋 참조를 보존하므로 기존 대표 이미지를 그대로 사용한다.
+   */
   @Transactional(readOnly = true)
   public List<UserPostListResponseDto> toUserPostListResponseDtoList(
       List<PostQuery.UserPostListRow> rows) {

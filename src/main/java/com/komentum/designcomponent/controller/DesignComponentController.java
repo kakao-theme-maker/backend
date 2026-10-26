@@ -69,10 +69,8 @@ public class DesignComponentController {
   }
 
   /**
-   * designComponentId 로 designComponent 단건 조회
-   *
-   * @param designComponentId
-   * @return
+   * ID에 해당하는 활성 컴포넌트 응답을 반환한다.
+   * 비활성 컴포넌트는 소유자와 관리자에게도 조회되지 않는다.
    */
   @GetMapping("/{id}")
   @Operation(
@@ -88,10 +86,7 @@ public class DesignComponentController {
   }
 
   /**
-   * designComponent 전체 조회
-   *
-   * @param pageable
-   * @return
+   * 활성 컴포넌트만을 대상으로 계산한 페이지 내용과 전체 개수를 반환한다.
    */
   @GetMapping
   @Operation(
@@ -102,6 +97,9 @@ public class DesignComponentController {
     return ResponseEntity.ok(designComponentService.getAllDesignComponents(pageable));
   }
 
+  /**
+   * 공개 식별자로 지정한 사용자의 활성 컴포넌트 목록을 반환한다.
+   */
   @GetMapping("/user/{publicUserId}")
   @Operation(
       summary = "특정 사용자의 공개 식별자로 designComponent 목록을 조회한다.",
@@ -112,6 +110,9 @@ public class DesignComponentController {
     return ResponseEntity.ok(designComponentService.getByPublicUserId(publicUserId));
   }
 
+  /**
+   * 지정한 타입에 연결된 활성 컴포넌트 목록을 반환한다.
+   */
   @GetMapping("/component-types/{componentTypeId}")
   @Operation(
       summary = "component type ID로 designComponent 목록을 조회한다.",
@@ -123,6 +124,9 @@ public class DesignComponentController {
         designComponentService.getDesignComponentsByComponentTypeId(componentTypeId));
   }
 
+  /**
+   * 현재 사용자가 업로드한 컴포넌트 중 활성 항목만 반환한다.
+   */
   @GetMapping("/uploaded")
   @Operation(
       summary = "업로드한 design component 목록을 조회한다",
@@ -136,6 +140,9 @@ public class DesignComponentController {
     return ResponseEntity.ok(res);
   }
 
+  /**
+   * 현재 사용자의 북마크 게시글에 연결된 활성 컴포넌트 목록을 반환한다.
+   */
   @Hidden
   @GetMapping("/bookmarked")
   @Operation(
@@ -151,11 +158,7 @@ public class DesignComponentController {
   }
 
   /**
-   * designComponent 수정
-   *
-   * @param id
-   * @param request
-   * @return
+   * 소유자·관리자 권한 검사와 활성 검증을 통과한 컴포넌트의 수정 결과를 반환한다.
    */
   @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(
@@ -178,10 +181,8 @@ public class DesignComponentController {
   }
 
   /**
-   * designComponent 삭제
-   *
-   * @param id
-   * @return
+   * 소유자 또는 관리자의 비활성화 요청을 처리하고 본문 없는 204 응답을 반환한다.
+   * 이미 비활성인 경우에도 권한 검사를 통과하면 같은 응답을 반환한다.
    */
   @DeleteMapping("/{id}")
   @Operation(

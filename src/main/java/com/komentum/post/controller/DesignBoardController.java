@@ -40,7 +40,8 @@ public class DesignBoardController {
   private final DesignBoardManagementFacade designBoardManagementFacade;
 
   /**
-   * 디자인 에셋 게시글 목록 조회
+   * 활성 에셋 연결 단위의 미리보기 페이지를 반환한다.
+   * 같은 게시글도 활성 연결이 여러 개면 여러 행으로 반환될 수 있다.
    */
   @GetMapping
   @Operation(
@@ -71,9 +72,9 @@ public class DesignBoardController {
   }
 
   /**
-   * 특정 디자인 에셋 게시글 상세 조회
+   * 활성 에셋의 이미지·타입만 포함한 디자인 게시글 상세 응답을 반환한다.
+   * 게시글이 없거나 모든 에셋이 비활성이면 404로 처리한다.
    *
-   * @param postId 게시글 ID
    * @param userDetails 인증된 사용자 정보 (비인증 요청은 null)
    */
   @GetMapping("/{postId}")
@@ -91,13 +92,11 @@ public class DesignBoardController {
   }
 
   /**
-   * 디자인 에셋 게시글 상세 정보 리스트 조회
+   * 활성 에셋이 남은 디자인 게시글을 게시글 단위의 상세 페이지로 반환한다.
    *
    * @param pinnedPostId 첫 페이지 최상단에 고정할 게시글 ID
-   * @param pageable 조회할 페이지 정보
    * @param userDetails 인증된 사용자 정보 (비인증 요청은 null)
-   * @return 디자인 에셋 게시글 상세 정보 목록
-   * */
+   */
   @GetMapping("/details")
   @Operation(
       summary = "인증 여부와 관계없이 디자인 에셋 게시글 상세 목록을 조회한다",

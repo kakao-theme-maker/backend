@@ -91,6 +91,10 @@ public class PostDto {
     @Schema(description = "현재 사용자의 북마크 여부")
     boolean bookmarked;
 
+    /**
+     * 게시글 조회 결과와 태그를 목록 응답으로 변환한다.
+     * 호출 측에서 노출 정책을 적용한 대표 이미지명을 사용하며, 이미지명이 없으면 빈 목록을 반환한다.
+     */
     public static UserPostListResponseDto from(PostQuery.UserPostListRow row, List<Tag> tags,
         BoardManagementHelper boardManagementHelper, String previewImageName) {
       List<TagResponse> tagResponses = tags.stream().map(TagResponse::from).toList();

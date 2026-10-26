@@ -27,6 +27,9 @@ public class UserPostController {
   private final PostService postService;
   private final PostManagementFacade postManagementFacade;
 
+  /**
+   * 현재 사용자가 소유한 게시글 목록에 디자인 게시글의 활성 에셋 노출 정책을 적용해 반환한다.
+   */
   @GetMapping("/me/upload-posts")
   @Operation(
       summary = "현재 인증된 사용자가 업로드/소유한 게시글 목록을 조회한다",
@@ -41,7 +44,7 @@ public class UserPostController {
   }
 
   /**
-   * 사용자가 북마크에 추가한 게시글 목록 반환
+   * 현재 사용자의 북마크 목록에 디자인 게시글의 활성 에셋 노출 정책을 적용해 반환한다.
    */
   @Hidden
   @GetMapping("/me/bookmarked-posts")
@@ -58,6 +61,9 @@ public class UserPostController {
             pageable));
   }
 
+  /**
+   * 현재 사용자의 좋아요 목록에 디자인 게시글의 활성 에셋 노출 정책을 적용해 반환한다.
+   */
   @GetMapping("/me/preferred-posts")
   @Operation(
       summary = "현재 인증된 사용자가 좋아요를 누른 게시글 목록을 조회한다",

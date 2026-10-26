@@ -64,6 +64,10 @@ public class DesignBoardService {
     return designBoardRepository.findByPost_PostId(postId);
   }
 
+  /**
+   * 게시글의 전체 연결을 에셋·타입과 함께 조회한다.
+   * 대표 이미지의 대체 여부와 기존 연결 보존을 판단해야 하므로 비활성 에셋도 포함한다.
+   */
   @Transactional(readOnly = true)
   public List<DesignBoard> findWithDesignComponentsByPostIdIn(List<Long> postIds) {
     return designBoardRepository.findWithDesignComponentByPost_PostIdIn(postIds);
@@ -86,6 +90,7 @@ public class DesignBoardService {
 
   /**
    * 비활성 에셋이 포함된 게시글의 대표 이미지를 활성 에셋 중 ID가 가장 작은 에셋의 파일명으로 대체한다.
+   * 기존 합성 이미지에 비활성 에셋이 남지 않도록 대체하며, 최소 ID로 조회 순서와 무관하게 선택한다.
    *
    * @param designBoards 비활성 에셋을 포함한 게시글의 전체 연결 목록
    * @return 모두 활성이거나 목록이 비어 있으면 기존 파일명, 일부 비활성이면 가장 작은 활성 ID의 파일명,
@@ -132,14 +137,18 @@ public class DesignBoardService {
         .build());
   }
 
+  /**
+   * 게시글의 연결행을 요청한 에셋 목록으로 교체한다.
+   * 기존 연결행만 삭제·재생성하며 에셋 엔티티나 원본 이미지는 삭제하지 않는다.
+   */
   @Transactional
   public void synchronizeDesignBoards(
       Post post,
       List<DesignComponent> requestedComponents
   ) {
-    // delete all design boards
+    // DesignBoard는 게시글과 에셋의 연결행이며 에셋 자체가 아니다.
     designBoardRepository.deleteByPost_PostId(post.getPostId());
-    // generate all design boards
+    // 검증된 요청 목록으로 연결을 다시 생성한다.
     List<DesignBoard> designBoards = findWithDesignBoardByPostId(post.getPostId());
     for (DesignComponent component : requestedComponents) {
       save(post, component);
@@ -148,6 +157,9 @@ public class DesignBoardService {
     int a = 1;
   }
 
+  /**
+   * 게시글의 에셋 연결행만 삭제하고 연결 대상 에셋과 원본 이미지는 보존한다.
+   */
   @Transactional
   public void deleteByPostId(Long postId) {
     designBoardRepository.deleteByPost_PostId(postId);

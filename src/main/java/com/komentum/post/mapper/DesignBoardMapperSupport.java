@@ -19,6 +19,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class DesignBoardMapperSupport {
 
+  /**
+   * 활성 에셋의 타입만 모아 TypeCode 기준으로 중복을 제거한다.
+   * 입력 연결과 타입을 순회하며 처음 발견한 순서를 유지한다.
+   */
   public List<BoardComponentTypeDto> toComponentTypeDtos(List<DesignBoard> designBoards) {
     Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
     for (DesignBoard designBoard : designBoards) {
@@ -33,6 +37,10 @@ public class DesignBoardMapperSupport {
     return List.copyOf(componentTypeMap.values());
   }
 
+  /**
+   * 활성 연결의 미리보기 조회 결과에 노출 정책을 적용한 대표 이미지와 타입을 결합한다.
+   * 대표 이미지 선택과 타입 필터링은 호출 측에서 완료한 값을 사용한다.
+   */
   public DesignBoardPreviewDto toDesignBoardPreviewDto(
       DesignBoardQuery.Preview preview,
       BoardManagementHelper helper,

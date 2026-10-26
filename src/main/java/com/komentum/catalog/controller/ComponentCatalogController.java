@@ -22,6 +22,10 @@ public class ComponentCatalogController {
 
   private final ComponentCatalogService componentCatalogService;
 
+  /**
+   * 현재 사용자의 활성 디자인 에셋과 기존 테마를 합쳐 생성일 내림차순의 페이지로 반환한다.
+   * 테마는 연결된 에셋이 비활성이어도 목록에 남긴다.
+   */
   @GetMapping("/users/me/custom-components")
   @Operation(
       summary = "현재 사용자가 생성한 디자인 에셋과 테마 목록을 생성일 기준 내림차순으로 페이징 조회한다",

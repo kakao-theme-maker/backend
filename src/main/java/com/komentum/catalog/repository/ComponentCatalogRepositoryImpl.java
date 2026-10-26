@@ -19,6 +19,13 @@ public class ComponentCatalogRepositoryImpl implements ComponentCatalogRepositor
   @PersistenceContext
   private final EntityManager em;
 
+  /**
+   * 디자인 에셋은 활성 항목만, 테마는 참조 에셋의 활성 여부와 관계없이 조회하여 합친다.
+   * UNION ALL 이후 통합 결과에 정렬과 페이징을 적용해 두 유형이 하나의 페이지를 공유한다.
+   *
+   * @throws IllegalStateException 조회 행의 ID, 유형 또는 생성일이 없는 경우
+   * @throws IllegalArgumentException 알 수 없는 컴포넌트 유형이 조회된 경우
+   */
   @Override
   public List<ComponentSummary> findComponentSummaryByClient(Pageable pageable, User client) {
     String query = """
