@@ -96,7 +96,7 @@ public class DesignComponentService {
   }
 
   /**
-   * 이미 업로드된 이미지 파일로 비공개 DesignComponent를 생성한다. 파일 업로드와 업로드 파일 정리는 호출자가 책임진다.
+   * 이미 업로드된 이미지 파일로 공개 DesignComponent를 생성한다. 파일 업로드와 업로드 파일 정리는 호출자가 책임진다.
    *
    * @param owner         DesignComponent 소유자
    * @param fileName      저장소에 업로드된 파일명

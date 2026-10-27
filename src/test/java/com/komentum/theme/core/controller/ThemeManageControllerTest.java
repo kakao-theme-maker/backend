@@ -66,6 +66,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -128,6 +129,9 @@ class ThemeManageControllerTest {
     // 업로드 파일명 생성 규칙(default method)은 실제 구현을 사용한다
     when(fileManager.uploadAndGetFileName(any(InputStream.class), anyLong(), anyString(),
         anyString())).thenCallRealMethod();
+    // 기존 이미지는 샘플 PNG 파일로 다운로드된다
+    when(fileManager.download(anyString())).thenAnswer(
+        invocation -> new ClassPathResource("sample-images/test.png").getInputStream());
   }
 
   @AfterEach
@@ -285,6 +289,49 @@ class ThemeManageControllerTest {
     // then
     resultActions.andExpect(status().isForbidden());
     verify(fileManager, never()).uploadFile(any(InputStream.class), anyLong(), anyString());
+  }
+
+  @Test
+  @DisplayName("교체하는 이미지 범위를 벗어난 inset이 전달되면 INVALID_IMAGE_INSET으로 400을 반환한다")
+  public void updateTheme_failWhenInsetOutOfNewImageRange() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.insetUpdateRequest(typeCode, 100000), testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(typeCode.getTypeCode()));
+    // then
+    expectBadRequest(resultActions, "INVALID_IMAGE_INSET");
+  }
+
+  @Test
+  @DisplayName("이미지 없이 기존 이미지 범위를 벗어난 inset이 전달되면 INVALID_IMAGE_INSET으로 400을 반환한다")
+  public void updateTheme_failWhenInsetOutOfExistingImageRange() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.insetUpdateRequest(typeCode, 100000), testUser);
+    // then
+    expectBadRequest(resultActions, "INVALID_IMAGE_INSET");
+    assertThat(findThemeImage(targetTheme, typeCode).getImageInset().getEdgeInsetBottom())
+        .isEqualTo(15);
+  }
+
+  @Test
+  @DisplayName("inset 없이 이미지만 교체해도 기존 inset이 새 이미지 범위를 벗어나면 INVALID_IMAGE_INSET으로 400을 반환한다")
+  public void updateTheme_failWhenRetainedInsetOutOfNewImageRange() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    // when ( 기존 inset의 stretch 좌표(50)보다 작은 이미지로 교체 )
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generatePngFormData(typeCode.getTypeCode(), 10, 10));
+    // then
+    expectBadRequest(resultActions, "INVALID_IMAGE_INSET");
   }
 
   @Test

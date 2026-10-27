@@ -5,19 +5,28 @@ import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.designcomponent.enums.TypeCodeGroup;
 import com.komentum.designcomponent.service.ComponentTypeService;
 import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.utils.ImageUtils;
+import com.komentum.global.utils.ImageUtils.ImageSize;
+import com.komentum.theme.core.domain.ImageInset;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.dto.ThemeCloneRequest.ThemeImageCloneRequest;
 import com.komentum.theme.core.dto.ThemeDesignAssetDto;
 import com.komentum.theme.core.dto.ThemeDetailResponse.TypeCodeInfo;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
+import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
 import com.komentum.theme.core.repository.ThemeImageRepository;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
@@ -302,6 +312,119 @@ public class ThemeImageService {
           themeImage.update(null, imageRequest.getInset());
         }
       });
+    }
+  }
+
+  /**
+   * 테마 수정 후 말풍선 이미지의 inset이 이미지 범위 안에 있는지 업로드 전에 검증한다. 이번 요청에서 이미지가 교체되거나 inset이 전달된
+   * 말풍선만 검증한다. 검증 기준은 inset은 요청 값(없으면 기존 값), 이미지 크기는 새 파일(없으면 기존 파일)이다.
+   *
+   * @param themeComponentId 수정할 테마 ID
+   * @param request          inset과 제거할 TypeCode 목록이 담긴 수정 요청
+   * @param imageFiles       TypeCode별 교체할 이미지 파일 맵
+   * @throws ResponseStatusException inset이 없거나 이미지 범위를 벗어난 경우(INVALID_IMAGE_INSET), 업로드 파일이 이미지
+   *                                 포맷이 아닌 경우(INVALID_IMAGE_FORMAT) (400 Bad Request)
+   */
+  @Transactional(readOnly = true)
+  public void validateImageInsets(
+      Integer themeComponentId,
+      ThemeUpdateRequest request,
+      Map<TypeCode, MultipartFile> imageFiles
+  ) {
+    Map<TypeCode, MultipartFile> files = imageFiles == null ? Map.of() : imageFiles;
+    Set<TypeCode> targetTypeCodes = findInsetValidationTargets(request, files);
+    if (targetTypeCodes.isEmpty()) {
+      return;
+    }
+    Map<TypeCode, ThemeImage> themeImages = fetchJoinThemeImagesByThemeComponentId(
+        themeComponentId).stream()
+        .collect(Collectors.toMap(
+            ti -> ti.getComponentType().getTypeCode(),
+            Functions.identity()
+        ));
+    for (TypeCode typeCode : targetTypeCodes) {
+      MultipartFile newFile = files.get(typeCode);
+      ThemeImage existingImage = themeImages.get(typeCode);
+      // 새 파일도 기존 이미지도 없다면 수정되는 이미지가 없으므로 검증하지 않는다
+      if (newFile == null && existingImage == null) {
+        continue;
+      }
+      // 기존인셋-새이미지, 새인셋-새이미지, 새인셋-기존이미지에 대한 인셋 검증을 수행한다
+      ImageInset inset = findFinalInset(request, typeCode, existingImage);
+      ImageSize imageSize = newFile != null
+          ? readUploadedImageSize(typeCode, newFile)
+          : readExistingImageSize(typeCode, existingImage);
+      if (inset == null || !inset.isInImageRange(imageSize.width(), imageSize.height())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "INVALID_IMAGE_INSET: inset is missing or out of image range : typeCode="
+                + typeCode.getTypeCode() + ", imageSize=" + imageSize.width() + "x"
+                + imageSize.height());
+      }
+    }
+  }
+
+  /**
+   * inset 검증 대상 TypeCode를 찾는다. 이미지가 교체되거나 inset이 전달된 말풍선이 대상이며, 제거되는 이미지는 제외한다.
+   */
+  private Set<TypeCode> findInsetValidationTargets(ThemeUpdateRequest request,
+      Map<TypeCode, MultipartFile> files) {
+    Set<TypeCode> targets = new LinkedHashSet<>(files.keySet());
+    if (request.getTypeCodes() != null) {
+      request.getTypeCodes().forEach((typeCode, imageRequest) -> {
+        if (imageRequest != null && imageRequest.getInset() != null) {
+          targets.add(typeCode);
+        }
+      });
+    }
+    if (request.getDeleteTypeCodes() != null) {
+      targets.removeAll(request.getDeleteTypeCodes());
+    }
+    targets.removeIf(typeCode -> typeCode.getTypeCodeGroup() != TypeCodeGroup.CHATROOM_BUBBLE);
+    return targets;
+  }
+
+  /**
+   * 수정 후 이미지에 적용될 inset을 찾는다. 요청에 inset이 있으면 요청 값, 없으면 기존 이미지의 inset이다.
+   *
+   * @return 적용될 inset, 요청에도 기존 이미지에도 없다면 null
+   */
+  private ImageInset findFinalInset(ThemeUpdateRequest request, TypeCode typeCode,
+      ThemeImage existingImage) {
+    ThemeImageUpdateRequest imageRequest =
+        request.getTypeCodes() == null ? null : request.getTypeCodes().get(typeCode);
+    if (imageRequest != null && imageRequest.getInset() != null) {
+      return ImageInset.from(imageRequest.getInset());
+    }
+    return existingImage == null ? null : existingImage.getImageInset();
+  }
+
+  /**
+   * 업로드 파일의 이미지 크기를 읽는다.
+   *
+   * @throws ResponseStatusException 이미지 포맷이 아닌 경우 (400 Bad Request)
+   */
+  private ImageSize readUploadedImageSize(TypeCode typeCode, MultipartFile file) {
+    try (InputStream is = file.getInputStream()) {
+      return ImageUtils.readImageSize(is).orElseThrow(() ->
+          new ResponseStatusException(HttpStatus.BAD_REQUEST,
+              "INVALID_IMAGE_FORMAT: unsupported image format : " + typeCode.getTypeCode()));
+    } catch (IOException e) {
+      throw new UncheckedIOException("failed to read theme image file : " + typeCode, e);
+    }
+  }
+
+  /**
+   * 저장소에 있는 기존 이미지의 크기를 읽는다.
+   *
+   * @throws IllegalStateException 저장된 이미지의 크기를 읽지 못한 경우
+   */
+  private ImageSize readExistingImageSize(TypeCode typeCode, ThemeImage existingImage) {
+    try (InputStream is = fileManager.download(existingImage.getDesignComponent().getFileName())) {
+      return ImageUtils.readImageSize(is).orElseThrow(() ->
+          new IllegalStateException(
+              "failed to read image size of existing theme image : " + typeCode.getTypeCode()));
+    } catch (IOException e) {
+      throw new UncheckedIOException("failed to read theme image file : " + typeCode, e);
     }
   }
 }

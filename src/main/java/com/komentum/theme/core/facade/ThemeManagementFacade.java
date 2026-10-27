@@ -58,12 +58,14 @@ public class ThemeManagementFacade {
    * @param request          이미지 외 수정 정보와 제거할 TypeCode 목록
    * @param imageFiles       TypeCode별 교체할 이미지 파일 맵
    * @throws AccessDeniedException   테마 소유자도, Admin 사용자도 아닌 경우 (403 Forbidden)
-   * @throws ResponseStatusException 이미지 포맷이 올바르지 않은 경우 (400 Bad Request)
+   * @throws ResponseStatusException 이미지 포맷이 올바르지 않거나 inset이 이미지 범위를 벗어난 경우 (400 Bad Request)
    */
   public void updateTheme(Integer themeComponentId, ThemeUpdateRequest request,
       Map<TypeCode, MultipartFile> imageFiles) {
     // 업로드 전에 수정 권한을 검증한다 ( 트랜잭션 안에서 조회해야 lazy 로딩 가능 )
     transactionTemplate.executeWithoutResult(status -> getUpdatableTheme(themeComponentId));
+    // 업로드 전에 inset 정보가 이미지 범위 안에 있는지 검증한다
+    themeImageService.validateImageInsets(themeComponentId, request, imageFiles);
     // 새 이미지 업로드 ( 실패 시 이번에 업로드한 파일은 서비스에서 삭제 )
     Map<TypeCode, String> uploadedFileNames = designComponentService.uploadImages(imageFiles);
     // DB 처리 + 커밋, 실패 시 업로드한 파일 롤백

@@ -2,7 +2,10 @@ package com.komentum.test.data;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 import lombok.Getter;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
@@ -95,6 +98,18 @@ public class MockMultipartFileUtils {
       );
     } catch (JsonProcessingException e) {
       throw new RuntimeException("failed to convert json to byte : " + partName, e);
+    }
+  }
+
+  /**
+   * 가로, 세로 크기를 지정한 실제 PNG 이미지 form data를 생성한다.
+   */
+  public static MockMultipartFile generatePngFormData(String partName, int width, int height) {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      ImageIO.write(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB), "png", baos);
+      return generateImageFormData(partName, baos.toByteArray());
+    } catch (IOException e) {
+      throw new RuntimeException("failed to generate png image : " + partName, e);
     }
   }
 }
