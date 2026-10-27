@@ -242,7 +242,7 @@ public class DefaultThemeSeeder {
             "platformComponentType with typeCode" + typeCode.getTypeCode() + "not exists");
       }
       DesignComponent designComponent = createDefaultDesignComponent(user, themeRootPath,
-          componentType, platformComponentTypes);
+          platformComponentTypes);
       designComponentsToSave.add(designComponent);
       themeImages.add(ThemeImage.builder()
           .themeComponent(theme)
@@ -258,19 +258,17 @@ public class DefaultThemeSeeder {
    * design component를 생성한다.
    * */
   private DesignComponent createDefaultDesignComponent(User user, Path themeRootPath,
-      ComponentType componentType, List<PlatformComponentType> platformComponentTypes)
+      List<PlatformComponentType> platformComponentTypes)
       throws IOException {
     PlatformComponentType pct = platformComponentTypes.get(0);
     Path imagePath = themePathManager.getAndroidThemeImagePath(themeRootPath, pct.getPath());
     String fileName = UUID.randomUUID().toString();
     fileManager.uploadFile(Files.readAllBytes(imagePath), fileName);
-    DesignComponent dc = DesignComponent.builder()
+    return DesignComponent.builder()
         .fileName(fileName)
         .user(user)
         .isPublic(true)
         .build();
-    dc.replaceComponentTypes(List.of(componentType));
-    return dc;
   }
 
   /**

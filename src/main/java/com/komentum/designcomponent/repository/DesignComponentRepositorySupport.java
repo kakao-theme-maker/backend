@@ -1,9 +1,7 @@
 package com.komentum.designcomponent.repository;
 
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.domain.QComponentType;
 import com.komentum.designcomponent.domain.QDesignComponent;
-import com.komentum.designcomponent.domain.QDesignComponentComponentType;
 import com.komentum.post.domain.QCategory;
 import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QDesignBoard;
@@ -26,14 +24,8 @@ public class DesignComponentRepositorySupport {
   @Transactional(readOnly = true)
   public List<DesignComponent> findUploadedDesignComponents(User client) {
     QDesignComponent designComponent = QDesignComponent.designComponent;
-    QDesignComponentComponentType designComponentComponentType =
-        QDesignComponentComponentType.designComponentComponentType;
-    QComponentType componentType = QComponentType.componentType;
-
     return queryFactory
-        .selectFrom(designComponent).distinct()
-        .leftJoin(designComponent.componentTypeMappings, designComponentComponentType).fetchJoin()
-        .leftJoin(designComponentComponentType.componentType, componentType).fetchJoin()
+        .selectFrom(designComponent)
         .where(designComponent.user.eq(client))
         .orderBy(designComponent.createdAt.desc())
         .fetch();
