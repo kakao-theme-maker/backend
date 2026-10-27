@@ -2,6 +2,7 @@ package com.komentum.theme.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.ThemeDataGenerator;
 import com.komentum.test.data.scenario.UserScenarioSupport;
@@ -16,6 +17,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -48,6 +51,7 @@ class ThemeManageServiceTest {
 
   @AfterEach
   void tearDown() {
+    SecurityContextHolder.clearContext();
     themeDataGenerator.deleteTestData();
   }
 
@@ -84,6 +88,15 @@ class ThemeManageServiceTest {
   public void deleteTheme_success() {
     // given
     ThemeComponent toDelete = themeDataGenerator.initialThemes.get(0);
+    User owner = toDelete.getUser();
+    CustomUserDetails userDetails = CustomUserDetails.builder()
+        .userEmail(owner.getUserEmail())
+        .publicUserId(owner.getPublicUserId())
+        .userRole(owner.getRole())
+        .build();
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            userDetails, null, userDetails.getAuthorities()));
     // when
     themeManageService.deleteTheme(toDelete.getThemeComponentId());
     // then
