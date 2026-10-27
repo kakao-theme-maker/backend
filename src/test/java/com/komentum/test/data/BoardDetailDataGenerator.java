@@ -78,6 +78,8 @@ public class BoardDetailDataGenerator {
       DesignBoard designBoard = designBoardRepository.save(DesignBoard.builder()
           .designComponent(allDesignComponents.get(i))
           .post(allPosts.get(i))
+          .componentType(themeDataGenerator.initialComponentTypes.get(
+              i % themeDataGenerator.initialComponentTypes.size()))
           .build());
       designBoards.add(designBoard);
     }
