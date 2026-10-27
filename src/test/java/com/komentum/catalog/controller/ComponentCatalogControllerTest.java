@@ -71,7 +71,7 @@ class ComponentCatalogControllerTest {
   @DisplayName("when send request, return user's theme and design components order by created date desc")
   void findCustomComponents_success() throws Exception {
     // stub
-    BDDMockito.given(fileManager.resolveFilePath(BDDMockito.anyString()))
+    BDDMockito.given(fileManager.resolvePublicFileUrl(BDDMockito.anyString()))
         .willReturn("http://mocked-url/1234567890");
     // given: 사용자마다 3개의 design component와 3개의 theme component 소유
     List<User> users = userScenarioSupport.builder()

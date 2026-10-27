@@ -43,7 +43,7 @@ class ThemeRetrieveServiceTest {
 
   @BeforeEach
   void setUp() {
-    when(fileManager.resolveFilePath(anyString()))
+    when(fileManager.resolvePublicFileUrl(anyString()))
         .thenAnswer(invocation -> "https://cdn.example.com/" + invocation.getArgument(0));
     themeDataGenerator.deleteTestData();
     userDataGenerator.deleteAllUsers();

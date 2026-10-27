@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.komentum.global.properties.AuthProperty;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,6 +19,7 @@ class TokenCookieManagerTest {
   private final AuthProperty authProperty = new AuthProperty(
       1000L,
       1000L,
+      2000L,
       "http://localhost:3000",
       false,
       "Lax"
@@ -47,6 +49,21 @@ class TokenCookieManagerTest {
     Cookie refreshTokenCookie = response.getCookie(AuthProperty.REFRESH_TOKEN_COOKIE_NAME);
     assertTokenCookie(accessTokenCookie, accessToken);
     assertTokenCookie(refreshTokenCookie, refreshToken);
+  }
+
+  @Test
+  @DisplayName("게스트 토큰 쿠키의 만료 시간은 access token이 아닌 게스트 토큰 만료 시간을 따른다")
+  void addGuestTokenOnCookie_useGuestTokenExpiresIn() {
+    // given
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    String guestToken = "guest-token";
+    // when
+    tokenCookieManager.addGuestTokenOnCookie(response, guestToken);
+    // then
+    Cookie guestTokenCookie = response.getCookie(AuthProperty.ACCESS_TOKEN_COOKIE_NAME);
+    assertTokenCookie(guestTokenCookie, guestToken);
+    assertThat(guestTokenCookie.getMaxAge())
+        .isEqualTo(authProperty.getGuestTokenExpiresIn().intValue());
   }
 
   @Test

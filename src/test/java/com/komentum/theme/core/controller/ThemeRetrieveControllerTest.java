@@ -103,11 +103,11 @@ class ThemeRetrieveControllerTest {
   @BeforeEach
   void setUp() {
     // stub
-    Mockito.when(fileManager.resolveFilePath(Mockito.any()))
+    Mockito.when(fileManager.resolvePublicFileUrl(Mockito.any()))
         .thenReturn("http://mocked-url/1234567890");
     Mockito.when(fileManager.convertUrlToFileName(Mockito.any()))
         .thenReturn("mocked-file-name");
-    Mockito.when(fileManager.uploadFile(Mockito.any(), Mockito.any()))
+    Mockito.when(fileManager.uploadPublicFile(Mockito.any(), Mockito.any()))
         .thenReturn("http://mocked-url/1234567890");
     // generate users
     userResult = userScenarioSupport.builder()
@@ -300,7 +300,7 @@ class ThemeRetrieveControllerTest {
     // 임시 : setUp 데이터 삭제 ( 시나리오 구현 어려움 )
     testDataRemover.deleteAll();
     // stub : 이미지 생성 시 Mock URL 사용
-    Mockito.when(fileManager.resolveFilePath(Mockito.any()))
+    Mockito.when(fileManager.resolvePublicFileUrl(Mockito.any()))
         .thenReturn("http://mocked-url/1234567890");
     // given: 사용자 4명 생성
     List<User> users = userScenarioSupport.builder()

@@ -90,7 +90,7 @@ abstract class DesignComponentControllerTestSupport {
     testUser = userDataGenerator.generateTestUser("test@example.com");
     testClient = TestClientDto.fromEntity(testUser);
 
-    when(fileManager.resolveFilePath(anyString()))
+    when(fileManager.resolvePublicFileUrl(anyString()))
         .thenAnswer(invocation -> imageUrlOf(invocation.getArgument(0, String.class)));
 
     authenticateAs(testUser);

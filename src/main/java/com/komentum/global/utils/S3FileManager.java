@@ -59,7 +59,7 @@ public class S3FileManager implements FileManager {
   }
 
   @Override
-  public String resolveFilePath(String fileName) {
+  public String resolvePublicFileUrl(String fileName) {
     if (fileName == null || fileName.trim().isEmpty()) {
       throw new IllegalArgumentException("[S3 File Manager] fileName is null or empty");
     }
@@ -73,24 +73,24 @@ public class S3FileManager implements FileManager {
    * @param fileName  name of the file
    */
   @Override
-  public String uploadFile(byte[] fileBytes, String fileName) {
+  public String uploadPublicFile(byte[] fileBytes, String fileName) {
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
         .bucket(bucketName)
         .key(fileName)
         .contentLength((long) fileBytes.length)
         .build();
     s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes));
-    return resolveFilePath(fileName);
+    return resolvePublicFileUrl(fileName);
   }
 
   @Override
-  public String uploadFile(InputStream is, long contentLength, String fileName) {
+  public String uploadPublicFile(InputStream is, long contentLength, String fileName) {
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
         .bucket(bucketName)
         .key(fileName)
         .build();
     s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(is, contentLength));
-    return resolveFilePath(fileName);
+    return resolvePublicFileUrl(fileName);
   }
 
   /**

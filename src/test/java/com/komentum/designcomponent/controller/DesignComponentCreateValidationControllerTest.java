@@ -51,7 +51,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
         emptyFile
     );
 
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 
   @Test
@@ -74,7 +74,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
     );
 
     assertThat(designComponentRepository.count()).isZero();
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 
 }

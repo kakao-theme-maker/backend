@@ -31,7 +31,7 @@ public class DesignComponentSeeder {
       String fileName =
           "DesignComponent_" + UUID.randomUUID() + "_" + System.currentTimeMillis() + ".png";
       try (InputStream is = targetImage.getInputStream()) {
-        fileManager.uploadFile(is.readAllBytes(), fileName);
+        fileManager.uploadPublicFile(is.readAllBytes(), fileName);
       }
       return DesignComponent.builder()
           .user(owner)

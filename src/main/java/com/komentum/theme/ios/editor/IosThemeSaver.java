@@ -26,7 +26,7 @@ public class IosThemeSaver {
   public String save(Integer themeComponentId, Path workDir) throws IOException {
     String fileName = resolveThemeName(themeComponentId);
     byte[] packageBytes = createPackageBytes(workDir);
-    return fileManager.uploadAndGetFileName(packageBytes, fileName, "ktheme");
+    return fileManager.uploadThemePackageAndGetFileName(packageBytes, fileName, "ktheme");
   }
 
   private String resolveThemeName(Integer themeComponentId) {

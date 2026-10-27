@@ -24,6 +24,7 @@ public class AuthProperty {
   // 인증 관련 환경 변수
   private final Long accessTokenExpiresIn;
   private final Long refreshTokenExpiresIn;
+  private final Long guestTokenExpiresIn;
   private final String oauth2RedirectUrl;
   private final Boolean withHttps;
   private final String sameSite;
