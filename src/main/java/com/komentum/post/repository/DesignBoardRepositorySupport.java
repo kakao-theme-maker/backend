@@ -115,7 +115,6 @@ public class DesignBoardRepositorySupport {
     QDesignBoard designBoard = QDesignBoard.designBoard;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
-    QDesignComponent designComponent = QDesignComponent.designComponent;
     NumberExpression<Long> preferCount = prefer.countDistinct();
     BooleanExpression searchMatched = createSearchMatched(post, condition);
     OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, preferCount,
@@ -123,7 +122,6 @@ public class DesignBoardRepositorySupport {
     return queryFactory.select(
             new QDesignBoardQuery_Preview(
                 post.postId,
-                designComponent.designComponentId,
                 post.title,
                 post.previewImageName,
                 user.userEmail,
@@ -132,7 +130,6 @@ public class DesignBoardRepositorySupport {
             )
         )
         .from(designBoard)
-        .join(designBoard.designComponent, designComponent)
         .join(designBoard.post, post)
         .join(post.user, user)
         .leftJoin(prefer).on(prefer.post.eq(post))
@@ -141,11 +138,12 @@ public class DesignBoardRepositorySupport {
         )
         .groupBy(
             post.postId,
-            designComponent.designComponentId,
-            designBoard.designBoardId
+            post.title,
+            post.previewImageName,
+            user.userEmail,
+            post.createdAt
         )
         .orderBy(orderSpecifiers)
-        .orderBy(designBoard.designBoardId.desc())
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();

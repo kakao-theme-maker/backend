@@ -8,7 +8,6 @@ import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
-import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -102,28 +101,29 @@ public class DesignBoardService {
     );
   }
 
+  /**
+   * 검증된 에셋·타입 매핑에 게시글을 연결해 저장한다.
+   */
   @Transactional
-  public DesignBoard save(Post post, DesignComponent designComponent) {
-    return designBoardRepository.save(DesignBoard.builder()
-        .post(post)
-        .designComponent(designComponent)
-        .build());
+  public DesignBoard save(Post post, DesignBoard mapping) {
+    mapping.setPost(post);
+    return designBoardRepository.save(mapping);
   }
 
+  /**
+   * 기존 게시글 매핑을 삭제한 후 요청한 에셋별 타입 매핑으로 교체한다.
+   */
   @Transactional
   public void synchronizeDesignBoards(
       Post post,
-      List<DesignComponent> requestedComponents
+      List<DesignBoard> requestedMappings
   ) {
     // delete all design boards
     designBoardRepository.deleteByPost_PostId(post.getPostId());
-    // generate all design boards
-    List<DesignBoard> designBoards = findWithDesignBoardByPostId(post.getPostId());
-    for (DesignComponent component : requestedComponents) {
-      save(post, component);
+    designBoardRepository.flush();
+    for (DesignBoard mapping : requestedMappings) {
+      save(post, mapping);
     }
-    List<DesignBoard> updated = findWithDesignBoardByPostId(post.getPostId());
-    int a = 1;
   }
 
   @Transactional
