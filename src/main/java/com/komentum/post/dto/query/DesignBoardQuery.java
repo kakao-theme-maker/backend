@@ -60,7 +60,6 @@ public class DesignBoardQuery {
   public static class Preview {
 
     private final Long postId;
-    private final Integer designComponentId;
     private final String title;
     private final String previewImageName;
     private final String userEmail;
@@ -68,10 +67,9 @@ public class DesignBoardQuery {
     private final Long prefers;
 
     @QueryProjection
-    public Preview(Long postId, Integer designComponentId, String title, String previewImageName,
+    public Preview(Long postId, String title, String previewImageName,
         String userEmail, LocalDateTime createdAt, Long prefers) {
       this.postId = postId;
-      this.designComponentId = designComponentId;
       this.title = title;
       this.previewImageName = previewImageName;
       this.userEmail = userEmail;

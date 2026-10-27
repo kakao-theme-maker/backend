@@ -11,21 +11,19 @@ import org.mapstruct.Named;
 import org.springframework.beans.factory.annotation.Autowired;
 
 // DesignComponent Mapper
-@Mapper(componentModel = "spring", uses = ComponentTypeMapper.class)
+@Mapper(componentModel = "spring")
 public abstract class DesignComponentMapper {
 
   @Autowired
   protected FileManager fileManager;
 
   @Mapping(target = "publicUserId", source = "user.publicUserId")
-  @Mapping(target = "componentTypes", source = "componentTypes")
   @Mapping(target = "imageUrl", source = "fileName", qualifiedByName = "fileNameToUrl")
   public abstract DesignComponentDto toDto(DesignComponent designComponent);
 
   @Mapping(target = "designComponentId", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "componentTypeMappings", ignore = true)
   @Mapping(target = "user", source = "user")
   @Mapping(target = "fileName", source = "fileName")
   public abstract DesignComponent toEntity(CreateDesignComponentRequest request, String fileName,

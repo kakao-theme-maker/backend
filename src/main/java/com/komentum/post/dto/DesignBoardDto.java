@@ -4,6 +4,9 @@ import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -12,6 +15,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 public class DesignBoardDto {
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Schema(description = "게시글에 연결할 디자인 에셋과 타입 ID 목록")
+  public static class DesignComponentMappingDto {
+
+    @NotNull
+    private Integer designComponentId;
+
+    @NotEmpty
+    private List<@NotNull Integer> componentTypeIds;
+  }
 
   @Data
   @Builder
@@ -28,9 +45,6 @@ public class DesignBoardDto {
 
     @Schema(description = "게시글 내용")
     private String content;
-
-    @Schema(description = "디자인 에셋 데이터 ID")
-    private Integer designComponentId;
 
     @Schema(description = "게시글 작성자 이메일")
     private String userEmail;
@@ -67,6 +81,9 @@ public class DesignBoardDto {
 
     @Schema(description = "게시글에 연결된 component type 목록")
     private List<BoardComponentTypeDto> componentTypes;
+
+    @Schema(description = "디자인 에셋별 게시글 타입 매핑")
+    private List<DesignComponentMappingDto> designComponents;
   }
 
   @Data
@@ -78,9 +95,6 @@ public class DesignBoardDto {
 
     @Schema(description = "게시글 ID")
     private Long postId;
-
-    @Schema(description = "디자인 에셋 데이터 ID")
-    private Integer designComponentId;
 
     @Schema(description = "게시글 제목")
     private String title;
@@ -111,12 +125,12 @@ public class DesignBoardDto {
           
           - title (String, not null) : 새로운 게시글 제목
           - content (String, not null) : 새로운 게시글 내용
-          - designComponentIds(List<String>, not null) : 게시글을 생성할 design component ID 목록
-          - publicFlag (String, optional) : 게시글 공개 여부 (null 허용)
+          - designComponents (List<DesignComponentMappingDto>, not empty) : 디자인 에셋별 타입 매핑
+          - publicFlag (boolean, optional) : 게시글 공개 여부 (미전달 시 false)
           
-          - post_tags (List<TagCreateDto>, optional) : 생성할 게시글 태그 목록 (전체 덮어쓰기)
+          - postTags (List<TagCreateDto>, optional) : 생성할 게시글 태그 목록 (전체 덮어쓰기)
             - TagCreateDto 구조:
-              - tag_name (String, not null) : 생성할 태그 이름
+              - tagName (String, not null) : 생성할 태그 이름
           """
   )
   public static class DesignBoardCreateDto {
@@ -129,10 +143,12 @@ public class DesignBoardDto {
     @Size(max = 2000, message = "content must be at most 2000 characters")
     String content;
 
-    @Schema(description = "디자인 에셋 게시글에 대한 디자인 에셋 데이터 ID")
-    List<Integer> designComponentIds;
+    @Schema(description = "게시글에 연결할 디자인 에셋별 타입 매핑")
+    @Valid
+    @NotEmpty
+    List<@NotNull DesignComponentMappingDto> designComponents;
 
-    @Schema(description = "공개여부")
+    @Schema(description = "공개 여부(미전달 시 false)", example = "true")
     boolean publicFlag;
 
     @Schema(description = "태그 목록")
@@ -149,12 +165,12 @@ public class DesignBoardDto {
           
           - title (String, optional) : 새로운 게시글 제목 (null 허용)
           - content (String, optional) : 새로운 게시글 내용 (null 허용)
-          - publicFlag (String, optional) : 게시글 공개 여부 (null 허용)
-          - designComponentIds (String, optional) : 현재 디자인 에셋 목록으로 디자인 에셋 게시글을 덮어쓴다
+          - publicFlag (boolean, optional) : 게시글 공개 여부 (미전달 시 false)
+          - designComponents (List<DesignComponentMappingDto>, optional) : 에셋별 타입 매핑 전체 변경
           
-          - post_tags (List<TagUpdateDto>, optional) : 게시글 태그 목록 (전체 덮어쓰기)
+          - postTags (List<TagUpdateDto>, optional) : 게시글 태그 목록 (전체 덮어쓰기)
             - TagUpdateDto 구조:
-              - tag_name (String, not null) : 생성할 태그 이름
+              - tagName (String, not null) : 생성할 태그 이름
           """
   )
   public static class DesignBoardUpdateDto {
@@ -167,10 +183,12 @@ public class DesignBoardDto {
     @Size(max = 2000, message = "content must be at most 2000 characters")
     String content;
 
-    @Schema(description = "현재 디자인 에셋 목록으로 디자인 에셋 게시글을 덮어쓴다(null 허용)")
-    List<Integer> designComponentIds;
+    @Schema(description = "에셋별 타입 매핑 전체 변경(null이면 유지, 빈 목록 불가)")
+    @Valid
+    @Size(min = 1)
+    List<@NotNull DesignComponentMappingDto> designComponents;
 
-    @Schema(description = "공개여부(null 허용)", example = "공개여부(null 허용) : true|false")
+    @Schema(description = "공개 여부(미전달 시 false)", example = "true")
     boolean publicFlag;
 
     @Schema(description = "게시글에 덮어쓸 태그 목록 ( 이 목록으로 태그 목록이 변경됨 )")

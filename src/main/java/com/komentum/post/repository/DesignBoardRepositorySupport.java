@@ -109,13 +109,17 @@ public class DesignBoardRepositorySupport {
         List.of(PostSortType.CREATED_DESC));
   }
 
+  /**
+   * 디자인 게시글 요약을 게시글 단위로 묶어 페이지 조회한다.
+   * 복수 에셋·타입 매핑에도 게시글을 한 번만 반환하고 좋아요 수를 중복 집계하지 않는다.
+   * 검색어와 타입 조건은 일치하는 게시글을 우선 정렬하는 데 사용한다.
+   */
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable,
       PostSearchCondition condition, List<PostSortType> sortTypes) {
     QPost post = QPost.post;
     QDesignBoard designBoard = QDesignBoard.designBoard;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
-    QDesignComponent designComponent = QDesignComponent.designComponent;
     NumberExpression<Long> preferCount = prefer.countDistinct();
     BooleanExpression searchMatched = createSearchMatched(post, condition);
     OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, preferCount,
@@ -123,7 +127,6 @@ public class DesignBoardRepositorySupport {
     return queryFactory.select(
             new QDesignBoardQuery_Preview(
                 post.postId,
-                designComponent.designComponentId,
                 post.title,
                 post.previewImageName,
                 user.userEmail,
@@ -132,7 +135,6 @@ public class DesignBoardRepositorySupport {
             )
         )
         .from(designBoard)
-        .join(designBoard.designComponent, designComponent)
         .join(designBoard.post, post)
         .join(post.user, user)
         .leftJoin(prefer).on(prefer.post.eq(post))
@@ -141,11 +143,12 @@ public class DesignBoardRepositorySupport {
         )
         .groupBy(
             post.postId,
-            designComponent.designComponentId,
-            designBoard.designBoardId
+            post.title,
+            post.previewImageName,
+            user.userEmail,
+            post.createdAt
         )
         .orderBy(orderSpecifiers)
-        .orderBy(designBoard.designBoardId.desc())
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();

@@ -1,5 +1,6 @@
 package com.komentum.post.domain;
 
+import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,7 +25,7 @@ import lombok.Setter;
 @Table(
     uniqueConstraints = @UniqueConstraint(
         name = "unique_design_board",
-        columnNames = {"post_id", "design_component_id"}
+        columnNames = {"post_id", "design_component_id", "component_type_id"}
     )
 )
 public class DesignBoard {
@@ -40,4 +41,8 @@ public class DesignBoard {
   @ManyToOne
   @JoinColumn(nullable = false, name = "design_component_id")
   private DesignComponent designComponent;
+
+  @ManyToOne
+  @JoinColumn(nullable = false, name = "component_type_id")
+  private ComponentType componentType;
 }

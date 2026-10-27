@@ -8,9 +8,11 @@ import com.komentum.post.domain.Tag;
 import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
+import com.komentum.post.dto.DesignBoardDto.DesignComponentMappingDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.facade.BoardManagementHelper;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,15 +21,35 @@ import org.springframework.stereotype.Component;
 @Component
 public class DesignBoardMapperSupport {
 
+  /**
+   * 게시글의 타입 목록을 중복 없이 응답 DTO로 변환한다.
+   */
   public List<BoardComponentTypeDto> toComponentTypeDtos(List<DesignBoard> designBoards) {
     Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
     for (DesignBoard designBoard : designBoards) {
-      for (ComponentType componentType : designBoard.getDesignComponent().getComponentTypes()) {
-        componentTypeMap.putIfAbsent(componentType.getTypeCode(),
-            BoardComponentTypeDto.from(componentType));
-      }
+      ComponentType componentType = designBoard.getComponentType();
+      componentTypeMap.putIfAbsent(componentType.getTypeCode(),
+          BoardComponentTypeDto.from(componentType));
     }
     return List.copyOf(componentTypeMap.values());
+  }
+
+  /**
+   * 게시글 매핑을 에셋별 타입 ID 목록으로 묶어 반환한다.
+   */
+  public List<DesignComponentMappingDto> toDesignComponentMappings(List<DesignBoard> designBoards) {
+    Map<Integer, List<Integer>> mappings = new LinkedHashMap<>();
+    for (DesignBoard designBoard : designBoards) {
+      Integer designComponentId = designBoard.getDesignComponent().getDesignComponentId();
+      mappings.computeIfAbsent(designComponentId, id -> new ArrayList<>())
+          .add(designBoard.getComponentType().getComponentTypeId());
+    }
+    return mappings.entrySet().stream()
+        .map(entry -> DesignComponentMappingDto.builder()
+            .designComponentId(entry.getKey())
+            .componentTypeIds(List.copyOf(entry.getValue()))
+            .build())
+        .toList();
   }
 
   public DesignBoardPreviewDto toDesignBoardPreviewDto(
@@ -37,7 +59,6 @@ public class DesignBoardMapperSupport {
   ) {
     return DesignBoardPreviewDto.builder()
         .postId(preview.getPostId())
-        .designComponentId(preview.getDesignComponentId())
         .title(preview.getTitle())
         .previewImageUrl(helper.findPreviewImageUrl(preview.getPreviewImageName()))
         .userEmail(preview.getUserEmail())

@@ -9,10 +9,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.dto.CreateDesignComponentRequest;
-import com.komentum.designcomponent.enums.TypeCode;
-import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.global.utils.FileManager;
 import com.komentum.test.data.UserDataGenerator;
@@ -42,36 +39,25 @@ class DesignComponentServiceTest {
   private DesignComponentRepository designComponentRepository;
 
   @Autowired
-  private ComponentTypeRepository componentTypeRepository;
-
-  @Autowired
   private UserDataGenerator userDataGenerator;
 
   @MockitoBean
   private FileManager fileManager;
 
   private User user;
-  private ComponentType componentType;
 
   @BeforeEach
   void setUp() {
     designComponentRepository.deleteAll();
-    componentTypeRepository.deleteAll();
     userDataGenerator.deleteAllUsers();
     reset(fileManager);
 
     user = userDataGenerator.generateTestUser("service-test@example.com");
-    componentType = componentTypeRepository.save(ComponentType.builder()
-        .typeCode(TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE)
-        .name("service test component type")
-        .explain("service test component type explain")
-        .build());
   }
 
   @AfterEach
   void tearDown() {
     designComponentRepository.deleteAll();
-    componentTypeRepository.deleteAll();
     userDataGenerator.deleteAllUsers();
     reset(fileManager);
   }
@@ -81,7 +67,6 @@ class DesignComponentServiceTest {
   void createDesignComponents_allOrNothing_whenOneFails() {
     CreateDesignComponentRequest request = CreateDesignComponentRequest.builder()
         .isPublic(true)
-        .componentTypeIds(java.util.List.of(componentType.getComponentTypeId()))
         .build();
     MockMultipartFile firstFile = new MockMultipartFile(
         "files",

@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.dto.DesignComponentDto;
+import com.komentum.designcomponent.service.seeder.ComponentTypeSeeder;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -24,11 +26,14 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @DisplayName("DesignComponent 조회 테스트")
 class DesignComponentRetrieveControllerTest extends DesignComponentControllerTestSupport {
 
+  @Autowired
+  private ComponentTypeSeeder componentTypeSeeder;
+
   @Test
   @DisplayName("DesignComponent 조회 테스트")
   void getDesignComponent() throws Exception {
     DesignComponent savedComponent = testUserComponent(
-        "image.png", false, componentTypeA, componentTypeB);
+        "image.png", false);
 
     MockHttpServletRequestBuilder requestBuilder = get("/api/design-components/{id}",
         savedComponent.getDesignComponentId());
@@ -43,81 +48,22 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     assertThat(response.getImageUrl()).isEqualTo(imageUrlOf("image.png"));
     assertThat(response.getCreatedAt()).isNotNull();
     assertThat(response.getUpdatedAt()).isNotNull();
-    assertThat(response.getComponentTypes())
-        .extracting("componentTypeId")
-        .containsExactlyInAnyOrder(componentTypeA.getComponentTypeId(),
-            componentTypeB.getComponentTypeId());
+    assertThat(objectMapper.readTree(result.getResponse().getContentAsString())
+        .has("componentTypes")).isFalse();
   }
 
   @Test
   @DisplayName("DesignComponent 전체 조회 테스트")
   void getAllDesignComponents() throws Exception {
     designComponentDataGenerator.generateDesignComponents(
-        userDataGenerator.generateTestUsers(5), 4, List.of(componentTypeA));
+        userDataGenerator.generateTestUsers(5), 4);
 
     MockHttpServletRequestBuilder requestBuilder = get("/api/design-components");
 
     mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content.length()").value(20))
-        .andExpect(jsonPath("$.content[0].componentTypes.length()").value(1));
-  }
-
-  @Test
-  @DisplayName("componentTypeId로 DesignComponent 목록 조회 테스트")
-  void getDesignComponentsByComponentTypeId() throws Exception {
-    DesignComponent componentAOnly = testUserComponent(
-        "image-a.png", true, componentTypeA);
-    DesignComponent componentAAndB = testUserComponent(
-        "image-ab.png", true, componentTypeA, componentTypeB);
-    testUserComponent("image-b.png", true, componentTypeB);
-
-    MockHttpServletRequestBuilder requestBuilder = get(
-        "/api/design-components/component-types/{componentTypeId}",
-        componentTypeA.getComponentTypeId());
-
-    MvcResult result = performAuthenticated(requestBuilder, status().isOk());
-
-    DesignComponentDto[] responses = objectMapper.readValue(
-        result.getResponse().getContentAsString(), DesignComponentDto[].class);
-
-    assertThat(responses).hasSize(2);
-    assertThat(responses)
-        .extracting(DesignComponentDto::getDesignComponentId)
-        .containsExactlyInAnyOrder(
-            componentAOnly.getDesignComponentId(),
-            componentAAndB.getDesignComponentId()
-        );
-    assertThat(responses).allSatisfy(response ->
-        assertThat(response.getComponentTypes())
-            .extracting("componentTypeId")
-            .contains(componentTypeA.getComponentTypeId()));
-  }
-
-  @Test
-  @DisplayName("존재하지 않는 componentTypeId 조회 시 404 반환")
-  void getDesignComponentsByUnknownComponentTypeId() throws Exception {
-    MockHttpServletRequestBuilder requestBuilder = get(
-        "/api/design-components/component-types/{componentTypeId}", 999999);
-
-    mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
-        .andExpect(status().isNotFound());
-  }
-
-  @Test
-  @DisplayName("componentType에 속한 DesignComponent가 없으면 빈 리스트 반환")
-  void getDesignComponentsByComponentTypeId_emptyResult() throws Exception {
-    testUserComponent("image-b.png", true, componentTypeB);
-
-    MockHttpServletRequestBuilder requestBuilder = get(
-        "/api/design-components/component-types/{componentTypeId}",
-        componentTypeA.getComponentTypeId());
-
-    MvcResult result = performAuthenticated(requestBuilder, status().isOk());
-
-    DesignComponentDto[] responses = objectMapper.readValue(
-        result.getResponse().getContentAsString(), DesignComponentDto[].class);
-    assertThat(responses).isEmpty();
+        .andExpect(jsonPath("$.content[0].componentTypes").doesNotExist());
   }
 
   @Test
@@ -125,14 +71,14 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
   void getDesignComponentsByPublicUserId() throws Exception {
     User otherUser = createOtherUser("other@test.com");
 
-    testUserComponent("image1.png", true, componentTypeA);
-    testUserComponent("image2.png", true, componentTypeA);
-    testUserComponent("image3.png", true, componentTypeB);
+    testUserComponent("image1.png", true);
+    testUserComponent("image2.png", true);
+    testUserComponent("image3.png", true);
 
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "other1.png", true, List.of(componentTypeA));
+        "other1.png", true);
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "other2.png", true, List.of(componentTypeB));
+        "other2.png", true);
 
     MockHttpServletRequestBuilder requestBuilder = get(
         "/api/design-components/user/{publicUserId}",
@@ -164,14 +110,14 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     // given
     User otherUser = createOtherUser("other@test.com");
 
-    testUserComponent("image1.png", true, componentTypeA);
-    testUserComponent("image2.png", true, componentTypeA);
-    testUserComponent("image3.png", true, componentTypeB);
+    testUserComponent("image1.png", true);
+    testUserComponent("image2.png", true);
+    testUserComponent("image3.png", true);
 
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "other1.png", true, List.of(componentTypeA));
+        "other1.png", true);
     designComponentDataGenerator.generateDesignComponent(otherUser,
-        "other2.png", true, List.of(componentTypeB));
+        "other2.png", true);
 
     // when
     List<DesignComponentDto> res = mockMvcUtils.doAuthRequest(
@@ -208,6 +154,7 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
   @DisplayName("when send request, retrieve bookmarked design components")
   public void findBookmarkedDesignComponent_success() throws Exception {
     // given
+    componentTypeSeeder.upsertComponentType();
     // 유저당 3개의 design component
     Map<User, List<DesignComponent>> designComponentMap = designComponentScenarioSupport
         .builder(List.of(testUser))

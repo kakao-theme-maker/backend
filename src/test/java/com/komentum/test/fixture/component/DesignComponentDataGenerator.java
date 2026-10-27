@@ -1,7 +1,6 @@
 package com.komentum.test.fixture.component;
 
 import com.github.javafaker.Faker;
-import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.test.data.UserDataGenerator;
@@ -48,11 +47,6 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent 리스트
    */
   public List<DesignComponent> generateDesignComponents(List<User> users, int componentPerUser) {
-    return generateDesignComponents(users, componentPerUser, List.of());
-  }
-
-  public List<DesignComponent> generateDesignComponents(List<User> users, int componentPerUser,
-      List<ComponentType> componentTypes) {
     List<DesignComponent> components = new ArrayList<>();
     for (User user : users) {
       for (int j = 0; j < componentPerUser; j++) {
@@ -61,7 +55,6 @@ public class DesignComponentDataGenerator {
             .fileName(faker.internet().slug() + ".png")
             .isPublic(j % 2 == 0) // 짝수일 때는 public 홀수일때는 private
             .build();
-        designComponent.replaceComponentTypes(componentTypes);
         components.add(designComponent);
       }
     }
@@ -78,17 +71,11 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent
    */
   public DesignComponent generateDesignComponent(User user, String fileName, Boolean isPublic) {
-    return generateDesignComponent(user, fileName, isPublic, List.of());
-  }
-
-  public DesignComponent generateDesignComponent(User user, String fileName, Boolean isPublic,
-      List<ComponentType> componentTypes) {
     DesignComponent designComponent = DesignComponent.builder()
         .user(user)
         .fileName(fileName)
         .isPublic(isPublic)
         .build();
-    designComponent.replaceComponentTypes(componentTypes);
     return designComponentRepository.save(designComponent);
   }
 
@@ -99,7 +86,7 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent
    */
   public DesignComponent generateDesignComponent(User user) {
-    return generateDesignComponent(user, faker.internet().slug() + ".png", true, List.of());
+    return generateDesignComponent(user, faker.internet().slug() + ".png", true);
   }
 
 

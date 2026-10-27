@@ -1,6 +1,5 @@
 package com.komentum.post.repository.predicate;
 
-import com.komentum.designcomponent.domain.QDesignComponentComponentType;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.post.domain.QDesignBoard;
 import com.komentum.post.domain.QPost;
@@ -30,14 +29,11 @@ public class PostPredicate {
       return null;
     }
     QDesignBoard searchDesignBoard = new QDesignBoard("searchDesignBoard");
-    QDesignComponentComponentType componentTypeMapping =
-        new QDesignComponentComponentType("searchComponentTypeMapping");
     return JPAExpressions.selectOne()
         .from(searchDesignBoard)
-        .join(searchDesignBoard.designComponent.componentTypeMappings, componentTypeMapping)
         .where(
             searchDesignBoard.post.eq(post),
-            componentTypeMapping.componentType.typeCode.eq(typeCode)
+            searchDesignBoard.componentType.typeCode.eq(typeCode)
         )
         .exists();
   }

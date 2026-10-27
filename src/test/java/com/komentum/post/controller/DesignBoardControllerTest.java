@@ -1,6 +1,8 @@
 package com.komentum.post.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -22,6 +24,7 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
+import com.komentum.post.dto.DesignBoardDto.DesignComponentMappingDto;
 import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
@@ -62,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -121,6 +125,7 @@ public class DesignBoardControllerTest {
 
   @BeforeEach
   public void setUp() {
+    componentTypeSeeder.upsertComponentType();
     this.expectedImageUrl = UUID.randomUUID().toString();
     stubImageUploadAndRetrieve(expectedImageUrl);
     userResult = userScenarioSupport.builder() // 사용자 3명
@@ -239,12 +244,62 @@ public class DesignBoardControllerTest {
   }
 
   private ComponentType getComponentType(TypeCode typeCode) {
-    componentTypeSeeder.upsertComponentType();
     return componentTypeRepository.findAllByTypeCodeIn(List.of(typeCode)).get(0);
   }
 
+  /**
+   * 테스트 에셋 목록을 기본 타입 하나를 갖는 게시글 매핑 요청으로 변환한다.
+   */
+  private List<DesignComponentMappingDto> mappingsFor(List<Integer> componentIds) {
+    Integer typeId = componentTypeRepository.findAll().get(0).getComponentTypeId();
+    return componentIds.stream()
+        .map(id -> DesignComponentMappingDto.builder()
+            .designComponentId(id).componentTypeIds(List.of(typeId)).build())
+        .toList();
+  }
+
+  /**
+   * 게시글 생성 또는 수정 요청을 수행하고 예상 상태 코드를 검증한다.
+   */
+  private DesignBoardDetailDto requestBoardMutation(HttpMethod method, Long postId,
+      Object request, User author, int statusCode) throws Exception {
+    String path = postId == null ? "/api/design-boards" : "/api/design-boards/" + postId;
+    List<MockMultipartFile> formData = List.of(
+        MockMultipartFileUtils.generateJsonFormData("boardInfo", request),
+        MockMultipartFileUtils.generateImageFormData("previewImage", ImageExtension.PNG));
+    if (statusCode >= 400) {
+      Map<String, String> errors = mockMvcUtils.doAuthMultipartRequest(
+          MockMvcMultipartRequestDto.<Map<String, String>>builder()
+              .mockMvc(mockMvc)
+              .path(path)
+              .httpMethod(method)
+              .formDataList(formData)
+              .clientDto(TestClientDto.fromEntity(author))
+              .statusCode(statusCode)
+              .responseType(new TypeReference<>() {
+              })
+              .build());
+      assertThat(errors).isNotEmpty();
+      return null;
+    }
+    return mockMvcUtils.doAuthMultipartRequest(
+        MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .path(path)
+            .httpMethod(method)
+            .formDataList(formData)
+            .clientDto(TestClientDto.fromEntity(author))
+            .statusCode(statusCode)
+            .responseType(new TypeReference<>() {
+            })
+            .build());
+  }
+
+  /**
+   * 디자인 게시글 목록의 페이지 크기와 에셋 ID가 없는 HTTP 응답을 검증한다.
+   */
   @Test
-  @DisplayName("when send request, retrieve list of design board infos")
+  @DisplayName("디자인 게시글 목록은 요청한 페이지 크기로 반환하고 designComponentId를 노출하지 않는다")
   public void whenSendRequest_retrieveListOfDesignBoards() throws Exception {
     // given
     int pageSize = 2;
@@ -252,17 +307,12 @@ public class DesignBoardControllerTest {
     User client = userResult.getFirstUser();
     MultiValueMap<String, String> params = TestParams.withPaging(pageNumber, pageSize);
     // when
-    List<DesignBoardPreviewDto> responses = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, List<DesignBoardPreviewDto>>builder()
-            .mockMvc(mockMvc)
-            .httpMethod(HttpMethod.GET)
-            .path("/api/design-boards")
-            .params(params)
-            .responseType(new TypeReference<>() {
-            })
-            .clientDto(TestClientDto.fromEntity(client))
-            .build()
-    );
+    ResultActions result = mockMvc.perform(mockMvcUtils.addAuthentication(
+            get("/api/design-boards").params(params), TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[*].designComponentId").doesNotHaveJsonPath());
+    List<DesignBoardPreviewDto> responses = mockMvcUtils.parseResponse(result, new TypeReference<>() {
+    });
     // then
     assertThat(responses).isNotNull().hasSize(pageSize);
   }
@@ -276,7 +326,7 @@ public class DesignBoardControllerTest {
     prepareDesignBoardSortData();
     User client = userResult.getFirstUser();
     MultiValueMap<String, String> params = TestParams.withPaging(0,
-        postResult.designBoards().size());
+        postResult.posts().size());
     if (sortType != null) {
       params.add("sortType", sortType);
     }
@@ -284,35 +334,37 @@ public class DesignBoardControllerTest {
     List<DesignBoardPreviewDto> response = requestDesignBoardPreviews(params, client);
     // then
     assertThat(response)
-        .hasSize(postResult.designBoards().size())
+        .hasSize(postResult.posts().size())
         .isSortedAccordingTo(designBoardComparator(sortType));
 
     MultiValueMap<String, String> repeatedParams = TestParams.withPaging(0,
-        postResult.designBoards().size());
+        postResult.posts().size());
     repeatedParams.add("sortType", sortType == null ? "CREATED_DESC" : sortType);
     assertThat(requestDesignBoardPreviews(repeatedParams, client))
         .containsExactlyElementsOf(response);
   }
 
   @Test
-  @DisplayName("when send request, retrieve design board by id")
+  @DisplayName("디자인 게시글 단건 상세는 최상위 에셋 ID 없이 에셋별 매핑을 반환한다")
   public void whenSendRequest_retrieveDesignBoardById() throws Exception {
     // given
     DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
+    List<Integer> expectedComponentIds = postResult.designBoards().stream()
+        .filter(board -> board.getPost().getPostId().equals(targetDesignBoard.getPost().getPostId()))
+        .map(board -> board.getDesignComponent().getDesignComponentId())
+        .toList();
     User client = userResult.getFirstUser();
     // when
-    DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, DesignBoardDetailDto>builder()
-            .mockMvc(mockMvc)
-            .httpMethod(HttpMethod.GET)
-            .path(requestPath)
-            .responseType(new TypeReference<>() {
-            })
-            .clientDto(TestClientDto.fromEntity(client))
-            .build()
-    );
+    ResultActions result = mockMvc.perform(mockMvcUtils.addAuthentication(
+            get(requestPath), TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.designComponentId").doesNotHaveJsonPath())
+        .andExpect(jsonPath("$.designComponents[*].designComponentId")
+            .value(containsInAnyOrder(expectedComponentIds.toArray())));
+    DesignBoardDetailDto response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
+    });
     // then
     assertDesignBoard(response);
   }
@@ -407,17 +459,23 @@ public class DesignBoardControllerTest {
    * 비인증 요청에서도 디자인 게시글 상세 목록의 모든 항목과 false인 사용자별 상태값을 반환하는지 검증한다.
    */
   @Test
-  @DisplayName("비인증 사용자가 디자인 게시글 상세 목록을 조회하면 각 상세 정보와 false인 사용자별 상태값을 반환한다")
+  @DisplayName("비인증 상세 목록은 최상위 에셋 ID 없이 에셋별 매핑과 false인 사용자별 상태값을 반환한다")
   void findDesignBoardDetails_withoutAuthentication_returnsDetails() throws Exception {
     // given
     List<Long> expectedPostIds = postResult.designBoards().stream()
         .map(designBoard -> designBoard.getPost().getPostId())
         .distinct()
         .toList();
+    List<Integer> expectedComponentIds = postResult.designBoards().stream()
+        .map(board -> board.getDesignComponent().getDesignComponentId())
+        .toList();
     MultiValueMap<String, String> params = TestParams.withPaging(0, expectedPostIds.size());
     // when
     ResultActions result = mockMvc.perform(get("/api/design-boards/details").params(params))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[*].designComponentId").doesNotHaveJsonPath())
+        .andExpect(jsonPath("$[*].designComponents[*].designComponentId")
+            .value(containsInAnyOrder(expectedComponentIds.toArray())));
     List<DesignBoardDetailDto> response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
     });
     // then
@@ -478,7 +536,7 @@ public class DesignBoardControllerTest {
     targetPost.setTitle(keyword);
     postRepository.save(targetPost);
     MultiValueMap<String, String> params = TestParams.withPaging(0,
-        postResult.designBoards().size());
+        postResult.posts().size());
     params.add("keyword", keyword);
     User client = userResult.getFirstUser();
     // when
@@ -494,7 +552,7 @@ public class DesignBoardControllerTest {
             .build()
     );
     // then
-    assertThat(response).hasSize(postResult.designBoards().size());
+    assertThat(response).hasSize(postResult.posts().size());
     assertThat(response.get(0).getPostId()).isEqualTo(targetPost.getPostId());
     assertThat(response)
         .extracting(DesignBoardPreviewDto::getPostId)
@@ -510,8 +568,13 @@ public class DesignBoardControllerTest {
     DesignComponent targetComponent = designComponentResult.designComponents().get(0);
     String matchedImageUrl = "https://test.com/matched-design-image.png";
     targetComponent.update(matchedImageUrl, true);
-    targetComponent.replaceComponentTypes(List.of(componentType));
     designComponentRepository.save(targetComponent);
+    List<DesignBoard> matchedBoards = postResult.designBoards().stream()
+        .filter(board -> board.getDesignComponent().getDesignComponentId()
+            .equals(targetComponent.getDesignComponentId()))
+        .toList();
+    matchedBoards.forEach(board -> board.setComponentType(componentType));
+    designBoardRepository.saveAllAndFlush(matchedBoards);
     List<Long> matchedPostIds = postResult.designBoards().stream()
         .filter(designBoard -> designBoard.getDesignComponent().getDesignComponentId()
             .equals(targetComponent.getDesignComponentId()))
@@ -519,7 +582,7 @@ public class DesignBoardControllerTest {
         .distinct()
         .toList();
     MultiValueMap<String, String> params = TestParams.withPaging(0,
-        postResult.designBoards().size());
+        postResult.posts().size());
     params.add("typeCode", typeCode.getTypeCode());
     User client = userResult.getFirstUser();
     // when
@@ -535,7 +598,7 @@ public class DesignBoardControllerTest {
             .build()
     );
     // then
-    assertThat(response).hasSize(postResult.designBoards().size());
+    assertThat(response).hasSize(postResult.posts().size());
     assertThat(response.get(0).getPostId()).isIn(matchedPostIds);
     assertThat(response.get(0).getComponentTypes())
         .extracting(componentTypeDto -> componentTypeDto.getTypeCode().getTypeCode())
@@ -585,7 +648,7 @@ public class DesignBoardControllerTest {
     DesignBoardCreateDto createDto = DesignBoardCreateDto.builder()
         .title(expectedTitle)
         .content(expectedContent)
-        .designComponentIds(designComponentIds)
+        .designComponents(mappingsFor(designComponentIds))
         .publicFlag(true)
         .postTags(tagCreateDtoList)
         .build();
@@ -635,7 +698,7 @@ public class DesignBoardControllerTest {
     DesignBoardCreateDto createDto = DesignBoardCreateDto.builder()
         .title("title".equals(invalidField) ? "t".repeat(101) : "t".repeat(100))
         .content("content".equals(invalidField) ? "c".repeat(2001) : "c".repeat(2000))
-        .designComponentIds(List.of(targetDesignComponent.getDesignComponentId()))
+        .designComponents(mappingsFor(List.of(targetDesignComponent.getDesignComponentId())))
         .publicFlag(true)
         .postTags(List.of())
         .build();
@@ -678,7 +741,7 @@ public class DesignBoardControllerTest {
         .title(expectedTitle)
         .content(expectedContent)
         .publicFlag(false)
-        .designComponentIds(designComponentIds.subList(0, 2))
+        .designComponents(mappingsFor(designComponentIds.subList(0, 2)))
         .postTags(tagUpdateDtoList)
         .build();
     MockMultipartFile previewImage = MockMultipartFileUtils
@@ -710,6 +773,165 @@ public class DesignBoardControllerTest {
     assertDesignBoard(response);
   }
 
+  @Test
+  @DisplayName("같은 에셋에 복수 타입을 저장하고 이미지와 게시글 조회 결과는 중복하지 않는다")
+  void createDesignBoard_multipleTypesPerAsset() throws Exception {
+    User author = userResult.getFirstUser();
+    Integer assetId = designComponentResult.designComponents().get(0).getDesignComponentId();
+    List<Integer> typeIds = componentTypeRepository.findAll().stream()
+        .limit(2).map(ComponentType::getComponentTypeId).toList();
+    List<DesignComponentMappingDto> mappings = List.of(new DesignComponentMappingDto(assetId, typeIds));
+    DesignBoardDetailDto response = requestBoardMutation(HttpMethod.POST, null,
+        DesignBoardCreateDto.builder().title("multiple types").content("content")
+            .designComponents(mappings).publicFlag(true).build(), author, 200);
+
+    assertThat(designBoardRepository.findByPost_PostId(response.getPostId()))
+        .extracting(board -> board.getComponentType().getComponentTypeId())
+        .containsExactlyInAnyOrderElementsOf(typeIds);
+    assertThat(response.getDesignComponents()).usingRecursiveComparison()
+        .ignoringCollectionOrder().isEqualTo(mappings);
+    assertThat(response.getComponentTypes()).hasSize(2);
+    assertThat(response.getPreviewImageUrl()).hasSize(2);
+
+    List<DesignBoardPreviewDto> previews = requestDesignBoardPreviews(TestParams.withPaging(0, 100),
+        author);
+    assertThat(previews.stream().filter(dto -> dto.getPostId().equals(response.getPostId())))
+        .hasSize(1);
+    List<DesignBoardDetailDto> details = requestDesignBoardDetails(TestParams.withPaging(0, 100),
+        author);
+    DesignBoardDetailDto detail = details.stream()
+        .filter(dto -> dto.getPostId().equals(response.getPostId())).findFirst().orElseThrow();
+    assertThat(detail.getPreviewImageUrl()).hasSize(2);
+    assertThat(detail.getDesignComponents()).usingRecursiveComparison()
+        .ignoringCollectionOrder().isEqualTo(mappings);
+  }
+
+  @Test
+  @DisplayName("같은 에셋도 게시글마다 서로 다른 타입으로 분류한다")
+  void createDesignBoard_sameAssetDifferentPostTypes() throws Exception {
+    User author = userResult.getFirstUser();
+    Integer assetId = designComponentResult.designComponents().get(0).getDesignComponentId();
+    List<Integer> typeIds = componentTypeRepository.findAll().stream()
+        .limit(2).map(ComponentType::getComponentTypeId).toList();
+    List<DesignBoardDetailDto> responses = new ArrayList<>();
+    for (Integer typeId : typeIds) {
+      responses.add(requestBoardMutation(HttpMethod.POST, null,
+          DesignBoardCreateDto.builder().title("independent types").content("content")
+              .designComponents(List.of(new DesignComponentMappingDto(assetId, List.of(typeId))))
+              .publicFlag(true).build(), author, 200));
+    }
+    for (int index = 0; index < responses.size(); index++) {
+      assertThat(responses.get(index).getDesignComponents().get(0).getComponentTypeIds())
+          .containsExactly(typeIds.get(index));
+      assertThat(designBoardRepository.findByPost_PostId(responses.get(index).getPostId()))
+          .extracting(board -> board.getComponentType().getComponentTypeId())
+          .containsExactly(typeIds.get(index));
+    }
+  }
+
+  @Test
+  @DisplayName("에셋별 타입 매핑을 응답 그대로 재저장하고 타입을 삭제하거나 유지할 수 있다")
+  void updateDesignBoard_replaceAndPreserveTypeMappings() throws Exception {
+    DesignBoard target = postResult.designBoards().get(0);
+    User author = target.getPost().getUser();
+    Long postId = target.getPost().getPostId();
+    List<Integer> typeIds = componentTypeRepository.findAll().stream()
+        .limit(2).map(ComponentType::getComponentTypeId).toList();
+    List<DesignComponentMappingDto> mappings = List.of(
+        new DesignComponentMappingDto(target.getDesignComponent().getDesignComponentId(), typeIds));
+
+    DesignBoardDetailDto response = requestBoardMutation(HttpMethod.PATCH, postId,
+        DesignBoardUpdateDto.builder().designComponents(mappings).build(), author, 200);
+    response = requestBoardMutation(HttpMethod.PATCH, postId,
+        DesignBoardUpdateDto.builder().designComponents(response.getDesignComponents()).build(),
+        author, 200);
+    assertThat(response.getDesignComponents()).usingRecursiveComparison()
+        .ignoringCollectionOrder().isEqualTo(mappings);
+
+    mappings = List.of(new DesignComponentMappingDto(target.getDesignComponent().getDesignComponentId(),
+        List.of(typeIds.get(1))));
+    requestBoardMutation(HttpMethod.PATCH, postId,
+        DesignBoardUpdateDto.builder().designComponents(mappings).build(), author, 200);
+    response = requestBoardMutation(HttpMethod.PATCH, postId,
+        DesignBoardUpdateDto.builder().title("mapping unchanged").build(), author, 200);
+    assertThat(response.getDesignComponents()).usingRecursiveComparison()
+        .ignoringCollectionOrder().isEqualTo(mappings);
+    assertThat(designBoardRepository.findByPost_PostId(postId))
+        .extracting(board -> board.getComponentType().getComponentTypeId())
+        .containsExactly(typeIds.get(1));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"missingMappings", "emptyMappings", "emptyTypes", "missingAssetId",
+      "nullMapping", "nullType", "duplicateType", "duplicateMapping", "missingAsset", "missingType"})
+  @DisplayName("잘못된 에셋별 타입 매핑으로 게시글을 생성하면 실패하고 저장하지 않는다")
+  void createDesignBoard_invalidMappings(String scenario) throws Exception {
+    Integer assetId = designComponentResult.designComponents().get(0).getDesignComponentId();
+    Integer typeId = componentTypeRepository.findAll().get(0).getComponentTypeId();
+    DesignComponentMappingDto mapping = new DesignComponentMappingDto(assetId, List.of(typeId));
+    List<DesignComponentMappingDto> mappings = switch (scenario) {
+      case "missingMappings" -> null;
+      case "emptyMappings" -> List.of();
+      case "emptyTypes" -> List.of(new DesignComponentMappingDto(assetId, List.of()));
+      case "missingAssetId" -> List.of(new DesignComponentMappingDto(null, List.of(typeId)));
+      case "nullMapping" -> java.util.Collections.singletonList(null);
+      case "nullType" -> List.of(new DesignComponentMappingDto(assetId,
+          java.util.Collections.singletonList(null)));
+      case "duplicateType" -> List.of(new DesignComponentMappingDto(assetId, List.of(typeId, typeId)));
+      case "duplicateMapping" -> List.of(mapping, mapping);
+      case "missingAsset" -> List.of(new DesignComponentMappingDto(Integer.MAX_VALUE, List.of(typeId)));
+      case "missingType" -> List.of(new DesignComponentMappingDto(assetId, List.of(Integer.MAX_VALUE)));
+      default -> throw new IllegalArgumentException(scenario);
+    };
+    long initialPostCount = postRepository.count();
+    long initialMappingCount = designBoardRepository.count();
+    requestBoardMutation(HttpMethod.POST, null,
+        DesignBoardCreateDto.builder().title("invalid mappings").content("content")
+            .designComponents(mappings).build(), userResult.getFirstUser(),
+        scenario.equals("missingAsset") || scenario.equals("missingType") ? 404 : 400);
+    assertThat(postRepository.count()).isEqualTo(initialPostCount);
+    assertThat(designBoardRepository.count()).isEqualTo(initialMappingCount);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"emptyMappings", "missingType"})
+  @DisplayName("매핑 수정 검증에 실패하면 기존 제목과 타입 매핑을 유지한다")
+  void updateDesignBoard_invalidMappingsLeavesPostUnchanged(String scenario) throws Exception {
+    DesignBoard target = postResult.designBoards().get(0);
+    Long postId = target.getPost().getPostId();
+    String originalTitle = target.getPost().getTitle();
+    List<Long> originalMappingIds = designBoardRepository.findByPost_PostId(postId).stream()
+        .map(DesignBoard::getDesignBoardId).toList();
+    DesignComponentMappingDto valid = new DesignComponentMappingDto(
+        target.getDesignComponent().getDesignComponentId(),
+        List.of(target.getComponentType().getComponentTypeId()));
+    List<DesignComponentMappingDto> mappings = switch (scenario) {
+      case "missingType" -> List.of(valid,
+          new DesignComponentMappingDto(valid.getDesignComponentId(), List.of(Integer.MAX_VALUE)));
+      case "emptyMappings" -> List.of();
+      default -> throw new IllegalArgumentException(scenario);
+    };
+    requestBoardMutation(HttpMethod.PATCH, postId,
+        DesignBoardUpdateDto.builder().title("must not be saved")
+            .postTags(List.of(TagUpdateDto.builder().tagName("must not be saved").build()))
+            .designComponents(mappings).build(), target.getPost().getUser(),
+        scenario.startsWith("missing") ? 404 : 400);
+    assertThat(postRepository.findById(postId).orElseThrow().getTitle()).isEqualTo(originalTitle);
+    assertThat(designBoardRepository.findByPost_PostId(postId))
+        .extracting(DesignBoard::getDesignBoardId)
+        .containsExactlyInAnyOrderElementsOf(originalMappingIds);
+  }
+
+  @Test
+  @DisplayName("DB는 게시글·에셋·타입 조합의 중복 저장을 차단한다")
+  void saveDesignBoard_duplicateTripleRejectedByDatabase() {
+    DesignBoard target = postResult.designBoards().get(0);
+    DesignBoard duplicate = DesignBoard.builder().post(target.getPost())
+        .designComponent(target.getDesignComponent()).componentType(target.getComponentType()).build();
+    assertThatThrownBy(() -> designBoardRepository.saveAndFlush(duplicate))
+        .isInstanceOf(DataIntegrityViolationException.class);
+  }
+
   @ParameterizedTest(name = "{0}")
   @ValueSource(strings = {"title", "content"})
   @DisplayName("디자인 게시글 수정 시 제목 또는 본문이 최대 길이를 초과하면 400을 반환한다")
@@ -725,7 +947,7 @@ public class DesignBoardControllerTest {
     DesignBoardUpdateDto updateDto = DesignBoardUpdateDto.builder()
         .title("title".equals(invalidField) ? "t".repeat(101) : "t".repeat(100))
         .content("content".equals(invalidField) ? "c".repeat(2001) : "c".repeat(2000))
-        .designComponentIds(designComponentIds)
+        .designComponents(mappingsFor(designComponentIds))
         .postTags(List.of())
         .build();
     MockMultipartFile boardInfo = MockMultipartFileUtils

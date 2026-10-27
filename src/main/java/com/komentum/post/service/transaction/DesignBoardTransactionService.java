@@ -1,7 +1,6 @@
 package com.komentum.post.service.transaction;
 
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
@@ -23,8 +22,11 @@ import com.komentum.post.service.TagService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,7 +45,6 @@ public class DesignBoardTransactionService {
   private final DesignBoardService designBoardService;
   private final TagService tagService;
   private final DesignBoardRepository designBoardRepository;
-  private final DesignComponentService designComponentService;
 
   /**
    * 게시글 ID로 디자인 에셋 게시글 상세 정보를 조회한다.
@@ -67,8 +68,11 @@ public class DesignBoardTransactionService {
         helper.findPreviewImageUrl(targetPost.getPreviewImageName());
     List<DesignBoard> designBoards = designBoardService.findWithDesignComponentsByPostId(postId);
     List<String> designImageUrls = designBoards.stream()
-        .map(designBoard -> helper.findPreviewImageUrl(
-            designBoard.getDesignComponent().getFileName()))
+        .map(DesignBoard::getDesignComponent)
+        .collect(Collectors.toMap(DesignComponent::getDesignComponentId,
+            Function.identity(), (first, ignored) -> first, LinkedHashMap::new))
+        .values().stream()
+        .map(component -> helper.findPreviewImageUrl(component.getFileName()))
         .toList();
     List<String> previewImageUrls = Stream.concat(
             Stream.ofNullable(previewImageUrl),
@@ -77,24 +81,29 @@ public class DesignBoardTransactionService {
         .filter(Objects::nonNull)
         .toList();
     // generate response dto
-    return designBoardMapperSupport.toDesignBoardDetailDto(
+    DesignBoardDetailDto response = designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
         tags,
         previewImageUrls,
         designBoardMapperSupport.toComponentTypeDtos(designBoards));
+    response.setDesignComponents(designBoardMapperSupport.toDesignComponentMappings(designBoards));
+    return response;
   }
 
+  /**
+   * 검증된 에셋별 타입 매핑과 태그를 포함하여 디자인 게시글을 생성한다.
+   */
   @Transactional
   public Post saveDesignBoardAndGetPost(
       DesignBoardCreateDto createDto,
-      List<DesignComponent> designComponents,
+      List<DesignBoard> designBoards,
       User author,
       String previewImageName) {
     PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
     Post savedPost = postService
         .createPost(postCreateDto, author, previewImageName, PostType.DESIGN_BOARD);
-    for (DesignComponent designComponent : designComponents) {
-      designBoardService.save(savedPost, designComponent);
+    for (DesignBoard designBoard : designBoards) {
+      designBoardService.save(savedPost, designBoard);
     }
     if (createDto.getPostTags() != null) {
       tagService.createTags(savedPost, createDto.getPostTags());
@@ -102,11 +111,15 @@ public class DesignBoardTransactionService {
     return savedPost;
   }
 
+  /**
+   * 게시글과 태그 및 요청된 매핑을 한 트랜잭션에서 수정하고 이전 대표 이미지명을 반환한다.
+   */
   @Transactional
   public String updateDesignBoardAndGetOldFileName(
       Long postId,
       DesignBoardUpdateDto updateDto,
-      String previewImageName
+      String previewImageName,
+      List<DesignBoard> requestedMappings
   ) {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
       throw new EntityNotFoundException("cannot find design board with post id = " + postId);
@@ -121,10 +134,8 @@ public class DesignBoardTransactionService {
       tagService.synchronizeTags(targetPost, updateDto.getPostTags());
     }
     // synchronize design boards
-    if (updateDto.getDesignComponentIds() != null && !updateDto.getDesignComponentIds().isEmpty()) {
-      List<DesignComponent> requestedComponents = designComponentService.findByIdIn(
-          updateDto.getDesignComponentIds());
-      designBoardService.synchronizeDesignBoards(targetPost, requestedComponents);
+    if (requestedMappings != null) {
+      designBoardService.synchronizeDesignBoards(targetPost, requestedMappings);
     }
     // retrieve old file name
     return oldFileName;
