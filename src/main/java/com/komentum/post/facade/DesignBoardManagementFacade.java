@@ -158,6 +158,10 @@ public class DesignBoardManagementFacade {
     }).toList();
   }
 
+  /**
+   * 게시글 대표 이미지 뒤에 에셋 이미지 URL을 이어 붙인다.
+   * 복수 타입 매핑에 반복된 에셋은 ID 기준으로 한 번만 포함하며 입력 순서를 유지한다.
+   */
   private List<String> resolvePreviewImageUrls(DesignBoardQuery.Detail detail,
       List<DesignBoard> designBoards) {
     String postPreviewImageUrl = boardManagementHelper.findPreviewImageUrl(

@@ -38,6 +38,11 @@ public class DesignBoardSeeder {
         .build();
   }
 
+  /**
+   * 에셋마다 소유자 명의의 게시글을 생성하고 조회한 타입을 순환하여 하나씩 배정한다.
+   *
+   * @throws IllegalStateException 사전에 시딩된 컴포넌트 타입이 없는 경우
+   */
   @Transactional
   public DesignBoardSeedResult seedData(List<DesignComponent> designComponents) {
     List<DesignBoard> designBoards = new ArrayList<>();
@@ -56,6 +61,12 @@ public class DesignBoardSeeder {
     return new DesignBoardSeedResult(designBoards, posts);
   }
 
+  /**
+   * 조회한 첫 번째 타입을 모든 에셋에 공통 적용한 게시글 하나를 생성한다.
+   *
+   * @throws IllegalStateException 사전에 시딩된 컴포넌트 타입이 없는 경우
+   * @throws IllegalArgumentException 에셋 목록이 비어 있는 경우
+   */
   @Transactional
   public DesignBoardSeedResult seedWithSinglePost(User author,
       List<DesignComponent> designComponents) {
