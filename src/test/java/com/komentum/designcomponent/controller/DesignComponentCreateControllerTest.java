@@ -55,7 +55,7 @@ class DesignComponentCreateControllerTest extends DesignComponentControllerTestS
         response.getDesignComponentId()).orElseThrow();
     // DB에는 URL이 아닌 파일명만 저장되고, 응답의 imageUrl은 파일명으로부터 생성된다
     assertThat(saved.getFileName()).doesNotContain("://");
-    verify(fileManager).uploadFile(any(byte[].class), eq(saved.getFileName()));
+    verify(fileManager).uploadPublicFile(any(byte[].class), eq(saved.getFileName()));
     assertThat(response.getImageUrl()).isEqualTo(imageUrlOf(saved.getFileName()));
     assertThat(saved.getComponentTypes())
         .extracting(ComponentType::getComponentTypeId)

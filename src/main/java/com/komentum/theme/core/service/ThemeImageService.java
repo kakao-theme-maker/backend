@@ -84,7 +84,7 @@ public class ThemeImageService {
     return findThemePreviewFileNames(themeComponentIds).entrySet().stream()
         .collect(Collectors.toMap(
             Entry::getKey,
-            entry -> fileManager.resolveFilePath(entry.getValue())
+            entry -> fileManager.resolvePublicFileUrl(entry.getValue())
         ));
   }
 
@@ -167,7 +167,7 @@ public class ThemeImageService {
    */
   private String resolveImageUrl(DesignComponent designComponent) {
     String fileName = designComponent.getFileName();
-    return fileName == null ? null : fileManager.resolveFilePath(fileName);
+    return fileName == null ? null : fileManager.resolvePublicFileUrl(fileName);
   }
 
   @Transactional

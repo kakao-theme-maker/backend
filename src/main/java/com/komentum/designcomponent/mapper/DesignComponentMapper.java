@@ -39,6 +39,6 @@ public abstract class DesignComponentMapper {
     if (fileName == null || fileName.isBlank()) {
       return null;
     }
-    return fileManager.resolveFilePath(fileName);
+    return fileManager.resolvePublicFileUrl(fileName);
   }
 }
