@@ -2,6 +2,7 @@ package com.komentum.post.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -344,24 +345,26 @@ public class DesignBoardControllerTest {
   }
 
   @Test
-  @DisplayName("when send request, retrieve design board by id")
+  @DisplayName("디자인 게시글 단건 상세는 최상위 에셋 ID 없이 에셋별 매핑을 반환한다")
   public void whenSendRequest_retrieveDesignBoardById() throws Exception {
     // given
     DesignBoard targetDesignBoard = postResult.designBoards().get(0);
     String requestPath = String.format("/api/design-boards/%d",
         targetDesignBoard.getPost().getPostId());
+    List<Integer> expectedComponentIds = postResult.designBoards().stream()
+        .filter(board -> board.getPost().getPostId().equals(targetDesignBoard.getPost().getPostId()))
+        .map(board -> board.getDesignComponent().getDesignComponentId())
+        .toList();
     User client = userResult.getFirstUser();
     // when
-    DesignBoardDetailDto response = mockMvcUtils.doAuthRequest(
-        MockMvcRequestDto.<Void, DesignBoardDetailDto>builder()
-            .mockMvc(mockMvc)
-            .httpMethod(HttpMethod.GET)
-            .path(requestPath)
-            .responseType(new TypeReference<>() {
-            })
-            .clientDto(TestClientDto.fromEntity(client))
-            .build()
-    );
+    ResultActions result = mockMvc.perform(mockMvcUtils.addAuthentication(
+            get(requestPath), TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.designComponentId").doesNotHaveJsonPath())
+        .andExpect(jsonPath("$.designComponents[*].designComponentId")
+            .value(containsInAnyOrder(expectedComponentIds.toArray())));
+    DesignBoardDetailDto response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
+    });
     // then
     assertDesignBoard(response);
   }
@@ -456,17 +459,23 @@ public class DesignBoardControllerTest {
    * 비인증 요청에서도 디자인 게시글 상세 목록의 모든 항목과 false인 사용자별 상태값을 반환하는지 검증한다.
    */
   @Test
-  @DisplayName("비인증 사용자가 디자인 게시글 상세 목록을 조회하면 각 상세 정보와 false인 사용자별 상태값을 반환한다")
+  @DisplayName("비인증 상세 목록은 최상위 에셋 ID 없이 에셋별 매핑과 false인 사용자별 상태값을 반환한다")
   void findDesignBoardDetails_withoutAuthentication_returnsDetails() throws Exception {
     // given
     List<Long> expectedPostIds = postResult.designBoards().stream()
         .map(designBoard -> designBoard.getPost().getPostId())
         .distinct()
         .toList();
+    List<Integer> expectedComponentIds = postResult.designBoards().stream()
+        .map(board -> board.getDesignComponent().getDesignComponentId())
+        .toList();
     MultiValueMap<String, String> params = TestParams.withPaging(0, expectedPostIds.size());
     // when
     ResultActions result = mockMvc.perform(get("/api/design-boards/details").params(params))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[*].designComponentId").doesNotHaveJsonPath())
+        .andExpect(jsonPath("$[*].designComponents[*].designComponentId")
+            .value(containsInAnyOrder(expectedComponentIds.toArray())));
     List<DesignBoardDetailDto> response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
     });
     // then
