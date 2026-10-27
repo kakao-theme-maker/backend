@@ -7,10 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.enums.TypeCode;
-import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.global.security.UserRole;
@@ -25,7 +22,6 @@ import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.fixture.component.DesignComponentDataGenerator;
 import com.komentum.test.fixture.component.DesignComponentMultipartFixture;
 import com.komentum.user.domain.User;
-import com.komentum.user.repository.UserRepository;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,9 +59,6 @@ abstract class DesignComponentControllerTestSupport {
   protected DesignComponentRepository designComponentRepository;
 
   @Autowired
-  protected ComponentTypeRepository componentTypeRepository;
-
-  @Autowired
   protected MockMvcUtils mockMvcUtils;
 
   @MockitoBean
@@ -91,17 +84,11 @@ abstract class DesignComponentControllerTestSupport {
 
   protected User testUser;
   protected TestClientDto testClient;
-  protected ComponentType componentTypeA;
-  protected ComponentType componentTypeB;
-  @Autowired
-  private UserRepository userRepository;
 
   @BeforeEach
   void setUpDesignComponentControllerTest() {
     testUser = userDataGenerator.generateTestUser("test@example.com");
     testClient = TestClientDto.fromEntity(testUser);
-    componentTypeA = createComponentType("comp-a");
-    componentTypeB = createComponentType("comp-b");
 
     when(fileManager.resolveFilePath(anyString()))
         .thenAnswer(invocation -> imageUrlOf(invocation.getArgument(0, String.class)));
@@ -137,28 +124,27 @@ abstract class DesignComponentControllerTestSupport {
         .andReturn();
   }
 
-  protected DesignComponent testUserComponent(String fileName, boolean isPublic,
-      ComponentType... componentTypes) {
-    return componentForUser(testUser, fileName, isPublic, componentTypes);
+  /**
+   * 현재 테스트 사용자가 소유하는 디자인 에셋을 생성한다.
+   */
+  protected DesignComponent testUserComponent(String fileName, boolean isPublic) {
+    return designComponentDataGenerator.generateDesignComponent(testUser, fileName, isPublic);
   }
 
   protected DesignComponent testUserComponent() {
     return designComponentDataGenerator.generateDesignComponent(testUser);
   }
 
-  protected DesignComponent otherUserComponent(String email, String fileName, boolean isPublic,
-      ComponentType... componentTypes) {
-    return componentForUser(createOtherUser(email), fileName, isPublic, componentTypes);
+  /**
+   * 다른 사용자가 소유하는 디자인 에셋을 생성한다.
+   */
+  protected DesignComponent otherUserComponent(String email, String fileName, boolean isPublic) {
+    return designComponentDataGenerator.generateDesignComponent(
+        createOtherUser(email), fileName, isPublic);
   }
 
   protected User createOtherUser(String email) {
     return userDataGenerator.generateTestUser(email);
-  }
-
-  private DesignComponent componentForUser(User user, String fileName, boolean isPublic,
-      ComponentType... componentTypes) {
-    return designComponentDataGenerator.generateDesignComponent(
-        user, fileName, isPublic, List.of(componentTypes));
   }
 
   private void authenticateAs(User user) {
@@ -173,19 +159,4 @@ abstract class DesignComponentControllerTestSupport {
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 
-  private ComponentType createComponentType(String suffix) {
-    return componentTypeRepository.save(ComponentType.builder()
-        .typeCode(typeCodeFor(suffix))
-        .name("test component type " + suffix)
-        .explain("test component type explain " + suffix)
-        .build());
-  }
-
-  private TypeCode typeCodeFor(String suffix) {
-    return switch (suffix) {
-      case "comp-a" -> TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE;
-      case "comp-b" -> TypeCode.TABBAR_STYLE_FRIENDS_NORMAL_ICON_IMAGE;
-      default -> TypeCode.DEFAULT_PROFILE_STYLE_PROFILE_IMAGE;
-    };
-  }
 }

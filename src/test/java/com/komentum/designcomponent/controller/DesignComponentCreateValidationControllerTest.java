@@ -1,8 +1,6 @@
 package com.komentum.designcomponent.controller;
 
-import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequest;
 import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequestPart;
-import static com.komentum.test.fixture.component.DesignComponentRequestFixture.createRequestWithoutComponentTypeIds;
 import static com.komentum.test.fixture.component.DesignComponentRequestFixture.publicCreateRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,7 +10,6 @@ import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.designcomponent.dto.CreateDesignComponentRequest;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -22,49 +19,9 @@ import org.springframework.mock.web.MockMultipartFile;
 class DesignComponentCreateValidationControllerTest extends DesignComponentControllerTestSupport {
 
   @Test
-  @DisplayName("DesignComponent 생성 시 componentTypeIds 누락 검증")
-  void createDesignComponent_withoutComponentTypeIds() throws Exception {
-    CreateDesignComponentRequest createRequest = createRequestWithoutComponentTypeIds(true);
-    MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile image = multipartFixture.imagePart("test.png");
-
-    doMultipartRequest(
-        "/api/design-components",
-        HttpMethod.POST,
-        400,
-        new TypeReference<Void>() {
-        },
-        requestPart,
-        image
-    );
-
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
-  }
-
-  @Test
-  @DisplayName("다중 업로드 생성 시 존재하지 않는 componentTypeId 검증")
-  void createDesignComponents_withUnknownComponentTypeId() throws Exception {
-    CreateDesignComponentRequest createRequest = createRequest(true, List.of(999999));
-    MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile file = multipartFixture.filesPart("test.png");
-
-    doMultipartRequest(
-        "/api/design-components/bulk",
-        HttpMethod.POST,
-        404,
-        new TypeReference<Void>() {
-        },
-        requestPart,
-        file
-    );
-
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
-  }
-
-  @Test
   @DisplayName("다중 업로드 생성 시 파일 누락 검증")
   void createDesignComponents_withoutFiles() throws Exception {
-    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA);
+    CreateDesignComponentRequest createRequest = publicCreateRequest();
     MockMultipartFile requestPart = createRequestPart(createRequest);
 
     doMultipartRequest(
@@ -80,7 +37,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   @Test
   @DisplayName("다중 업로드 생성 시 빈 파일 검증")
   void createDesignComponents_withEmptyFile() throws Exception {
-    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA);
+    CreateDesignComponentRequest createRequest = publicCreateRequest();
     MockMultipartFile requestPart = createRequestPart(createRequest);
     MockMultipartFile emptyFile = multipartFixture.emptyFilesPart("empty.png");
 
@@ -100,7 +57,7 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
   @Test
   @DisplayName("다중 업로드 생성 시 일부 빈 파일이 있으면 업로드를 시작하지 않는다")
   void createDesignComponents_withEmptyFileAfterValidFile() throws Exception {
-    CreateDesignComponentRequest createRequest = publicCreateRequest(componentTypeA);
+    CreateDesignComponentRequest createRequest = publicCreateRequest();
     MockMultipartFile requestPart = createRequestPart(createRequest);
     MockMultipartFile validFile = multipartFixture.filesPart("valid.png");
     MockMultipartFile emptyFile = multipartFixture.emptyFilesPart("empty.png");
@@ -120,63 +77,4 @@ class DesignComponentCreateValidationControllerTest extends DesignComponentContr
     verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
   }
 
-  @Test
-  @DisplayName("다중 업로드 생성 시 componentTypeIds 누락 검증")
-  void createDesignComponents_withoutComponentTypeIds() throws Exception {
-    CreateDesignComponentRequest createRequest = createRequestWithoutComponentTypeIds(true);
-    MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile file = multipartFixture.filesPart("single-file.png");
-
-    doMultipartRequest(
-        "/api/design-components/bulk",
-        HttpMethod.POST,
-        400,
-        new TypeReference<Void>() {
-        },
-        requestPart,
-        file
-    );
-
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
-  }
-
-  @Test
-  @DisplayName("DesignComponent 생성 시 중복 componentTypeIds 검증")
-  void createDesignComponent_duplicateComponentTypeIds() throws Exception {
-    CreateDesignComponentRequest createRequest = createRequest(true,
-        List.of(componentTypeA.getComponentTypeId(), componentTypeA.getComponentTypeId()));
-    MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile image = multipartFixture.imagePart("test.png");
-
-    doMultipartRequest(
-        "/api/design-components",
-        HttpMethod.POST,
-        400,
-        new TypeReference<Void>() {
-        },
-        requestPart,
-        image
-    );
-  }
-
-  @Test
-  @DisplayName("DesignComponent 생성 시 존재하지 않는 componentTypeId 검증")
-  void createDesignComponent_withUnknownComponentTypeId() throws Exception {
-    CreateDesignComponentRequest createRequest = createRequest(true,
-        List.of(componentTypeA.getComponentTypeId(), 999999));
-    MockMultipartFile requestPart = createRequestPart(createRequest);
-    MockMultipartFile image = multipartFixture.imagePart("test.png");
-
-    doMultipartRequest(
-        "/api/design-components",
-        HttpMethod.POST,
-        404,
-        new TypeReference<Void>() {
-        },
-        requestPart,
-        image
-    );
-
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
-  }
 }

@@ -31,7 +31,7 @@ class DesignComponentDeleteControllerTest extends DesignComponentControllerTestS
   @DisplayName("다른 사용자의 DesignComponent 삭제 실패 테스트")
   void deleteDesignComponentByOtherUser() throws Exception {
     DesignComponent savedComponent = otherUserComponent(
-        "other@test.com", "https://other.com/image.png", false, componentTypeA);
+        "other@test.com", "https://other.com/image.png", false);
 
     MockHttpServletRequestBuilder requestBuilder =
         delete("/api/design-components/{id}", savedComponent.getDesignComponentId());
