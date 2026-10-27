@@ -46,9 +46,6 @@ public class DesignBoardDto {
     @Schema(description = "게시글 내용")
     private String content;
 
-    @Schema(description = "디자인 에셋 데이터 ID")
-    private Integer designComponentId;
-
     @Schema(description = "게시글 작성자 이메일")
     private String userEmail;
 
