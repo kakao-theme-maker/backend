@@ -27,7 +27,9 @@ import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.designcomponent.service.ColorStyleService;
 import com.komentum.designcomponent.service.ComponentTypeService;
+import com.komentum.global.enums.FileExtension;
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.utils.ImageUtils;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.MockMultipartFileUtils;
@@ -126,9 +128,6 @@ class ThemeManageControllerTest {
         .withCountPerUser(5)
         .build().designComponents();
     testUser = userResult.users().get(0);
-    // 업로드 파일명 생성 규칙(default method)은 실제 구현을 사용한다
-    when(fileManager.uploadAndGetFileName(any(InputStream.class), anyLong(), anyString(),
-        anyString())).thenCallRealMethod();
     // 기존 이미지는 샘플 PNG 파일로 다운로드된다
     when(fileManager.download(anyString())).thenAnswer(
         invocation -> new ClassPathResource("sample-images/test.png").getInputStream());
@@ -188,6 +187,29 @@ class ThemeManageControllerTest {
     // 교체된 기존 DesignComponent는 공유될 수 있으므로 삭제하지 않는다
     assertThat(designComponentRepository.findById(beforeDesignComponentId)).isPresent();
     verify(fileManager, never()).deleteFile(anyString());
+  }
+
+  @Test
+  @DisplayName("PNG가 아닌 JPEG 이미지 파일을 전달하면 PNG로 변환되어 .png 파일로 저장된다")
+  public void updateTheme_convertJpegToPng() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.CHAT_ROOM_BACKGROUND_IMAGE;
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateSampleJpgFormData(typeCode.getTypeCode()));
+    // then
+    resultActions.andExpect(status().isNoContent());
+    ArgumentCaptor<InputStream> uploadedStream = ArgumentCaptor.forClass(InputStream.class);
+    ArgumentCaptor<String> uploadedFileName = ArgumentCaptor.forClass(String.class);
+    verify(fileManager).uploadPublicFile(uploadedStream.capture(), anyLong(),
+        uploadedFileName.capture());
+    assertThat(ImageUtils.detectImageExtension(uploadedStream.getValue()))
+        .contains(FileExtension.PNG);
+    assertThat(uploadedFileName.getValue()).startsWith("design-components_").endsWith(".png");
+    assertThat(findThemeImage(targetTheme, typeCode).getDesignComponent().getFileName())
+        .isEqualTo(uploadedFileName.getValue());
   }
 
   @Test
@@ -288,7 +310,7 @@ class ThemeManageControllerTest {
             TypeCode.CHAT_ROOM_BACKGROUND_IMAGE.getTypeCode()));
     // then
     resultActions.andExpect(status().isForbidden());
-    verify(fileManager, never()).uploadFile(any(InputStream.class), anyLong(), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
   }
 
   @Test
@@ -414,7 +436,7 @@ class ThemeManageControllerTest {
     Map<TypeCode, Integer> beforeDesignComponentIds = findDesignComponentIdMap(targetTheme);
     doReturn("uploaded-url")
         .doThrow(new RuntimeException("upload failed"))
-        .when(fileManager).uploadFile(any(InputStream.class), anyLong(), anyString());
+        .when(fileManager).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
     // when
     ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
         ThemeRequestFixture.emptyUpdateRequest(), testUser,
@@ -425,7 +447,7 @@ class ThemeManageControllerTest {
     // then
     resultActions.andExpect(status().isInternalServerError());
     ArgumentCaptor<String> uploadedFileNames = ArgumentCaptor.forClass(String.class);
-    verify(fileManager, times(2)).uploadFile(any(InputStream.class), anyLong(),
+    verify(fileManager, times(2)).uploadPublicFile(any(InputStream.class), anyLong(),
         uploadedFileNames.capture());
     String firstUploadedFileName = uploadedFileNames.getAllValues().get(0);
     verify(fileManager).deleteFile(firstUploadedFileName);
@@ -457,7 +479,7 @@ class ThemeManageControllerTest {
     // then
     resultActions.andExpect(status().isInternalServerError());
     ArgumentCaptor<String> uploadedFileName = ArgumentCaptor.forClass(String.class);
-    verify(fileManager).uploadFile(any(InputStream.class), anyLong(), uploadedFileName.capture());
+    verify(fileManager).uploadPublicFile(any(InputStream.class), anyLong(), uploadedFileName.capture());
     verify(fileManager).deleteFile(uploadedFileName.getValue());
     assertThat(findDesignComponentIdMap(targetTheme)).isEqualTo(beforeDesignComponentIds);
   }
@@ -668,7 +690,7 @@ class ThemeManageControllerTest {
   private void expectBadRequest(ResultActions resultActions, String errorCode) throws Exception {
     resultActions.andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value(startsWith(errorCode)));
-    verify(fileManager, never()).uploadFile(any(InputStream.class), anyLong(), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
   }
 
   private ResultActions doThemeUpdateRequest(Integer themeId, ThemeUpdateRequest dto, User client,

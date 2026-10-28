@@ -2,11 +2,14 @@ package com.komentum.global.utils;
 
 import com.komentum.global.enums.FileExtension;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Optional;
+import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
@@ -58,6 +61,40 @@ public class ImageUtils {
         }
       }
       return Optional.empty();
+    }
+  }
+
+  /**
+   * 이미지를 PNG 바이트로 변환한다. 실제 포맷(매직 바이트)이 이미 PNG이면 원본을 그대로 반환하고, JDK ImageIO가 디코딩할 수 있는
+   * 다른 포맷(JPEG, GIF, BMP, WBMP, TIFF)이면 PNG로 다시 인코딩한다. 애니메이션 GIF는 첫 프레임만 변환된다.
+   *
+   * @param imageBytes 변환할 이미지 바이트
+   * @return PNG 바이트, 이미지가 아니거나 디코딩할 수 없는 포맷(CMYK JPEG, SVG, WebP 등)이면 Optional.empty()
+   * @throws IOException PNG로 인코딩하지 못한 경우
+   */
+  public static Optional<byte[]> toPng(byte[] imageBytes) throws IOException {
+    if (imageBytes == null || imageBytes.length == 0) {
+      return Optional.empty();
+    }
+    if (detectImageExtension(new ByteArrayInputStream(imageBytes))
+        .filter(FileExtension.PNG::equals).isPresent()) {
+      return Optional.of(imageBytes);
+    }
+    BufferedImage image;
+    try {
+      image = ImageIO.read(new ByteArrayInputStream(imageBytes));
+    } catch (IIOException e) {
+      log.warn("[ImageUtils] failed to decode image : {}", e.getMessage());
+      return Optional.empty();
+    }
+    if (image == null) {
+      return Optional.empty();
+    }
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      if (!ImageIO.write(image, FileExtension.PNG.getExtension(), baos)) {
+        return Optional.empty();
+      }
+      return Optional.of(baos.toByteArray());
     }
   }
 

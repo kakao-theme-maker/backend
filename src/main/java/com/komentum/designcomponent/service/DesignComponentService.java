@@ -16,6 +16,7 @@ import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.global.utils.FileManager;
 import com.komentum.global.utils.ImageUtils;
 import com.komentum.user.domain.User;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -117,12 +118,13 @@ public class DesignComponentService {
   }
 
   /**
-   * TypeCode별 이미지를 업로드하고 TypeCode별 업로드 파일명을 반환한다. 트랜잭션 없이 수행되며, 모든 파일의 실제 포맷(매직 바이트)을 먼저
-   * 검증한 뒤 업로드한다. 업로드 도중 하나라도 실패하면 이번에 업로드한 파일을 모두 삭제하고 예외를 다시 던진다.
+   * TypeCode별 이미지를 PNG로 업로드하고 TypeCode별 업로드 파일명을 반환한다. 트랜잭션 없이 수행되며, 모든 파일을 실제 포맷(매직
+   * 바이트) 기준으로 먼저 PNG로 변환한 뒤 업로드한다. PNG가 아닌 JDK ImageIO 기본 포맷(JPEG, GIF, BMP, WBMP, TIFF)은 PNG로
+   * 변환된다. 업로드 도중 하나라도 실패하면 이번에 업로드한 파일을 모두 삭제하고 예외를 다시 던진다.
    *
    * @param images TypeCode별 업로드할 이미지, null이면 빈 맵을 반환한다
-   * @return TypeCode별 저장소에 업로드된 파일명 맵
-   * @throws ResponseStatusException 지원하지 않는 이미지 포맷인 경우 (400 Bad Request, INVALID_IMAGE_FORMAT)
+   * @return TypeCode별 저장소에 업로드된 파일명(.png) 맵
+   * @throws ResponseStatusException 변환할 수 없는 이미지 포맷인 경우 (400 Bad Request, INVALID_IMAGE_FORMAT)
    * @throws RuntimeException        파일을 읽거나 업로드하지 못한 경우
    */
   @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -131,11 +133,11 @@ public class DesignComponentService {
     if (images == null || images.isEmpty()) {
       return uploadedFileNames;
     }
-    Map<TypeCode, String> extensions = new EnumMap<>(TypeCode.class);
-    images.forEach((typeCode, image) -> extensions.put(typeCode, detectImageExtension(image)));
+    Map<TypeCode, byte[]> pngImages = new EnumMap<>(TypeCode.class);
+    images.forEach((typeCode, image) -> pngImages.put(typeCode, convertToPng(image)));
     try {
-      images.forEach((typeCode, image) ->
-          uploadedFileNames.put(typeCode, uploadImage(image, extensions.get(typeCode))));
+      pngImages.forEach((typeCode, pngImage) ->
+          uploadedFileNames.put(typeCode, uploadPngImage(pngImage)));
       return uploadedFileNames;
     } catch (RuntimeException e) {
       deleteUploadedImages(uploadedFileNames.values());
@@ -310,34 +312,29 @@ public class DesignComponentService {
   }
 
   /**
-   * 실제 포맷 기준 확장자로 이미지를 업로드하고, 저장소에 저장된 파일명을 반환한다.
-   *
-   * @throws RuntimeException 이미지를 읽거나 업로드하지 못한 경우
+   * PNG 이미지를 공개 저장소에 업로드하고, 저장소에 저장된 파일명(.png)을 반환한다.
    */
-  private String uploadImage(MultipartFile image, String extension) {
-    try {
-      return fileManager.uploadAndGetFileName(image.getInputStream(), image.getSize(),
-          "design-components_" + UUID.randomUUID(), extension);
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to upload image", e);
-    }
+  private String uploadPngImage(byte[] pngImage) {
+    String fileName =
+        "design-components_" + UUID.randomUUID() + "." + FileExtension.PNG.getExtension();
+    fileManager.uploadPublicFile(new ByteArrayInputStream(pngImage), pngImage.length, fileName);
+    return fileName;
   }
 
   /**
-   * 이미지의 실제 포맷(매직 바이트)을 판별해 저장 확장자를 반환한다. Content-Type 헤더나 파일 확장자는 신뢰하지 않으며, 테마 빌드에서
-   * 사용하는 FileExtension 포맷(PNG)만 허용한다.
+   * 이미지의 실제 포맷(매직 바이트)을 기준으로 PNG 바이트로 변환한다. Content-Type 헤더나 파일 확장자는 신뢰하지 않으며, PNG는 그대로,
+   * 그 외 JDK ImageIO 기본 포맷은 PNG로 변환한다.
    *
-   * @throws ResponseStatusException 지원하지 않는 이미지 포맷인 경우 (400 Bad Request)
-   * @throws RuntimeException        이미지를 읽지 못한 경우
+   * @throws ResponseStatusException 이미지가 아니거나 변환할 수 없는 포맷인 경우 (400 Bad Request)
+   * @throws RuntimeException        이미지를 읽거나 변환하지 못한 경우
    */
-  private String detectImageExtension(MultipartFile image) {
-    try (InputStream is = image.getInputStream()) {
-      return ImageUtils.detectImageExtension(is)
-          .map(FileExtension::getExtension)
+  private byte[] convertToPng(MultipartFile image) {
+    try {
+      return ImageUtils.toPng(image.getBytes())
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
               "INVALID_IMAGE_FORMAT: unsupported image format : " + image.getName()));
     } catch (IOException e) {
-      throw new RuntimeException("Failed to read image", e);
+      throw new RuntimeException("Failed to convert image to png", e);
     }
   }
 
