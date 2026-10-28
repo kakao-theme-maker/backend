@@ -8,6 +8,8 @@ import com.komentum.theme.build.dto.ThemeDownloadResponse;
 import com.komentum.theme.build.service.ThemeBuildService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,7 +30,14 @@ public class ThemeBuildController {
   private final ThemeBuildService themeBuildService;
 
   @PostMapping("/themes/{themeComponentId}/builds")
-  @Operation(summary = "테마 패키지 제작 작업을 시작한다")
+  @Operation(
+      summary = "테마 패키지 제작 작업을 시작한다",
+      description = "저장된 이미지 연결을 통해 비활성 에셋도 Android/iOS 빌드에 사용한다. "
+          + "202 응답은 제작 작업 접수를 의미하며 제작 완료 여부는 작업 상태 조회 API로 확인한다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "202", description = "테마 제작 작업 접수 성공"),
+      @ApiResponse(responseCode = "404", description = "테마가 존재하지 않음")
+  })
   public ResponseEntity<ThemeBuildStartResponse> startThemeBuild(
       @Parameter(description = "제작할 테마 ID", example = "1")
       @PathVariable Integer themeComponentId,

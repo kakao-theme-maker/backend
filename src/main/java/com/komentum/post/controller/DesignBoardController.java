@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +84,10 @@ public class DesignBoardController {
       summary = "인증 여부와 관계없이 ID=postId인 특정 디자인 에셋 게시글을 조회한다",
       description = "비활성 에셋의 이미지·타입은 제외하며, 일부만 비활성인 경우 대표 이미지는 ID가 가장 작은 활성 에셋의 이미지로 대체합니다. "
           + "게시글이 없거나 활성 에셋이 하나도 없으면 404를 반환합니다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "디자인 게시글 조회 성공"),
+      @ApiResponse(responseCode = "404", description = "게시글이 없거나 활성 에셋이 하나도 없는 경우")
+  })
   public ResponseEntity<DesignBoardDetailDto> findDesignBoardDetail(
       @PathVariable Long postId,
       @AuthenticationPrincipal CustomUserDetails userDetails
@@ -128,7 +134,13 @@ public class DesignBoardController {
    * 디자인 에셋 게시글 생성
    */
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @Operation(summary = "현재 인증된 사용자가 디자인 에셋 게시글을 작성한다")
+  @Operation(
+      summary = "현재 인증된 사용자가 디자인 에셋 게시글을 작성한다",
+      description = "활성 에셋만 연결할 수 있습니다. 요청에 비활성 에셋이 포함되면 404를 반환하며 게시글을 생성하지 않습니다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "디자인 게시글 생성 성공"),
+      @ApiResponse(responseCode = "404", description = "요청한 에셋이 없거나 비활성 상태인 경우")
+  })
   public ResponseEntity<DesignBoardDetailDto> createDesignBoard(
       @Valid @RequestPart("boardInfo") DesignBoardCreateDto createDto,
       @RequestPart(value = "previewImage", required = false) MultipartFile previewImage,
@@ -144,7 +156,17 @@ public class DesignBoardController {
    *
    */
   @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @Operation(summary = "현재 인증된 사용자가 자신이 소유한 ID=postId인 디자인 에셋 게시글을 수정한다")
+  @Operation(
+      summary = "현재 인증된 사용자가 자신이 소유한 ID=postId인 디자인 에셋 게시글을 수정한다",
+      description = """
+          현재 연결된 비활성 에셋은 유지할 수 있지만, 수정 결과에 활성 에셋이 하나 이상 있어야 합니다.
+          비활성 에셋의 신규 연결이나 제거 후 재연결은 404를 반환합니다.
+          에셋 ID 목록을 생략하거나 null 또는 빈 목록으로 보내면 기존 연결을 유지합니다.
+          """)
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "디자인 게시글 수정 성공"),
+      @ApiResponse(responseCode = "404", description = "게시글 또는 요청 에셋이 없거나, 비활성 에셋을 새로 연결하거나, 수정 결과에 활성 에셋이 없는 경우")
+  })
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
       @PathVariable Long postId,
       @Valid @RequestPart(value = "boardInfo") DesignBoardUpdateDto updateDto,
