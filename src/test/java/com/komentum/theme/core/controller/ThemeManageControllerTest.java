@@ -1,6 +1,18 @@
 package com.komentum.theme.core.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.startsWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,10 +24,13 @@ import com.komentum.designcomponent.dto.ComponentTypeUpdateRequest;
 import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
 import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.designcomponent.service.ColorStyleService;
 import com.komentum.designcomponent.service.ComponentTypeService;
+import com.komentum.global.utils.FileManager;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
+import com.komentum.test.data.MockMultipartFileUtils;
 import com.komentum.test.data.TestDataRemover;
 import com.komentum.test.data.scenario.DesignComponentScenarioSupport;
 import com.komentum.test.data.scenario.ThemeComponentScenarioSupport;
@@ -23,21 +38,23 @@ import com.komentum.test.data.scenario.ThemeMetaDataScenarioSupport;
 import com.komentum.test.data.scenario.UserScenarioSupport;
 import com.komentum.test.dto.MockMvcRequestDto.ExecutionContext;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.test.fixture.theme.ThemeRequestFixture;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.domain.ThemeStyle;
 import com.komentum.theme.core.dto.ThemeCloneRequest;
+import com.komentum.theme.core.dto.ThemeCloneRequest.ThemeImageCloneRequest;
 import com.komentum.theme.core.dto.ThemeDetailResponse;
 import com.komentum.theme.core.dto.ThemeUpdateRequest;
-import com.komentum.theme.core.dto.ThemeUpdateRequest.InsetUpdateDto;
-import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
 import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeStyleUpdateRequest;
 import com.komentum.theme.core.repository.ThemeComponentRepository;
 import com.komentum.theme.core.repository.ThemeImageRepository;
 import com.komentum.theme.core.repository.ThemeStyleRepository;
+import com.komentum.theme.core.service.ThemeStyleService;
 import com.komentum.user.domain.User;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,14 +64,23 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
 @EnableTestProfile
@@ -85,6 +111,12 @@ class ThemeManageControllerTest {
   private ComponentTypeService componentTypeService;
   @Autowired
   private ColorStyleService colorStyleService;
+  @Autowired
+  private DesignComponentRepository designComponentRepository;
+  @MockitoBean
+  private FileManager fileManager;
+  @MockitoSpyBean
+  private ThemeStyleService themeStyleService;
   private User testUser;
   private List<DesignComponent> designComponentList;
 
@@ -96,6 +128,9 @@ class ThemeManageControllerTest {
         .withCountPerUser(5)
         .build().designComponents();
     testUser = userResult.users().get(0);
+    // 기존 이미지는 샘플 PNG 파일로 다운로드된다
+    when(fileManager.download(anyString())).thenAnswer(
+        invocation -> new ClassPathResource("sample-images/test.png").getInputStream());
   }
 
   @AfterEach
@@ -161,16 +196,14 @@ class ThemeManageControllerTest {
     targetTheme.setIsDone(isDone);
     themeComponentRepository.saveAndFlush(targetTheme);
     ThemeImage existingImage = themeImageRepository
-        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).get(0);
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
+        .filter(image -> image.getComponentType().getTypeCode()
+            == TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
+        .findFirst().orElseThrow();
     Integer componentId = existingImage.getDesignComponent().getDesignComponentId();
     TypeCode typeCode = existingImage.getComponentType().getTypeCode();
     deactivateComponent(componentId);
-    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
-        .typeCodes(Map.of(typeCode, ThemeImageUpdateRequest.builder()
-            .designComponentId(componentId)
-            .inset(new InsetUpdateDto(10, 20, 50, 40, 60, 70))
-            .build()))
-        .build();
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.insetUpdateRequest(typeCode, 30);
 
     doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto, testUser)
         .andExpect(status().isNoContent());
@@ -181,190 +214,125 @@ class ThemeManageControllerTest {
         .findFirst().orElseThrow();
     assertThat(updatedImage.getDesignComponent().getDesignComponentId()).isEqualTo(componentId);
     assertThat(updatedImage.getDesignComponent().getIsActive()).isFalse();
-    assertThat(updatedImage.getImageInset().getEdgeInsetTop()).isEqualTo(10);
-    assertThat(updatedImage.getImageInset().getEdgeInsetBottom()).isEqualTo(50);
+    assertThat(updatedImage.getImageInset().getEdgeInsetTop()).isEqualTo(30);
+    assertThat(updatedImage.getImageInset().getEdgeInsetBottom()).isEqualTo(30);
   }
 
-  @Test
-  @DisplayName("새 비활성 에셋으로 교체하면 테마 메타데이터와 기존 연결도 유지된다")
-  void updateTheme_failWhenReplacingWithInactiveComponent() throws Exception {
-    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
-    ThemeImage existingImage = themeImageRepository
-        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).get(0);
-    Integer existingComponentId = existingImage.getDesignComponent().getDesignComponentId();
-    Integer inactiveComponentId = designComponentList.get(1).getDesignComponentId();
-    deactivateComponent(inactiveComponentId);
-    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
-        .themeName("must not persist")
-        .typeCodes(Map.of(existingImage.getComponentType().getTypeCode(),
-            ThemeImageUpdateRequest.builder().designComponentId(inactiveComponentId).build()))
-        .build();
-
-    doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto, testUser)
-        .andExpect(status().isNotFound());
-
-    ThemeComponent unchangedTheme = themeComponentRepository
-        .findById(targetTheme.getThemeComponentId()).orElseThrow();
-    assertThat(unchangedTheme.getThemeName()).isEqualTo(targetTheme.getThemeName());
-    assertThat(unchangedTheme.getVersionNumber()).isEqualTo(targetTheme.getVersionNumber());
-    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(
-            targetTheme.getThemeComponentId()))
-        .allSatisfy(image -> assertThat(image.getDesignComponent().getDesignComponentId())
-            .isEqualTo(existingComponentId));
-  }
-
-  @Test
-  @DisplayName("다른 슬롯에 쓰던 비활성 에셋을 재사용할 수 없고 다른 수정도 롤백한다")
-  void updateTheme_failWhenReusingInactiveComponentForAnotherTypeCode() throws Exception {
-    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
-    List<ThemeImage> existingImages = themeImageRepository
-        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId());
-    ThemeImage retainedImage = existingImages.get(0);
-    ThemeImage replacedImage = existingImages.get(1);
-    Integer inactiveComponentId = retainedImage.getDesignComponent().getDesignComponentId();
-    Integer activeComponentId = designComponentList.get(1).getDesignComponentId();
-    replacedImage.setDesignComponent(designComponentList.get(1));
-    themeImageRepository.saveAndFlush(replacedImage);
-    deactivateComponent(inactiveComponentId);
-    Map<TypeCode, ThemeImageUpdateRequest> typeCodes = new LinkedHashMap<>();
-    typeCodes.put(retainedImage.getComponentType().getTypeCode(), ThemeImageUpdateRequest.builder()
-        .designComponentId(inactiveComponentId)
-        .inset(new InsetUpdateDto(10, 20, 50, 40, 60, 70))
-        .build());
-    typeCodes.put(existingImages.get(2).getComponentType().getTypeCode(), null);
-    typeCodes.put(replacedImage.getComponentType().getTypeCode(), ThemeImageUpdateRequest.builder()
-        .designComponentId(inactiveComponentId).build());
-    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder().typeCodes(typeCodes).build();
-
-    doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto, testUser)
-        .andExpect(status().isNotFound());
-
-    Map<TypeCode, ThemeImage> unchangedImages = themeImageRepository
-        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
-        .collect(Collectors.toMap(image -> image.getComponentType().getTypeCode(), image -> image));
-    assertThat(unchangedImages).hasSize(existingImages.size());
-    assertThat(unchangedImages.get(retainedImage.getComponentType().getTypeCode()).getImageInset())
-        .usingRecursiveComparison().isEqualTo(retainedImage.getImageInset());
-    assertThat(unchangedImages.get(replacedImage.getComponentType().getTypeCode())
-        .getDesignComponent().getDesignComponentId()).isEqualTo(activeComponentId);
-  }
-
-
-  @Test
-  @DisplayName("사용자는 테마 이미지를 수정할 수 있다")
-  public void updateTheme_successWhenUpdateImage() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("기존 에셋의 활성 여부와 관계없이 파일로 교체하면 새 활성 에셋이 연결되고 기존 에셋과 파일은 보존된다")
+  public void updateTheme_replaceImageWhenFileIsGiven(boolean inactive) throws Exception {
     // given
-    ThemeComponent targetTheme = themeComponentScenarioSupport
-        .builder(List.of(testUser), designComponentList)
-        .withCountPerUser(1).build().themeComponents().get(0);
-    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
-        .styleCodes(Map.of())
-        .typeCodes(Map.of(
-            TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE,
-            ThemeImageUpdateRequest.builder()
-                .designComponentId(designComponentList.get(0).getDesignComponentId())
-                .inset(new InsetUpdateDto(50, 50, 50, 50, 50, 50))
-                .build()
-        ))
-        .build();
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    DesignComponent previousComponent = findThemeImage(targetTheme, typeCode).getDesignComponent();
+    Integer beforeDesignComponentId = previousComponent.getDesignComponentId();
+    String beforeFileName = previousComponent.getFileName();
+    if (inactive) {
+      deactivateComponent(beforeDesignComponentId);
+    }
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.insetUpdateRequest(typeCode, 50);
     // when
-    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
-        testUser);
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        updateDto, testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(typeCode.getTypeCode()));
     // then
     resultActions.andExpect(status().isNoContent());
-    ThemeImage updatedThemeImage = themeImageRepository.fetchJoinAllByThemeComponentId(
-            targetTheme.getThemeComponentId())
-        .stream().filter(v -> v.getComponentType().getTypeCode()
-            .equals(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE))
-        .findFirst().orElseThrow();
+    ThemeImage updatedThemeImage = findThemeImage(targetTheme, typeCode);
+    DesignComponent newDesignComponent = updatedThemeImage.getDesignComponent();
+    assertThat(newDesignComponent.getDesignComponentId()).isNotEqualTo(beforeDesignComponentId);
+    assertThat(newDesignComponent.getIsActive()).isTrue();
+    assertThat(newDesignComponent.getFileName()).startsWith("design-components_").endsWith(".png");
     assertThat(updatedThemeImage.getImageInset().getEdgeInsetBottom()).isEqualTo(50);
+    // 교체된 기존 DesignComponent는 공유될 수 있으므로 삭제하지 않는다
+    DesignComponent preservedComponent = designComponentRepository.findById(beforeDesignComponentId)
+        .orElseThrow();
+    assertThat(preservedComponent.getFileName()).isEqualTo(beforeFileName);
+    assertThat(preservedComponent.getIsActive()).isEqualTo(!inactive);
+    verify(fileManager, never()).deleteFile(anyString());
   }
 
   @Test
-  @DisplayName("비활성 에셋을 사용하던 테마 이미지도 null을 넣으면 삭제한다")
-  public void updateTheme_deleteImageWhenImageIsNull() throws Exception {
+  @DisplayName("이미지 파일 없이 이미지 정보만 전달하면 기존 이미지는 유지하고 inset 정보만 수정된다")
+  public void updateTheme_updateInsetOnlyWhenFileIsNotGiven() throws Exception {
     // given
-    ThemeComponent targetTheme = themeComponentScenarioSupport
-        .builder(List.of(testUser), designComponentList)
-        .withCountPerUser(1).build().themeComponents().get(0);
-    ThemeImage inactiveImage = themeImageRepository
-        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
-        .filter(image -> image.getComponentType().getTypeCode()
-            == TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
-        .findFirst().orElseThrow();
-    deactivateComponent(inactiveImage.getDesignComponent().getDesignComponentId());
-    Map<TypeCode, ThemeImageUpdateRequest> updateMap = new HashMap<>();
-    updateMap.put(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE, null);
-    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
-        .styleCodes(Map.of())
-        .typeCodes(updateMap)
-        .build();
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    Integer beforeDesignComponentId = findThemeImage(targetTheme, typeCode)
+        .getDesignComponent().getDesignComponentId();
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.insetUpdateRequest(typeCode, 30);
     // when
-    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
-        testUser);
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        updateDto, testUser);
     // then
     resultActions.andExpect(status().isNoContent());
-    ThemeImage updatedThemeImage = themeImageRepository.fetchJoinAllByThemeComponentId(
-            targetTheme.getThemeComponentId())
-        .stream().filter(v -> v.getComponentType().getTypeCode()
-            .equals(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE))
-        .findFirst().orElse(null);
-    assertThat(updatedThemeImage).isNull();
+    ThemeImage updatedThemeImage = findThemeImage(targetTheme, typeCode);
+    assertThat(updatedThemeImage.getDesignComponent().getDesignComponentId())
+        .isEqualTo(beforeDesignComponentId);
+    assertThat(updatedThemeImage.getImageInset().getEdgeInsetBottom()).isEqualTo(30);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("에셋의 활성 여부와 관계없이 deleteTypeCodes에 포함된 TypeCode의 테마 이미지는 제거된다")
+  public void updateTheme_deleteImageWhenTypeCodeInDeleteTypeCodes(boolean inactive) throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    Integer componentId = findThemeImage(targetTheme, typeCode).getDesignComponent()
+        .getDesignComponentId();
+    if (inactive) {
+      deactivateComponent(componentId);
+    }
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.deleteUpdateRequest(typeCode);
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        updateDto, testUser);
+    // then
+    resultActions.andExpect(status().isNoContent());
+    assertThat(findThemeImageMap(targetTheme)).doesNotContainKey(typeCode);
+    assertThat(designComponentRepository.findById(componentId)).isPresent();
+    verify(fileManager, never()).deleteFile(anyString());
   }
 
   @Test
-  @DisplayName("테마 이미지를 모두 제거한 뒤 비활성 에셋을 다시 연결할 수 없다")
-  void updateTheme_failWhenReattachingInactiveComponentAfterRemovingAllImages() throws Exception {
-    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
-    Integer themeId = targetTheme.getThemeComponentId();
-    Integer componentId = designComponentList.get(0).getDesignComponentId();
-    List<ThemeImage> existingImages = themeImageRepository.fetchJoinAllByThemeComponentId(themeId);
-    TypeCode previousTypeCode = existingImages.get(0).getComponentType().getTypeCode();
-    deactivateComponent(componentId);
-    Map<TypeCode, ThemeImageUpdateRequest> removals = new HashMap<>();
-    existingImages.forEach(image -> removals.put(image.getComponentType().getTypeCode(), null));
-
-    doThemeUpdateRequest(themeId, ThemeUpdateRequest.builder().typeCodes(removals).build(), testUser)
-        .andExpect(status().isNoContent());
-    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(themeId)).isEmpty();
-    String versionAfterRemoval = themeComponentRepository.findById(themeId).orElseThrow()
-        .getVersionNumber();
-    ResultActions detailResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/themes/{id}",
-            themeId))
-        .andExpect(status().isOk());
-    ThemeDetailResponse detail = mockMvcUtils.parseResponse(detailResult, new TypeReference<>() {
+  @DisplayName("파일도 없고 deleteTypeCodes에도 없는 TypeCode의 테마 이미지는 기존 이미지를 유지한다")
+  public void updateTheme_keepImageWhenTypeCodeNotRequested() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    Map<TypeCode, Integer> beforeDesignComponentIds = findThemeImageMap(targetTheme).entrySet()
+        .stream().collect(Collectors.toMap(Map.Entry::getKey,
+            entry -> entry.getValue().getDesignComponent().getDesignComponentId()));
+    TypeCode replaceTypeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    TypeCode deleteTypeCode = TypeCode.CHAT_ROOM_BACKGROUND_IMAGE;
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.deleteUpdateRequest(deleteTypeCode);
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        updateDto, testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(replaceTypeCode.getTypeCode()));
+    // then
+    resultActions.andExpect(status().isNoContent());
+    Map<TypeCode, ThemeImage> afterThemeImages = findThemeImageMap(targetTheme);
+    assertThat(afterThemeImages).hasSize(beforeDesignComponentIds.size() - 1);
+    beforeDesignComponentIds.forEach((typeCode, beforeDesignComponentId) -> {
+      if (typeCode == replaceTypeCode || typeCode == deleteTypeCode) {
+        return;
+      }
+      assertThat(afterThemeImages.get(typeCode).getDesignComponent().getDesignComponentId())
+          .isEqualTo(beforeDesignComponentId);
     });
-    assertThat(detail.getTypeCodes()).isEmpty();
-
-    ThemeUpdateRequest reattachment = ThemeUpdateRequest.builder()
-        .typeCodes(Map.of(previousTypeCode, ThemeImageUpdateRequest.builder()
-            .designComponentId(componentId).build()))
-        .build();
-    doThemeUpdateRequest(themeId, reattachment, testUser).andExpect(status().isNotFound());
-
-    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(themeId)).isEmpty();
-    assertThat(themeComponentRepository.findById(themeId).orElseThrow().getVersionNumber())
-        .isEqualTo(versionAfterRemoval);
   }
 
   @Test
   @DisplayName("사용자는 테마 스타일을 수정할 수 있다")
   public void updateTheme_successWhenUpdateStyle() throws Exception {
     // given
-    ThemeComponent targetTheme = themeComponentScenarioSupport
-        .builder(List.of(testUser), designComponentList)
-        .withCountPerUser(1).build().themeComponents().get(0);
-    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
-        .styleCodes(Map.of(
-            StyleCode.CHAT_ROOM_BACKGROUND_COLOR,
-            ThemeStyleUpdateRequest.builder()
-                .color("#ffffff").alpha(50).build()
-        ))
-        .typeCodes(Map.of())
-        .build();
+    ThemeComponent targetTheme = createTargetTheme();
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.styleUpdateRequest(
+        StyleCode.CHAT_ROOM_BACKGROUND_COLOR, "#ffffff", 50);
     // when
-    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
-        testUser);
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        updateDto, testUser);
     // then
     resultActions.andExpect(status().isNoContent());
     ThemeStyle updatedThemeStyle = themeStyleRepository.fetchJoinAllByThemeComponentId(
@@ -376,35 +344,192 @@ class ThemeManageControllerTest {
   }
 
   @Test
-  @DisplayName("사용자는 자신이 소유한 테마만 수정할 수 있다")
+  @DisplayName("사용자는 자신이 소유한 테마만 수정할 수 있고, 권한이 없으면 업로드 없이 403을 반환한다")
   public void updateTheme_failWhenUpdateNotOwnedTheme() throws Exception {
     // given
-    ThemeComponent targetTheme = themeComponentScenarioSupport
-        .builder(List.of(testUser), designComponentList)
-        .withCountPerUser(1).build().themeComponents().get(0);
+    ThemeComponent targetTheme = createTargetTheme();
     User other = userScenarioSupport.builder()
         .withUsers(1)
         .build().users().get(0);
-    ThemeUpdateRequest updateDto = ThemeUpdateRequest.builder()
-        .styleCodes(Map.of())
-        .typeCodes(Map.of())
-        .build();
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.emptyUpdateRequest();
     // when
-    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto,
-        other);
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        updateDto, other, MockMultipartFileUtils.generateSamplePngFormData(
+            TypeCode.CHAT_ROOM_BACKGROUND_IMAGE.getTypeCode()));
     // then
     resultActions.andExpect(status().isForbidden());
+    verify(fileManager, never()).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
   }
 
-  private ResultActions doThemeUpdateRequest(Integer themeId, ThemeUpdateRequest dto, User client)
-      throws Exception {
-    return mockMvcUtils.performAuthRequest(
-        MockMvcRequestBuilders.put("/api/themes/{id}", themeId),
-        ExecutionContext.builder()
-            .mockMvc(mockMvc)
-            .body(dto)
-            .clientDto(TestClientDto.fromEntity(client))
-            .build());
+  @Test
+  @DisplayName("교체하는 이미지 범위를 벗어난 inset이 전달되면 INVALID_IMAGE_INSET으로 400을 반환한다")
+  public void updateTheme_failWhenInsetOutOfNewImageRange() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.insetUpdateRequest(typeCode, 100000), testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(typeCode.getTypeCode()));
+    // then
+    expectBadRequest(resultActions, "INVALID_IMAGE_INSET");
+  }
+
+  @Test
+  @DisplayName("이미지 없이 기존 이미지 범위를 벗어난 inset이 전달되면 INVALID_IMAGE_INSET으로 400을 반환한다")
+  public void updateTheme_failWhenInsetOutOfExistingImageRange() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.insetUpdateRequest(typeCode, 100000), testUser);
+    // then
+    expectBadRequest(resultActions, "INVALID_IMAGE_INSET");
+    assertThat(findThemeImage(targetTheme, typeCode).getImageInset().getEdgeInsetBottom())
+        .isEqualTo(15);
+  }
+
+  @Test
+  @DisplayName("inset 없이 이미지만 교체해도 기존 inset이 새 이미지 범위를 벗어나면 INVALID_IMAGE_INSET으로 400을 반환한다")
+  public void updateTheme_failWhenRetainedInsetOutOfNewImageRange() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    // when ( 기존 inset의 stretch 좌표(50)보다 작은 이미지로 교체 )
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generatePngFormData(typeCode.getTypeCode(), 10, 10));
+    // then
+    expectBadRequest(resultActions, "INVALID_IMAGE_INSET");
+  }
+
+  @Test
+  @DisplayName("TypeCode에 없는 이름의 이미지 part가 있으면 UNKNOWN_TYPE_CODE로 400을 반환한다")
+  public void updateTheme_failWhenUnknownTypeCode() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateSamplePngFormData("unknownImage"));
+    // then
+    expectBadRequest(resultActions, "UNKNOWN_TYPE_CODE");
+  }
+
+  @Test
+  @DisplayName("같은 TypeCode의 이미지 part가 2개 이상이면 DUPLICATED_TYPE_CODE로 400을 반환한다")
+  public void updateTheme_failWhenDuplicatedTypeCode() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.CHAT_ROOM_BACKGROUND_IMAGE;
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(typeCode.getTypeCode()),
+        MockMultipartFileUtils.generateSamplePngFormData(typeCode.getTypeCode()));
+    // then
+    expectBadRequest(resultActions, "DUPLICATED_TYPE_CODE");
+  }
+
+  @Test
+  @DisplayName("빈 이미지 파일이 있으면 EMPTY_FILE로 400을 반환한다")
+  public void updateTheme_failWhenEmptyFile() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateEmptyImageFormData(
+            TypeCode.CHAT_ROOM_BACKGROUND_IMAGE.getTypeCode()));
+    // then
+    expectBadRequest(resultActions, "EMPTY_FILE");
+  }
+
+  @Test
+  @DisplayName("같은 TypeCode가 이미지 파일과 deleteTypeCodes에 동시에 있으면 TYPE_CODE_CONFLICT로 400을 반환한다")
+  public void updateTheme_failWhenTypeCodeConflict() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.CHAT_ROOM_BACKGROUND_IMAGE;
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.deleteUpdateRequest(typeCode);
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        updateDto, testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(typeCode.getTypeCode()));
+    // then
+    expectBadRequest(resultActions, "TYPE_CODE_CONFLICT");
+  }
+
+  @Test
+  @DisplayName("Content-Type과 확장자가 이미지여도 실제 포맷이 이미지가 아니면 INVALID_IMAGE_FORMAT으로 400을 반환한다")
+  public void updateTheme_failWhenInvalidImageFormat() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateImageFormData(
+            TypeCode.CHAT_ROOM_BACKGROUND_IMAGE.getTypeCode(),
+            "not an image".getBytes(StandardCharsets.UTF_8)));
+    // then
+    expectBadRequest(resultActions, "INVALID_IMAGE_FORMAT");
+  }
+
+  @Test
+  @DisplayName("이미지 업로드 도중 실패하면 이번에 업로드한 파일을 모두 삭제하고, 테마 이미지는 변경되지 않는다")
+  public void updateTheme_deleteUploadedFilesWhenUploadFails() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    Map<TypeCode, Integer> beforeDesignComponentIds = findDesignComponentIdMap(targetTheme);
+    doReturn("uploaded-url")
+        .doThrow(new RuntimeException("upload failed"))
+        .when(fileManager).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(
+            TypeCode.CHAT_ROOM_BACKGROUND_IMAGE.getTypeCode()),
+        MockMultipartFileUtils.generateSamplePngFormData(
+            TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE.getTypeCode()));
+    // then
+    resultActions.andExpect(status().isInternalServerError());
+    ArgumentCaptor<String> uploadedFileNames = ArgumentCaptor.forClass(String.class);
+    verify(fileManager, times(2)).uploadPublicFile(any(InputStream.class), anyLong(),
+        uploadedFileNames.capture());
+    String firstUploadedFileName = uploadedFileNames.getAllValues().get(0);
+    verify(fileManager).deleteFile(firstUploadedFileName);
+    assertThat(findDesignComponentIdMap(targetTheme)).isEqualTo(beforeDesignComponentIds);
+  }
+
+  @Test
+  @DisplayName("트랜잭션 커밋에 실패하면 이번에 업로드한 파일을 삭제하고, 테마 이미지는 변경되지 않는다")
+  public void updateTheme_deleteUploadedFilesWhenCommitFails() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    Map<TypeCode, Integer> beforeDesignComponentIds = findDesignComponentIdMap(targetTheme);
+    // 수정 트랜잭션 안에서 커밋 직전에 실패하는 synchronization을 등록한다
+    doAnswer(invocation -> {
+      invocation.callRealMethod();
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        @Override
+        public void beforeCommit(boolean readOnly) {
+          throw new RuntimeException("commit failed");
+        }
+      });
+      return null;
+    }).when(themeStyleService).updateThemeStyles(anyInt(), any());
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateSamplePngFormData(
+            TypeCode.CHAT_ROOM_BACKGROUND_IMAGE.getTypeCode()));
+    // then
+    resultActions.andExpect(status().isInternalServerError());
+    ArgumentCaptor<String> uploadedFileName = ArgumentCaptor.forClass(String.class);
+    verify(fileManager).uploadPublicFile(any(InputStream.class), anyLong(), uploadedFileName.capture());
+    verify(fileManager).deleteFile(uploadedFileName.getValue());
+    assertThat(findDesignComponentIdMap(targetTheme)).isEqualTo(beforeDesignComponentIds);
   }
 
   @Test
@@ -459,7 +584,7 @@ class ThemeManageControllerTest {
         .withCountPerUser(1).build().themeComponents().get(0);
     ThemeCloneRequest cloneRequest = buildCloneRequestFromTheme(sourceTheme.getThemeComponentId(),
         "cloned theme");
-    Map<TypeCode, ThemeImageUpdateRequest> incompleteTypeCodes = new HashMap<>(
+    Map<TypeCode, ThemeImageCloneRequest> incompleteTypeCodes = new HashMap<>(
         cloneRequest.getTypeCodes());
     incompleteTypeCodes.remove(TypeCode.COMMON_ICO_THEME);
     cloneRequest.setTypeCodes(incompleteTypeCodes);
@@ -513,7 +638,7 @@ class ThemeManageControllerTest {
             .build());
     ThemeCloneRequest cloneRequest = buildCloneRequestFromTheme(sourceTheme.getThemeComponentId(),
         "cloned theme");
-    Map<TypeCode, ThemeImageUpdateRequest> typeCodesWithoutPlatformSpecific = new HashMap<>(
+    Map<TypeCode, ThemeImageCloneRequest> typeCodesWithoutPlatformSpecific = new HashMap<>(
         cloneRequest.getTypeCodes());
     typeCodesWithoutPlatformSpecific.remove(TypeCode.COMMON_ICO_THEME);
     cloneRequest.setTypeCodes(typeCodesWithoutPlatformSpecific);
@@ -605,28 +730,9 @@ class ThemeManageControllerTest {
   }
 
   private ThemeCloneRequest buildCloneRequestFromTheme(Integer themeComponentId, String themeName) {
-    Map<TypeCode, ThemeImageUpdateRequest> typeCodes = themeImageRepository
-        .fetchJoinAllByThemeComponentId(themeComponentId).stream()
-        .collect(Collectors.toMap(
-            ti -> ti.getComponentType().getTypeCode(),
-            ti -> ThemeImageUpdateRequest.builder()
-                .designComponentId(ti.getDesignComponent().getDesignComponentId())
-                .build()
-        ));
-    Map<StyleCode, ThemeStyleUpdateRequest> styleCodes = themeStyleRepository
-        .fetchJoinAllByThemeComponentId(themeComponentId).stream()
-        .collect(Collectors.toMap(
-            ts -> ts.getColorStyle().getStyleCode(),
-            ts -> ThemeStyleUpdateRequest.builder()
-                .color(ts.getColor())
-                .alpha(ts.getAlpha())
-                .build()
-        ));
-    return ThemeCloneRequest.builder()
-        .themeName(themeName)
-        .typeCodes(typeCodes)
-        .styleCodes(styleCodes)
-        .build();
+    return ThemeRequestFixture.cloneRequest(themeName,
+        themeImageRepository.fetchJoinAllByThemeComponentId(themeComponentId),
+        themeStyleRepository.fetchJoinAllByThemeComponentId(themeComponentId));
   }
 
   private ResultActions doThemeCloneRequest(ThemeCloneRequest dto, User client) throws Exception {
@@ -637,5 +743,46 @@ class ThemeManageControllerTest {
             .body(dto)
             .clientDto(TestClientDto.fromEntity(client))
             .build());
+  }
+
+  private ThemeComponent createTargetTheme() {
+    return themeComponentScenarioSupport
+        .builder(List.of(testUser), designComponentList)
+        .withCountPerUser(1).build().themeComponents().get(0);
+  }
+
+  private Map<TypeCode, ThemeImage> findThemeImageMap(ThemeComponent theme) {
+    return themeImageRepository.fetchJoinAllByThemeComponentId(theme.getThemeComponentId())
+        .stream().collect(Collectors.toMap(ti -> ti.getComponentType().getTypeCode(), ti -> ti));
+  }
+
+  private Map<TypeCode, Integer> findDesignComponentIdMap(ThemeComponent theme) {
+    return findThemeImageMap(theme).entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey,
+            entry -> entry.getValue().getDesignComponent().getDesignComponentId()));
+  }
+
+  private ThemeImage findThemeImage(ThemeComponent theme, TypeCode typeCode) {
+    ThemeImage themeImage = findThemeImageMap(theme).get(typeCode);
+    assertThat(themeImage).isNotNull();
+    return themeImage;
+  }
+
+  private void expectBadRequest(ResultActions resultActions, String errorCode) throws Exception {
+    resultActions.andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value(startsWith(errorCode)));
+    verify(fileManager, never()).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
+  }
+
+  private ResultActions doThemeUpdateRequest(Integer themeId, ThemeUpdateRequest dto, User client,
+      MockMultipartFile... imageParts) throws Exception {
+    MockMultipartHttpServletRequestBuilder request = MockMvcRequestBuilders.multipart(
+        HttpMethod.PUT, "/api/themes/{id}", themeId);
+    request.file(MockMultipartFileUtils.generateJsonBlobFormData("request", dto));
+    for (MockMultipartFile imagePart : imageParts) {
+      request.file(imagePart);
+    }
+    return mockMvc.perform(
+        mockMvcUtils.addAuthentication(request, TestClientDto.fromEntity(client)));
   }
 }

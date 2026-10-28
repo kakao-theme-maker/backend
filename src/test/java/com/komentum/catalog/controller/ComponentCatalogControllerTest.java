@@ -75,7 +75,7 @@ class ComponentCatalogControllerTest {
   @DisplayName("when send request, return user's theme and design components order by created date desc")
   void findCustomComponents_success() throws Exception {
     // stub
-    BDDMockito.given(fileManager.resolveFilePath(BDDMockito.anyString()))
+    BDDMockito.given(fileManager.resolvePublicFileUrl(BDDMockito.anyString()))
         .willReturn("http://mocked-url/1234567890");
     // given: 사용자마다 3개의 design component와 3개의 theme component 소유
     List<User> users = userScenarioSupport.builder()
@@ -112,7 +112,7 @@ class ComponentCatalogControllerTest {
   @Test
   @DisplayName("비활성 디자인 컴포넌트는 제외하고 이를 참조하는 테마는 카탈로그에 보존한다")
   void findCustomComponents_excludesInactiveDesignsAndKeepsThemes() throws Exception {
-    BDDMockito.given(fileManager.resolveFilePath(BDDMockito.anyString()))
+    BDDMockito.given(fileManager.resolvePublicFileUrl(BDDMockito.anyString()))
         .willReturn("http://mocked-url/image.png");
     User client = userScenarioSupport.builder().withUsers(1).build().getFirstUser();
     List<DesignComponent> components = designComponentScenarioSupport.builder(List.of(client))

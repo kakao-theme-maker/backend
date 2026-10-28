@@ -33,7 +33,7 @@ class IosThemeSaverTest {
     Files.write(tempDir.resolve("Images/sample.png"), new byte[]{1, 2, 3});
     Files.writeString(tempDir.resolve(".DS_Store"), "ignored", StandardCharsets.UTF_8);
     FileManager fileManager = Mockito.mock(FileManager.class);
-    when(fileManager.uploadAndGetFileName(any(byte[].class), endsWith(".ktheme"), eq("ktheme")))
+    when(fileManager.uploadThemePackageAndGetFileName(any(byte[].class), endsWith(".ktheme"), eq("ktheme")))
         .thenReturn("ios-theme-3.ktheme");
     IosThemeSaver saver = new IosThemeSaver(fileManager);
 
@@ -44,7 +44,7 @@ class IosThemeSaverTest {
     ArgumentCaptor<byte[]> packageCaptor = ArgumentCaptor.forClass(byte[].class);
     ArgumentCaptor<String> fileNameCaptor = ArgumentCaptor.forClass(String.class);
     Mockito.verify(fileManager)
-        .uploadAndGetFileName(packageCaptor.capture(), fileNameCaptor.capture(), eq("ktheme"));
+        .uploadThemePackageAndGetFileName(packageCaptor.capture(), fileNameCaptor.capture(), eq("ktheme"));
     assertThat(themeFileName).isEqualTo("ios-theme-3.ktheme");
     assertThat(fileNameCaptor.getValue()).startsWith("ios-theme-3-").endsWith(".ktheme");
     assertThat(readZipEntries(packageCaptor.getValue()))

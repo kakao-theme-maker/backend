@@ -1,5 +1,6 @@
 package com.komentum.theme.core.controller;
 
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.global.dto.CustomUserDetails;
 import com.komentum.theme.core.dto.ThemeCloneRequest;
 import com.komentum.theme.core.dto.ThemeComponentDto;
@@ -15,23 +16,34 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.EnumMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/themes")
 @RequiredArgsConstructor
 @Tag(name = "Theme Management", description = "테마 관리 API")
 public class ThemeManageController {
+
+  // 이미지 외 수정 정보가 담긴 JSON part 이름
+  private static final String REQUEST_PART_NAME = "request";
 
   private final ThemeManageService themeManageService;
   private final ThemeManagementFacade themeManagementFacade;
@@ -55,23 +67,25 @@ public class ThemeManageController {
     );
   }
 
-  @PutMapping("/{themeComponentId}")
+  @PutMapping(value = "/{themeComponentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(
       summary = "인증된 사용자가 ID로 특정 테마를 수정한다",
       description = """
-          완성 여부와 관계없이 동일 TypeCode에 연결된 동일 에셋 ID를 유지하면 비활성 에셋도 유지하거나 inset을 수정할 수 있다.
-          다른 에셋으로 교체할 때는 활성 에셋만 허용한다. 다른 TypeCode에서 사용 중인 비활성 에셋의 재사용과 제거한 비활성 에셋의 재연결은 404로 실패한다.
-          typeCodes에서 생략한 항목은 유지하고 값이 null인 항목은 이미지 연결만 제거한다. 에셋과 원본 파일은 삭제하지 않는다.
-          에셋 검증에 실패하면 이름·색상·이미지 연결 등 전체 수정을 롤백한다.
+          request JSON part와 TypeCode 이름의 이미지 파일 part를 전달한다. 에셋 ID로 교체하지 않는다.
+          파일을 보내지 않은 TypeCode는 기존 비활성 에셋도 유지하며 typeCodes로 inset을 수정할 수 있다.
+          새 파일은 새 활성 에셋으로 교체·연결하고, 연결 제거는 deleteTypeCodes로 요청한다. 기존 에셋과 원본 파일은 보존한다.
+          검증·저장에 실패하면 전체 수정을 롤백하고 이번에 업로드한 파일을 정리한다.
           """)
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "테마 수정 성공", content = @Content),
-      @ApiResponse(responseCode = "404", description = "요청한 에셋이 없거나 기존 연결 유지 대상 외의 에셋이 비활성 상태")
+      @ApiResponse(responseCode = "400", description = "이미지 part·포맷 또는 inset이 올바르지 않은 경우"),
+      @ApiResponse(responseCode = "404", description = "TypeCode에 대응하는 컴포넌트 타입이 없는 경우")
   })
   public ResponseEntity<Void> updateTheme(
       @PathVariable @Parameter(description = "수정할 테마의 ID", example = "1") Integer themeComponentId,
-      @Valid @RequestBody ThemeUpdateRequest request) {
-    themeManagementFacade.updateTheme(themeComponentId, request);
+      @RequestPart(REQUEST_PART_NAME) @Valid ThemeUpdateRequest request,
+      @RequestParam MultiValueMap<String, MultipartFile> files) {
+    themeManagementFacade.updateTheme(themeComponentId, request, toImageFileMap(files, request));
     return ResponseEntity.noContent().build();
   }
 
@@ -118,5 +132,49 @@ public class ThemeManageController {
         themeManagementFacade.cloneTheme(request, userDetails.getPublicUserId()),
         HttpStatus.CREATED
     );
+  }
+
+  /**
+   * part 이름(TypeCode 값)별 파일 맵을 TypeCode별 이미지 파일 맵으로 변환한다. 파일 part의 key는 Jackson 역직렬화를 거치지 않아
+   * TypeCode로 자동 변환되지 않으므로 직접 변환한다. Blob으로 전송된 request part는 파일로 분류되므로 제외한다.
+   *
+   * @param files   part 이름별 파일 맵
+   * @param request 제거할 TypeCode 목록이 담긴 수정 요청
+   * @return TypeCode별 교체할 이미지 파일 맵
+   * @throws ResponseStatusException TypeCode에 없는 이름(UNKNOWN_TYPE_CODE), 같은 TypeCode의 파일이 2개
+   *                                 이상(DUPLICATED_TYPE_CODE), 빈 파일(EMPTY_FILE), 파일과 deleteTypeCodes에
+   *                                 같은 TypeCode가 존재(TYPE_CODE_CONFLICT)하는 경우 (400 Bad Request)
+   */
+  private Map<TypeCode, MultipartFile> toImageFileMap(MultiValueMap<String, MultipartFile> files,
+      ThemeUpdateRequest request) {
+    Map<TypeCode, MultipartFile> imageFiles = new EnumMap<>(TypeCode.class);
+    files.forEach((partName, partFiles) -> {
+      TypeCode typeCode;
+      // request JSON part는 Blob(filename="blob")이라 파일 맵에도 포함되므로 이미지 처리에서 제외한다
+      if (REQUEST_PART_NAME.equals(partName)) {
+        return;
+      }
+      try {
+        typeCode = TypeCode.from(partName);
+      } catch (IllegalArgumentException e) {
+        throw badRequest("UNKNOWN_TYPE_CODE", partName);
+      }
+      if (partFiles.size() > 1) {
+        throw badRequest("DUPLICATED_TYPE_CODE", partName);
+      }
+      if (partFiles.get(0).isEmpty()) {
+        throw badRequest("EMPTY_FILE", partName);
+      }
+      if (request.getDeleteTypeCodes() != null && request.getDeleteTypeCodes().contains(typeCode)) {
+        throw badRequest("TYPE_CODE_CONFLICT", partName);
+      }
+      imageFiles.put(typeCode, partFiles.get(0));
+    });
+    return imageFiles;
+  }
+
+  private ResponseStatusException badRequest(String errorCode, String partName) {
+    return new ResponseStatusException(HttpStatus.BAD_REQUEST,
+        errorCode + ": invalid image part : " + partName);
   }
 }

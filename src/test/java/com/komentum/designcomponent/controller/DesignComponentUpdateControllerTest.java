@@ -47,7 +47,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
     assertThat(response.getPublicUserId()).isEqualTo(testUser.getPublicUserId());
     assertThat(response.getIsPublic()).isTrue();
     ArgumentCaptor<String> fileNameCaptor = ArgumentCaptor.forClass(String.class);
-    verify(fileManager).uploadFile(any(byte[].class), fileNameCaptor.capture());
+    verify(fileManager).uploadPublicFile(any(byte[].class), fileNameCaptor.capture());
     String uploadedFileName = fileNameCaptor.getValue();
     // 갱신된 이미지가 요청에 사용된 이미지의 URL과 동일한지 확인
     assertThat(response.getImageUrl()).isEqualTo(imageUrlOf(uploadedFileName));
@@ -113,7 +113,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
         image
     );
 
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 
   @Test
@@ -138,7 +138,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
     assertThat(savedComponent.getIsActive()).isFalse();
     assertThat(savedComponent.getComponentTypes()).extracting(ComponentType::getComponentTypeId)
         .containsExactly(componentTypeA.getComponentTypeId());
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 
   @Test
@@ -159,6 +159,6 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
         multipartFixture.imagePart("updated.png")
     );
 
-    verify(fileManager, never()).uploadFile(any(byte[].class), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 }

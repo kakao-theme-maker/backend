@@ -1,5 +1,7 @@
 package com.komentum.theme.core.facade;
 
+import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.global.domain.policy.OwnerAdminPolicy;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.theme.core.dto.ThemeCloneRequest;
@@ -11,10 +13,13 @@ import com.komentum.theme.core.service.ThemeRetrieveService;
 import com.komentum.theme.core.service.ThemeStyleService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -27,6 +32,8 @@ public class ThemeManagementFacade {
   private final ThemeRetrieveService themeRetrieveService;
   private final UserEntityFinder userEntityFinder;
   private final OwnerAdminPolicy ownerAdminPolicy;
+  private final DesignComponentService designComponentService;
+  private final TransactionTemplate transactionTemplate;
 
   /**
    * 기본 테마의 이미지 연결과 스타일을 복사하여 사용자의 새 테마를 생성한다.
@@ -51,28 +58,54 @@ public class ThemeManagementFacade {
   }
 
   /**
-   * 소유자 또는 관리자 권한을 확인한 뒤 테마의 메타데이터·이미지 연결·스타일을 함께 수정한다.
-   * 비활성 컴포넌트는 동일 TypeCode와 동일 ID의 기존 연결을 유지할 때만 허용한다.
-   * 이미지 검증이 실패하면 앞서 변경한 메타데이터를 포함해 전체 수정을 롤백한다.
+   * 테마 메타데이터, 이미지, 색상을 수정한다. 새 이미지는 트랜잭션 밖에서 업로드하고, 트랜잭션에서 TypeCode별 이미지 참조를 교체·제거한다.
+   * 트랜잭션(커밋)이 실패하면 이번에 업로드한 파일을 삭제한다. 교체·제거된 기존 이미지는 다른 테마·게시글과 공유될 수 있으므로 삭제하지 않는다.
+   * 교체·제거하지 않은 비활성 에셋의 기존 연결과 inset 수정은 계속 허용한다.
    *
-   * @throws AccessDeniedException 요청자가 테마 소유자나 관리자가 아닌 경우
-   * @throws com.komentum.global.exception.ResourceNotFoundException 요청한 컴포넌트가 없거나,
-   *     기존 연결 유지 대상 외의 컴포넌트가 비활성 상태인 경우
+   * @param themeComponentId 수정할 테마 ID
+   * @param request          이미지 외 수정 정보와 제거할 TypeCode 목록
+   * @param imageFiles       TypeCode별 교체할 이미지 파일 맵
+   * @throws AccessDeniedException   테마 소유자도, Admin 사용자도 아닌 경우 (403 Forbidden)
+   * @throws ResponseStatusException 이미지 포맷이 올바르지 않거나 inset이 이미지 범위를 벗어난 경우 (400 Bad Request)
    */
-  @Transactional
-  public void updateTheme(Integer themeComponentId, ThemeUpdateRequest request) {
-    // check entity update policy
+  public void updateTheme(Integer themeComponentId, ThemeUpdateRequest request,
+      Map<TypeCode, MultipartFile> imageFiles) {
+    // 업로드 전에 수정 권한을 검증한다 ( 트랜잭션 안에서 조회해야 lazy 로딩 가능 )
+    transactionTemplate.executeWithoutResult(status -> getUpdatableTheme(themeComponentId));
+    // 업로드 전에 inset 정보가 이미지 범위 안에 있는지 검증한다
+    themeImageService.validateImageInsets(themeComponentId, request, imageFiles);
+    // 새 이미지 업로드 ( 실패 시 이번에 업로드한 파일은 서비스에서 삭제 )
+    Map<TypeCode, String> uploadedFileNames = designComponentService.uploadImages(imageFiles);
+    // DB 처리 + 커밋, 실패 시 업로드한 파일 롤백
+    try {
+      transactionTemplate.executeWithoutResult(status -> {
+        // 트랜잭션 안에서 다시 조회해야 변경 감지가 동작한다
+        ThemeComponent targetTheme = getUpdatableTheme(themeComponentId);
+        // update theme meta data
+        targetTheme.update(request);
+        // update theme images
+        themeImageService.updateThemeImages(targetTheme, request, uploadedFileNames);
+        // update theme styles
+        themeStyleService.updateThemeStyles(themeComponentId, request.getStyleCodes());
+      });
+    } catch (RuntimeException e) {
+      designComponentService.deleteUploadedImages(uploadedFileNames.values());
+      throw e;
+    }
+  }
+
+  /**
+   * 수정할 테마를 조회하고 수정 권한을 검증한다. 트랜잭션 안에서 호출해야 한다.
+   *
+   * @throws AccessDeniedException 테마 소유자도, Admin 사용자도 아닌 경우 (403 Forbidden)
+   */
+  private ThemeComponent getUpdatableTheme(Integer themeComponentId) {
     ThemeComponent targetTheme = themeRetrieveService.getThemeEntityById(themeComponentId);
     // Entity 소유자가 아니고, Admin 사용자도 아니라면 403 예외를 던진다
     if (!ownerAdminPolicy.validate(targetTheme.getUser())) {
       throw new AccessDeniedException("failed to update theme : invalid user");
     }
-    // update theme meta data
-    targetTheme.update(request);
-    // update theme images
-    themeImageService.updateThemeImages(themeComponentId, request);
-    // update theme styles
-    themeStyleService.updateThemeStyles(themeComponentId, request.getStyleCodes());
+    return targetTheme;
   }
 
   /**

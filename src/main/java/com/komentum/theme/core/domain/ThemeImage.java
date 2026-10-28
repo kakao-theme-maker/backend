@@ -2,7 +2,7 @@ package com.komentum.theme.core.domain;
 
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
+import com.komentum.theme.core.dto.ThemeUpdateRequest.InsetUpdateDto;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -62,10 +62,15 @@ public class ThemeImage {
         .build();
   }
 
-  public void update(DesignComponent designComponent, ThemeImageUpdateRequest updateRequest) {
-    this.designComponent = designComponent;
-    if (updateRequest.getInset() != null) {
-      this.imageInset = ImageInset.from(updateRequest.getInset());
+  /**
+   * 이미지가 참조하는 designComponent와 inset 정보를 갱신한다. null인 값은 기존 정보를 유지한다.
+   */
+  public void update(DesignComponent designComponent, InsetUpdateDto inset) {
+    if (designComponent != null) {
+      this.designComponent = designComponent;
+    }
+    if (inset != null) {
+      this.imageInset = ImageInset.from(inset);
     }
   }
 }

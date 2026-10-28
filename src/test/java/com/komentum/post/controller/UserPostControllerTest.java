@@ -113,7 +113,7 @@ public class UserPostControllerTest {
 
   @BeforeEach
   void setUp() {
-    given(fileManager.resolveFilePath(any())).willReturn(PREVIEW_IMAGE_URL);
+    given(fileManager.resolvePublicFileUrl(any())).willReturn(PREVIEW_IMAGE_URL);
     given(fileManager.convertUrlToFileName(any())).willReturn(PREVIEW_IMAGE_NAME);
     componentTypeRepository.save(ComponentType.builder()
         .name("theme-icon")
@@ -246,7 +246,7 @@ public class UserPostControllerTest {
     DesignComponent activeComponent = boards.get(1).getDesignComponent();
     deletedComponent.deactivate();
     designComponentRepository.saveAndFlush(deletedComponent);
-    given(fileManager.resolveFilePath(any()))
+    given(fileManager.resolvePublicFileUrl(any()))
         .willAnswer(invocation -> "http://mocked-url/" + invocation.getArgument(0, String.class));
 
     for (String path : USER_POST_PATHS) {
