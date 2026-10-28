@@ -13,6 +13,7 @@ import com.komentum.seed.seeder.ThemeBoardSeeder;
 import com.komentum.seed.seeder.ThemeComponentSeeder;
 import com.komentum.seed.seeder.UserSeeder;
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.service.seeder.DefaultThemeSeeder;
 import com.komentum.user.domain.User;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -38,12 +39,14 @@ public class DevDataGenerator {
   private final ColorStyleSeeder colorStyleSeeder;
   private final PlatformComponentTypeSeeder platformComponentTypeSeeder;
   private final PlatformColorStyleSeeder platformColorStyleSeeder;
+  private final DefaultThemeSeeder defaultThemeSeeder;
 
   @PostConstruct
   @Transactional
   public void init() {
     List<User> users = new ArrayList<>(userSeeder.seedData(10));
-    users.add(userSeeder.createOrRetrieveRootUser()); // 11
+    User rootUser = userSeeder.createOrRetrieveRootUser();
+    users.add(rootUser); // 11
     // seed component type, color style, platform component type, platform color style
     componentTypeSeeder.upsertComponentType();
     colorStyleSeeder.upsertColorStyleSeed();
@@ -58,5 +61,7 @@ public class DevDataGenerator {
     designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
     commentSeeder.seedPerPost(5, users); // 550
     preferSeeder.seedPerPost(5, users, 0.5); // 550
+    // seed default theme
+    defaultThemeSeeder.seedDefaultThemes(rootUser.getPublicUserId());
   }
 }
