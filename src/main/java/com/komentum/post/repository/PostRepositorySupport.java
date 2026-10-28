@@ -9,6 +9,7 @@ import com.komentum.post.domain.QPrefer;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.PostSummary;
 import com.komentum.post.dto.query.PostQuery;
+import com.komentum.post.repository.predicate.PostPredicate;
 import com.komentum.post.service.enums.CategoryType;
 import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.user.domain.QFollow;
@@ -88,11 +89,12 @@ public class PostRepositorySupport {
   }
 
   /**
-   * DB에서 사용자가 북마크에 저장한 게시글 목록 조회
+   * 사용자가 북마크한 게시글을 최신순으로 페이징한다.
+   * 활성 에셋이 없는 디자인 게시글은 페이징 전에 제외하고 테마 게시글은 유지한다.
+   *
    * @param client 카테고리에 게시글을 저장한 User 엔티티
    * @param postType 조회할 게시글 종류 (null 이면 전체)
-   * @return 카테고리에 저장된 게시글 목록
-   * */
+   */
   public List<PostQuery.UserPostListRow> findBookmarkedPostsByUser(User client, PostType postType,
       Pageable pageable) {
     QPost post = QPost.post;
@@ -107,7 +109,8 @@ public class PostRepositorySupport {
         .where(
             category.owner.eq(client),
             category.categoryType.eq(CategoryType.BOOKMARK),
-            postTypeEq(post, postType)
+            postTypeEq(post, postType),
+            PostPredicate.visibleDesignPost(post)
         )
         .orderBy(post.createdAt.desc(), post.postId.desc())
         .offset(pageable.getOffset())
@@ -116,8 +119,9 @@ public class PostRepositorySupport {
   }
 
   /**
-   * 사용자가 좋아요를 누른 게시글 목록 조회
-   * */
+   * 사용자가 좋아요를 누른 게시글을 최신순으로 페이징한다.
+   * 활성 에셋이 없는 디자인 게시글은 페이징 전에 제외하고 테마 게시글은 유지한다.
+   */
   public List<PostQuery.UserPostListRow> findUserPreferredPosts(User client, PostType postType,
       Pageable pageable) {
     QPost post = QPost.post;
@@ -129,7 +133,8 @@ public class PostRepositorySupport {
         .join(post.user, user)
         .where(
             prefer.user.eq(client),
-            postTypeEq(post, postType)
+            postTypeEq(post, postType),
+            PostPredicate.visibleDesignPost(post)
         )
         .orderBy(post.createdAt.desc(), post.postId.desc())
         .offset(pageable.getOffset())
@@ -138,8 +143,9 @@ public class PostRepositorySupport {
   }
 
   /**
-   * 사용자가 소유한 게시글 목록 조회
-   * */
+   * 사용자가 소유한 게시글을 최신순으로 페이징한다.
+   * 활성 에셋이 없는 디자인 게시글은 페이징 전에 제외하고 테마 게시글은 유지한다.
+   */
   public List<PostQuery.UserPostListRow> findMyPostsByUser(User client, PostType postType,
       Pageable pageable) {
     QPost post = QPost.post;
@@ -149,7 +155,8 @@ public class PostRepositorySupport {
         .join(post.user, user)
         .where(
             post.user.eq(client),
-            postTypeEq(post, postType)
+            postTypeEq(post, postType),
+            PostPredicate.visibleDesignPost(post)
         )
         .orderBy(post.createdAt.desc(), post.postId.desc())
         .offset(pageable.getOffset())

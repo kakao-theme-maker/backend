@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.dto.DesignComponentDto;
+import com.komentum.global.security.UserRole;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.user.domain.User;
@@ -17,6 +18,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -234,5 +238,93 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     );
     // then
     assertThat(res).hasSize(3);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole.class, names = {"USER", "ADMIN"})
+  @DisplayName("소유자와 관리자 모두 비활성 컴포넌트 단건 조회는 404를 받는다")
+  void getInactiveDesignComponent(UserRole role) throws Exception {
+    DesignComponent inactive = testUserComponent();
+    inactive.deactivate();
+    designComponentRepository.flush();
+    authenticateAs(testUser, role);
+
+    performAuthenticated(get("/api/design-components/{id}", inactive.getDesignComponentId()),
+        status().isNotFound());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"user", "uploaded", "component-type"})
+  @DisplayName("사용자·업로드·컴포넌트 타입 목록에서 비활성 컴포넌트를 제외한다")
+  void componentLists_excludeInactiveComponents(String listType) throws Exception {
+    DesignComponent active = testUserComponent("active.png", true, componentTypeA);
+    DesignComponent inactive = testUserComponent("inactive.png", true, componentTypeA);
+    inactive.deactivate();
+    designComponentRepository.flush();
+    String path = switch (listType) {
+      case "user" -> "/api/design-components/user/" + testUser.getPublicUserId();
+      case "uploaded" -> "/api/design-components/uploaded";
+      default -> "/api/design-components/component-types/" + componentTypeA.getComponentTypeId();
+    };
+
+    MvcResult result = performAuthenticated(get(path), status().isOk());
+    DesignComponentDto[] response = objectMapper.readValue(
+        result.getResponse().getContentAsString(), DesignComponentDto[].class);
+
+    assertThat(response).extracting(DesignComponentDto::getDesignComponentId)
+        .containsExactly(active.getDesignComponentId());
+  }
+
+  @Test
+  @DisplayName("페이지 내용과 전체 개수 모두 비활성 컴포넌트를 제외한다")
+  void componentPages_excludeInactiveComponentsFromContentAndCount() throws Exception {
+    DesignComponent first = testUserComponent("first.png", true, componentTypeA);
+    testUserComponent("inactive-first.png", true, componentTypeA).deactivate();
+    DesignComponent second = testUserComponent("second.png", true, componentTypeA);
+    testUserComponent("inactive-second.png", true, componentTypeA).deactivate();
+    DesignComponent third = testUserComponent("third.png", true, componentTypeA);
+    designComponentRepository.flush();
+
+    mockMvc.perform(mockMvcUtils.addAuthentication(get("/api/design-components")
+            .param("page", "0").param("size", "2").param("sort", "designComponentId,asc"),
+        testClient))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(3))
+        .andExpect(jsonPath("$.totalPages").value(2))
+        .andExpect(jsonPath("$.content.length()").value(2))
+        .andExpect(jsonPath("$.content[0].designComponentId").value(first.getDesignComponentId()))
+        .andExpect(jsonPath("$.content[1].designComponentId").value(second.getDesignComponentId()));
+    mockMvc.perform(mockMvcUtils.addAuthentication(get("/api/design-components")
+            .param("page", "1").param("size", "2").param("sort", "designComponentId,asc"),
+        testClient))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(3))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].designComponentId").value(third.getDesignComponentId()));
+    mockMvc.perform(mockMvcUtils.addAuthentication(get("/api/design-components")
+            .param("page", "2").param("size", "2"), testClient))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(3))
+        .andExpect(jsonPath("$.content.length()").value(0));
+  }
+
+  @Test
+  @DisplayName("북마크 컴포넌트 목록은 기존 게시글의 비활성 컴포넌트를 제외한다")
+  void bookmarkedComponents_excludeInactiveComponents() throws Exception {
+    List<DesignComponent> components = designComponentScenarioSupport.builder(List.of(testUser))
+        .withCountPerUser(2).build().designComponents();
+    postScenarioSupport.builder(List.of(testUser))
+        .withDesignBoardsPerUser(1, Map.of(testUser, components))
+        .withBookmarkRatio(1).build();
+    components.get(0).deactivate();
+    designComponentRepository.flush();
+
+    MvcResult result = performAuthenticated(get("/api/design-components/bookmarked"),
+        status().isOk());
+    DesignComponentDto[] response = objectMapper.readValue(
+        result.getResponse().getContentAsString(), DesignComponentDto[].class);
+
+    assertThat(response).extracting(DesignComponentDto::getDesignComponentId)
+        .containsExactly(components.get(1).getDesignComponentId());
   }
 }

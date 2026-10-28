@@ -62,6 +62,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -126,9 +128,6 @@ class ThemeManageControllerTest {
         .withCountPerUser(5)
         .build().designComponents();
     testUser = userResult.users().get(0);
-    // 업로드 파일명 생성 규칙(default method)은 실제 구현을 사용한다
-    when(fileManager.uploadAndGetFileName(any(InputStream.class), anyLong(), anyString(),
-        anyString())).thenCallRealMethod();
     // 기존 이미지는 샘플 PNG 파일로 다운로드된다
     when(fileManager.download(anyString())).thenAnswer(
         invocation -> new ClassPathResource("sample-images/test.png").getInputStream());
@@ -164,15 +163,74 @@ class ThemeManageControllerTest {
     assertThat(response.getStyleCodes()).isNotEmpty();
   }
 
-
   @Test
-  @DisplayName("이미지 파일을 전달한 TypeCode는 새 이미지로 교체되고, inset 정보도 함께 수정된다")
-  public void updateTheme_replaceImageWhenFileIsGiven() throws Exception {
+  @DisplayName("비활성 에셋이 포함된 기본 테마를 복사할 수 없고 새 테마가 남지 않는다")
+  void createNewTheme_failWhenDefaultThemeContainsInactiveComponent() throws Exception {
+    themeComponentScenarioSupport.builder(List.of(testUser),
+            List.of(designComponentList.get(0)))
+        .withCountPerUser(1)
+        .withDefaultTheme()
+        .build();
+    deactivateComponent(designComponentList.get(0).getDesignComponentId());
+    long themeCount = themeComponentRepository.count();
+    long imageCount = themeImageRepository.count();
+    long styleCount = themeStyleRepository.count();
+
+    mockMvcUtils.performAuthRequest(MockMvcRequestBuilders.post("/api/themes"),
+            ExecutionContext.builder()
+                .mockMvc(mockMvc)
+                .clientDto(TestClientDto.fromEntity(testUser))
+                .build())
+        .andExpect(status().isNotFound());
+
+    assertThat(themeComponentRepository.count()).isEqualTo(themeCount);
+    assertThat(themeImageRepository.count()).isEqualTo(imageCount);
+    assertThat(themeStyleRepository.count()).isEqualTo(styleCount);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("완성 또는 작성 중 테마에서 기존 비활성 에셋을 유지하면서 inset을 수정할 수 있다")
+  void updateTheme_successWhenRetainingInactiveComponent(boolean isDone) throws Exception {
+    ThemeComponent targetTheme = createThemeUsing(designComponentList.get(0));
+    targetTheme.setIsDone(isDone);
+    themeComponentRepository.saveAndFlush(targetTheme);
+    ThemeImage existingImage = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
+        .filter(image -> image.getComponentType().getTypeCode()
+            == TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
+        .findFirst().orElseThrow();
+    Integer componentId = existingImage.getDesignComponent().getDesignComponentId();
+    TypeCode typeCode = existingImage.getComponentType().getTypeCode();
+    deactivateComponent(componentId);
+    ThemeUpdateRequest updateDto = ThemeRequestFixture.insetUpdateRequest(typeCode, 30);
+
+    doThemeUpdateRequest(targetTheme.getThemeComponentId(), updateDto, testUser)
+        .andExpect(status().isNoContent());
+
+    ThemeImage updatedImage = themeImageRepository
+        .fetchJoinAllByThemeComponentId(targetTheme.getThemeComponentId()).stream()
+        .filter(image -> image.getComponentType().getTypeCode() == typeCode)
+        .findFirst().orElseThrow();
+    assertThat(updatedImage.getDesignComponent().getDesignComponentId()).isEqualTo(componentId);
+    assertThat(updatedImage.getDesignComponent().getIsActive()).isFalse();
+    assertThat(updatedImage.getImageInset().getEdgeInsetTop()).isEqualTo(30);
+    assertThat(updatedImage.getImageInset().getEdgeInsetBottom()).isEqualTo(30);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("기존 에셋의 활성 여부와 관계없이 파일로 교체하면 새 활성 에셋이 연결되고 기존 에셋과 파일은 보존된다")
+  public void updateTheme_replaceImageWhenFileIsGiven(boolean inactive) throws Exception {
     // given
     ThemeComponent targetTheme = createTargetTheme();
     TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
-    Integer beforeDesignComponentId = findThemeImage(targetTheme, typeCode)
-        .getDesignComponent().getDesignComponentId();
+    DesignComponent previousComponent = findThemeImage(targetTheme, typeCode).getDesignComponent();
+    Integer beforeDesignComponentId = previousComponent.getDesignComponentId();
+    String beforeFileName = previousComponent.getFileName();
+    if (inactive) {
+      deactivateComponent(beforeDesignComponentId);
+    }
     ThemeUpdateRequest updateDto = ThemeRequestFixture.insetUpdateRequest(typeCode, 50);
     // when
     ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
@@ -183,10 +241,14 @@ class ThemeManageControllerTest {
     ThemeImage updatedThemeImage = findThemeImage(targetTheme, typeCode);
     DesignComponent newDesignComponent = updatedThemeImage.getDesignComponent();
     assertThat(newDesignComponent.getDesignComponentId()).isNotEqualTo(beforeDesignComponentId);
+    assertThat(newDesignComponent.getIsActive()).isTrue();
     assertThat(newDesignComponent.getFileName()).startsWith("design-components_").endsWith(".png");
     assertThat(updatedThemeImage.getImageInset().getEdgeInsetBottom()).isEqualTo(50);
     // 교체된 기존 DesignComponent는 공유될 수 있으므로 삭제하지 않는다
-    assertThat(designComponentRepository.findById(beforeDesignComponentId)).isPresent();
+    DesignComponent preservedComponent = designComponentRepository.findById(beforeDesignComponentId)
+        .orElseThrow();
+    assertThat(preservedComponent.getFileName()).isEqualTo(beforeFileName);
+    assertThat(preservedComponent.getIsActive()).isEqualTo(!inactive);
     verify(fileManager, never()).deleteFile(anyString());
   }
 
@@ -210,12 +272,18 @@ class ThemeManageControllerTest {
     assertThat(updatedThemeImage.getImageInset().getEdgeInsetBottom()).isEqualTo(30);
   }
 
-  @Test
-  @DisplayName("deleteTypeCodes에 포함된 TypeCode의 테마 이미지는 제거된다")
-  public void updateTheme_deleteImageWhenTypeCodeInDeleteTypeCodes() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("에셋의 활성 여부와 관계없이 deleteTypeCodes에 포함된 TypeCode의 테마 이미지는 제거된다")
+  public void updateTheme_deleteImageWhenTypeCodeInDeleteTypeCodes(boolean inactive) throws Exception {
     // given
     ThemeComponent targetTheme = createTargetTheme();
     TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
+    Integer componentId = findThemeImage(targetTheme, typeCode).getDesignComponent()
+        .getDesignComponentId();
+    if (inactive) {
+      deactivateComponent(componentId);
+    }
     ThemeUpdateRequest updateDto = ThemeRequestFixture.deleteUpdateRequest(typeCode);
     // when
     ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
@@ -223,6 +291,8 @@ class ThemeManageControllerTest {
     // then
     resultActions.andExpect(status().isNoContent());
     assertThat(findThemeImageMap(targetTheme)).doesNotContainKey(typeCode);
+    assertThat(designComponentRepository.findById(componentId)).isPresent();
+    verify(fileManager, never()).deleteFile(anyString());
   }
 
   @Test
@@ -288,7 +358,7 @@ class ThemeManageControllerTest {
             TypeCode.CHAT_ROOM_BACKGROUND_IMAGE.getTypeCode()));
     // then
     resultActions.andExpect(status().isForbidden());
-    verify(fileManager, never()).uploadFile(any(InputStream.class), anyLong(), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
   }
 
   @Test
@@ -414,7 +484,7 @@ class ThemeManageControllerTest {
     Map<TypeCode, Integer> beforeDesignComponentIds = findDesignComponentIdMap(targetTheme);
     doReturn("uploaded-url")
         .doThrow(new RuntimeException("upload failed"))
-        .when(fileManager).uploadFile(any(InputStream.class), anyLong(), anyString());
+        .when(fileManager).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
     // when
     ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
         ThemeRequestFixture.emptyUpdateRequest(), testUser,
@@ -425,7 +495,7 @@ class ThemeManageControllerTest {
     // then
     resultActions.andExpect(status().isInternalServerError());
     ArgumentCaptor<String> uploadedFileNames = ArgumentCaptor.forClass(String.class);
-    verify(fileManager, times(2)).uploadFile(any(InputStream.class), anyLong(),
+    verify(fileManager, times(2)).uploadPublicFile(any(InputStream.class), anyLong(),
         uploadedFileNames.capture());
     String firstUploadedFileName = uploadedFileNames.getAllValues().get(0);
     verify(fileManager).deleteFile(firstUploadedFileName);
@@ -457,7 +527,7 @@ class ThemeManageControllerTest {
     // then
     resultActions.andExpect(status().isInternalServerError());
     ArgumentCaptor<String> uploadedFileName = ArgumentCaptor.forClass(String.class);
-    verify(fileManager).uploadFile(any(InputStream.class), anyLong(), uploadedFileName.capture());
+    verify(fileManager).uploadPublicFile(any(InputStream.class), anyLong(), uploadedFileName.capture());
     verify(fileManager).deleteFile(uploadedFileName.getValue());
     assertThat(findDesignComponentIdMap(targetTheme)).isEqualTo(beforeDesignComponentIds);
   }
@@ -485,6 +555,24 @@ class ThemeManageControllerTest {
     ThemeComponent clonedTheme = themeComponentRepository.findById(response.getThemeComponentId())
         .orElseThrow();
     assertThat(clonedTheme.getUser().getUserEmail()).isEqualTo(testUser.getUserEmail());
+  }
+
+  @Test
+  @DisplayName("비활성 에셋이 포함된 테마는 복제할 수 없고 새 테마가 남지 않는다")
+  void cloneTheme_failWhenComponentIsInactive() throws Exception {
+    ThemeComponent sourceTheme = createThemeUsing(designComponentList.get(0));
+    ThemeCloneRequest cloneRequest = buildCloneRequestFromTheme(sourceTheme.getThemeComponentId(),
+        "cloned theme");
+    deactivateComponent(designComponentList.get(0).getDesignComponentId());
+    long themeCount = themeComponentRepository.count();
+    long imageCount = themeImageRepository.count();
+    long styleCount = themeStyleRepository.count();
+
+    doThemeCloneRequest(cloneRequest, testUser).andExpect(status().isNotFound());
+
+    assertThat(themeComponentRepository.count()).isEqualTo(themeCount);
+    assertThat(themeImageRepository.count()).isEqualTo(imageCount);
+    assertThat(themeStyleRepository.count()).isEqualTo(styleCount);
   }
 
   @Test
@@ -626,6 +714,21 @@ class ThemeManageControllerTest {
     resultActions.andExpect(status().isOk());
   }
 
+  private ThemeComponent createThemeUsing(DesignComponent component) {
+    return themeComponentScenarioSupport.builder(List.of(testUser), List.of(component))
+        .withCountPerUser(1).build().themeComponents().get(0);
+  }
+
+  private void deactivateComponent(Integer componentId) throws Exception {
+    mockMvcUtils.performAuthRequest(
+            MockMvcRequestBuilders.delete("/api/design-components/{id}", componentId),
+            ExecutionContext.builder()
+                .mockMvc(mockMvc)
+                .clientDto(TestClientDto.fromEntity(testUser))
+                .build())
+        .andExpect(status().isNoContent());
+  }
+
   private ThemeCloneRequest buildCloneRequestFromTheme(Integer themeComponentId, String themeName) {
     return ThemeRequestFixture.cloneRequest(themeName,
         themeImageRepository.fetchJoinAllByThemeComponentId(themeComponentId),
@@ -668,7 +771,7 @@ class ThemeManageControllerTest {
   private void expectBadRequest(ResultActions resultActions, String errorCode) throws Exception {
     resultActions.andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value(startsWith(errorCode)));
-    verify(fileManager, never()).uploadFile(any(InputStream.class), anyLong(), anyString());
+    verify(fileManager, never()).uploadPublicFile(any(InputStream.class), anyLong(), anyString());
   }
 
   private ResultActions doThemeUpdateRequest(Integer themeId, ThemeUpdateRequest dto, User client,

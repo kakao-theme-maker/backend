@@ -50,6 +50,10 @@ public class ThemeImage {
   @Embedded
   private ImageInset imageInset;
 
+  /**
+   * 원본의 컴포넌트와 타입을 참조하는 새 테마 이미지 연결을 생성한다.
+   * 에셋과 이미지 파일은 공유하며, 새 연결에 사용할 컴포넌트의 활성 검증은 호출 측에서 수행한다.
+   */
   public static ThemeImage copyOf(ThemeComponent targetTheme, ThemeImage sourceImage) {
     return ThemeImage.builder()
         .themeComponent(targetTheme)

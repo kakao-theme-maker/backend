@@ -150,6 +150,13 @@ public class ThemeRetrieveService {
     }).toList();
   }
 
+  /**
+   * 테마의 메타데이터와 TypeCode별 이미지·StyleCode별 색상 정보를 상세 응답으로 구성한다.
+   * 기존 테마의 구성을 보존하기 위해 비활성 컴포넌트의 연결도 포함하며,
+   * 이미지 연결을 모두 제거한 테마는 빈 이미지 맵을 반환한다.
+   *
+   * @throws CustomEntityNotFoundException 테마가 존재하지 않는 경우
+   */
   @Transactional(readOnly = true)
   public ThemeDetailResponse findThemeDetail(Integer themeComponentId) {
     ThemeComponent themeComponent = getThemeEntityById(themeComponentId);

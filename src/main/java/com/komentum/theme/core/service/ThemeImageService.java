@@ -52,8 +52,9 @@ public class ThemeImageService {
   private final FileManager fileManager;
 
   /**
-   * themeComponent ID별 테마 대표 이미지의 파일명을 조회한다.
-   *
+   * 테마별 COMMON_ICO_THEME 연결에서 대표 이미지 파일명을 조회한다.
+   * 기존 테마의 모습을 보존하기 위해 연결된 컴포넌트가 비활성이어도 포함한다.
+   * 해당 연결이나 파일명이 없는 테마는 결과 맵에서 제외한다.
    */
   @Transactional(readOnly = true)
   public Map<Integer, String> findThemePreviewFileNames(List<Integer> themeComponentIds) {
@@ -95,6 +96,10 @@ public class ThemeImageService {
     return findThemePreviewImageUrls(List.of(themeComponentId)).get(themeComponentId);
   }
 
+  /**
+   * 테마에 연결된 이미지와 inset 정보를 TypeCode별 상세 응답으로 구성한다.
+   * 기존 구성을 유지하도록 비활성 컴포넌트도 포함하며, 연결이 없으면 빈 맵을 반환한다.
+   */
   @Transactional(readOnly = true)
   public Map<TypeCode, TypeCodeInfo> findTypeCodeMapByThemeComponentId(Integer themeComponentId) {
     List<ThemeImage> themeImages = fetchJoinThemeImagesByThemeComponentId(
@@ -117,19 +122,20 @@ public class ThemeImageService {
   }
 
   /**
-   * themeComponent ID를 기반으로 ThemeImage 목록을 조회한다. 연관 엔티티(ThemeComponent, designComponent,
-   * componentType)이 함께 조회된다.
-   *
+   * 테마 이미지 연결과 테마·컴포넌트·타입을 함께 조회한다.
+   * 기존 테마의 조회와 빌드에 필요한 비활성 컴포넌트도 포함한다.
+   * 연결을 모두 제거한 테마도 조회할 수 있도록 연결이 없으면 빈 목록을 반환한다.
    */
   @Transactional(readOnly = true)
   public List<ThemeImage> fetchJoinThemeImagesByThemeComponentId(Integer themeComponentId) {
-    return fetchJoinThemeImageMapByThemeIds(List.of(themeComponentId)).get(themeComponentId);
+    return fetchJoinThemeImageMapByThemeIds(List.of(themeComponentId))
+        .getOrDefault(themeComponentId, List.of());
   }
 
   /**
-   * themeComponent ID 목록을 기반으로 ThemeComponentId - ThemeImage 맵을 조회한다. 연관 엔티티(ThemeComponent,
-   * designComponent, componentType)이 함께 조회된다.
-   *
+   * 테마 이미지 연결과 연관 엔티티를 조회하여 테마 ID별로 묶는다.
+   * 기존 테마를 재현하기 위한 내부 조회이므로 컴포넌트의 활성 상태를 제한하지 않는다.
+   * 이미지 연결이 없는 테마는 결과 맵에 포함하지 않는다.
    */
   @Transactional(readOnly = true)
   public Map<Integer, List<ThemeImage>> fetchJoinThemeImageMapByThemeIds(
@@ -142,8 +148,9 @@ public class ThemeImageService {
   }
 
   /**
-   * theme ID 리스트를 기반으로 테마별 ThemeDesignAssetDto 리스트를 조회한다
-   *
+   * 테마별 기존 이미지 연결을 테마 게시글 응답에 사용할 에셋 정보로 변환한다.
+   * 컴포넌트가 비활성이어도 기존 테마의 파일을 사용할 수 있도록 포함하며,
+   * 이미지 연결이 없는 테마는 결과 맵에 포함하지 않는다.
    */
   @Transactional(readOnly = true)
   public Map<Integer, List<ThemeDesignAssetDto>> findThemeDesignAssetMap(
@@ -170,11 +177,21 @@ public class ThemeImageService {
     return fileName == null ? null : fileManager.resolvePublicFileUrl(fileName);
   }
 
+  /**
+   * 원본 테마의 컴포넌트·타입 연결을 새 테마에 복사하며, 컴포넌트와 이미지 파일은 공유한다.
+   * 새 연결을 만드는 작업이므로 기존 테마의 비활성 참조 보존 예외를 적용하지 않는다.
+   *
+   * @throws ResourceNotFoundException 원본에 비활성 컴포넌트가 포함된 경우
+   */
   @Transactional
   public void copyThemeImages(ThemeComponent targetTheme,
       ThemeComponent sourceTheme) {
     List<ThemeImage> targetThemeImages = new ArrayList<>();
     Set<ThemeImage> sourceThemeImages = sourceTheme.getThemeImages();
+    // 일부 연결만 복사하지 않도록 새 연결을 만들기 전에 원본 전체의 활성 상태를 검증한다.
+    designComponentService.requireActiveComponents(sourceThemeImages.stream()
+        .map(ThemeImage::getDesignComponent)
+        .toList());
     for (ThemeImage sourceThemeImage : sourceThemeImages) {
       ThemeImage targetThemeImage = ThemeImage.copyOf(targetTheme, sourceThemeImage);
       targetThemeImages.add(targetThemeImage);
@@ -187,12 +204,12 @@ public class ThemeImageService {
    * typeCode별 이미지 정보로 새로운 ThemeImage들을 생성하여 targetTheme에 추가한다. platformScope=COMMON인 TypeCode는 요청에
    * 반드시 포함되어야 하며, 특정 플랫폼 전용(ANDROID/IOS) TypeCode는 요청에 없어도 된다. 요청에 포함된 TypeCode는 targetTheme에 아직
    * 이미지가 없는 상태여야 한다.
+   * 테마 복제도 새 연결이므로 기존 테마에서 사용하던 컴포넌트라도 비활성 상태라면 허용하지 않는다.
    *
-   * @param targetTheme 이미지를 추가할 대상 테마
    * @param typeCodes   typeCode별 이미지 정보 맵, 존재하는 값은 null이 아니어야 한다
    * @throws ResponseStatusException   platformScope=COMMON인 TypeCode가 요청에 누락된 경우 (400 Bad Request)
    * @throws ResourceNotFoundException typeCode에 대응하는 ComponentType이나 designComponentId에 대응하는
-   *                                   DesignComponent가 존재하지 않는 경우
+   *                                   DesignComponent가 없거나, 요청한 컴포넌트가 비활성 상태인 경우
    */
   @Transactional
   public void createThemeImages(
@@ -205,6 +222,8 @@ public class ThemeImageService {
         typeCodes.values().stream()
             .map(ThemeImageCloneRequest::getDesignComponentId)
             .collect(Collectors.toSet()));
+    // 하나라도 비활성이면 연결 생성 전에 전체 요청을 거절한다.
+    designComponentService.requireActiveComponents(designComponentMap.values());
     List<ThemeImage> themeImages = new ArrayList<>();
     typeCodes.forEach((typeCode, imageRequest) -> {
       ComponentType componentType = componentTypeMap.get(typeCode);
@@ -252,6 +271,7 @@ public class ThemeImageService {
    * 테마 수정 요청에 따라 TypeCode별 이미지를 수정한다. 업로드 파일이 전달된 TypeCode는 새 DesignComponent로 교체(기존 이미지가 없으면
    * 생성)하고, deleteTypeCodes에 포함된 TypeCode는 제거하며, 둘 다 아닌 TypeCode는 기존 이미지를 유지한다. 교체·제거된 기존
    * DesignComponent는 다른 테마·게시글과 공유될 수 있으므로 삭제하지 않는다.
+   * 파일 교체 없이 기존 연결을 유지하면 비활성 에셋도 유지하거나 inset을 수정할 수 있다.
    *
    * @param targetTheme       수정할 테마
    * @param request           이미지 정보(inset)와 제거할 TypeCode 목록이 담긴 수정 요청

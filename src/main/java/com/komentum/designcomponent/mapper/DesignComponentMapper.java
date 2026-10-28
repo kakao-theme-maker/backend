@@ -22,10 +22,15 @@ public abstract class DesignComponentMapper {
   @Mapping(target = "imageUrl", source = "fileName", qualifiedByName = "fileNameToUrl")
   public abstract DesignComponentDto toDto(DesignComponent designComponent);
 
+  /**
+   * 요청, 업로드된 파일명과 소유자로 신규 컴포넌트를 구성한다.
+   * isActive는 매핑하지 않아 엔티티 빌더의 기본값 true를 유지하고, 타입 연결은 서비스에서 설정한다.
+   */
   @Mapping(target = "designComponentId", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "componentTypeMappings", ignore = true)
+  @Mapping(target = "isActive", ignore = true)
   @Mapping(target = "user", source = "user")
   @Mapping(target = "fileName", source = "fileName")
   public abstract DesignComponent toEntity(CreateDesignComponentRequest request, String fileName,
