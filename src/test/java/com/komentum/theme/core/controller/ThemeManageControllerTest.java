@@ -108,6 +108,8 @@ class ThemeManageControllerTest {
   @Autowired
   private ThemeStyleRepository themeStyleRepository;
   @Autowired
+  private DesignComponentRepository designComponentRepository;
+  @Autowired
   private ComponentTypeService componentTypeService;
   @Autowired
   private ColorStyleService colorStyleService;
@@ -674,20 +676,136 @@ class ThemeManageControllerTest {
   }
 
   @Test
-  @DisplayName("")
+  @DisplayName("소유자는 테마와 이미지·스타일 연결을 삭제하고 공유 에셋은 보존한다")
   public void deleteTheme_success() throws Exception {
-    // given
-    ThemeComponent target = themeComponentScenarioSupport.builder(List.of(testUser),
+    ThemeComponent target = createThemeForDeletion();
+
+    doThemeDeleteRequest(target.getThemeComponentId(), testUser)
+        .andExpect(status().isNoContent());
+
+    assertThemeDeleted(target.getThemeComponentId());
+    assertDesignComponentsPreserved();
+  }
+
+  /**
+   * 관리자가 다른 사용자의 테마와 이미지·스타일 연결을 삭제할 수 있는지 검증한다.
+   */
+  @Test
+  @DisplayName("관리자는 다른 사용자의 테마와 이미지·스타일 연결을 삭제한다")
+  public void deleteTheme_successWhenAdminDeletesAnotherUsersTheme() throws Exception {
+    ThemeComponent target = createThemeForDeletion();
+    User admin = userScenarioSupport.builder().withRootUser().build().rootUser();
+
+    doThemeDeleteRequest(target.getThemeComponentId(), admin)
+        .andExpect(status().isNoContent());
+
+    assertThemeDeleted(target.getThemeComponentId());
+  }
+
+  /**
+   * 다른 사용자의 삭제 요청이 거부되고 테마와 연관 데이터가 보존되는지 검증한다.
+   */
+  @Test
+  @DisplayName("다른 사용자의 테마 삭제 요청은 403을 반환하고 테마와 연결을 보존한다")
+  public void deleteTheme_failWhenDeletingNotOwnedTheme() throws Exception {
+    ThemeComponent target = createThemeForDeletion();
+    Integer themeId = target.getThemeComponentId();
+    List<Long> imageIds = themeImageRepository.fetchJoinAllByThemeComponentId(themeId).stream()
+        .map(ThemeImage::getThemeImageId).toList();
+    List<Long> styleIds = themeStyleRepository.fetchJoinAllByThemeComponentId(themeId).stream()
+        .map(ThemeStyle::getThemeStyleId).toList();
+    User other = userScenarioSupport.builder().withUsers(1).build().getFirstUser();
+
+    doThemeDeleteRequest(themeId, other)
+        .andExpect(status().isForbidden());
+
+    assertThemePreserved(themeId, imageIds, styleIds);
+  }
+
+  /**
+   * 비인증 삭제 요청이 거부되고 테마와 연관 데이터가 보존되는지 검증한다.
+   */
+  @Test
+  @DisplayName("인증하지 않은 테마 삭제 요청은 401을 반환하고 테마와 연결을 보존한다")
+  public void deleteTheme_failWhenUnauthenticated() throws Exception {
+    ThemeComponent target = createThemeForDeletion();
+    Integer themeId = target.getThemeComponentId();
+    List<Long> imageIds = themeImageRepository.fetchJoinAllByThemeComponentId(themeId).stream()
+        .map(ThemeImage::getThemeImageId).toList();
+    List<Long> styleIds = themeStyleRepository.fetchJoinAllByThemeComponentId(themeId).stream()
+        .map(ThemeStyle::getThemeStyleId).toList();
+
+    mockMvc.perform(MockMvcRequestBuilders.delete("/api/themes/{id}", themeId))
+        .andExpect(status().isUnauthorized());
+
+    assertThemePreserved(themeId, imageIds, styleIds);
+  }
+
+  /**
+   * 존재하지 않는 테마의 삭제 요청이 기존처럼 404를 반환하는지 검증한다.
+   */
+  @Test
+  @DisplayName("존재하지 않는 테마 삭제 요청은 404를 반환한다")
+  public void deleteTheme_failWhenThemeNotFound() throws Exception {
+    doThemeDeleteRequest(Integer.MAX_VALUE, testUser)
+        .andExpect(status().isNotFound());
+  }
+
+  /**
+   * 삭제 검증에 사용할 이미지와 스타일이 연결된 소유자 테마를 생성한다.
+   */
+  private ThemeComponent createThemeForDeletion() {
+    ThemeComponent theme = themeComponentScenarioSupport.builder(List.of(testUser),
             designComponentList)
         .withCountPerUser(1)
         .build().themeComponents().get(0);
-    // when
-    MockHttpServletRequestBuilder request = MockMvcRequestBuilders.delete("/api/themes/{id}",
-        target.getThemeComponentId());
-    request = mockMvcUtils.addAuthentication(request, TestClientDto.fromEntity(testUser));
-    // then
-    mockMvc.perform(request)
-        .andExpect(status().isNoContent());
+    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(theme.getThemeComponentId()))
+        .isNotEmpty();
+    assertThat(themeStyleRepository.fetchJoinAllByThemeComponentId(theme.getThemeComponentId()))
+        .isNotEmpty();
+    return theme;
+  }
+
+  /**
+   * 지정한 사용자의 인증 정보로 테마 삭제 API를 호출한다.
+   */
+  private ResultActions doThemeDeleteRequest(Integer themeId, User client) throws Exception {
+    return mockMvc.perform(mockMvcUtils.addAuthentication(
+        MockMvcRequestBuilders.delete("/api/themes/{id}", themeId),
+        TestClientDto.fromEntity(client)));
+  }
+
+  /**
+   * 테마와 해당 테마의 이미지·스타일 연결이 모두 삭제되었는지 확인한다.
+   */
+  private void assertThemeDeleted(Integer themeId) {
+    assertThat(themeComponentRepository.existsById(themeId)).isFalse();
+    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(themeId)).isEmpty();
+    assertThat(themeStyleRepository.fetchJoinAllByThemeComponentId(themeId)).isEmpty();
+  }
+
+  /**
+   * 거절된 삭제 요청 이후 테마와 기존 이미지·스타일 연결이 보존되었는지 확인한다.
+   */
+  private void assertThemePreserved(Integer themeId, List<Long> imageIds, List<Long> styleIds) {
+    assertThat(themeComponentRepository.existsById(themeId)).isTrue();
+    assertThat(themeImageRepository.fetchJoinAllByThemeComponentId(themeId))
+        .extracting(ThemeImage::getThemeImageId)
+        .containsExactlyInAnyOrderElementsOf(imageIds);
+    assertThat(themeStyleRepository.fetchJoinAllByThemeComponentId(themeId))
+        .extracting(ThemeStyle::getThemeStyleId)
+        .containsExactlyInAnyOrderElementsOf(styleIds);
+  }
+
+  /**
+   * 테마가 참조하던 공유 에셋의 DB 행과 파일명이 보존되었는지 확인한다.
+   */
+  private void assertDesignComponentsPreserved() {
+    for (DesignComponent component : designComponentList) {
+      DesignComponent preserved = designComponentRepository.findById(component.getDesignComponentId())
+          .orElseThrow();
+      assertThat(preserved.getFileName()).isEqualTo(component.getFileName());
+    }
   }
 
   @Test
