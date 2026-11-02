@@ -97,6 +97,41 @@ class ImageUtilsTest {
     assertThat(ImageUtils.readImageSize(text)).isEmpty();
   }
 
+  @Test
+  @DisplayName("scaleDownToCover는 자르지 않고 비율을 유지한 채 영역을 덮는 최소 크기까지 축소한다")
+  void scaleDownToCover_keepRatioAndCoverTarget() {
+    BufferedImage result = ImageUtils.scaleDownToCover(
+        new BufferedImage(400, 300, BufferedImage.TYPE_INT_ARGB), 144, 288);
+    assertThat(result.getWidth()).isEqualTo(384);
+    assertThat(result.getHeight()).isEqualTo(288);
+  }
+
+  @Test
+  @DisplayName("scaleDownToFit은 여백 없이 비율을 유지한 채 영역 안에 들어가는 최대 크기까지 축소한다")
+  void scaleDownToFit_keepRatioWithinTarget() {
+    BufferedImage result = ImageUtils.scaleDownToFit(
+        new BufferedImage(600, 560, BufferedImage.TYPE_INT_ARGB), 124, 114);
+    assertThat(result.getWidth()).isEqualTo(122);
+    assertThat(result.getHeight()).isEqualTo(114);
+  }
+
+  @Test
+  @DisplayName("축소 대상 영역보다 작은 이미지는 확대하지 않고 원본을 그대로 반환한다")
+  void scaleDown_returnOriginalWhenSmallerThanTarget() {
+    BufferedImage source = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+    assertThat(ImageUtils.scaleDownToCover(source, 144, 288)).isSameAs(source);
+    assertThat(ImageUtils.scaleDownToFit(source, 124, 114)).isSameAs(source);
+  }
+
+  @Test
+  @DisplayName("여러 단계로 나눠 크게 축소해도 결과는 정확히 목표 크기다")
+  void resizeFit_exactSizeWhenLargeDownscale() {
+    BufferedImage result = ImageUtils.resizeFit(
+        new BufferedImage(2000, 2000, BufferedImage.TYPE_INT_ARGB), 48, 48);
+    assertThat(result.getWidth()).isEqualTo(48);
+    assertThat(result.getHeight()).isEqualTo(48);
+  }
+
   private byte[] writeImage(BufferedImage image, String formatName) throws IOException {
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
       ImageIO.write(image, formatName, baos);
