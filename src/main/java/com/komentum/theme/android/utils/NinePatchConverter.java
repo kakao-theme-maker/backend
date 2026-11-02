@@ -5,40 +5,29 @@ import com.komentum.theme.core.domain.ImageInset;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import javax.imageio.ImageIO;
 
 public final class NinePatchConverter {
 
   /**
    * 파일이 9-patch PNG라면 일반 PNG를 Android에서 사용하는 9-patch 형식으로 변환한다. 일반 PNG라면 별도 변환 없이 그대로 반환한다.
+   * imageInset은 source 이미지 크기 기준이어야 한다.
+   *
+   * @throws IllegalArgumentException inset이 source 이미지 범위를 벗어난 경우
    */
-  public static InputStream convertIfNeeded(
-      InputStream inputStream,
+  public static BufferedImage convertIfNeeded(
+      BufferedImage source,
       FileExtension extension,
       ImageInset imageInset
-  ) throws IOException {
+  ) {
     // 9-patch-PNG가 아니라면 이미지 다시 반환
     if (extension != FileExtension.NINE_PATCH_PNG) {
-      return inputStream;
+      return source;
     }
     // 9-patch image로 변환
-    BufferedImage source = ImageIO.read(inputStream);
-    if (source == null) {
-      throw new IOException("[9-patch converter] Invalid source image");
-    }
-    BufferedImage result;
     if (imageInset == null) {
-      result = createWithoutMarker(source);
-    } else {
-      result = convertWithMarker(source, imageInset);
+      return createWithoutMarker(source);
     }
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ImageIO.write(result, "png", baos);
-    return new ByteArrayInputStream(baos.toByteArray());
+    return convertWithMarker(source, imageInset);
   }
 
   /**
