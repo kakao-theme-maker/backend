@@ -27,7 +27,9 @@ import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.designcomponent.service.ColorStyleService;
 import com.komentum.designcomponent.service.ComponentTypeService;
+import com.komentum.global.enums.FileExtension;
 import com.komentum.global.utils.FileManager;
+import com.komentum.global.utils.ImageUtils;
 import com.komentum.test.MockMvcUtils;
 import com.komentum.test.config.EnableTestProfile;
 import com.komentum.test.data.MockMultipartFileUtils;
@@ -113,8 +115,6 @@ class ThemeManageControllerTest {
   private ComponentTypeService componentTypeService;
   @Autowired
   private ColorStyleService colorStyleService;
-  @Autowired
-  private DesignComponentRepository designComponentRepository;
   @MockitoBean
   private FileManager fileManager;
   @MockitoSpyBean
@@ -255,6 +255,29 @@ class ThemeManageControllerTest {
   }
 
   @Test
+  @DisplayName("PNG가 아닌 JPEG 이미지 파일을 전달하면 PNG로 변환되어 .png 파일로 저장된다")
+  public void updateTheme_convertJpegToPng() throws Exception {
+    // given
+    ThemeComponent targetTheme = createTargetTheme();
+    TypeCode typeCode = TypeCode.CHAT_ROOM_BACKGROUND_IMAGE;
+    // when
+    ResultActions resultActions = doThemeUpdateRequest(targetTheme.getThemeComponentId(),
+        ThemeRequestFixture.emptyUpdateRequest(), testUser,
+        MockMultipartFileUtils.generateSampleJpgFormData(typeCode.getTypeCode()));
+    // then
+    resultActions.andExpect(status().isNoContent());
+    ArgumentCaptor<InputStream> uploadedStream = ArgumentCaptor.forClass(InputStream.class);
+    ArgumentCaptor<String> uploadedFileName = ArgumentCaptor.forClass(String.class);
+    verify(fileManager).uploadPublicFile(uploadedStream.capture(), anyLong(),
+        uploadedFileName.capture());
+    assertThat(ImageUtils.detectImageExtension(uploadedStream.getValue()))
+        .contains(FileExtension.PNG);
+    assertThat(uploadedFileName.getValue()).startsWith("design-components_").endsWith(".png");
+    assertThat(findThemeImage(targetTheme, typeCode).getDesignComponent().getFileName())
+        .isEqualTo(uploadedFileName.getValue());
+  }
+
+  @Test
   @DisplayName("이미지 파일 없이 이미지 정보만 전달하면 기존 이미지는 유지하고 inset 정보만 수정된다")
   public void updateTheme_updateInsetOnlyWhenFileIsNotGiven() throws Exception {
     // given
@@ -277,7 +300,8 @@ class ThemeManageControllerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   @DisplayName("에셋의 활성 여부와 관계없이 deleteTypeCodes에 포함된 TypeCode의 테마 이미지는 제거된다")
-  public void updateTheme_deleteImageWhenTypeCodeInDeleteTypeCodes(boolean inactive) throws Exception {
+  public void updateTheme_deleteImageWhenTypeCodeInDeleteTypeCodes(boolean inactive)
+      throws Exception {
     // given
     ThemeComponent targetTheme = createTargetTheme();
     TypeCode typeCode = TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE;
@@ -529,7 +553,8 @@ class ThemeManageControllerTest {
     // then
     resultActions.andExpect(status().isInternalServerError());
     ArgumentCaptor<String> uploadedFileName = ArgumentCaptor.forClass(String.class);
-    verify(fileManager).uploadPublicFile(any(InputStream.class), anyLong(), uploadedFileName.capture());
+    verify(fileManager).uploadPublicFile(any(InputStream.class), anyLong(),
+        uploadedFileName.capture());
     verify(fileManager).deleteFile(uploadedFileName.getValue());
     assertThat(findDesignComponentIdMap(targetTheme)).isEqualTo(beforeDesignComponentIds);
   }
@@ -802,7 +827,8 @@ class ThemeManageControllerTest {
    */
   private void assertDesignComponentsPreserved() {
     for (DesignComponent component : designComponentList) {
-      DesignComponent preserved = designComponentRepository.findById(component.getDesignComponentId())
+      DesignComponent preserved = designComponentRepository.findById(
+              component.getDesignComponentId())
           .orElseThrow();
       assertThat(preserved.getFileName()).isEqualTo(component.getFileName());
     }

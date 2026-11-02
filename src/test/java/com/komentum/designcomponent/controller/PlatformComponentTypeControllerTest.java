@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 public class PlatformComponentTypeControllerTest {
 
-  private final int PLATFORM_COMPONENT_TYPE_COUNT = 97;
+  private final int PLATFORM_COMPONENT_TYPE_COUNT = 117;
   User rootUser;
 
   @Autowired
