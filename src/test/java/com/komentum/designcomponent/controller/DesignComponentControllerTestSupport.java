@@ -26,6 +26,7 @@ import com.komentum.test.fixture.component.DesignComponentDataGenerator;
 import com.komentum.test.fixture.component.DesignComponentMultipartFixture;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,6 +89,9 @@ abstract class DesignComponentControllerTestSupport {
 
   @Autowired
   protected CategoryPostRepository categoryPostRepository;
+
+  @Autowired
+  protected EntityManager entityManager;
 
   protected User testUser;
   protected TestClientDto testClient;
@@ -161,11 +165,15 @@ abstract class DesignComponentControllerTestSupport {
         user, fileName, isPublic, List.of(componentTypes));
   }
 
-  private void authenticateAs(User user) {
+  protected void authenticateAs(User user) {
+    authenticateAs(user, UserRole.USER);
+  }
+
+  protected void authenticateAs(User user, UserRole role) {
     CustomUserDetails userDetails = CustomUserDetails.builder()
         .userEmail(user.getUserEmail())
         .publicUserId(user.getPublicUserId())
-        .userRole(UserRole.USER)
+        .userRole(role)
         .build();
 
     Authentication auth = new UsernamePasswordAuthenticationToken(

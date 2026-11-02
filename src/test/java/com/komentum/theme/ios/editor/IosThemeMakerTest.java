@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.komentum.designcomponent.domain.ColorStyle;
 import com.komentum.designcomponent.domain.ComponentType;
+import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.Platform;
 import com.komentum.designcomponent.enums.PlatformScope;
 import com.komentum.designcomponent.enums.StyleCode;
@@ -158,7 +159,7 @@ class IosThemeMakerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void makeTheme_excludesDataExclusiveToOtherPlatforms() throws Exception {
+  void makeTheme_keepsInactiveImagesAndExcludesDataExclusiveToOtherPlatforms() throws Exception {
     // given
     int themeComponentId = 9;
     String ownerEmail = "owner@test.com";
@@ -201,7 +202,9 @@ class IosThemeMakerTest {
         .typeCode(TypeCode.CHAT_ROOM_BACKGROUND_IMAGE)
         .platformScope(PlatformScope.ANDROID)
         .build();
-    ThemeImage commonImage = ThemeImage.builder().componentType(commonType).build();
+    ThemeImage commonImage = ThemeImage.builder().componentType(commonType)
+        .designComponent(DesignComponent.builder().isActive(false).fileName("existing-image").build())
+        .build();
     ThemeImage androidOnlyImage = ThemeImage.builder().componentType(androidOnlyType).build();
     // stub
     when(themeRetrieveService.fetchJoinWithUser(themeComponentId)).thenReturn(themeComponent);

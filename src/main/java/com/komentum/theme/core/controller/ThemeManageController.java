@@ -11,6 +11,9 @@ import com.komentum.theme.core.service.ThemeManageService;
 import com.komentum.theme.core.service.seeder.DefaultThemeSeeder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.EnumMap;
@@ -47,7 +50,14 @@ public class ThemeManageController {
   private final DefaultThemeSeeder defaultThemeSeeder;
 
   @PostMapping
-  @Operation(summary = "인증된 사용자가 새로운 테마를 생성한다")
+  @Operation(
+      summary = "인증된 사용자가 새로운 테마를 생성한다",
+      description = "기본 테마의 이미지 연결과 스타일을 복사한다. 기본 테마에 비활성 에셋이 하나라도 포함되면 "
+          + "404를 반환하고 새 테마를 포함한 생성 결과 전체를 롤백한다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "기본 테마를 복사한 새 테마 생성 성공"),
+      @ApiResponse(responseCode = "404", description = "기본 테마에 비활성 에셋이 포함됨")
+  })
   public ResponseEntity<ThemeDetailResponse> createNewTheme(
       @AuthenticationPrincipal CustomUserDetails userDetails
   ) {
@@ -58,7 +68,19 @@ public class ThemeManageController {
   }
 
   @PutMapping(value = "/{themeComponentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @Operation(summary = "인증된 사용자가 ID로 특정 테마를 수정한다")
+  @Operation(
+      summary = "인증된 사용자가 ID로 특정 테마를 수정한다",
+      description = """
+          request JSON part와 TypeCode 이름의 이미지 파일 part를 전달한다. 에셋 ID로 교체하지 않는다.
+          파일을 보내지 않은 TypeCode는 기존 비활성 에셋도 유지하며 typeCodes로 inset을 수정할 수 있다.
+          새 파일은 새 활성 에셋으로 교체·연결하고, 연결 제거는 deleteTypeCodes로 요청한다. 기존 에셋과 원본 파일은 보존한다.
+          검증·저장에 실패하면 전체 수정을 롤백하고 이번에 업로드한 파일을 정리한다.
+          """)
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "테마 수정 성공", content = @Content),
+      @ApiResponse(responseCode = "400", description = "이미지 part·포맷 또는 inset이 올바르지 않은 경우"),
+      @ApiResponse(responseCode = "404", description = "TypeCode에 대응하는 컴포넌트 타입이 없는 경우")
+  })
   public ResponseEntity<Void> updateTheme(
       @PathVariable @Parameter(description = "수정할 테마의 ID", example = "1") Integer themeComponentId,
       @RequestPart(REQUEST_PART_NAME) @Valid ThemeUpdateRequest request,
@@ -94,7 +116,14 @@ public class ThemeManageController {
   }
 
   @PostMapping("/clone")
-  @Operation(summary = "인증된 사용자가 요청 본문의 이미지/색상 정보를 기반으로 테마를 복제한다")
+  @Operation(
+      summary = "인증된 사용자가 요청 본문의 이미지/색상 정보를 기반으로 테마를 복제한다",
+      description = "요청 데이터로 새 이미지 연결을 생성하므로 기존 테마에서 사용 중인 에셋도 활성 상태여야 한다. "
+          + "요청에 비활성 에셋이 하나라도 포함되면 404를 반환하고 새 테마를 포함한 복제 결과 전체를 롤백한다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "테마 복제 성공"),
+      @ApiResponse(responseCode = "404", description = "요청한 에셋이나 타입이 없거나 에셋이 비활성 상태")
+  })
   public ResponseEntity<ThemeDetailResponse> cloneTheme(
       @AuthenticationPrincipal CustomUserDetails userDetails,
       @Valid @RequestBody ThemeCloneRequest request

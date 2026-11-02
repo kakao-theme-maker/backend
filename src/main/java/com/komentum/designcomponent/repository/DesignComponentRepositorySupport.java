@@ -23,6 +23,9 @@ public class DesignComponentRepositorySupport {
 
   private final JPAQueryFactory queryFactory;
 
+  /**
+   * 사용자가 업로드한 활성 컴포넌트를 타입 정보와 함께 생성일 내림차순으로 조회한다.
+   */
   @Transactional(readOnly = true)
   public List<DesignComponent> findUploadedDesignComponents(User client) {
     QDesignComponent designComponent = QDesignComponent.designComponent;
@@ -34,11 +37,15 @@ public class DesignComponentRepositorySupport {
         .selectFrom(designComponent).distinct()
         .leftJoin(designComponent.componentTypeMappings, designComponentComponentType).fetchJoin()
         .leftJoin(designComponentComponentType.componentType, componentType).fetchJoin()
-        .where(designComponent.user.eq(client))
+        .where(designComponent.user.eq(client), designComponent.isActive.isTrue())
         .orderBy(designComponent.createdAt.desc())
         .fetch();
   }
 
+  /**
+   * 사용자의 북마크 게시글에 연결된 활성 컴포넌트를 생성일 내림차순으로 조회한다.
+   * 여러 게시글에 연결된 동일 컴포넌트는 한 번만 반환하며 기존 연결은 변경하지 않는다.
+   */
   @Transactional(readOnly = true)
   public List<DesignComponent> findBookmarkedDesignComponents(String publicUserId) {
     QDesignBoard designBoard = QDesignBoard.designBoard;
@@ -57,7 +64,8 @@ public class DesignComponentRepositorySupport {
         .join(designComponent.user, user).fetchJoin()
         .where(
             category.owner.publicUserId.eq(publicUserId),
-            categoryPost.category.categoryType.eq(CategoryType.BOOKMARK)
+            categoryPost.category.categoryType.eq(CategoryType.BOOKMARK),
+            designComponent.isActive.isTrue()
         )
         .orderBy(designComponent.createdAt.desc())
         .fetch();

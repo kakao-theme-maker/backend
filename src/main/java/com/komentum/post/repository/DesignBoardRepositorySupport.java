@@ -31,6 +31,10 @@ public class DesignBoardRepositorySupport {
   private final JPAQueryFactory queryFactory;
   private final PostRepositorySupport postRepositorySupport;
 
+  /**
+   * 활성 에셋 연결만 대상으로 게시글 상세·사용자 반응 정보를 조회하는 공통 쿼리를 구성한다.
+   * 활성 에셋이 없는 게시글은 집계와 페이징 전에 제외한다.
+   */
   private JPAQuery<DesignBoardQuery.Detail> getDesignBoardDetailBaseQuery(User client) {
     QPost post = QPost.post;
     QDesignBoard designBoard = QDesignBoard.designBoard;
@@ -59,9 +63,14 @@ public class DesignBoardRepositorySupport {
         .from(designBoard)
         .join(designBoard.designComponent, designComponent)
         .join(designBoard.post, post)
-        .join(post.user, user);
+        .join(post.user, user)
+        .where(designComponent.isActive.isTrue());
   }
 
+  /**
+   * 활성 에셋이 남은 게시글을 연결 수와 무관하게 한 건으로 집계한다.
+   * 게시글이 없거나 모든 에셋이 비활성이면 null을 반환한다.
+   */
   public DesignBoardQuery.Detail findDetailByPostId(Long postId, User client) {
     QPost post = QPost.post;
     return getDesignBoardDetailBaseQuery(client)
@@ -70,6 +79,10 @@ public class DesignBoardRepositorySupport {
         .fetchOne();
   }
 
+  /**
+   * 활성 에셋이 있는 게시글을 게시글 ID로 묶은 뒤 상세 목록을 페이징한다.
+   * 미리보기와 달리 한 게시글의 활성 에셋 수가 페이지 행 수를 늘리지 않는다.
+   */
   public List<DesignBoardQuery.Detail> findDesignBoardDetails(
       Pageable pageable,
       User client,
@@ -109,6 +122,10 @@ public class DesignBoardRepositorySupport {
         List.of(PostSortType.CREATED_DESC));
   }
 
+  /**
+   * 활성 에셋 연결행을 기준으로 미리보기를 정렬·페이징한다.
+   * 같은 게시글의 여러 활성 연결은 각각 한 행을 차지하고, 비활성 연결은 페이징 전에 제외한다.
+   */
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable,
       PostSearchCondition condition, List<PostSortType> sortTypes) {
     QPost post = QPost.post;
@@ -137,6 +154,7 @@ public class DesignBoardRepositorySupport {
         .join(post.user, user)
         .leftJoin(prefer).on(prefer.post.eq(post))
         .where(
+            designComponent.isActive.isTrue(),
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
         )
         .groupBy(

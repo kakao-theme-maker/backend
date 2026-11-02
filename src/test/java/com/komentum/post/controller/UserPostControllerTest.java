@@ -9,7 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.designcomponent.repository.ComponentTypeRepository;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.global.utils.DateUtils;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Category;
@@ -56,6 +60,10 @@ public class UserPostControllerTest {
 
   private static final String PREVIEW_IMAGE_URL = "http://mocked-url/user-post-preview.png";
   private static final String PREVIEW_IMAGE_NAME = "user-post-preview.png";
+  private static final List<String> USER_POST_PATHS = List.of(
+      "/api/users/me/upload-posts",
+      "/api/users/me/bookmarked-posts",
+      "/api/users/me/preferred-posts");
 
   @Autowired
   private MockMvc mockMvc;
@@ -90,6 +98,12 @@ public class UserPostControllerTest {
   @Autowired
   private CategoryPostRepository categoryPostRepository;
 
+  @Autowired
+  private DesignComponentRepository designComponentRepository;
+
+  @Autowired
+  private ComponentTypeRepository componentTypeRepository;
+
   private User client;
   private Post customCategoryOnlyPost;
   private PostScenarioSupport.Result postResult;
@@ -101,6 +115,10 @@ public class UserPostControllerTest {
   void setUp() {
     given(fileManager.resolvePublicFileUrl(any())).willReturn(PREVIEW_IMAGE_URL);
     given(fileManager.convertUrlToFileName(any())).willReturn(PREVIEW_IMAGE_NAME);
+    componentTypeRepository.save(ComponentType.builder()
+        .name("theme-icon")
+        .typeCode(TypeCode.COMMON_ICO_THEME)
+        .build());
 
     List<User> users = userScenarioSupport.builder()
         .withUsers(3)
@@ -217,6 +235,54 @@ public class UserPostControllerTest {
     assertThat(customCategoryPostResponse.isBookmarked()).isFalse();
   }
 
+  @Test
+  @DisplayName("일부 컴포넌트가 삭제된 디자인 게시글은 사용자 목록에서 활성 에셋을 대표 이미지로 표시한다")
+  void userPostLists_partiallyInactiveDesignPostUsesActivePreview() throws Exception {
+    List<DesignBoard> boards = postResult.designBoards().stream()
+        .filter(board -> board.getPost().getUser().getUserId().equals(client.getUserId()))
+        .sorted(Comparator.comparing(board -> board.getDesignComponent().getDesignComponentId()))
+        .toList();
+    DesignComponent deletedComponent = boards.get(0).getDesignComponent();
+    DesignComponent activeComponent = boards.get(1).getDesignComponent();
+    deletedComponent.deactivate();
+    designComponentRepository.saveAndFlush(deletedComponent);
+    given(fileManager.resolvePublicFileUrl(any()))
+        .willAnswer(invocation -> "http://mocked-url/" + invocation.getArgument(0, String.class));
+
+    for (String path : USER_POST_PATHS) {
+      UserPostListResponseDto response = requestUserPosts(path, PostType.DESIGN_BOARD).stream()
+          .filter(dto -> dto.getPostId().equals(boards.get(0).getPost().getPostId()))
+          .findFirst()
+          .orElseThrow();
+      assertThat(response.getPreviewImageUrl())
+          .containsExactly("http://mocked-url/" + activeComponent.getFileName());
+    }
+  }
+
+  @Test
+  @DisplayName("전체 컴포넌트가 삭제된 디자인 게시글은 페이징 전에 숨기고 테마 게시글은 유지한다")
+  void userPostLists_inactiveDesignPostsAreHiddenBeforePagination() throws Exception {
+    List<DesignComponent> components = designComponentRepository.findAll();
+    components.forEach(DesignComponent::deactivate);
+    designComponentRepository.saveAllAndFlush(components);
+
+    for (String path : USER_POST_PATHS) {
+      assertThat(requestUserPosts(path, PostType.DESIGN_BOARD)).isEmpty();
+      List<Long> expectedThemePostIds = switch (path) {
+        case "/api/users/me/upload-posts" -> expectedUploadedPostIds(PostType.THEME_BOARD);
+        case "/api/users/me/bookmarked-posts" -> expectedBookmarkedPostIds(PostType.THEME_BOARD);
+        default -> expectedPreferredPostIds(PostType.THEME_BOARD);
+      };
+      assertUserPostListResponse(requestUserPosts(path, null), expectedThemePostIds);
+      MvcResult result = performGet(path, null, 1);
+      List<UserPostListResponseDto> firstPage = objectMapper.readValue(
+          result.getResponse().getContentAsString(), new TypeReference<>() {
+          });
+      assertThat(firstPage).extracting(UserPostListResponseDto::getPostId)
+          .containsExactly(expectedThemePostIds.get(0));
+    }
+  }
+
   private void assertEndpointFilters(String path, List<Long> allPostIds, List<Long> themePostIds,
       List<Long> designPostIds) throws Exception {
     assertUserPostListResponse(requestUserPosts(path, null), allPostIds);
@@ -260,7 +326,11 @@ public class UserPostControllerTest {
   }
 
   private MvcResult performGet(String path, PostType postType) throws Exception {
-    MockHttpServletRequestBuilder requestBuilder = get(path);
+    return performGet(path, postType, 20);
+  }
+
+  private MvcResult performGet(String path, PostType postType, int pageSize) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = get(path).param("size", String.valueOf(pageSize));
     if (postType != null) {
       requestBuilder.param("postType", postType.name());
     }

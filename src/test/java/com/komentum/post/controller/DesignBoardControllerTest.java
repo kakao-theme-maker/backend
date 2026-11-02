@@ -3,6 +3,7 @@ package com.komentum.post.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,6 +19,7 @@ import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Prefer;
+import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
@@ -241,6 +243,276 @@ public class DesignBoardControllerTest {
   private ComponentType getComponentType(TypeCode typeCode) {
     componentTypeSeeder.upsertComponentType();
     return componentTypeRepository.findAllByTypeCodeIn(List.of(typeCode)).get(0);
+  }
+
+  private void deleteComponent(DesignComponent component) throws Exception {
+    mockMvc.perform(mockMvcUtils.addAuthentication(
+            delete("/api/design-components/{id}", component.getDesignComponentId()),
+            TestClientDto.fromEntity(component.getUser())))
+        .andExpect(status().isNoContent());
+  }
+
+  private DesignBoardDetailDto requestDesignBoardDetail(Long postId, User client) throws Exception {
+    return mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, DesignBoardDetailDto>builder()
+            .mockMvc(mockMvc)
+            .httpMethod(HttpMethod.GET)
+            .path("/api/design-boards/" + postId)
+            .clientDto(TestClientDto.fromEntity(client))
+            .responseType(new TypeReference<>() {
+            })
+            .build());
+  }
+
+  @Test
+  @DisplayName("일부 에셋 삭제 후 게시글 단건·목록은 활성 ID·이미지·타입만 표시하고 대표 이미지를 교체한다")
+  void partiallyInactiveDesignPost_onlyExposesActiveAssets() throws Exception {
+    Post targetPost = postResult.posts().get(0);
+    List<DesignComponent> components = designComponentResult.designComponents().stream()
+        .filter(component -> component.getUser().getUserId().equals(targetPost.getUser().getUserId()))
+        .sorted(Comparator.comparing(DesignComponent::getDesignComponentId))
+        .toList();
+    List<TypeCode> typeCodes = List.of(TypeCode.COMMON_ICO_THEME,
+        TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE, TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE);
+    componentTypeSeeder.upsertComponentType();
+    for (int i = 0; i < components.size(); i++) {
+      ComponentType componentType = componentTypeRepository
+          .findAllByTypeCodeIn(List.of(typeCodes.get(i))).get(0);
+      components.get(i).replaceComponentTypes(List.of(componentType));
+    }
+    designComponentRepository.saveAllAndFlush(components);
+    targetPost.setPreviewImageName("partial-composite.png");
+    postRepository.saveAndFlush(targetPost);
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
+        .thenAnswer(invocation -> "http://mocked-url/" + invocation.getArgument(0, String.class));
+    deleteComponent(components.get(0));
+
+    String activePreviewUrl = "http://mocked-url/" + components.get(1).getFileName();
+    List<Integer> activeIds = components.subList(1, 3).stream()
+        .map(DesignComponent::getDesignComponentId).toList();
+    List<TypeCode> activeTypes = typeCodes.subList(1, 3);
+    List<DesignBoardPreviewDto> previews = requestDesignBoardPreviews(TestParams.withPaging(0, 100),
+        targetPost.getUser()).stream()
+        .filter(dto -> dto.getPostId().equals(targetPost.getPostId()))
+        .toList();
+    assertThat(previews).extracting(DesignBoardPreviewDto::getDesignComponentId)
+        .containsExactlyInAnyOrderElementsOf(activeIds);
+    previews.forEach(dto -> {
+      assertThat(dto.getPreviewImageUrl()).isEqualTo(activePreviewUrl);
+      assertThat(dto.getComponentTypes()).extracting(BoardComponentTypeDto::getTypeCode)
+          .containsExactlyInAnyOrderElementsOf(activeTypes);
+    });
+
+    DesignBoardDetailDto detail = requestDesignBoardDetail(targetPost.getPostId(), targetPost.getUser());
+    DesignBoardDetailDto listedDetail = requestDesignBoardDetails(TestParams.withPaging(0, 100),
+        targetPost.getUser()).stream()
+        .filter(dto -> dto.getPostId().equals(targetPost.getPostId()))
+        .findFirst().orElseThrow();
+    for (DesignBoardDetailDto dto : List.of(detail, listedDetail)) {
+      assertThat(dto.getPreviewImageUrl()).hasSize(3).first().isEqualTo(activePreviewUrl);
+      assertThat(dto.getPreviewImageUrl()).contains("http://mocked-url/" + components.get(2).getFileName())
+          .doesNotContain("http://mocked-url/" + components.get(0).getFileName(),
+              "http://mocked-url/partial-composite.png");
+      assertThat(dto.getComponentTypes()).extracting(BoardComponentTypeDto::getTypeCode)
+          .containsExactlyInAnyOrderElementsOf(activeTypes);
+    }
+    assertThat(designBoardRepository.findByPost_PostId(targetPost.getPostId())).hasSize(3);
+    assertThat(designComponentRepository.findById(components.get(0).getDesignComponentId()))
+        .get().extracting(DesignComponent::getIsActive).isEqualTo(false);
+  }
+
+  @Test
+  @DisplayName("모든 에셋 삭제 후 게시글 단건은 404이며 목록은 페이징 전에 게시글을 제외한다")
+  void whollyInactiveDesignPosts_areHiddenBeforePagination() throws Exception {
+    Post targetPost = postResult.posts().stream().max(Comparator.comparing(Post::getPostId))
+        .orElseThrow();
+    for (DesignComponent component : designComponentResult.designComponents()) {
+      if (component.getUser().getUserId().equals(targetPost.getUser().getUserId())) {
+        deleteComponent(component);
+      }
+    }
+    List<Long> hiddenPostIds = postResult.posts().stream()
+        .filter(post -> post.getUser().getUserId().equals(targetPost.getUser().getUserId()))
+        .map(Post::getPostId).toList();
+    mockMvc.perform(get("/api/design-boards/{postId}", targetPost.getPostId()))
+        .andExpect(status().isNotFound());
+    assertThat(requestDesignBoardPreviews(TestParams.withPaging(0, 100), targetPost.getUser()))
+        .extracting(DesignBoardPreviewDto::getPostId)
+        .doesNotContainAnyElementsOf(hiddenPostIds);
+    assertThat(requestDesignBoardDetails(TestParams.withPaging(0, 100), targetPost.getUser()))
+        .extracting(DesignBoardDetailDto::getPostId)
+        .doesNotContainAnyElementsOf(hiddenPostIds);
+    assertThat(requestDesignBoardPreviews(TestParams.withPaging(0, 1), targetPost.getUser())).hasSize(1);
+    assertThat(requestDesignBoardDetails(TestParams.withPaging(0, 1), targetPost.getUser())).hasSize(1);
+    assertThat(postRepository.findById(targetPost.getPostId())).isPresent();
+    assertThat(designBoardRepository.findByPost_PostId(targetPost.getPostId())).hasSize(3);
+  }
+
+  @Test
+  @DisplayName("삭제된 에셋을 사용한 게시글 생성은 파일 업로드 전에 404로 거절한다")
+  void createDesignBoard_inactiveComponentIsRejectedBeforeUpload() throws Exception {
+    DesignComponent component = designComponentResult.designComponents().get(0);
+    deleteComponent(component);
+    long postCount = postRepository.count();
+    long boardCount = designBoardRepository.count();
+    DesignBoardCreateDto createDto = DesignBoardCreateDto.builder()
+        .title("inactive asset").content("must not be saved")
+        .designComponentIds(List.of(component.getDesignComponentId()))
+        .postTags(List.of()).build();
+    Mockito.clearInvocations(fileManager);
+    mockMvcUtils.doAuthMultipartRequest(MockMvcMultipartRequestDto.<Void>builder()
+        .mockMvc(mockMvc).path("/api/design-boards").httpMethod(HttpMethod.POST)
+        .clientDto(TestClientDto.fromEntity(component.getUser())).statusCode(404)
+        .formDataList(List.of(MockMultipartFileUtils.generateJsonFormData("boardInfo", createDto),
+            MockMultipartFileUtils.generateImageFormData("previewImage", ImageExtension.PNG)))
+        .responseType(new TypeReference<>() {
+        }).build());
+    Mockito.verify(fileManager, Mockito.never()).uploadPublicFile(any(byte[].class), anyString());
+    assertThat(postRepository.count()).isEqualTo(postCount);
+    assertThat(designBoardRepository.count()).isEqualTo(boardCount);
+  }
+
+  @Test
+  @DisplayName("삭제된 에셋을 새로 연결하는 게시글 수정은 404이며 기존 데이터가 유지된다")
+  void updateDesignBoard_newInactiveComponentIsRejectedBeforeMutation() throws Exception {
+    Post targetPost = postResult.posts().get(0);
+    DesignComponent replacement = designComponentRepository.saveAndFlush(DesignComponent.builder()
+        .user(targetPost.getUser()).fileName("inactive-replacement.png").isPublic(true).build());
+    deleteComponent(replacement);
+    List<Integer> originalIds = designBoardRepository.findByPost_PostId(targetPost.getPostId()).stream()
+        .map(board -> board.getDesignComponent().getDesignComponentId()).toList();
+    String originalTitle = targetPost.getTitle();
+    String originalContent = targetPost.getContent();
+    String originalPreview = targetPost.getPreviewImageName();
+    long boardCount = designBoardRepository.count();
+    DesignBoardUpdateDto updateDto = DesignBoardUpdateDto.builder()
+        .title("must roll back").content("must roll back")
+        .designComponentIds(List.of(originalIds.get(0), replacement.getDesignComponentId()))
+        .postTags(List.of(TagUpdateDto.builder().tagName("must roll back").build())).build();
+    mockMvcUtils.doAuthMultipartRequest(MockMvcMultipartRequestDto.<Void>builder()
+        .mockMvc(mockMvc).path("/api/design-boards/" + targetPost.getPostId()).httpMethod(HttpMethod.PATCH)
+        .clientDto(TestClientDto.fromEntity(targetPost.getUser())).statusCode(404)
+        .formDataList(List.of(MockMultipartFileUtils.generateJsonFormData("boardInfo", updateDto),
+            MockMultipartFileUtils.generateImageFormData("previewImage", ImageExtension.PNG)))
+        .responseType(new TypeReference<>() {
+        }).build());
+    Post unchanged = postRepository.findById(targetPost.getPostId()).orElseThrow();
+    assertThat(unchanged.getTitle()).isEqualTo(originalTitle);
+    assertThat(unchanged.getContent()).isEqualTo(originalContent);
+    assertThat(unchanged.getPreviewImageName()).isEqualTo(originalPreview);
+    assertThat(designBoardRepository.findByPost_PostId(targetPost.getPostId()))
+        .extracting(board -> board.getDesignComponent().getDesignComponentId())
+        .containsExactlyInAnyOrderElementsOf(originalIds);
+    assertThat(designBoardRepository.count()).isEqualTo(boardCount);
+    assertThat(requestDesignBoardDetail(targetPost.getPostId(), targetPost.getUser()).getTags()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("기존 삭제된 에셋 연결을 유지하는 게시글 수정은 성공하고 활성 에셋만 응답한다")
+  void updateDesignBoard_retainedInactiveComponentRemainsLinked() throws Exception {
+    Post targetPost = postResult.posts().get(0);
+    List<DesignComponent> components = designComponentResult.designComponents().stream()
+        .filter(component -> component.getUser().getUserId().equals(targetPost.getUser().getUserId()))
+        .toList();
+    deleteComponent(components.get(0));
+    List<Integer> originalIds = components.stream().map(DesignComponent::getDesignComponentId).toList();
+    DesignBoardUpdateDto updateDto = DesignBoardUpdateDto.builder()
+        .title("retained inactive asset").designComponentIds(originalIds).postTags(List.of()).build();
+    DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
+        MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
+            .mockMvc(mockMvc).path("/api/design-boards/" + targetPost.getPostId()).httpMethod(HttpMethod.PATCH)
+            .clientDto(TestClientDto.fromEntity(targetPost.getUser()))
+            .formDataList(List.of(MockMultipartFileUtils.generateJsonFormData("boardInfo", updateDto)))
+            .responseType(new TypeReference<>() {
+            }).build());
+    assertThat(response.getTitle()).isEqualTo("retained inactive asset");
+    assertThat(response.getPreviewImageUrl()).hasSize(3);
+    assertThat(designBoardRepository.findByPost_PostId(targetPost.getPostId()))
+        .extracting(board -> board.getDesignComponent().getDesignComponentId())
+        .containsExactlyInAnyOrderElementsOf(originalIds);
+  }
+
+  @Test
+  @DisplayName("삭제된 에셋 연결을 제거하면 기존 합성 대표 이미지 대신 활성 에셋을 복사한 이미지를 저장한다")
+  void updateDesignBoard_removingInactiveLinksReplacesOwnedPreview()
+      throws Exception {
+    Post targetPost = postResult.posts().get(0);
+    List<DesignComponent> components = designComponentResult.designComponents().stream()
+        .filter(component -> component.getUser().getUserId().equals(targetPost.getUser().getUserId()))
+        .sorted(Comparator.comparing(DesignComponent::getDesignComponentId)).toList();
+    String oldPreview = "owned-post-composite.png";
+    targetPost.setPreviewImageName(oldPreview);
+    postRepository.saveAndFlush(targetPost);
+    deleteComponent(components.get(0));
+    Mockito.when(fileManager.resolvePublicFileUrl(anyString()))
+        .thenAnswer(invocation -> "http://mocked-url/" + invocation.getArgument(0, String.class));
+    Mockito.when(fileManager.downloadFile(components.get(1).getFileName()))
+        .thenReturn(new byte[]{1, 2, 3});
+    Mockito.clearInvocations(fileManager);
+    DesignBoardUpdateDto updateDto = DesignBoardUpdateDto.builder()
+        .designComponentIds(List.of(components.get(2).getDesignComponentId(),
+            components.get(1).getDesignComponentId()))
+        .build();
+    DesignBoardDetailDto response = mockMvcUtils.doAuthMultipartRequest(
+        MockMvcMultipartRequestDto.<DesignBoardDetailDto>builder()
+            .mockMvc(mockMvc).path("/api/design-boards/" + targetPost.getPostId()).httpMethod(HttpMethod.PATCH)
+            .clientDto(TestClientDto.fromEntity(targetPost.getUser()))
+            .formDataList(List.of(MockMultipartFileUtils.generateJsonFormData("boardInfo", updateDto)))
+            .responseType(new TypeReference<>() {
+            }).build());
+    String newPreview = postRepository.findById(targetPost.getPostId()).orElseThrow()
+        .getPreviewImageName();
+    assertThat(newPreview).isNotBlank().isNotEqualTo(oldPreview)
+        .isNotIn(components.stream().map(DesignComponent::getFileName).toList());
+    assertThat(response.getPreviewImageUrl()).hasSize(3).first()
+        .isEqualTo("http://mocked-url/" + newPreview);
+    assertThat(response.getPreviewImageUrl())
+        .doesNotContain("http://mocked-url/" + oldPreview,
+            "http://mocked-url/" + components.get(0).getFileName());
+    Mockito.verify(fileManager).downloadFile(components.get(1).getFileName());
+    Mockito.verify(fileManager).deleteFile(oldPreview);
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 디자인 게시글 단건 조회는 404를 반환한다")
+  void findDesignBoard_missingPostReturnsNotFound() throws Exception {
+    mockMvc.perform(get("/api/design-boards/{postId}", Long.MAX_VALUE))
+        .andExpect(status().isNotFound());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("수정 결과에 활성 에셋이 없는 게시글은 파일 업로드와 데이터 변경 전에 404로 거절한다")
+  void updateDesignBoard_withoutActiveResultIsRejectedBeforeMutation(boolean alreadyHidden)
+      throws Exception {
+    Post targetPost = postResult.posts().get(0);
+    List<DesignComponent> components = designComponentResult.designComponents().stream()
+        .filter(component -> component.getUser().getUserId().equals(targetPost.getUser().getUserId()))
+        .toList();
+    for (DesignComponent component : alreadyHidden ? components : List.of(components.get(0))) {
+      deleteComponent(component);
+    }
+    DesignBoardUpdateDto updateDto = DesignBoardUpdateDto.builder()
+        .title("must stay hidden").content("must not change")
+        .designComponentIds(alreadyHidden ? null : List.of(components.get(0).getDesignComponentId()))
+        .postTags(List.of()).build();
+    Mockito.clearInvocations(fileManager);
+    mockMvcUtils.doAuthMultipartRequest(MockMvcMultipartRequestDto.<Void>builder()
+        .mockMvc(mockMvc).path("/api/design-boards/" + targetPost.getPostId()).httpMethod(HttpMethod.PATCH)
+        .clientDto(TestClientDto.fromEntity(targetPost.getUser())).statusCode(404)
+        .formDataList(List.of(MockMultipartFileUtils.generateJsonFormData("boardInfo", updateDto),
+            MockMultipartFileUtils.generateImageFormData("previewImage", ImageExtension.PNG)))
+        .responseType(new TypeReference<>() {
+        }).build());
+    Mockito.verify(fileManager, Mockito.never()).uploadPublicFile(any(byte[].class), anyString());
+    Post unchanged = postRepository.findById(targetPost.getPostId()).orElseThrow();
+    assertThat(unchanged.getTitle()).isEqualTo(targetPost.getTitle());
+    assertThat(unchanged.getContent()).isEqualTo(targetPost.getContent());
+    assertThat(unchanged.getPreviewImageName()).isEqualTo(targetPost.getPreviewImageName());
+    assertThat(designBoardRepository.findByPost_PostId(targetPost.getPostId()))
+        .extracting(board -> board.getDesignComponent().getDesignComponentId())
+        .containsExactlyInAnyOrderElementsOf(components.stream()
+            .map(DesignComponent::getDesignComponentId).toList());
   }
 
   @Test
