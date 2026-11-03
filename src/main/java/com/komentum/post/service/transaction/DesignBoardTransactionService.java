@@ -1,6 +1,7 @@
 package com.komentum.post.service.transaction;
 
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.Tag;
@@ -21,7 +22,6 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -47,27 +47,32 @@ public class DesignBoardTransactionService {
   private final DesignBoardRepository designBoardRepository;
 
   /**
-   * 게시글 ID로 디자인 에셋 게시글 상세 정보를 조회한다.
+   * 활성 에셋이 남은 디자인 게시글의 상세 응답을 이미지·타입·태그와 함께 조립한다.
    *
-   * @param postId 게시글 ID
    * @param userIdentifier 사용자 식별자 (비인증 요청은 null)
-   * @return 디자인 에셋 게시글 상세 정보
+   * @throws ResourceNotFoundException 게시글 연결이 없거나 활성 에셋이 하나도 없는 경우
    */
   @Transactional(readOnly = true)
   public DesignBoardDetailDto findDesignBoardDetail(Long postId, String userIdentifier) {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
-      throw new EntityNotFoundException("cannot find design board with post id = " + postId);
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
     }
     User client = userIdentifier == null ? null : userEntityFinder.findUserEntity(userIdentifier);
     DesignBoardQuery.Detail detail = designBoardRepositorySupport
         .findDetailByPostId(postId, client);
+    // 상세 쿼리는 활성 에셋만 대상으로 하므로 기존 연결이 있어도 모두 비활성이면 조회되지 않는다.
+    if (detail == null) {
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
+    }
     List<Tag> tags = tagService.findAllByPostId(postId);
-    // generate preview image url list
+    // 대표 이미지 대체 여부는 비활성을 포함한 전체 연결로 판단하고 에셋 이미지는 활성만 노출한다.
     Post targetPost = postService.getPostByPostId(postId);
-    String previewImageUrl =
-        helper.findPreviewImageUrl(targetPost.getPreviewImageName());
     List<DesignBoard> designBoards = designBoardService.findWithDesignComponentsByPostId(postId);
+    String previewImageUrl =
+        helper.findPreviewImageUrl(designBoardService.resolveVisiblePreviewImageName(
+            targetPost.getPreviewImageName(), designBoards));
     List<String> designImageUrls = designBoards.stream()
+        .filter(board -> Boolean.TRUE.equals(board.getDesignComponent().getIsActive()))
         .map(DesignBoard::getDesignComponent)
         .collect(Collectors.toMap(DesignComponent::getDesignComponentId,
             Function.identity(), (first, ignored) -> first, LinkedHashMap::new))
@@ -80,7 +85,7 @@ public class DesignBoardTransactionService {
         )
         .filter(Objects::nonNull)
         .toList();
-    // generate response dto
+    // 타입과 매핑도 활성 에셋만 대상으로 조립해 이미지와 동일한 노출 정책을 적용한다.
     DesignBoardDetailDto response = designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
         tags,
@@ -113,6 +118,9 @@ public class DesignBoardTransactionService {
 
   /**
    * 게시글과 태그 및 요청된 매핑을 한 트랜잭션에서 수정하고 이전 대표 이미지명을 반환한다.
+   * 매핑 목록이 null이면 기존 연결을 유지하며 파일 저장·삭제는 호출 측에 맡긴다.
+   *
+   * @throws ResourceNotFoundException 게시글의 에셋 연결이 없는 경우
    */
   @Transactional
   public String updateDesignBoardAndGetOldFileName(
@@ -122,7 +130,7 @@ public class DesignBoardTransactionService {
       List<DesignBoard> requestedMappings
   ) {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
-      throw new EntityNotFoundException("cannot find design board with post id = " + postId);
+      throw new ResourceNotFoundException("Design board not found with post id: " + postId);
     }
     // update post info
     PostUpdateDto postUpdateDto = postDtoMapper.toPostUpdateDto(updateDto, previewImageName);

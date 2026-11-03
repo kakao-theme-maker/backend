@@ -8,6 +8,7 @@ import com.komentum.theme.core.service.ThemeRetrieveService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +54,11 @@ public class ThemeRetrieveController {
   }
 
   @GetMapping("/{themeComponentId}")
-  @Operation(summary = "사용자가 ID로 특정 테마를 조회한다")
+  @Operation(
+      summary = "사용자가 ID로 특정 테마를 조회한다",
+      description = "완성 여부와 관계없이 저장된 이미지 연결을 통해 비활성 에셋의 ID·이미지 URL·inset도 반환한다. "
+          + "기존 에셋 표시는 이 응답을 사용하며, 비활성 에셋의 DesignComponent 직접 조회는 404를 반환한다.")
+  @ApiResponse(responseCode = "200", description = "비활성 에셋의 기존 연결을 포함한 테마 조회 성공")
   public ResponseEntity<ThemeDetailResponse> findThemeById(
       @PathVariable @Parameter(description = "조회할 테마의 ID", example = "1") Integer themeComponentId) {
     return ResponseEntity.ok(themeRetrieveService.findThemeDetail(themeComponentId));

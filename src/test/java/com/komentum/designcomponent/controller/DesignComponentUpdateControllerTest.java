@@ -107,4 +107,47 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
     assertThat(afterComponent.getIsPublic()).isFalse();
   }
 
+  @Test
+  @DisplayName("비활성 DesignComponent 수정은 업로드 전에 404를 반환한다")
+  void updateInactiveDesignComponent() throws Exception {
+    DesignComponent savedComponent = testUserComponent("image.png", false);
+    savedComponent.deactivate();
+    designComponentRepository.flush();
+
+    doMultipartRequest(
+        "/api/design-components/" + savedComponent.getDesignComponentId(),
+        HttpMethod.PUT,
+        404,
+        new TypeReference<Void>() {
+        },
+        createRequestPart(updateRequest(true)),
+        multipartFixture.imagePart("updated.png")
+    );
+
+    assertThat(savedComponent.getFileName()).isEqualTo("image.png");
+    assertThat(savedComponent.getIsPublic()).isFalse();
+    assertThat(savedComponent.getIsActive()).isFalse();
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
+  }
+
+  @Test
+  @DisplayName("비활성 DesignComponent 수정도 기존 소유자 권한을 먼저 검사한다")
+  void updateInactiveDesignComponentByOtherUser() throws Exception {
+    DesignComponent savedComponent = otherUserComponent(
+        "other@test.com", "image.png", false);
+    savedComponent.deactivate();
+    designComponentRepository.flush();
+
+    doMultipartRequest(
+        "/api/design-components/" + savedComponent.getDesignComponentId(),
+        HttpMethod.PUT,
+        403,
+        new TypeReference<Void>() {
+        },
+        createRequestPart(updateRequest(true)),
+        multipartFixture.imagePart("updated.png")
+    );
+
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
+  }
 }

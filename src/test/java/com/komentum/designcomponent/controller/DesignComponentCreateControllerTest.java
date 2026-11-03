@@ -47,6 +47,7 @@ class DesignComponentCreateControllerTest extends DesignComponentControllerTestS
     assertThat(designComponentRepository.count()).isEqualTo(1);
     DesignComponent saved = designComponentRepository.findByDesignComponentId(
         response.getDesignComponentId()).orElseThrow();
+    assertThat(saved.getIsActive()).isTrue();
     // DB에는 URL이 아닌 파일명만 저장되고, 응답의 imageUrl은 파일명으로부터 생성된다
     assertThat(saved.getFileName()).doesNotContain("://");
     verify(fileManager).uploadPublicFile(any(byte[].class), eq(saved.getFileName()));
@@ -78,6 +79,8 @@ class DesignComponentCreateControllerTest extends DesignComponentControllerTestS
         .containsOnly(testUser.getPublicUserId());
 
     assertThat(designComponentRepository.count()).isEqualTo(2);
+    assertThat(designComponentRepository.findAll()).allSatisfy(component ->
+        assertThat(component.getIsActive()).isTrue());
   }
 
   @Test

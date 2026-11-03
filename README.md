@@ -13,6 +13,7 @@
 - [Docker 실행](#docker-실행)
 - [테스트](#테스트)
 - [API 개요](#api-개요)
+- [디자인 에셋 삭제 정책](#디자인-에셋-삭제-정책)
 - [운영 및 보안 메모](#운영-및-보안-메모)
 
 ## 프로젝트 개요
@@ -284,6 +285,28 @@ Docker 이미지 빌드 시 Gradle이 `backend_config`의 설정 파일을 복�
 | Category | `GET, POST /api/categories`<br>`PATCH, DELETE /api/categories/{categoryId}`<br>`PUT, DELETE /api/categories/{categoryId}/posts/{postId}` |
 | Bookmark | `PUT, DELETE /api/bookmarks/posts/{postId}`<br>`GET /api/users/me/bookmarked-posts`<br>`GET /api/design-components/bookmarked`<br>`GET /api/themes/bookmarked` |
 | User | `PATCH /api/users/me/gender`<br>`PATCH /api/users/me/birth` |
+
+## 디자인 에셋 삭제 정책
+
+디자인 에셋 삭제는 비활성화 처리입니다. 기존 참조를 위해 DB 행과 이미지 파일을 보존하며,
+이미 저장된 테마는 완성 여부와 관계없이 아래 정책을 적용합니다.
+표는 비활성 상태에 따른 제약을 설명하며, 기존 인증·권한·요청 검증 조건은 별도로 적용됩니다.
+
+| 대상 | 핵심 정책 |
+| --- | --- |
+| 디자인 에셋 | 비활성 에셋은 직접 조회·수정 시 404, 목록에서 제외. 수정 권한이 없으면 활성 여부 검사 전에 403. 삭제·재삭제는 소유자·관리자 권한 검사 후 204 |
+| 디자인 게시글 조회 | 활성 에셋의 정보만 표시. 일부 에셋이 비활성이면 응답의 대표 이미지를 가장 작은 ID의 활성 에셋 이미지로 대체. 모두 비활성이면 목록 제외·상세 404 |
+| 디자인 게시글 생성·수정 | 비활성 에셋 신규 연결·제거 후 재연결은 404. 기존 비활성 연결 유지는 허용하지만 수정 결과에 활성 에셋이 하나 이상 남아야 함 |
+| 기존 테마 | 조회·미리보기·Android/iOS 빌드·이름·색상 수정 허용. 파일을 보내지 않으면 기존 비활성 에셋 유지·inset 수정 허용. 연결 제거는 deleteTypeCodes로 요청 |
+| 테마의 에셋 변경 | 에셋 ID 대신 TypeCode 이름의 이미지 파일 part로 교체·새 연결. 새 활성 에셋을 생성하며 기존 에셋과 원본 파일은 보존 |
+| 테마 생성·복제 | 기본 테마 복사 대상이나 복제 요청에 비활성 에셋이 포함되면 404로 전체 실패 |
+| 테마 게시글·통합 목록 | 기존 테마 게시글은 유지. 통합 목록에서 DESIGN은 비활성 제외, THEME은 유지 |
+
+FE 참고 사항:
+
+- 테마 수정은 multipart 요청으로 request JSON과 TypeCode별 이미지 파일을 전달합니다. typeCodes는 inset 정보이며, 연결 제거는 null 대신 deleteTypeCodes를 사용합니다.
+- 기존 테마 이미지는 테마 조회 응답으로 표시하며, 에셋 단건 API로 재조회하면 404가 될 수 있습니다.
+- 테마 조회 성공이 복제 가능을 의미하지 않습니다. 복제 요청에 비활성 에셋이 포함되면 실패합니다.
 
 ## 운영 및 보안 메모
 

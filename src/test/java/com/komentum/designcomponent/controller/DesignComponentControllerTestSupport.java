@@ -22,6 +22,7 @@ import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.fixture.component.DesignComponentDataGenerator;
 import com.komentum.test.fixture.component.DesignComponentMultipartFixture;
 import com.komentum.user.domain.User;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,6 +82,9 @@ abstract class DesignComponentControllerTestSupport {
 
   @Autowired
   protected CategoryPostRepository categoryPostRepository;
+
+  @Autowired
+  protected EntityManager entityManager;
 
   protected User testUser;
   protected TestClientDto testClient;
@@ -147,11 +151,21 @@ abstract class DesignComponentControllerTestSupport {
     return userDataGenerator.generateTestUser(email);
   }
 
-  private void authenticateAs(User user) {
+  /**
+   * 테스트 요청에 사용할 일반 사용자 인증 정보를 설정한다.
+   */
+  protected void authenticateAs(User user) {
+    authenticateAs(user, UserRole.USER);
+  }
+
+  /**
+   * 지정한 권한으로 테스트 요청의 인증 정보를 설정한다.
+   */
+  protected void authenticateAs(User user, UserRole role) {
     CustomUserDetails userDetails = CustomUserDetails.builder()
         .userEmail(user.getUserEmail())
         .publicUserId(user.getPublicUserId())
-        .userRole(UserRole.USER)
+        .userRole(role)
         .build();
 
     Authentication auth = new UsernamePasswordAuthenticationToken(

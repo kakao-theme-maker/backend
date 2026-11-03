@@ -39,6 +39,10 @@ public class DesignComponent {
   @Column(name = "is_public")
   private Boolean isPublic;
 
+  @Builder.Default
+  @Column(name = "is_active", nullable = false)
+  private Boolean isActive = true;
+
   @CreationTimestamp
   @Column(updatable = false)
   private LocalDateTime createdAt;
@@ -53,6 +57,14 @@ public class DesignComponent {
     if (isPublic != null) {
       this.isPublic = isPublic;
     }
+  }
+
+  /**
+   * 컴포넌트를 비활성 상태로 전환하고 파일명은 유지한다.
+   * 이미 비활성인 경우에도 상태는 그대로 유지한다.
+   */
+  public void deactivate() {
+    this.isActive = false;
   }
 
 }

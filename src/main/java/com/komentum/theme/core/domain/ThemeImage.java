@@ -2,7 +2,7 @@ package com.komentum.theme.core.domain;
 
 import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.theme.core.dto.ThemeUpdateRequest.ThemeImageUpdateRequest;
+import com.komentum.theme.core.dto.ThemeUpdateRequest.InsetUpdateDto;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -50,6 +50,10 @@ public class ThemeImage {
   @Embedded
   private ImageInset imageInset;
 
+  /**
+   * 원본의 컴포넌트와 타입을 참조하는 새 테마 이미지 연결을 생성한다.
+   * 에셋과 이미지 파일은 공유하며, 새 연결에 사용할 컴포넌트의 활성 검증은 호출 측에서 수행한다.
+   */
   public static ThemeImage copyOf(ThemeComponent targetTheme, ThemeImage sourceImage) {
     return ThemeImage.builder()
         .themeComponent(targetTheme)
@@ -58,10 +62,15 @@ public class ThemeImage {
         .build();
   }
 
-  public void update(DesignComponent designComponent, ThemeImageUpdateRequest updateRequest) {
-    this.designComponent = designComponent;
-    if (updateRequest.getInset() != null) {
-      this.imageInset = ImageInset.from(updateRequest.getInset());
+  /**
+   * 이미지가 참조하는 designComponent와 inset 정보를 갱신한다. null인 값은 기존 정보를 유지한다.
+   */
+  public void update(DesignComponent designComponent, InsetUpdateDto inset) {
+    if (designComponent != null) {
+      this.designComponent = designComponent;
+    }
+    if (inset != null) {
+      this.imageInset = ImageInset.from(inset);
     }
   }
 }

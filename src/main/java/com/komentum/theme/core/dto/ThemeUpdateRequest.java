@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,11 +27,14 @@ public class ThemeUpdateRequest {
   @Schema(description = "변경할 테마의 이름")
   String themeName;
 
-  @Schema(description = "변경할 이미지에 대한 typeCode:이미지 맵")
+  @Schema(description = "변경할 이미지 정보에 대한 typeCode:이미지 정보 맵, 이미지 파일은 typeCode 이름의 part로 전달한다. 사용 가능한 typeCode는 Schemas의 TypeCode 참고")
   Map<TypeCode, ThemeImageUpdateRequest> typeCodes;
 
-  @Schema(description = "변경할 색상에 대한 styleCode:색상 맵")
+  @Schema(description = "변경할 색상에 대한 styleCode:색상 맵. 사용 가능한 styleCode는 Schemas의 StyleCode 참고")
   Map<StyleCode, ThemeStyleUpdateRequest> styleCodes;
+
+  @Schema(description = "제거할 이미지의 typeCode 목록")
+  Set<TypeCode> deleteTypeCodes;
 
   @Getter
   @Setter
@@ -40,8 +44,6 @@ public class ThemeUpdateRequest {
   @Schema(description = "수정할 이미지 정보")
   public static class ThemeImageUpdateRequest {
 
-    @Schema(description = "수정할 이미지 식별자(ID)")
-    Integer designComponentId;
     @Schema(description = "이미지 inset 정보 ( 말풍선인 경우 ), nullable")
     InsetUpdateDto inset;
   }

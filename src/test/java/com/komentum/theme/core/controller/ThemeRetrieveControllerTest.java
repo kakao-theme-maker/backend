@@ -6,8 +6,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.domain.PlatformComponentType;
+import com.komentum.designcomponent.enums.Platform;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.enums.TypeCodeGroup;
+import com.komentum.designcomponent.repository.DesignComponentRepository;
+import com.komentum.global.enums.FileExtension;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.ThemeBoard;
 import com.komentum.test.MockMvcUtils;
@@ -25,20 +29,36 @@ import com.komentum.test.data.scenario.UserScenarioSupport.UserScenarioResult;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto.ExecutionContext;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.theme.android.dto.AndroidComponentDto;
+import com.komentum.theme.android.editor.AndroidThemeImageEditor;
+import com.komentum.theme.android.utils.ThemePathManager;
 import com.komentum.theme.core.domain.ThemeComponent;
+import com.komentum.theme.core.domain.ThemeImage;
 import com.komentum.theme.core.dto.ThemeComponentDto;
 import com.komentum.theme.core.dto.ThemeDetailResponse;
 import com.komentum.theme.core.dto.ThemeDetailResponse.TypeCodeInfo;
 import com.komentum.theme.core.dto.ThemePreviewDto;
+import com.komentum.theme.core.repository.ThemeComponentRepository;
+import com.komentum.theme.core.service.ThemeImageService;
+import com.komentum.theme.ios.editor.IosThemeImageEditor;
 import com.komentum.user.domain.User;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -82,7 +102,19 @@ class ThemeRetrieveControllerTest {
   private DesignComponentScenarioSupport designComponentScenarioSupport;
 
   @Autowired
+  private DesignComponentRepository designComponentRepository;
+
+  @Autowired
+  private ThemeComponentRepository themeComponentRepository;
+
+  @Autowired
+  private ThemeImageService themeImageService;
+
+  @Autowired
   private FileManager fileManager;
+
+  @TempDir
+  Path tempDir;
 
   private TestClientDto testClient;
   private User testUser;
@@ -178,6 +210,118 @@ class ThemeRetrieveControllerTest {
         assertThat(typeCodeInfo.getInset()).isNotNull();
       }
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("에셋 삭제 후에도 완성 또는 작성 중 테마의 기존 이미지와 식별자는 조회된다")
+  void findThemeById_includesDeletedComponentInCompletedAndDraftThemes(boolean isDone)
+      throws Exception {
+    ThemeComponent toFind = tcResult.themeComponents().get(0);
+    ThemeComponent persistedTheme = themeComponentRepository
+        .findById(toFind.getThemeComponentId()).orElseThrow();
+    persistedTheme.setIsDone(isDone);
+    themeComponentRepository.saveAndFlush(persistedTheme);
+    ThemeImage preservedImage = toFind.getThemeImages().iterator().next();
+    Integer componentId = preservedImage.getDesignComponent().getDesignComponentId();
+    DesignComponent component = designComponentRepository.findByDesignComponentId(componentId)
+        .orElseThrow();
+    deleteComponent(component);
+
+    ResultActions result = mockMvcUtils.performRequest(
+        MockMvcRequestBuilders.get("/api/themes/{id}", toFind.getThemeComponentId()),
+        ExecutionContext.builder().mockMvc(mockMvc).build());
+    result.andExpect(status().isOk());
+    ThemeDetailResponse response = mockMvcUtils.parseResponse(result, new TypeReference<>() {
+    });
+
+    assertThat(response.getTypeCodes()).hasSize(toFind.getThemeImages().size());
+    TypeCodeInfo preservedInfo = response.getTypeCodes()
+        .get(preservedImage.getComponentType().getTypeCode());
+    assertThat(preservedInfo.getDesignComponentId()).isEqualTo(componentId);
+    assertThat(preservedInfo.getImageUrl()).isEqualTo("http://mocked-url/1234567890");
+    assertThat(designComponentRepository.findByDesignComponentId(componentId).orElseThrow()
+        .getIsActive()).isFalse();
+    assertThat(themeComponentRepository.findById(toFind.getThemeComponentId()).orElseThrow()
+        .getIsDone()).isEqualTo(isDone);
+  }
+
+  @Test
+  @DisplayName("에셋 삭제 전후 Android와 iOS 이미지 생성 결과가 같다")
+  void buildImages_preservesSameFileAfterDelete() throws Exception {
+    ThemeComponent theme = tcResult.themeComponents().get(0);
+    ThemeImage beforeImage = findFriendsImage(theme.getThemeComponentId());
+    DesignComponent component = beforeImage.getDesignComponent();
+    String originalFileName = component.getFileName();
+    BufferedImage sourceImage = new BufferedImage(2, 2, BufferedImage.TYPE_INT_ARGB);
+    sourceImage.setRGB(0, 0, 0xffff0000);
+    sourceImage.setRGB(1, 1, 0xff0000ff);
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    ImageIO.write(sourceImage, "png", output);
+    byte[] imageBytes = output.toByteArray();
+    Mockito.when(fileManager.download(originalFileName))
+        .thenAnswer(invocation -> new ByteArrayInputStream(imageBytes));
+    Mockito.when(fileManager.downloadFile(originalFileName)).thenReturn(imageBytes);
+    renderThemeImages(beforeImage, tempDir.resolve("before"));
+
+    deleteComponent(component);
+
+    ThemeImage afterImage = findFriendsImage(theme.getThemeComponentId());
+    assertThat(afterImage.getDesignComponent().getIsActive()).isFalse();
+    assertThat(afterImage.getDesignComponent().getFileName()).isEqualTo(originalFileName);
+    renderThemeImages(afterImage, tempDir.resolve("after"));
+
+    assertThat(Files.readAllBytes(tempDir.resolve("after/android/asset.png")))
+        .isEqualTo(Files.readAllBytes(tempDir.resolve("before/android/asset.png")))
+        .isEqualTo(imageBytes);
+    assertThat(Files.readAllBytes(tempDir.resolve("after/ios/Images/asset.png")))
+        .isEqualTo(Files.readAllBytes(tempDir.resolve("before/ios/Images/asset.png")));
+    BufferedImage iosImage = ImageIO.read(tempDir.resolve("after/ios/Images/asset.png").toFile());
+    assertThat(iosImage.getRGB(0, 0)).isEqualTo(sourceImage.getRGB(0, 0));
+    assertThat(iosImage.getRGB(1, 1)).isEqualTo(sourceImage.getRGB(1, 1));
+    Mockito.verify(fileManager, Mockito.never()).deleteFile(originalFileName);
+  }
+
+  private void deleteComponent(DesignComponent component) throws Exception {
+    DesignComponent ownedComponent = designComponentRepository
+        .findByDesignComponentId(component.getDesignComponentId()).orElseThrow();
+    mockMvcUtils.performAuthRequest(
+            MockMvcRequestBuilders.delete("/api/design-components/{id}",
+                component.getDesignComponentId()),
+            ExecutionContext.builder().mockMvc(mockMvc)
+                .clientDto(TestClientDto.fromEntity(ownedComponent.getUser())).build())
+        .andExpect(status().isNoContent());
+  }
+
+  private ThemeImage findFriendsImage(Integer themeId) {
+    return themeImageService.fetchJoinThemeImagesByThemeComponentId(themeId).stream()
+        .filter(image -> image.getComponentType().getTypeCode()
+            == TypeCode.TABBAR_STYLE_FRIENDS_NORMAL_ICON_IMAGE)
+        .findFirst().orElseThrow();
+  }
+
+  private void renderThemeImages(ThemeImage themeImage, Path directory) throws Exception {
+    PlatformComponentType androidType = PlatformComponentType.builder()
+        .componentType(themeImage.getComponentType())
+        .platform(Platform.ANDROID).path("asset.png")
+        .width(2).height(2).fileExtension(FileExtension.PNG).build();
+    AndroidComponentDto component = AndroidComponentDto.fromEntity(androidType,
+        themeImage.getDesignComponent(), themeImage.getImageInset());
+    ThemePathManager pathManager = Mockito.mock(ThemePathManager.class);
+    Mockito.when(pathManager.getAndroidThemeImagePath("build", component))
+        .thenReturn(directory.resolve("android/asset.png"));
+    AndroidThemeImageEditor androidEditor = new AndroidThemeImageEditor(fileManager, pathManager);
+    try {
+      androidEditor.editImages("theme", "build", List.of(component));
+    } finally {
+      androidEditor.shutdown();
+    }
+    PlatformComponentType iosType = PlatformComponentType.builder()
+        .componentType(themeImage.getComponentType())
+        .platform(Platform.IOS).path("asset.png")
+        .width(2).height(2).fileExtension(FileExtension.PNG).build();
+    new IosThemeImageEditor(fileManager).editImages(directory.resolve("ios"),
+        List.of(themeImage), List.of(iosType));
   }
 
   @Test

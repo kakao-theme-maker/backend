@@ -22,11 +22,15 @@ import org.springframework.stereotype.Component;
 public class DesignBoardMapperSupport {
 
   /**
-   * 게시글의 타입 목록을 중복 없이 응답 DTO로 변환한다.
+   * 활성 에셋의 타입만 모아 TypeCode 기준으로 중복을 제거한다.
+   * 입력 연결과 타입을 순회하며 처음 발견한 순서를 유지한다.
    */
   public List<BoardComponentTypeDto> toComponentTypeDtos(List<DesignBoard> designBoards) {
     Map<TypeCode, BoardComponentTypeDto> componentTypeMap = new LinkedHashMap<>();
     for (DesignBoard designBoard : designBoards) {
+      if (!Boolean.TRUE.equals(designBoard.getDesignComponent().getIsActive())) {
+        continue;
+      }
       ComponentType componentType = designBoard.getComponentType();
       componentTypeMap.putIfAbsent(componentType.getTypeCode(),
           BoardComponentTypeDto.from(componentType));
@@ -35,11 +39,14 @@ public class DesignBoardMapperSupport {
   }
 
   /**
-   * 게시글 매핑을 에셋별 타입 ID 목록으로 묶어 반환한다.
+   * 활성 에셋의 게시글 매핑을 에셋별 타입 ID 목록으로 묶어 반환한다.
    */
   public List<DesignComponentMappingDto> toDesignComponentMappings(List<DesignBoard> designBoards) {
     Map<Integer, List<Integer>> mappings = new LinkedHashMap<>();
     for (DesignBoard designBoard : designBoards) {
+      if (!Boolean.TRUE.equals(designBoard.getDesignComponent().getIsActive())) {
+        continue;
+      }
       Integer designComponentId = designBoard.getDesignComponent().getDesignComponentId();
       mappings.computeIfAbsent(designComponentId, id -> new ArrayList<>())
           .add(designBoard.getComponentType().getComponentTypeId());
@@ -52,15 +59,20 @@ public class DesignBoardMapperSupport {
         .toList();
   }
 
+  /**
+   * 활성 연결의 미리보기 조회 결과에 노출 정책을 적용한 대표 이미지와 타입을 결합한다.
+   * 대표 이미지 선택과 타입 필터링은 호출 측에서 완료한 값을 사용한다.
+   */
   public DesignBoardPreviewDto toDesignBoardPreviewDto(
       DesignBoardQuery.Preview preview,
       BoardManagementHelper helper,
-      List<BoardComponentTypeDto> componentTypes
+      List<BoardComponentTypeDto> componentTypes,
+      String previewImageName
   ) {
     return DesignBoardPreviewDto.builder()
         .postId(preview.getPostId())
         .title(preview.getTitle())
-        .previewImageUrl(helper.findPreviewImageUrl(preview.getPreviewImageName()))
+        .previewImageUrl(helper.findPreviewImageUrl(previewImageName))
         .userEmail(preview.getUserEmail())
         .createdAt(DateUtils.convertToDateString(preview.getCreatedAt()))
         .prefers(preview.getPrefers())

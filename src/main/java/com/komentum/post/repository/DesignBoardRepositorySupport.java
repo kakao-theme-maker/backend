@@ -31,6 +31,10 @@ public class DesignBoardRepositorySupport {
   private final JPAQueryFactory queryFactory;
   private final PostRepositorySupport postRepositorySupport;
 
+  /**
+   * 활성 에셋 연결만 대상으로 게시글 상세·사용자 반응 정보를 조회하는 공통 쿼리를 구성한다.
+   * 활성 에셋이 없는 게시글은 집계와 페이징 전에 제외한다.
+   */
   private JPAQuery<DesignBoardQuery.Detail> getDesignBoardDetailBaseQuery(User client) {
     QPost post = QPost.post;
     QDesignBoard designBoard = QDesignBoard.designBoard;
@@ -59,9 +63,14 @@ public class DesignBoardRepositorySupport {
         .from(designBoard)
         .join(designBoard.designComponent, designComponent)
         .join(designBoard.post, post)
-        .join(post.user, user);
+        .join(post.user, user)
+        .where(designComponent.isActive.isTrue());
   }
 
+  /**
+   * 활성 에셋이 남은 게시글을 연결 수와 무관하게 한 건으로 집계한다.
+   * 게시글이 없거나 모든 에셋이 비활성이면 null을 반환한다.
+   */
   public DesignBoardQuery.Detail findDetailByPostId(Long postId, User client) {
     QPost post = QPost.post;
     return getDesignBoardDetailBaseQuery(client)
@@ -70,6 +79,10 @@ public class DesignBoardRepositorySupport {
         .fetchOne();
   }
 
+  /**
+   * 활성 에셋이 있는 게시글을 게시글 ID로 묶은 뒤 상세 목록을 페이징한다.
+   * 한 게시글의 활성 에셋·타입 연결 수가 페이지 행 수를 늘리지 않는다.
+   */
   public List<DesignBoardQuery.Detail> findDesignBoardDetails(
       Pageable pageable,
       User client,
@@ -110,7 +123,7 @@ public class DesignBoardRepositorySupport {
   }
 
   /**
-   * 디자인 게시글 요약을 게시글 단위로 묶어 페이지 조회한다.
+   * 활성 에셋이 있는 디자인 게시글 요약을 게시글 단위로 묶어 페이지 조회한다.
    * 복수 에셋·타입 매핑에도 게시글을 한 번만 반환하고 좋아요 수를 중복 집계하지 않는다.
    * 검색어와 타입 조건은 일치하는 게시글을 우선 정렬하는 데 사용한다.
    */
@@ -120,6 +133,7 @@ public class DesignBoardRepositorySupport {
     QDesignBoard designBoard = QDesignBoard.designBoard;
     QPrefer prefer = QPrefer.prefer;
     QUser user = QUser.user;
+    QDesignComponent designComponent = QDesignComponent.designComponent;
     NumberExpression<Long> preferCount = prefer.countDistinct();
     BooleanExpression searchMatched = createSearchMatched(post, condition);
     OrderSpecifier<?>[] orderSpecifiers = PostOrder.create(condition, sortTypes, post, preferCount,
@@ -135,10 +149,12 @@ public class DesignBoardRepositorySupport {
             )
         )
         .from(designBoard)
+        .join(designBoard.designComponent, designComponent)
         .join(designBoard.post, post)
         .join(post.user, user)
         .leftJoin(prefer).on(prefer.post.eq(post))
         .where(
+            designComponent.isActive.isTrue(),
             PostPredicate.userPublicIdEq(post, condition.getAuthorPublicId())
         )
         .groupBy(
