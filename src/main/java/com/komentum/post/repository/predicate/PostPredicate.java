@@ -47,13 +47,13 @@ public class PostPredicate {
     if (typeCode == null) {
       return null;
     }
-    QDesignBoard searchDesignBoard = new QDesignBoard("searchDesignBoard");
+    QDesignBoard targetDesignBoard = new QDesignBoard("targetDesignBoard");
     return JPAExpressions.selectOne()
-        .from(searchDesignBoard)
+        .from(targetDesignBoard)
         .where(
-            searchDesignBoard.post.eq(post),
-            searchDesignBoard.designComponent.isActive.isTrue(),
-            searchDesignBoard.componentType.typeCode.eq(typeCode)
+            targetDesignBoard.post.eq(post),
+            targetDesignBoard.designComponent.isActive.isTrue(),
+            targetDesignBoard.componentType.typeCode.eq(typeCode)
         )
         .exists();
   }
