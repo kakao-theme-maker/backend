@@ -14,6 +14,7 @@ import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
+import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
@@ -122,12 +123,8 @@ class DesignBoardRepositorySupportTest {
    * 유일한 이메일과 공개 ID를 가진 테스트 사용자를 저장한다.
    */
   private User user(String name) {
-    return entityManager.persist(User.builder()
-        .publicUserId(name)
-        .userEmail(name + "@example.com")
-        .name(name)
-        .role(UserRole.USER)
-        .build());
+    User user = UserFixture.user(name + "@example.com", UserRole.USER);
+    return entityManager.persist(user);
   }
 
   /**
