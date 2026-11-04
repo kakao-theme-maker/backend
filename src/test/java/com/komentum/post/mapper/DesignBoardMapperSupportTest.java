@@ -32,7 +32,7 @@ class DesignBoardMapperSupportTest {
   }
 
   @Test
-  @DisplayName("게시글 연결행을 에셋별 타입 ID 목록으로 묶어 반환한다")
+  @DisplayName("게시글 연결행을 에셋별 TypeCode 목록으로 묶어 반환한다")
   void toDesignComponentMappings_groupsAssets() {
     ComponentType first = componentType(10, TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE);
     ComponentType second = componentType(20, TypeCode.CHAT_ROOM_BACKGROUND_IMAGE);
@@ -41,8 +41,9 @@ class DesignBoardMapperSupportTest {
         board(2, second), board(1, second), board(1, first)));
 
     assertThat(result).usingRecursiveComparison().ignoringCollectionOrder()
-        .isEqualTo(List.of(new DesignComponentMappingDto(1, List.of(10, 20)),
-            new DesignComponentMappingDto(2, List.of(20))));
+        .isEqualTo(List.of(new DesignComponentMappingDto(1,
+                List.of(first.getTypeCode(), second.getTypeCode())),
+            new DesignComponentMappingDto(2, List.of(second.getTypeCode()))));
   }
 
   @Test
