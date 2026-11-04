@@ -91,7 +91,8 @@ public class DesignBoardTransactionService {
         tags,
         previewImageUrls,
         designBoardMapperSupport.toComponentTypeDtos(designBoards));
-    response.setDesignComponents(designBoardMapperSupport.toDesignComponentMappings(designBoards));
+    response.setDesignComponentMappings(
+        designBoardMapperSupport.toDesignComponentMappings(designBoards));
     return response;
   }
 

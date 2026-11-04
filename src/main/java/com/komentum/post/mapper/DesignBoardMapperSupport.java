@@ -39,22 +39,22 @@ public class DesignBoardMapperSupport {
   }
 
   /**
-   * 활성 에셋의 게시글 매핑을 에셋별 타입 ID 목록으로 묶어 반환한다.
+   * 활성 에셋의 게시글 매핑을 에셋별 타입 코드 목록으로 묶어 반환한다.
    */
   public List<DesignComponentMappingDto> toDesignComponentMappings(List<DesignBoard> designBoards) {
-    Map<Integer, List<Integer>> mappings = new LinkedHashMap<>();
+    Map<Integer, List<TypeCode>> mappings = new LinkedHashMap<>();
     for (DesignBoard designBoard : designBoards) {
       if (!Boolean.TRUE.equals(designBoard.getDesignComponent().getIsActive())) {
         continue;
       }
       Integer designComponentId = designBoard.getDesignComponent().getDesignComponentId();
       mappings.computeIfAbsent(designComponentId, id -> new ArrayList<>())
-          .add(designBoard.getComponentType().getComponentTypeId());
+          .add(designBoard.getComponentType().getTypeCode());
     }
     return mappings.entrySet().stream()
         .map(entry -> DesignComponentMappingDto.builder()
             .designComponentId(entry.getKey())
-            .componentTypeIds(List.copyOf(entry.getValue()))
+            .typeCodes(List.copyOf(entry.getValue()))
             .build())
         .toList();
   }

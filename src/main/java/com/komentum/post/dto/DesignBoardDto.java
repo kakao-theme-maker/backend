@@ -1,5 +1,6 @@
 package com.komentum.post.dto;
 
+import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.post.dto.TagDto.TagCreateDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.TagDto.TagUpdateDto;
@@ -20,14 +21,14 @@ public class DesignBoardDto {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "게시글에 연결할 디자인 에셋과 타입 ID 목록")
+  @Schema(description = "게시글에 연결할 디자인 에셋 ID와 타입 코드 목록")
   public static class DesignComponentMappingDto {
 
     @NotNull
     private Integer designComponentId;
 
     @NotEmpty
-    private List<@NotNull Integer> componentTypeIds;
+    private List<@NotNull TypeCode> typeCodes;
   }
 
   @Data
@@ -83,7 +84,7 @@ public class DesignBoardDto {
     private List<BoardComponentTypeDto> componentTypes;
 
     @Schema(description = "디자인 에셋별 게시글 타입 매핑")
-    private List<DesignComponentMappingDto> designComponents;
+    private List<DesignComponentMappingDto> designComponentMappings;
   }
 
   @Data
@@ -125,7 +126,7 @@ public class DesignBoardDto {
           
           - title (String, not null) : 새로운 게시글 제목
           - content (String, not null) : 새로운 게시글 내용
-          - designComponents (List<DesignComponentMappingDto>, not empty) : 디자인 에셋별 타입 매핑
+          - designComponentMappings (List<DesignComponentMappingDto>, not empty) : 디자인 에셋 ID와 TypeCode 목록의 매핑
           - publicFlag (boolean, optional) : 게시글 공개 여부 (미전달 시 false)
           
           - postTags (List<TagCreateDto>, optional) : 생성할 게시글 태그 목록 (전체 덮어쓰기)
@@ -146,7 +147,7 @@ public class DesignBoardDto {
     @Schema(description = "게시글에 연결할 디자인 에셋별 타입 매핑")
     @Valid
     @NotEmpty
-    List<@NotNull DesignComponentMappingDto> designComponents;
+    List<@NotNull DesignComponentMappingDto> designComponentMappings;
 
     @Schema(description = "공개 여부(미전달 시 false)", example = "true")
     boolean publicFlag;
@@ -166,7 +167,7 @@ public class DesignBoardDto {
           - title (String, optional) : 새로운 게시글 제목 (null 허용)
           - content (String, optional) : 새로운 게시글 내용 (null 허용)
           - publicFlag (boolean, optional) : 게시글 공개 여부 (미전달 시 false)
-          - designComponents (List<DesignComponentMappingDto>, optional) : 에셋별 타입 매핑 전체 변경
+          - designComponentMappings (List<DesignComponentMappingDto>, optional) : 에셋별 타입 매핑 전체 변경(null이면 유지, 빈 목록 불가)
           
           - postTags (List<TagUpdateDto>, optional) : 게시글 태그 목록 (전체 덮어쓰기)
             - TagUpdateDto 구조:
@@ -186,7 +187,7 @@ public class DesignBoardDto {
     @Schema(description = "에셋별 타입 매핑 전체 변경(null이면 유지, 빈 목록 불가)")
     @Valid
     @Size(min = 1)
-    List<@NotNull DesignComponentMappingDto> designComponents;
+    List<@NotNull DesignComponentMappingDto> designComponentMappings;
 
     @Schema(description = "공개 여부(미전달 시 false)", example = "true")
     boolean publicFlag;

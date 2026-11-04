@@ -20,15 +20,11 @@ import com.komentum.post.service.TagService;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.post.service.transaction.DesignBoardTransactionService;
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.DesignComponentService;
 import com.komentum.designcomponent.service.ComponentTypeService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,10 +38,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @Service
@@ -164,7 +158,8 @@ public class DesignBoardManagementFacade {
       DesignBoardDetailDto response = designBoardMapperSupport.toDesignBoardDetailDto(
           detail, tags, previewImageUrls,
           designBoardMapperSupport.toComponentTypeDtos(designBoards));
-      response.setDesignComponents(designBoardMapperSupport.toDesignComponentMappings(designBoards));
+      response.setDesignComponentMappings(
+          designBoardMapperSupport.toDesignComponentMappings(designBoards));
       return response;
     }).toList();
   }
@@ -202,7 +197,7 @@ public class DesignBoardManagementFacade {
   public DesignBoardDetailDto createDesignBoard(DesignBoardCreateDto createDto,
       MultipartFile previewImage, String authorId) {
     // 비활성 에셋을 새 게시글에 연결할 수 없으므로 파일 저장 전에 검사한다.
-    List<DesignBoard> designBoards = resolveDesignBoards(createDto.getDesignComponents());
+    List<DesignBoard> designBoards = resolveDesignBoards(createDto.getDesignComponentMappings());
     designComponentService.requireActiveComponents(designBoards.stream()
         .map(DesignBoard::getDesignComponent).toList());
     String previewImageName = uploadOrReusePreviewImage(previewImage,
@@ -240,8 +235,8 @@ public class DesignBoardManagementFacade {
     if (existingBoards.isEmpty()) {
       throw new ResourceNotFoundException("Design board not found with post id: " + postId);
     }
-    List<DesignBoard> requestedMappings = updateDto.getDesignComponents() == null ? null
-        : resolveDesignBoards(updateDto.getDesignComponents());
+    List<DesignBoard> requestedMappings = updateDto.getDesignComponentMappings() == null ? null
+        : resolveDesignBoards(updateDto.getDesignComponentMappings());
     List<DesignComponent> requestedComponents = null;
     if (requestedMappings != null) {
       requestedComponents = requestedMappings.stream().map(DesignBoard::getDesignComponent).toList();
@@ -295,50 +290,17 @@ public class DesignBoardManagementFacade {
   }
 
   /**
-   * 중복 매핑과 누락된 에셋 및 타입을 검증한 후 게시글에 저장할 매핑을 구성한다.
+   * 요청한 에셋과 타입을 조회하고 매핑 검증과 생성을 서비스에 위임한다.
    *
-   * @throws ResponseStatusException 매핑이 비어 있거나 동일 에셋·타입 조합이 중복된 경우
    * @throws ResourceNotFoundException 요청한 에셋이나 타입이 존재하지 않는 경우
    */
   private List<DesignBoard> resolveDesignBoards(List<DesignComponentMappingDto> mappings) {
-    if (mappings == null || mappings.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "designComponents must not be empty");
-    }
-    Map<Integer, Set<Integer>> requestedTypes = new HashMap<>();
-    Set<Integer> componentIds = new LinkedHashSet<>();
-    for (DesignComponentMappingDto mapping : mappings) {
-      if (mapping == null || mapping.getDesignComponentId() == null
-          || mapping.getComponentTypeIds() == null || mapping.getComponentTypeIds().isEmpty()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-            "designComponentId and non-empty componentTypeIds are required");
-      }
-      componentIds.add(mapping.getDesignComponentId());
-      Set<Integer> types = requestedTypes.computeIfAbsent(mapping.getDesignComponentId(),
-          ignored -> new HashSet<>());
-      for (Integer typeId : mapping.getComponentTypeIds()) {
-        if (typeId == null || !types.add(typeId)) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-              "Duplicate or null design component type mapping");
-        }
-      }
-    }
+    Set<Integer> componentIds = mappings.stream()
+        .map(DesignComponentMappingDto::getDesignComponentId)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
     Map<Integer, DesignComponent> components = designComponentService.findMapByIdIn(componentIds);
-    Map<Integer, ComponentType> types = componentTypeService.getAllComponentTypes().stream()
-        .collect(Collectors.toMap(ComponentType::getComponentTypeId, Function.identity()));
-    List<DesignBoard> designBoards = new ArrayList<>();
-    for (DesignComponentMappingDto mapping : mappings) {
-      for (Integer typeId : mapping.getComponentTypeIds()) {
-        ComponentType type = types.get(typeId);
-        if (type == null) {
-          throw new ResourceNotFoundException("ComponentType not found with id: " + typeId);
-        }
-        designBoards.add(DesignBoard.builder()
-            .designComponent(components.get(mapping.getDesignComponentId()))
-            .componentType(type)
-            .build());
-      }
-    }
-    return designBoards;
+    return designBoardService.prepareMappings(mappings, components,
+        componentTypeService.findComponentTypeMap());
   }
 
   /**

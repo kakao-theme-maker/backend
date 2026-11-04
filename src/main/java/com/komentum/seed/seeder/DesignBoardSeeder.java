@@ -6,6 +6,7 @@ import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.DesignBoardRepository;
+import com.komentum.post.service.DesignBoardService;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DesignBoardSeeder {
 
   private final DesignBoardRepository designBoardRepository;
+  private final DesignBoardService designBoardService;
   private final ComponentTypeRepository componentTypeRepository;
   private final PostSeeder postSeeder;
 
@@ -27,15 +29,6 @@ public class DesignBoardSeeder {
       List<Post> posts
   ) {
 
-  }
-
-  private DesignBoard generateOne(DesignComponent designComponent, Post post,
-      ComponentType componentType) {
-    return DesignBoard.builder()
-        .designComponent(designComponent)
-        .post(post)
-        .componentType(componentType)
-        .build();
   }
 
   /**
@@ -95,7 +88,9 @@ public class DesignBoardSeeder {
         PostType.DESIGN_BOARD);
     for (DesignComponent designComponent : designComponents) {
       for (ComponentType componentType : componentTypes) {
-        designBoards.add(generateOne(designComponent, targetPost, componentType));
+        DesignBoard designBoard = designBoardService.createMapping(designComponent, componentType);
+        designBoard.setPost(targetPost);
+        designBoards.add(designBoard);
       }
     }
     List<DesignBoard> savedDesignBoards = designBoardRepository.saveAll(designBoards);
