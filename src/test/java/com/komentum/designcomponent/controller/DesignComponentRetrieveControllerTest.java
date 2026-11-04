@@ -67,7 +67,7 @@ class DesignComponentRetrieveControllerTest extends DesignComponentControllerTes
     mockMvc.perform(mockMvcUtils.addAuthentication(requestBuilder, testClient))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content.length()").value(20))
-        .andExpect(jsonPath("$.content[0].componentTypes").doesNotExist());
+        .andExpect(jsonPath("$.content[0].componentTypes").doesNotHaveJsonPath());
   }
 
   @Test
