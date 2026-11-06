@@ -3,11 +3,13 @@ package com.komentum.post.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.komentum.designcomponent.domain.ComponentType;
-import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.DesignBoardDto.DesignComponentMappingDto;
+import com.komentum.test.fixture.component.ComponentTypeFixture;
+import com.komentum.test.fixture.component.DesignComponentFixture;
+import com.komentum.test.fixture.post.DesignBoardFixture;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,8 +21,8 @@ class DesignBoardMapperSupportTest {
   @Test
   @DisplayName("여러 에셋이 같은 타입을 사용해도 게시글 타입 목록에는 한 번만 반환한다")
   void toComponentTypeDtos_deduplicatesBoardTypes() {
-    ComponentType first = componentType(10, TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE);
-    ComponentType second = componentType(20, TypeCode.CHAT_ROOM_BACKGROUND_IMAGE);
+    ComponentType first = ComponentTypeFixture.componentType(10, TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE);
+    ComponentType second = ComponentTypeFixture.componentType(20, TypeCode.CHAT_ROOM_BACKGROUND_IMAGE);
 
     List<BoardComponentTypeDto> result = mapper.toComponentTypeDtos(List.of(
         board(2, second), board(1, first), board(2, first)));
@@ -34,8 +36,8 @@ class DesignBoardMapperSupportTest {
   @Test
   @DisplayName("게시글 연결행을 에셋별 TypeCode 목록으로 묶어 반환한다")
   void toDesignComponentMappings_groupsAssets() {
-    ComponentType first = componentType(10, TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE);
-    ComponentType second = componentType(20, TypeCode.CHAT_ROOM_BACKGROUND_IMAGE);
+    ComponentType first = ComponentTypeFixture.componentType(10, TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE);
+    ComponentType second = ComponentTypeFixture.componentType(20, TypeCode.CHAT_ROOM_BACKGROUND_IMAGE);
 
     List<DesignComponentMappingDto> result = mapper.toDesignComponentMappings(List.of(
         board(2, second), board(1, second), board(1, first)));
@@ -54,22 +56,10 @@ class DesignBoardMapperSupportTest {
   }
 
   /**
-   * 게시글에 연결할 테스트 타입을 생성한다.
-   */
-  private ComponentType componentType(int id, TypeCode typeCode) {
-    return ComponentType.builder()
-        .componentTypeId(id)
-        .typeCode(typeCode)
-        .build();
-  }
-
-  /**
    * 에셋 ID와 타입만 가진 게시글 연결행을 생성한다.
    */
   private DesignBoard board(int designComponentId, ComponentType componentType) {
-    return DesignBoard.builder()
-        .designComponent(DesignComponent.builder().designComponentId(designComponentId).build())
-        .componentType(componentType)
-        .build();
+    return DesignBoardFixture.designBoard(null,
+        DesignComponentFixture.designComponent(designComponentId), componentType);
   }
 }

@@ -14,6 +14,10 @@ import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
+import com.komentum.test.fixture.component.ComponentTypeFixture;
+import com.komentum.test.fixture.component.DesignComponentFixture;
+import com.komentum.test.fixture.post.DesignBoardFixture;
+import com.komentum.test.fixture.post.PostFixture;
 import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -131,33 +135,21 @@ class DesignBoardRepositorySupportTest {
    * 정렬과 타입 검색에 사용할 컴포넌트 타입을 저장한다.
    */
   private ComponentType componentType(TypeCode typeCode) {
-    return entityManager.persist(ComponentType.builder()
-        .typeCode(typeCode)
-        .name(typeCode.name())
-        .build());
+    return entityManager.persist(ComponentTypeFixture.componentType(typeCode));
   }
 
   /**
    * 타입을 갖지 않는 디자인 에셋을 저장한다.
    */
   private DesignComponent asset(String fileName) {
-    return entityManager.persist(DesignComponent.builder()
-        .user(author)
-        .fileName(fileName)
-        .isPublic(true)
-        .build());
+    return entityManager.persist(DesignComponentFixture.designComponent(author, fileName));
   }
 
   /**
    * 게시글 생성 시각을 지정해 목록 정렬을 결정적으로 검증한다.
    */
   private Post post(String title, int day) {
-    Post post = entityManager.persist(Post.builder()
-        .user(author)
-        .title(title)
-        .content("content")
-        .postType(PostType.DESIGN_BOARD)
-        .build());
+    Post post = entityManager.persist(PostFixture.post(author, title, PostType.DESIGN_BOARD));
     post.setCreatedAt(LocalDateTime.of(2026, 1, day, 12, 0));
     return post;
   }
@@ -166,10 +158,6 @@ class DesignBoardRepositorySupportTest {
    * 게시글·에셋·타입의 개별 연결행을 저장한다.
    */
   private void board(Post post, DesignComponent asset, ComponentType componentType) {
-    entityManager.persist(DesignBoard.builder()
-        .post(post)
-        .designComponent(asset)
-        .componentType(componentType)
-        .build());
+    entityManager.persist(DesignBoardFixture.designBoard(post, asset, componentType));
   }
 }

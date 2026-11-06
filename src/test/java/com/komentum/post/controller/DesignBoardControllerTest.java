@@ -46,6 +46,7 @@ import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
+import com.komentum.test.fixture.post.DesignBoardFixture;
 import com.komentum.user.domain.Follow;
 import com.komentum.user.domain.User;
 import com.komentum.user.repository.FollowRepository;
@@ -1293,8 +1294,8 @@ public class DesignBoardControllerTest {
   @DisplayName("DB는 게시글·에셋·타입 조합의 중복 저장을 차단한다")
   void saveDesignBoard_duplicateTripleRejectedByDatabase() {
     DesignBoard target = postResult.designBoards().get(0);
-    DesignBoard duplicate = DesignBoard.builder().post(target.getPost())
-        .designComponent(target.getDesignComponent()).componentType(target.getComponentType()).build();
+    DesignBoard duplicate = DesignBoardFixture.designBoard(target.getPost(),
+        target.getDesignComponent(), target.getComponentType());
     assertThatThrownBy(() -> designBoardRepository.saveAndFlush(duplicate))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
