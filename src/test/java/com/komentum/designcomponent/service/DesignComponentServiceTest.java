@@ -15,6 +15,7 @@ import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.global.utils.FileManager;
 import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.fixture.component.DesignComponentFixture;
 import com.komentum.user.domain.User;
 import jakarta.persistence.EntityManager;
 import java.util.List;
@@ -111,8 +112,7 @@ class DesignComponentServiceTest {
   @Transactional
   @DisplayName("기존 참조용 원시 조회는 비활성 컴포넌트를 보존하고 신규 사용 검증은 거부한다")
   void inactiveComponents_remainAvailableToHistoricalLookups() {
-    DesignComponent inactive = DesignComponent.builder()
-        .user(user).fileName("image.png").isPublic(true).build();
+    DesignComponent inactive = DesignComponentFixture.designComponent(user, "image.png");
     inactive.deactivate();
     Integer componentId = designComponentRepository.saveAndFlush(inactive).getDesignComponentId();
     entityManager.clear();

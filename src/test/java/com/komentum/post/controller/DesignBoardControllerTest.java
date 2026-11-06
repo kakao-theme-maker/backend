@@ -46,6 +46,7 @@ import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
 import com.komentum.test.dto.TestParams;
+import com.komentum.test.fixture.component.DesignComponentFixture;
 import com.komentum.test.fixture.post.DesignBoardFixture;
 import com.komentum.user.domain.Follow;
 import com.komentum.user.domain.User;
@@ -453,8 +454,8 @@ public class DesignBoardControllerTest {
   @DisplayName("삭제된 에셋을 새로 연결하는 게시글 수정은 404이며 기존 데이터가 유지된다")
   void updateDesignBoard_newInactiveComponentIsRejectedBeforeMutation() throws Exception {
     Post targetPost = postResult.posts().get(0);
-    DesignComponent replacement = designComponentRepository.saveAndFlush(DesignComponent.builder()
-        .user(targetPost.getUser()).fileName("inactive-replacement.png").isPublic(true).build());
+    DesignComponent replacement = designComponentRepository.saveAndFlush(
+        DesignComponentFixture.designComponent(targetPost.getUser(), "inactive-replacement.png"));
     deleteComponent(replacement);
     List<Integer> originalIds = designBoardRepository.findByPost_PostId(targetPost.getPostId()).stream()
         .map(board -> board.getDesignComponent().getDesignComponentId()).toList();
