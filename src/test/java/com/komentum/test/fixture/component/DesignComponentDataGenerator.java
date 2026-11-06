@@ -50,11 +50,8 @@ public class DesignComponentDataGenerator {
     List<DesignComponent> components = new ArrayList<>();
     for (User user : users) {
       for (int j = 0; j < componentPerUser; j++) {
-        DesignComponent designComponent = DesignComponent.builder()
-            .user(user)
-            .fileName(faker.internet().slug() + ".png")
-            .isPublic(j % 2 == 0) // 짝수일 때는 public 홀수일때는 private
-            .build();
+        DesignComponent designComponent = DesignComponentFixture.designComponent(
+            user, faker.internet().slug() + ".png", j % 2 == 0); // 짝수일 때는 public 홀수일때는 private
         components.add(designComponent);
       }
     }
@@ -71,11 +68,8 @@ public class DesignComponentDataGenerator {
    * @return 생성된 DesignComponent
    */
   public DesignComponent generateDesignComponent(User user, String fileName, Boolean isPublic) {
-    DesignComponent designComponent = DesignComponent.builder()
-        .user(user)
-        .fileName(fileName)
-        .isPublic(isPublic)
-        .build();
+    DesignComponent designComponent = DesignComponentFixture.designComponent(user, fileName,
+        isPublic);
     return designComponentRepository.save(designComponent);
   }
 
