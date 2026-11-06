@@ -1,9 +1,7 @@
 package com.komentum.designcomponent.repository;
 
 import com.komentum.designcomponent.domain.DesignComponent;
-import com.komentum.designcomponent.domain.QComponentType;
 import com.komentum.designcomponent.domain.QDesignComponent;
-import com.komentum.designcomponent.domain.QDesignComponentComponentType;
 import com.komentum.post.domain.QCategory;
 import com.komentum.post.domain.QCategoryPost;
 import com.komentum.post.domain.QDesignBoard;
@@ -24,19 +22,13 @@ public class DesignComponentRepositorySupport {
   private final JPAQueryFactory queryFactory;
 
   /**
-   * 사용자가 업로드한 활성 컴포넌트를 타입 정보와 함께 생성일 내림차순으로 조회한다.
+   * 사용자가 업로드한 활성 컴포넌트를 생성일 내림차순으로 조회한다.
    */
   @Transactional(readOnly = true)
   public List<DesignComponent> findUploadedDesignComponents(User client) {
     QDesignComponent designComponent = QDesignComponent.designComponent;
-    QDesignComponentComponentType designComponentComponentType =
-        QDesignComponentComponentType.designComponentComponentType;
-    QComponentType componentType = QComponentType.componentType;
-
     return queryFactory
-        .selectFrom(designComponent).distinct()
-        .leftJoin(designComponent.componentTypeMappings, designComponentComponentType).fetchJoin()
-        .leftJoin(designComponentComponentType.componentType, componentType).fetchJoin()
+        .selectFrom(designComponent)
         .where(designComponent.user.eq(client), designComponent.isActive.isTrue())
         .orderBy(designComponent.createdAt.desc())
         .fetch();

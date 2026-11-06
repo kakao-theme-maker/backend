@@ -3,24 +3,32 @@ package com.komentum.post.service;
 import com.komentum.post.domain.DesignBoard;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.QDesignBoard;
+import com.komentum.post.dto.DesignBoardDto.DesignComponentMappingDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.DesignBoardRepositorySupport;
 import com.komentum.post.service.condition.PostSearchCondition;
 import com.komentum.post.service.enums.PostSortType;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.enums.TypeCode;
+import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -129,32 +137,79 @@ public class DesignBoardService {
     );
   }
 
-  @Transactional
-  public DesignBoard save(Post post, DesignComponent designComponent) {
-    return designBoardRepository.save(DesignBoard.builder()
-        .post(post)
+  /**
+   * 조회한 에셋과 타입으로 저장되지 않은 게시글 매핑을 생성한다.
+   * 게시글 연결과 저장은 호출 측에서 별도로 처리한다.
+   *
+   * @throws IllegalArgumentException 에셋이나 타입이 null인 경우
+   */
+  public DesignBoard createMapping(DesignComponent designComponent, ComponentType componentType) {
+    if (designComponent == null || componentType == null) {
+      throw new IllegalArgumentException("designComponent and componentType are required");
+    }
+    return DesignBoard.builder()
         .designComponent(designComponent)
-        .build());
+        .componentType(componentType)
+        .build();
   }
 
   /**
-   * 게시글의 연결행을 요청한 에셋 목록으로 교체한다.
+   * 기본 입력 검증을 통과한 요청의 중복 조합과 타입 존재 여부를 검증하고 매핑을 준비한다.
+   * 입력 순서를 유지하며 게시글 연결이나 DB 저장은 수행하지 않는다.
+   *
+   * @param mappings Bean Validation을 통과한 에셋별 타입 매핑 요청
+   * @param components 요청한 모든 에셋이 포함된 ID별 조회 결과
+   * @param componentTypes 타입 코드별 조회 결과
+   * @throws ResponseStatusException 동일 에셋·타입 조합이 중복된 경우
+   * @throws ResourceNotFoundException 요청한 타입 코드에 대응하는 엔티티가 없는 경우
+   */
+  public List<DesignBoard> prepareMappings(List<DesignComponentMappingDto> mappings,
+      Map<Integer, DesignComponent> components, Map<TypeCode, ComponentType> componentTypes) {
+    Map<Integer, Set<TypeCode>> requestedTypes = new HashMap<>();
+    List<DesignBoard> designBoards = new ArrayList<>();
+    for (DesignComponentMappingDto mapping : mappings) {
+      DesignComponent component = components.get(mapping.getDesignComponentId());
+      Set<TypeCode> types = requestedTypes.computeIfAbsent(mapping.getDesignComponentId(),
+          ignored -> new HashSet<>());
+      for (TypeCode typeCode : mapping.getTypeCodes()) {
+        if (!types.add(typeCode)) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+              "Duplicate design component type mapping");
+        }
+        ComponentType componentType = componentTypes.get(typeCode);
+        if (componentType == null) {
+          throw new ResourceNotFoundException("ComponentType not found for typeCode: " + typeCode);
+        }
+        designBoards.add(createMapping(component, componentType));
+      }
+    }
+    return designBoards;
+  }
+
+  /**
+   * 검증된 에셋·타입 매핑에 게시글을 연결해 저장한다.
+   */
+  @Transactional
+  public DesignBoard save(Post post, DesignBoard mapping) {
+    mapping.setPost(post);
+    return designBoardRepository.save(mapping);
+  }
+
+  /**
+   * 기존 게시글 매핑을 삭제한 후 요청한 에셋별 타입 매핑으로 교체한다.
    * 기존 연결행만 삭제·재생성하며 에셋 엔티티나 원본 이미지는 삭제하지 않는다.
    */
   @Transactional
   public void synchronizeDesignBoards(
       Post post,
-      List<DesignComponent> requestedComponents
+      List<DesignBoard> requestedMappings
   ) {
     // DesignBoard는 게시글과 에셋의 연결행이며 에셋 자체가 아니다.
     designBoardRepository.deleteByPost_PostId(post.getPostId());
-    // 검증된 요청 목록으로 연결을 다시 생성한다.
-    List<DesignBoard> designBoards = findWithDesignBoardByPostId(post.getPostId());
-    for (DesignComponent component : requestedComponents) {
-      save(post, component);
+    designBoardRepository.flush();
+    for (DesignBoard mapping : requestedMappings) {
+      save(post, mapping);
     }
-    List<DesignBoard> updated = findWithDesignBoardByPostId(post.getPostId());
-    int a = 1;
   }
 
   /**

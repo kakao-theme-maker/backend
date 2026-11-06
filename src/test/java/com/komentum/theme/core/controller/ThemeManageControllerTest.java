@@ -113,8 +113,6 @@ class ThemeManageControllerTest {
   private ComponentTypeService componentTypeService;
   @Autowired
   private ColorStyleService colorStyleService;
-  @Autowired
-  private DesignComponentRepository designComponentRepository;
   @MockitoBean
   private FileManager fileManager;
   @MockitoSpyBean

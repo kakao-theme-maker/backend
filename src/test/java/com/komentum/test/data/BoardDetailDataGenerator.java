@@ -7,6 +7,7 @@ import com.komentum.post.domain.enums.PostType;
 import com.komentum.post.repository.DesignBoardRepository;
 import com.komentum.post.repository.ThemeBoardRepository;
 import com.komentum.designcomponent.domain.DesignComponent;
+import com.komentum.test.fixture.post.DesignBoardFixture;
 import com.komentum.theme.core.domain.ThemeComponent;
 import com.komentum.user.domain.User;
 import java.util.ArrayList;
@@ -75,10 +76,10 @@ public class BoardDetailDataGenerator {
     List<Post> allPosts = getPosts();
     List<DesignComponent> allDesignComponents = themeDataGenerator.initialDesignComponents;
     for (int i = 0; i < allPosts.size() / 2; i++) {
-      DesignBoard designBoard = designBoardRepository.save(DesignBoard.builder()
-          .designComponent(allDesignComponents.get(i))
-          .post(allPosts.get(i))
-          .build());
+      DesignBoard designBoard = designBoardRepository.save(DesignBoardFixture.designBoard(
+          allPosts.get(i), allDesignComponents.get(i),
+          themeDataGenerator.initialComponentTypes.get(
+              i % themeDataGenerator.initialComponentTypes.size())));
       designBoards.add(designBoard);
     }
     nonDesignBoardDesignComponents.addAll(
