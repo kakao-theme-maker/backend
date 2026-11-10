@@ -8,9 +8,11 @@ import com.komentum.post.domain.Tag;
 import com.komentum.post.dto.BoardComponentTypeDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
+import com.komentum.post.dto.DesignBoardDto.DesignComponentMappingDto;
 import com.komentum.post.dto.TagDto.TagResponse;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.facade.BoardManagementHelper;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,12 +31,32 @@ public class DesignBoardMapperSupport {
       if (!Boolean.TRUE.equals(designBoard.getDesignComponent().getIsActive())) {
         continue;
       }
-      for (ComponentType componentType : designBoard.getDesignComponent().getComponentTypes()) {
-        componentTypeMap.putIfAbsent(componentType.getTypeCode(),
-            BoardComponentTypeDto.from(componentType));
-      }
+      ComponentType componentType = designBoard.getComponentType();
+      componentTypeMap.putIfAbsent(componentType.getTypeCode(),
+          BoardComponentTypeDto.from(componentType));
     }
     return List.copyOf(componentTypeMap.values());
+  }
+
+  /**
+   * 활성 에셋의 게시글 매핑을 에셋별 타입 코드 목록으로 묶어 반환한다.
+   */
+  public List<DesignComponentMappingDto> toDesignComponentMappings(List<DesignBoard> designBoards) {
+    Map<Integer, List<TypeCode>> mappings = new LinkedHashMap<>();
+    for (DesignBoard designBoard : designBoards) {
+      if (!Boolean.TRUE.equals(designBoard.getDesignComponent().getIsActive())) {
+        continue;
+      }
+      Integer designComponentId = designBoard.getDesignComponent().getDesignComponentId();
+      mappings.computeIfAbsent(designComponentId, id -> new ArrayList<>())
+          .add(designBoard.getComponentType().getTypeCode());
+    }
+    return mappings.entrySet().stream()
+        .map(entry -> DesignComponentMappingDto.builder()
+            .designComponentId(entry.getKey())
+            .typeCodes(List.copyOf(entry.getValue()))
+            .build())
+        .toList();
   }
 
   /**
@@ -49,7 +71,6 @@ public class DesignBoardMapperSupport {
   ) {
     return DesignBoardPreviewDto.builder()
         .postId(preview.getPostId())
-        .designComponentId(preview.getDesignComponentId())
         .title(preview.getTitle())
         .previewImageUrl(helper.findPreviewImageUrl(previewImageName))
         .userEmail(preview.getUserEmail())

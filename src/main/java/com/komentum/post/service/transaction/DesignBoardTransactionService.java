@@ -22,8 +22,11 @@ import com.komentum.post.service.PostService;
 import com.komentum.post.service.TagService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -70,8 +73,11 @@ public class DesignBoardTransactionService {
             targetPost.getPreviewImageName(), designBoards));
     List<String> designImageUrls = designBoards.stream()
         .filter(board -> Boolean.TRUE.equals(board.getDesignComponent().getIsActive()))
-        .map(designBoard -> helper.findPreviewImageUrl(
-            designBoard.getDesignComponent().getFileName()))
+        .map(DesignBoard::getDesignComponent)
+        .collect(Collectors.toMap(DesignComponent::getDesignComponentId,
+            Function.identity(), (first, ignored) -> first, LinkedHashMap::new))
+        .values().stream()
+        .map(component -> helper.findPreviewImageUrl(component.getFileName()))
         .toList();
     List<String> previewImageUrls = Stream.concat(
             Stream.ofNullable(previewImageUrl),
@@ -79,25 +85,31 @@ public class DesignBoardTransactionService {
         )
         .filter(Objects::nonNull)
         .toList();
-    // 타입도 활성 에셋만 대상으로 조립해 이미지와 동일한 노출 정책을 적용한다.
-    return designBoardMapperSupport.toDesignBoardDetailDto(
+    // 타입과 매핑도 활성 에셋만 대상으로 조립해 이미지와 동일한 노출 정책을 적용한다.
+    DesignBoardDetailDto response = designBoardMapperSupport.toDesignBoardDetailDto(
         detail,
         tags,
         previewImageUrls,
         designBoardMapperSupport.toComponentTypeDtos(designBoards));
+    response.setDesignComponentMappings(
+        designBoardMapperSupport.toDesignComponentMappings(designBoards));
+    return response;
   }
 
+  /**
+   * 검증된 에셋별 타입 매핑과 태그를 포함하여 디자인 게시글을 생성한다.
+   */
   @Transactional
   public Post saveDesignBoardAndGetPost(
       DesignBoardCreateDto createDto,
-      List<DesignComponent> designComponents,
+      List<DesignBoard> designBoards,
       User author,
       String previewImageName) {
     PostCreateDto postCreateDto = postDtoMapper.toPostCreateDto(createDto);
     Post savedPost = postService
         .createPost(postCreateDto, author, previewImageName, PostType.DESIGN_BOARD);
-    for (DesignComponent designComponent : designComponents) {
-      designBoardService.save(savedPost, designComponent);
+    for (DesignBoard designBoard : designBoards) {
+      designBoardService.save(savedPost, designBoard);
     }
     if (createDto.getPostTags() != null) {
       tagService.createTags(savedPost, createDto.getPostTags());
@@ -106,8 +118,8 @@ public class DesignBoardTransactionService {
   }
 
   /**
-   * 게시글·태그·사전 검증한 에셋 연결을 갱신하고 파일 정리에 사용할 이전 대표 이미지명을 반환한다.
-   * 연결 목록이 null이거나 비어 있으면 기존 연결을 유지하며 파일 저장·삭제는 호출 측에 맡긴다.
+   * 게시글과 태그 및 요청된 매핑을 한 트랜잭션에서 수정하고 이전 대표 이미지명을 반환한다.
+   * 매핑 목록이 null이면 기존 연결을 유지하며 파일 저장·삭제는 호출 측에 맡긴다.
    *
    * @throws ResourceNotFoundException 게시글의 에셋 연결이 없는 경우
    */
@@ -116,7 +128,7 @@ public class DesignBoardTransactionService {
       Long postId,
       DesignBoardUpdateDto updateDto,
       String previewImageName,
-      List<DesignComponent> requestedComponents
+      List<DesignBoard> requestedMappings
   ) {
     if (!designBoardRepository.existsByPost_PostId(postId)) {
       throw new ResourceNotFoundException("Design board not found with post id: " + postId);
@@ -131,8 +143,8 @@ public class DesignBoardTransactionService {
       tagService.synchronizeTags(targetPost, updateDto.getPostTags());
     }
     // synchronize design boards
-    if (requestedComponents != null && !requestedComponents.isEmpty()) {
-      designBoardService.synchronizeDesignBoards(targetPost, requestedComponents);
+    if (requestedMappings != null) {
+      designBoardService.synchronizeDesignBoards(targetPost, requestedMappings);
     }
     // retrieve old file name
     return oldFileName;

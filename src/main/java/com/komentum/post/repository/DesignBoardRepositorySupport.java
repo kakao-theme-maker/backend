@@ -81,7 +81,7 @@ public class DesignBoardRepositorySupport {
 
   /**
    * 활성 에셋이 있는 게시글을 게시글 ID로 묶은 뒤 상세 목록을 페이징한다.
-   * 미리보기와 달리 한 게시글의 활성 에셋 수가 페이지 행 수를 늘리지 않는다.
+   * 한 게시글의 활성 에셋·타입 연결 수가 페이지 행 수를 늘리지 않는다.
    */
   public List<DesignBoardQuery.Detail> findDesignBoardDetails(
       Pageable pageable,
@@ -123,8 +123,9 @@ public class DesignBoardRepositorySupport {
   }
 
   /**
-   * 활성 에셋 연결행을 기준으로 미리보기를 정렬·페이징한다.
-   * 같은 게시글의 여러 활성 연결은 각각 한 행을 차지하고, 비활성 연결은 페이징 전에 제외한다.
+   * 활성 에셋이 있는 디자인 게시글 요약을 게시글 단위로 묶어 페이지 조회한다.
+   * 복수 에셋·타입 매핑에도 게시글을 한 번만 반환하고 좋아요 수를 중복 집계하지 않는다.
+   * 검색어와 타입 조건은 일치하는 게시글을 우선 정렬하는 데 사용한다.
    */
   public List<DesignBoardQuery.Preview> findPreviewList(Pageable pageable,
       PostSearchCondition condition, List<PostSortType> sortTypes) {
@@ -140,7 +141,6 @@ public class DesignBoardRepositorySupport {
     return queryFactory.select(
             new QDesignBoardQuery_Preview(
                 post.postId,
-                designComponent.designComponentId,
                 post.title,
                 post.previewImageName,
                 user.userEmail,
@@ -159,11 +159,12 @@ public class DesignBoardRepositorySupport {
         )
         .groupBy(
             post.postId,
-            designComponent.designComponentId,
-            designBoard.designBoardId
+            post.title,
+            post.previewImageName,
+            user.userEmail,
+            post.createdAt
         )
         .orderBy(orderSpecifiers)
-        .orderBy(designBoard.designBoardId.desc())
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();

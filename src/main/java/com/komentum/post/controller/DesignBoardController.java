@@ -42,13 +42,13 @@ public class DesignBoardController {
   private final DesignBoardManagementFacade designBoardManagementFacade;
 
   /**
-   * 활성 에셋 연결 단위의 미리보기 페이지를 반환한다.
-   * 같은 게시글도 활성 연결이 여러 개면 여러 행으로 반환될 수 있다.
+   * 활성 에셋이 있는 게시글의 미리보기를 게시글 단위로 페이지 조회한다.
+   * 같은 게시글에 에셋·타입 연결이 여러 개 있어도 한 번만 반환한다.
    */
   @GetMapping
   @Operation(
       summary = "현재 인증된 사용자가 디자인 에셋 게시글 목록을 조회힌다",
-      description = "활성 에셋의 ID·타입만 노출하고, 활성 에셋이 없는 게시글은 목록에서 제외합니다. "
+      description = "게시글별로 활성 에셋의 타입을 노출하고, 활성 에셋이 없는 게시글은 목록에서 제외합니다. "
           + "일부 에셋이 비활성인 게시글의 대표 이미지는 ID가 가장 작은 활성 에셋의 이미지로 대체합니다.",
       parameters = {
           @Parameter(name = "page", in = ParameterIn.QUERY, description = "페이지 번호 (0부터 시작)",
@@ -136,10 +136,12 @@ public class DesignBoardController {
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(
       summary = "현재 인증된 사용자가 디자인 에셋 게시글을 작성한다",
-      description = "활성 에셋만 연결할 수 있습니다. 요청에 비활성 에셋이 포함되면 404를 반환하며 게시글을 생성하지 않습니다.")
+      description = "designComponentMappings에 에셋 ID(designComponentId)와 타입 코드 목록(typeCodes)을 전달합니다. "
+          + "활성 에셋만 연결할 수 있습니다. 요청에 비활성 에셋이 포함되면 404를 반환하며 게시글을 생성하지 않습니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "디자인 게시글 생성 성공"),
-      @ApiResponse(responseCode = "404", description = "요청한 에셋이 없거나 비활성 상태인 경우")
+      @ApiResponse(responseCode = "400", description = "매핑이 비어 있거나 중복되거나 지원하지 않는 타입 코드를 요청한 경우"),
+      @ApiResponse(responseCode = "404", description = "요청한 에셋이 없거나 비활성 상태이거나 타입 엔티티가 없는 경우")
   })
   public ResponseEntity<DesignBoardDetailDto> createDesignBoard(
       @Valid @RequestPart("boardInfo") DesignBoardCreateDto createDto,
@@ -161,11 +163,13 @@ public class DesignBoardController {
       description = """
           현재 연결된 비활성 에셋은 유지할 수 있지만, 수정 결과에 활성 에셋이 하나 이상 있어야 합니다.
           비활성 에셋의 신규 연결이나 제거 후 재연결은 404를 반환합니다.
-          에셋 ID 목록을 생략하거나 null 또는 빈 목록으로 보내면 기존 연결을 유지합니다.
+          designComponentMappings에는 에셋 ID(designComponentId)와 타입 코드 목록(typeCodes)을 전달합니다.
+          designComponentMappings를 생략하거나 null로 보내면 기존 연결을 유지하고, 빈 목록은 400을 반환합니다.
           """)
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "디자인 게시글 수정 성공"),
-      @ApiResponse(responseCode = "404", description = "게시글 또는 요청 에셋이 없거나, 비활성 에셋을 새로 연결하거나, 수정 결과에 활성 에셋이 없는 경우")
+      @ApiResponse(responseCode = "400", description = "매핑이 비어 있거나 중복되거나 지원하지 않는 타입 코드를 요청한 경우"),
+      @ApiResponse(responseCode = "404", description = "게시글·요청 에셋·타입 엔티티가 없거나, 비활성 에셋을 새로 연결하거나, 수정 결과에 활성 에셋이 없는 경우")
   })
   public ResponseEntity<DesignBoardDetailDto> updateDesignBoard(
       @PathVariable Long postId,

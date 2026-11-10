@@ -1,5 +1,6 @@
 package com.komentum.designcomponent.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 import lombok.Getter;
@@ -102,6 +103,12 @@ public enum TypeCode {
     return typeCode;
   }
 
+  /**
+   * 공유 타입 코드 문자열과 일치하는 TypeCode를 반환한다.
+   *
+   * @throws IllegalArgumentException 일치하는 타입 코드가 없는 경우
+   */
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static TypeCode from(String typeCodeString) {
     return Arrays.stream(values())
         .filter(typeCode -> typeCode.typeCode.equals(typeCodeString))

@@ -309,7 +309,7 @@ public class ThemeImageService {
           throw new ResourceNotFoundException("ComponentType not found for typeCode: " + typeCode);
         }
         DesignComponent designComponent = designComponentService.createDesignComponent(
-            targetTheme.getUser(), fileName, componentType);
+            targetTheme.getUser(), fileName);
         ThemeImage themeImage = themeImages.get(typeCode);
         if (themeImage == null) {
           themeImage = ThemeImage.builder()
