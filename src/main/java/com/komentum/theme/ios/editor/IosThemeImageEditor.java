@@ -84,13 +84,14 @@ public class IosThemeImageEditor {
     // 대상 영역 전체를 채워야 하는 배경 이미지는 투명 여백이 생기지 않도록 중앙 크롭한다.
     // 나머지 아이콘과 장식 이미지는 원본 비율을 유지한 채 투명 여백으로 크기를 맞춘다.
     BufferedImage resized = typeCode.isBackgroundImage()
-        ? ImageUtils.resizeCenterCrop(source, platformComponentType.getWidth(),
-            platformComponentType.getHeight())
+        ? ImageUtils.scaleDownToCover(source, platformComponentType.getWidth(),
+        platformComponentType.getHeight())
         : ImageUtils.resizeFit(source, platformComponentType.getWidth(),
             platformComponentType.getHeight());
     Path outputPath = IosThemePathManager.getImagesDir(workDir)
         .resolve(platformComponentType.getPath());
     Files.createDirectories(outputPath.getParent());
-    ImageIO.write(resized, platformComponentType.getFileExtension().getExtension(), outputPath.toFile());
+    ImageIO.write(resized, platformComponentType.getFileExtension().getExtension(),
+        outputPath.toFile());
   }
 }
