@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javax.imageio.ImageIO;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
@@ -75,8 +76,10 @@ class IosThemeImageEditorTest {
     editor.editImages(tempDir, List.of(themeImage), List.of(twoX, threeX));
 
     // then
-    BufferedImage twoXImage = ImageIO.read(tempDir.resolve("Images/maintabIcoFriends@2x.png").toFile());
-    BufferedImage threeXImage = ImageIO.read(tempDir.resolve("Images/maintabIcoFriends@3x.png").toFile());
+    BufferedImage twoXImage = ImageIO.read(
+        tempDir.resolve("Images/maintabIcoFriends@2x.png").toFile());
+    BufferedImage threeXImage = ImageIO.read(
+        tempDir.resolve("Images/maintabIcoFriends@3x.png").toFile());
     assertThat(twoXImage.getWidth()).isEqualTo(76);
     assertThat(twoXImage.getHeight()).isEqualTo(76);
     assertThat(threeXImage.getWidth()).isEqualTo(114);
@@ -87,7 +90,8 @@ class IosThemeImageEditorTest {
   }
 
   @Test
-  void editImages_centerCropFillsTargetWithoutTransparentPadding() throws Exception {
+  @DisplayName("테마 이미지의 크기가 실제 원본 테마의 이미지 크기보다 작다면, 비율을 유지하고 크기를 늘리지 않는다")
+  void editImages_notScaleUpImageCase() throws Exception {
     // given
     Files.createDirectories(tempDir.resolve("Images"));
     FileManager fileManager = Mockito.mock(FileManager.class);
@@ -122,10 +126,10 @@ class IosThemeImageEditorTest {
 
     // then
     BufferedImage result = ImageIO.read(tempDir.resolve("Images/mainBgImage@3x.png").toFile());
-    assertThat(result.getWidth()).isEqualTo(76);
-    assertThat(result.getHeight()).isEqualTo(76);
+    assertThat(result.getWidth()).isEqualTo(20);
+    assertThat(result.getHeight()).isEqualTo(10);
     assertThat(new Color(result.getRGB(0, 0), true).getAlpha()).isEqualTo(255);
-    assertThat(new Color(result.getRGB(75, 75), true).getAlpha()).isEqualTo(255);
+    assertThat(new Color(result.getRGB(19, 9), true).getAlpha()).isEqualTo(255);
   }
 
   @Test

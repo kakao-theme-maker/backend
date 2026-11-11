@@ -67,6 +67,19 @@ public class MockMultipartFileUtils {
   }
 
   /**
+   * 테스트 리소스(sample-images)의 실제 JPEG 파일 내용으로 part 이름을 지정한 이미지 form data를 생성한다.
+   */
+  public static MockMultipartFile generateSampleJpgFormData(String partName) {
+    try {
+      byte[] content = new ClassPathResource("sample-images/test.jpg").getContentAsByteArray();
+      return new MockMultipartFile(partName, "image.jpg", MediaType.IMAGE_JPEG.toString(),
+          content);
+    } catch (IOException e) {
+      throw new RuntimeException("failed to read sample image : test.jpg", e);
+    }
+  }
+
+  /**
    * 파일 내용을 직접 지정한 PNG 이미지 form data를 생성한다. Content-Type, 파일명은 PNG이므로 실제 포맷 검증 테스트에 사용할 수 있다.
    */
   public static MockMultipartFile generateImageFormData(String partName, byte[] content) {

@@ -1151,6 +1151,146 @@
               "width": 512,
               "height": 512,
               "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapHdpiLauncher",
+              "path": "res/mipmap-hdpi/ic_launcher.png",
+              "width": 72,
+              "height": 72,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapHdpiLauncherBackground",
+              "path": "res/mipmap-hdpi/ic_launcher_background.png",
+              "width": 162,
+              "height": 162,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapHdpiLauncherForeground",
+              "path": "res/mipmap-hdpi/ic_launcher_foreground.png",
+              "width": 162,
+              "height": 162,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapHdpiLauncherRound",
+              "path": "res/mipmap-hdpi/ic_launcher_round.png",
+              "width": 72,
+              "height": 72,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapMdpiLauncher",
+              "path": "res/mipmap-mdpi/ic_launcher.png",
+              "width": 48,
+              "height": 48,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapMdpiLauncherBackground",
+              "path": "res/mipmap-mdpi/ic_launcher_background.png",
+              "width": 108,
+              "height": 108,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapMdpiLauncherForeground",
+              "path": "res/mipmap-mdpi/ic_launcher_foreground.png",
+              "width": 108,
+              "height": 108,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapMdpiLauncherRound",
+              "path": "res/mipmap-mdpi/ic_launcher_round.png",
+              "width": 48,
+              "height": 48,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXhdpiLauncher",
+              "path": "res/mipmap-xhdpi/ic_launcher.png",
+              "width": 96,
+              "height": 96,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXhdpiLauncherBackground",
+              "path": "res/mipmap-xhdpi/ic_launcher_background.png",
+              "width": 216,
+              "height": 216,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXhdpiLauncherForeground",
+              "path": "res/mipmap-xhdpi/ic_launcher_foreground.png",
+              "width": 216,
+              "height": 216,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXhdpiLauncherRound",
+              "path": "res/mipmap-xhdpi/ic_launcher_round.png",
+              "width": 96,
+              "height": 96,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxhdpiLauncher",
+              "path": "res/mipmap-xxhdpi/ic_launcher.png",
+              "width": 144,
+              "height": 144,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxhdpiLauncherBackground",
+              "path": "res/mipmap-xxhdpi/ic_launcher_background.png",
+              "width": 324,
+              "height": 324,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxhdpiLauncherForeground",
+              "path": "res/mipmap-xxhdpi/ic_launcher_foreground.png",
+              "width": 324,
+              "height": 324,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxhdpiLauncherRound",
+              "path": "res/mipmap-xxhdpi/ic_launcher_round.png",
+              "width": 144,
+              "height": 144,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxxhdpiLauncher",
+              "path": "res/mipmap-xxxhdpi/ic_launcher.png",
+              "width": 192,
+              "height": 192,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxxhdpiLauncherBackground",
+              "path": "res/mipmap-xxxhdpi/ic_launcher_background.png",
+              "width": 432,
+              "height": 432,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxxhdpiLauncherForeground",
+              "path": "res/mipmap-xxxhdpi/ic_launcher_foreground.png",
+              "width": 432,
+              "height": 432,
+              "fileExtension": "png"
+            },
+            {
+              "code": "commonIcoThemeMipmapXxxhdpiLauncherRound",
+              "path": "res/mipmap-xxxhdpi/ic_launcher_round.png",
+              "width": 192,
+              "height": 192,
+              "fileExtension": "png"
             }
           ]
         },

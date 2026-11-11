@@ -104,6 +104,17 @@ public enum TypeCode {
   }
 
   /**
+   * 화면 영역 전체를 채우는 배경 이미지(메인뷰, 탭바, 잠금화면, 채팅방 배경)인지 확인한다. 배경 이미지는 투명 여백 없이 영역을 채워야 하므로
+   * 플랫폼별 리사이즈 시 아이콘과 다른 방식(iOS: 중앙 크롭, Android: 비율 유지 축소)을 사용한다.
+   */
+  public boolean isBackgroundImage() {
+    return switch (typeCodeGroup) {
+      case MAINVIEW_BACKGROUND, TABBAR_BACKGROUND, PASSCODE_BACKGROUND, CHATROOM_BACKGROUND -> true;
+      default -> false;
+    };
+  }
+
+  /**
    * 공유 타입 코드 문자열과 일치하는 TypeCode를 반환한다.
    *
    * @throws IllegalArgumentException 일치하는 타입 코드가 없는 경우
