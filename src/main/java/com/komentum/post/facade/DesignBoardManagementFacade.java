@@ -10,6 +10,7 @@ import com.komentum.post.dto.DesignBoardDto.DesignBoardCreateDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardDetailDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardPreviewDto;
 import com.komentum.post.dto.DesignBoardDto.DesignBoardUpdateDto;
+import com.komentum.post.dto.DesignBoardDto.DesignComponentMappingDto;
 import com.komentum.post.dto.query.DesignBoardQuery;
 import com.komentum.post.dto.query.DesignBoardQuery.Detail;
 import com.komentum.post.mapper.DesignBoardMapperSupport;
@@ -21,12 +22,16 @@ import com.komentum.post.service.transaction.DesignBoardTransactionService;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.enums.TypeCode;
 import com.komentum.designcomponent.service.DesignComponentService;
+import com.komentum.designcomponent.service.ComponentTypeService;
 import com.komentum.user.domain.User;
 import com.komentum.user.service.UserEntityFinder;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +47,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class DesignBoardManagementFacade {
 
   private final DesignComponentService designComponentService;
+  private final ComponentTypeService componentTypeService;
   private final PostService postService;
   private final DesignBoardService designBoardService;
   private final UserEntityFinder userEntityFinder;
@@ -96,8 +102,8 @@ public class DesignBoardManagementFacade {
   }
 
   /**
-   * 활성 에셋 연결 단위의 페이지를 조회하고 노출 가능한 대표 이미지·타입을 조립한다.
-   * 같은 게시글에 활성 에셋이 여러 개면 게시글 ID가 같은 미리보기가 여러 행 반환된다.
+   * 활성 에셋이 있는 게시글을 페이지 조회하고 노출 가능한 대표 이미지·타입을 조립한다.
+   * 같은 게시글에 활성 에셋·타입 연결이 여러 개 있어도 미리보기는 한 번만 반환한다.
    */
   @Transactional(readOnly = true)
   public List<DesignBoardPreviewDto> findBoardPreviews(Pageable pageable, String keyword,
@@ -149,13 +155,18 @@ public class DesignBoardManagementFacade {
       List<Tag> tags = tagMap.getOrDefault(detail.getPostId(), List.of());
       List<DesignBoard> designBoards = designBoardMap.getOrDefault(detail.getPostId(), List.of());
       List<String> previewImageUrls = resolvePreviewImageUrls(detail, designBoards);
-      return designBoardMapperSupport.toDesignBoardDetailDto(detail, tags, previewImageUrls,
+      DesignBoardDetailDto response = designBoardMapperSupport.toDesignBoardDetailDto(
+          detail, tags, previewImageUrls,
           designBoardMapperSupport.toComponentTypeDtos(designBoards));
+      response.setDesignComponentMappings(
+          designBoardMapperSupport.toDesignComponentMappings(designBoards));
+      return response;
     }).toList();
   }
 
   /**
-   * 노출 정책에 맞춘 대표 이미지 뒤에 활성 에셋 이미지들을 연결해 상세 이미지 목록을 만든다.
+   * 노출 정책에 맞춘 대표 이미지 뒤에 활성 에셋 이미지 URL을 이어 붙인다.
+   * 복수 타입 매핑에 반복된 에셋은 ID 기준으로 한 번만 포함하며 입력 순서를 유지한다.
    * 대표 이미지 대체 여부를 판단할 수 있도록 입력에는 비활성 연결도 포함한다.
    */
   private List<String> resolvePreviewImageUrls(DesignBoardQuery.Detail detail,
@@ -167,8 +178,11 @@ public class DesignBoardManagementFacade {
         Stream.ofNullable(postPreviewImageUrl),
         designBoards.stream()
             .filter(board -> Boolean.TRUE.equals(board.getDesignComponent().getIsActive()))
-            .map(designBoard -> boardManagementHelper.findPreviewImageUrl(
-                designBoard.getDesignComponent().getFileName()))
+            .map(DesignBoard::getDesignComponent)
+            .collect(Collectors.toMap(DesignComponent::getDesignComponentId,
+                Function.identity(), (first, ignored) -> first, LinkedHashMap::new))
+            .values().stream()
+            .map(component -> boardManagementHelper.findPreviewImageUrl(component.getFileName()))
     ).toList();
   }
 
@@ -183,16 +197,17 @@ public class DesignBoardManagementFacade {
   public DesignBoardDetailDto createDesignBoard(DesignBoardCreateDto createDto,
       MultipartFile previewImage, String authorId) {
     // 비활성 에셋을 새 게시글에 연결할 수 없으므로 파일 저장 전에 검사한다.
-    List<DesignComponent> designComponents = designComponentService.findByIdIn(
-        createDto.getDesignComponentIds());
-    designComponentService.requireActiveComponents(designComponents);
-    String previewImageName = uploadOrReusePreviewImage(previewImage, designComponents.get(0));
+    List<DesignBoard> designBoards = resolveDesignBoards(createDto.getDesignComponentMappings());
+    designComponentService.requireActiveComponents(designBoards.stream()
+        .map(DesignBoard::getDesignComponent).toList());
+    String previewImageName = uploadOrReusePreviewImage(previewImage,
+        designBoards.get(0).getDesignComponent());
     // DB 작업 수행
     User author = userEntityFinder.findUserEntity(authorId);
     try {
       Post savedPost = designBoardTransactionService.saveDesignBoardAndGetPost(
           createDto,
-          designComponents,
+          designBoards,
           author,
           previewImageName
       );
@@ -206,7 +221,7 @@ public class DesignBoardManagementFacade {
 
   /**
    * 기존 연결 보존 정책에 따라 에셋 연결·게시글·태그·대표 이미지를 수정한다.
-   * 연결 ID 목록이 null이거나 비어 있으면 기존 연결을 유지한다.
+   * 매핑 목록이 null이면 기존 연결을 유지하며 빈 목록은 허용하지 않는다.
    *
    * @throws ResourceNotFoundException 게시글 연결이 없거나 요청 에셋이 없거나,
    *     새 연결에 비활성 에셋이 포함되거나 수정 결과에 활성 에셋이 하나도 없는 경우
@@ -220,9 +235,11 @@ public class DesignBoardManagementFacade {
     if (existingBoards.isEmpty()) {
       throw new ResourceNotFoundException("Design board not found with post id: " + postId);
     }
+    List<DesignBoard> requestedMappings = updateDto.getDesignComponentMappings() == null ? null
+        : resolveDesignBoards(updateDto.getDesignComponentMappings());
     List<DesignComponent> requestedComponents = null;
-    if (updateDto.getDesignComponentIds() != null && !updateDto.getDesignComponentIds().isEmpty()) {
-      requestedComponents = designComponentService.findByIdIn(updateDto.getDesignComponentIds());
+    if (requestedMappings != null) {
+      requestedComponents = requestedMappings.stream().map(DesignBoard::getDesignComponent).toList();
       Set<Integer> existingIds = existingBoards
           .stream().map(board -> board.getDesignComponent().getDesignComponentId())
           .collect(Collectors.toSet());
@@ -259,7 +276,7 @@ public class DesignBoardManagementFacade {
           postId,
           updateDto,
           newImageName,
-          requestedComponents
+          requestedMappings
       );
       if (newImageName != null && oldImageName != null) {
         boardManagementHelper.deleteFileSilently(oldImageName, "Design Board의 이전 파일 삭제 실패");
@@ -270,6 +287,20 @@ public class DesignBoardManagementFacade {
     }
     // 응답값 반환
     return designBoardTransactionService.findDesignBoardDetail(postId, userIdentifier);
+  }
+
+  /**
+   * 요청한 에셋과 타입을 조회하고 매핑 검증과 생성을 서비스에 위임한다.
+   *
+   * @throws ResourceNotFoundException 요청한 에셋이나 타입이 존재하지 않는 경우
+   */
+  private List<DesignBoard> resolveDesignBoards(List<DesignComponentMappingDto> mappings) {
+    Set<Integer> componentIds = mappings.stream()
+        .map(DesignComponentMappingDto::getDesignComponentId)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+    Map<Integer, DesignComponent> components = designComponentService.findMapByIdIn(componentIds);
+    return designBoardService.prepareMappings(mappings, components,
+        componentTypeService.findComponentTypeMap());
   }
 
   /**

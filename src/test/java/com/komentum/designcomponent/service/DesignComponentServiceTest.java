@@ -9,15 +9,13 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.dto.CreateDesignComponentRequest;
-import com.komentum.designcomponent.enums.TypeCode;
-import com.komentum.designcomponent.repository.ComponentTypeRepository;
 import com.komentum.designcomponent.repository.DesignComponentRepository;
 import com.komentum.global.utils.FileManager;
 import com.komentum.global.exception.ResourceNotFoundException;
 import com.komentum.test.data.UserDataGenerator;
+import com.komentum.test.fixture.component.DesignComponentFixture;
 import com.komentum.user.domain.User;
 import jakarta.persistence.EntityManager;
 import java.util.List;
@@ -48,9 +46,6 @@ class DesignComponentServiceTest {
   private DesignComponentRepository designComponentRepository;
 
   @Autowired
-  private ComponentTypeRepository componentTypeRepository;
-
-  @Autowired
   private UserDataGenerator userDataGenerator;
 
   @Autowired
@@ -60,27 +55,19 @@ class DesignComponentServiceTest {
   private FileManager fileManager;
 
   private User user;
-  private ComponentType componentType;
 
   @BeforeEach
   void setUp() {
     designComponentRepository.deleteAll();
-    componentTypeRepository.deleteAll();
     userDataGenerator.deleteAllUsers();
     reset(fileManager);
 
     user = userDataGenerator.generateTestUser("service-test@example.com");
-    componentType = componentTypeRepository.save(ComponentType.builder()
-        .typeCode(TypeCode.TABBAR_STYLE_BACKGROUND_IMAGE)
-        .name("service test component type")
-        .explain("service test component type explain")
-        .build());
   }
 
   @AfterEach
   void tearDown() {
     designComponentRepository.deleteAll();
-    componentTypeRepository.deleteAll();
     userDataGenerator.deleteAllUsers();
     reset(fileManager);
   }
@@ -90,7 +77,6 @@ class DesignComponentServiceTest {
   void createDesignComponents_allOrNothing_whenOneFails() {
     CreateDesignComponentRequest request = CreateDesignComponentRequest.builder()
         .isPublic(true)
-        .componentTypeIds(java.util.List.of(componentType.getComponentTypeId()))
         .build();
     MockMultipartFile firstFile = new MockMultipartFile(
         "files",
@@ -126,17 +112,13 @@ class DesignComponentServiceTest {
   @Transactional
   @DisplayName("기존 참조용 원시 조회는 비활성 컴포넌트를 보존하고 신규 사용 검증은 거부한다")
   void inactiveComponents_remainAvailableToHistoricalLookups() {
-    DesignComponent inactive = DesignComponent.builder()
-        .user(user).fileName("image.png").isPublic(true).build();
-    inactive.replaceComponentTypes(List.of(componentType));
+    DesignComponent inactive = DesignComponentFixture.designComponent(user, "image.png");
     inactive.deactivate();
     Integer componentId = designComponentRepository.saveAndFlush(inactive).getDesignComponentId();
     entityManager.clear();
 
     DesignComponent retained = designComponentService.getEntityById(componentId);
     assertThat(retained.getIsActive()).isFalse();
-    assertThat(retained.getComponentTypes()).extracting(ComponentType::getComponentTypeId)
-        .containsExactly(componentType.getComponentTypeId());
     assertThat(designComponentService.findByIdIn(List.of(componentId)))
         .extracting(DesignComponent::getDesignComponentId).containsExactly(componentId);
     assertThat(designComponentService.findMapByIdIn(Set.of(componentId)))

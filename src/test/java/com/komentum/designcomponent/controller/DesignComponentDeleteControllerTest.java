@@ -19,9 +19,8 @@ class DesignComponentDeleteControllerTest extends DesignComponentControllerTestS
   @Test
   @DisplayName("DesignComponent 삭제 테스트")
   void deleteDesignComponent() throws Exception {
-    DesignComponent savedComponent = testUserComponent("image.png", true, componentTypeA);
+    DesignComponent savedComponent = testUserComponent("image.png", true);
     Integer componentId = savedComponent.getDesignComponentId();
-    Integer componentTypeId = componentTypeA.getComponentTypeId();
 
     MockHttpServletRequestBuilder requestBuilder =
         delete("/api/design-components/{id}", savedComponent.getDesignComponentId());
@@ -35,8 +34,6 @@ class DesignComponentDeleteControllerTest extends DesignComponentControllerTestS
         .orElseThrow();
     assertThat(retained.getIsActive()).isFalse();
     assertThat(retained.getFileName()).isEqualTo("image.png");
-    assertThat(retained.getComponentTypes()).extracting("componentTypeId")
-        .containsExactly(componentTypeId);
     verify(fileManager, never()).deleteFile(anyString());
   }
 
@@ -44,7 +41,7 @@ class DesignComponentDeleteControllerTest extends DesignComponentControllerTestS
   @DisplayName("다른 사용자의 DesignComponent 삭제 실패 테스트")
   void deleteDesignComponentByOtherUser() throws Exception {
     DesignComponent savedComponent = otherUserComponent(
-        "other@test.com", "https://other.com/image.png", false, componentTypeA);
+        "other@test.com", "https://other.com/image.png", false);
 
     MockHttpServletRequestBuilder requestBuilder =
         delete("/api/design-components/{id}", savedComponent.getDesignComponentId());
@@ -61,7 +58,7 @@ class DesignComponentDeleteControllerTest extends DesignComponentControllerTestS
   @DisplayName("관리자는 다른 사용자의 DesignComponent를 비활성화할 수 있다")
   void deleteDesignComponentByAdmin() throws Exception {
     DesignComponent savedComponent = otherUserComponent(
-        "other@test.com", "image.png", true, componentTypeA);
+        "other@test.com", "image.png", true);
     authenticateAs(testUser, UserRole.ADMIN);
 
     performAuthenticated(delete("/api/design-components/{id}",
@@ -94,7 +91,7 @@ class DesignComponentDeleteControllerTest extends DesignComponentControllerTestS
   @DisplayName("비활성 DesignComponent도 다른 사용자의 삭제 요청은 거부한다")
   void deleteInactiveDesignComponentByOtherUser() throws Exception {
     DesignComponent savedComponent = otherUserComponent(
-        "other@test.com", "image.png", true, componentTypeA);
+        "other@test.com", "image.png", true);
     savedComponent.deactivate();
     designComponentRepository.flush();
 

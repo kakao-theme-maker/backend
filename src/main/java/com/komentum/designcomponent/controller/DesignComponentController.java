@@ -111,20 +111,6 @@ public class DesignComponentController {
   }
 
   /**
-   * 지정한 타입에 연결된 활성 컴포넌트 목록을 반환한다.
-   */
-  @GetMapping("/component-types/{componentTypeId}")
-  @Operation(
-      summary = "component type ID로 designComponent 목록을 조회한다.",
-      description = "비활성 컴포넌트를 제외하고 활성 컴포넌트만 반환한다.")
-  public ResponseEntity<List<DesignComponentDto>> getDesignComponentsByComponentTypeId(
-      @PathVariable("componentTypeId") Integer componentTypeId
-  ) {
-    return ResponseEntity.ok(
-        designComponentService.getDesignComponentsByComponentTypeId(componentTypeId));
-  }
-
-  /**
    * 현재 사용자가 업로드한 컴포넌트 중 활성 항목만 반환한다.
    */
   @GetMapping("/uploaded")

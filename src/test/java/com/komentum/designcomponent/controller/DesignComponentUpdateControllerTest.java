@@ -10,11 +10,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.komentum.designcomponent.domain.ComponentType;
 import com.komentum.designcomponent.domain.DesignComponent;
 import com.komentum.designcomponent.dto.DesignComponentDto;
 import com.komentum.designcomponent.dto.UpdateDesignComponentRequest;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,11 +23,11 @@ import org.springframework.mock.web.MockMultipartFile;
 class DesignComponentUpdateControllerTest extends DesignComponentControllerTestSupport {
 
   @Test
-  @DisplayName("DesignComponent 수정 테스트")
+  @DisplayName("타입 정보 없이 DesignComponent의 이미지와 공개 여부를 수정한다")
   void updateDesignComponent() throws Exception {
     DesignComponent savedComponent = testUserComponent(
-        "image.png", false, componentTypeA);
-    UpdateDesignComponentRequest updateRequest = updateRequest(true, componentTypeB);
+        "image.png", false);
+    UpdateDesignComponentRequest updateRequest = updateRequest(true);
     MockMultipartFile requestPart = createRequestPart(updateRequest);
     MockMultipartFile image = multipartFixture.imagePart("updated.png");
 
@@ -54,24 +52,42 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
     assertThat(response.getImageUrl()).isNotEqualTo(imageUrlOf("image.png"));
     assertThat(response.getCreatedAt()).isNotNull();
     assertThat(response.getUpdatedAt()).isNotNull();
-    assertThat(response.getComponentTypes())
-        .extracting("componentTypeId")
-        .containsExactly(componentTypeB.getComponentTypeId());
 
     DesignComponent updated = designComponentRepository.findByDesignComponentId(
         savedComponent.getDesignComponentId()).orElseThrow();
     assertThat(updated.getFileName()).isEqualTo(uploadedFileName);
-    assertThat(updated.getComponentTypes())
-        .extracting(ComponentType::getComponentTypeId)
-        .containsExactly(componentTypeB.getComponentTypeId());
+  }
+
+  /**
+   * 타입이나 이미지 없이 공개 여부만 수정할 수 있는지 검증한다.
+   */
+  @Test
+  @DisplayName("이미지를 전달하지 않으면 파일을 유지하고 공개 여부만 수정한다")
+  void updateDesignComponent_withoutImage() throws Exception {
+    DesignComponent savedComponent = testUserComponent("image.png", false);
+
+    DesignComponentDto response = doMultipartRequest(
+        "/api/design-components/" + savedComponent.getDesignComponentId(),
+        HttpMethod.PUT,
+        200,
+        new TypeReference<>() {
+        },
+        createRequestPart(updateRequest(true))
+    );
+
+    assertThat(response.getIsPublic()).isTrue();
+    assertThat(response.getImageUrl()).isEqualTo(imageUrlOf("image.png"));
+    assertThat(designComponentRepository.findById(savedComponent.getDesignComponentId())
+        .orElseThrow().getFileName()).isEqualTo("image.png");
+    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 
   @Test
   @DisplayName("다른 사용자의 DesignComponent 수정 실패 테스트")
   void updateDesignComponentByOtherUser() throws Exception {
     DesignComponent savedComponent = otherUserComponent(
-        "other@test.com", "image.png", false, componentTypeA);
-    UpdateDesignComponentRequest updateRequest = updateRequest(true, componentTypeB);
+        "other@test.com", "image.png", false);
+    UpdateDesignComponentRequest updateRequest = updateRequest(true);
     MockMultipartFile requestPart = createRequestPart(updateRequest);
     MockMultipartFile image = multipartFixture.imagePart("updated.png");
 
@@ -89,37 +105,12 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
         savedComponent.getDesignComponentId()).orElseThrow();
     assertThat(afterComponent.getFileName()).isEqualTo("image.png");
     assertThat(afterComponent.getIsPublic()).isFalse();
-    assertThat(afterComponent.getComponentTypes())
-        .extracting(ComponentType::getComponentTypeId)
-        .containsExactly(componentTypeA.getComponentTypeId());
-  }
-
-  @Test
-  @DisplayName("DesignComponent 수정 시 존재하지 않는 componentTypeId 검증")
-  void updateDesignComponent_withUnknownComponentTypeId() throws Exception {
-    DesignComponent savedComponent = testUserComponent(
-        "image.png", false, componentTypeA);
-    UpdateDesignComponentRequest updateRequest = updateRequest(true, List.of(999999));
-    MockMultipartFile requestPart = createRequestPart(updateRequest);
-    MockMultipartFile image = multipartFixture.imagePart("updated.png");
-
-    doMultipartRequest(
-        "/api/design-components/" + savedComponent.getDesignComponentId(),
-        HttpMethod.PUT,
-        404,
-        new TypeReference<Void>() {
-        },
-        requestPart,
-        image
-    );
-
-    verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 
   @Test
   @DisplayName("비활성 DesignComponent 수정은 업로드 전에 404를 반환한다")
   void updateInactiveDesignComponent() throws Exception {
-    DesignComponent savedComponent = testUserComponent("image.png", false, componentTypeA);
+    DesignComponent savedComponent = testUserComponent("image.png", false);
     savedComponent.deactivate();
     designComponentRepository.flush();
 
@@ -129,15 +120,13 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
         404,
         new TypeReference<Void>() {
         },
-        createRequestPart(updateRequest(true, componentTypeB)),
+        createRequestPart(updateRequest(true)),
         multipartFixture.imagePart("updated.png")
     );
 
     assertThat(savedComponent.getFileName()).isEqualTo("image.png");
     assertThat(savedComponent.getIsPublic()).isFalse();
     assertThat(savedComponent.getIsActive()).isFalse();
-    assertThat(savedComponent.getComponentTypes()).extracting(ComponentType::getComponentTypeId)
-        .containsExactly(componentTypeA.getComponentTypeId());
     verify(fileManager, never()).uploadPublicFile(any(byte[].class), anyString());
   }
 
@@ -145,7 +134,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
   @DisplayName("비활성 DesignComponent 수정도 기존 소유자 권한을 먼저 검사한다")
   void updateInactiveDesignComponentByOtherUser() throws Exception {
     DesignComponent savedComponent = otherUserComponent(
-        "other@test.com", "image.png", false, componentTypeA);
+        "other@test.com", "image.png", false);
     savedComponent.deactivate();
     designComponentRepository.flush();
 
@@ -155,7 +144,7 @@ class DesignComponentUpdateControllerTest extends DesignComponentControllerTestS
         403,
         new TypeReference<Void>() {
         },
-        createRequestPart(updateRequest(true, componentTypeB)),
+        createRequestPart(updateRequest(true)),
         multipartFixture.imagePart("updated.png")
     );
 
