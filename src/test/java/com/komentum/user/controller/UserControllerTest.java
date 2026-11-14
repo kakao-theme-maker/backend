@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.contains;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.global.dto.CustomResponse;
+import com.komentum.global.security.UserRole;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.enums.PostType;
@@ -17,6 +18,7 @@ import com.komentum.test.data.UserDataGenerator;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.user.domain.Follow;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
@@ -140,6 +142,7 @@ public class UserControllerTest {
             .introduce(user.getIntroduce())
             .gender(user.getGender())
             .birth(user.getBirth())
+            .role(user.getRole())
             .profileImage(user.getProfileImgUrl())
             .profileImageName(user.getProfileImgName())
             .publicUserId(user.getPublicUserId())
@@ -194,6 +197,30 @@ public class UserControllerTest {
     assertThat(response.getName()).isEqualTo(targetUser.getName());
     assertThat(response.getIntroduce()).isEqualTo(targetUser.getIntroduce());
     assertThat(response.getPublicUserId()).isEqualTo(targetUser.getPublicUserId());
+    assertThat(response.getRole()).isEqualTo(UserRole.USER);
+  }
+
+  @Test
+  @DisplayName("관리자 계정으로 현재 사용자 정보 조회 시 ADMIN 권한을 함께 반환한다")
+  void retrieveCurrentUser_returnsAdminRole() throws Exception {
+    // given
+    User admin = userRepository.saveAndFlush(
+        UserFixture.user(UUID.randomUUID() + "@test.com", UserRole.ADMIN));
+    // when
+    UserResponseDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, UserResponseDto>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me")
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(admin))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response.getPublicUserId()).isEqualTo(admin.getPublicUserId());
+    assertThat(response.getRole()).isEqualTo(UserRole.ADMIN);
   }
 
   @Test
