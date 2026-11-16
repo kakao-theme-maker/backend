@@ -28,6 +28,9 @@ repositories {
     mavenCentral()
 }
 
+// Boot 3.4.3 관리 버전(1.20.5)은 Docker Engine 29+의 최소 API 버전을 만족하지 못해 Docker 환경을 인식하지 못한다
+ext['testcontainers.version'] = '1.21.4'
+
 bootJar {
     enabled = true
     archiveFileName = "kakao-theme-maker.jar"
@@ -85,6 +88,11 @@ dependencies {
     testImplementation 'com.h2database:h2'
     // test: redis embedded
     testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
+    // test: db migration 검증 (flyway + testcontainers mysql)
+    testImplementation 'org.flywaydb:flyway-core'
+    testImplementation 'org.flywaydb:flyway-mysql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:mysql'
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

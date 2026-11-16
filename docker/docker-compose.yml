@@ -21,7 +21,8 @@ services:
     environment:
       <<: *common-variables
   database:
-    image: mysql:8.0
+    # 데이터 디렉터리 자동 업그레이드(다운그레이드 불가) 방지 및 마이그레이션 검증 버전과 일치시키기 위해 버전 고정
+    image: mysql:8.0.46
     container_name: database
     restart: unless-stopped
     env_file:
@@ -32,6 +33,23 @@ services:
       MYSQL_ROOT_HOST: ${MYSQL_ROOT_HOST}
     ports:
       - "23306:3306"
+  # DB 마이그레이션 전용 (평소 `docker compose up`에는 포함되지 않음)
+  # 사용 예 : docker compose --profile migration run --rm flyway info
+  flyway:
+    image: flyway/flyway:10.20.1
+    profiles: [ "migration" ]
+    env_file:
+      - .env
+    environment:
+      FLYWAY_URL: jdbc:mysql://database:3306/${MYSQL_DATABASE}?allowPublicKeyRetrieval=true&useSSL=false
+      FLYWAY_USER: root
+      FLYWAY_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      FLYWAY_BASELINE_VERSION: "1"
+      FLYWAY_BASELINE_DESCRIPTION: "hibernate ddl-auto schema before #188"
+    volumes:
+      - ../src/main/resources/db/migration:/flyway/sql:ro
+    depends_on:
+      - database
   redis:
     image: redis:6.2.6-alpine
     command: redis-server /usr/local/etc/redis/redis.conf
