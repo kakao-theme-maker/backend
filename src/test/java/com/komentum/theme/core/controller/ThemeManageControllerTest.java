@@ -1,6 +1,7 @@
 package com.komentum.theme.core.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -835,7 +836,7 @@ class ThemeManageControllerTest {
   }
 
   @Test
-  @DisplayName("루트 유저가 디폴트 테마를 생성한다")
+  @DisplayName("어피치 기본 테마를 시드하고 새 테마에 RGB와 불투명도를 복사한다")
   public void seedDefaultTheme_success() throws Exception {
     // given
     User rootUser = userScenarioSupport.builder().withRootUser().build().rootUser();
@@ -855,7 +856,36 @@ class ThemeManageControllerTest {
         .isEqualTo("apeach_5031cb08-7ae9-40a7-a57c-2d24bd93f2d5");
     assertThat(themeImageRepository.count()).isEqualTo(TypeCode.values().length);
     assertThat(themeStyleRepository.count()).isEqualTo(StyleCode.values().length);
-    resultActions.andExpect(status().isOk());
+
+    var expectedStyles = List.of(
+        tuple(StyleCode.MAINVIEW_STYLE_NORMAL_BACKGROUND_COLOR, "#FFDEDE", 0),
+        tuple(StyleCode.SECTION_TITLE_STYLE_BORDER_COLOR, "#664242", 15),
+        tuple(StyleCode.TABBAR_STYLE_BACKGROUND_COLOR, "#FFFFFF", 0),
+        tuple(StyleCode.INPUT_BAR_STYLE_CHAT_BUTTON_NORMAL_BACKGROUND_COLOR, "#000000", 4),
+        tuple(StyleCode.MAINVIEW_STYLE_BACKGROUND_COLOR, "#FFDEDE", 100));
+    assertThat(themeStyleRepository.fetchJoinAllByThemeComponentId(
+        themeComponents.get(0).getThemeComponentId()))
+        .extracting(style -> style.getColorStyle().getStyleCode(), ThemeStyle::getColor,
+            ThemeStyle::getAlpha)
+        .containsAll(expectedStyles);
+
+    ResultActions created = mockMvc.perform(mockMvcUtils.addAuthentication(
+        MockMvcRequestBuilders.post("/api/themes"), TestClientDto.fromEntity(testUser)))
+        .andExpect(status().isCreated());
+    ThemeDetailResponse response = mockMvcUtils.parseResponse(created, new TypeReference<>() {
+    });
+    assertThat(response.getStyleCodes().entrySet())
+        .extracting(Map.Entry::getKey, entry -> entry.getValue().getColor(),
+            entry -> entry.getValue().getAlpha())
+        .containsAll(expectedStyles);
+    assertThat(themeStyleRepository.fetchJoinAllByThemeComponentId(response.getThemeComponentId()))
+        .extracting(style -> style.getColorStyle().getStyleCode(),
+            ThemeStyle::getColorWithAlphaArgb)
+        .contains(
+            tuple(StyleCode.MAINVIEW_STYLE_NORMAL_BACKGROUND_COLOR, "#00FFDEDE"),
+            tuple(StyleCode.SECTION_TITLE_STYLE_BORDER_COLOR, "#26664242"),
+            tuple(StyleCode.TABBAR_STYLE_BACKGROUND_COLOR, "#00FFFFFF"),
+            tuple(StyleCode.INPUT_BAR_STYLE_CHAT_BUTTON_NORMAL_BACKGROUND_COLOR, "#0A000000"));
   }
 
   private ThemeComponent createThemeUsing(DesignComponent component) {
