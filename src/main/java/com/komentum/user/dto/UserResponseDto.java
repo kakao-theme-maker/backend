@@ -1,5 +1,6 @@
 package com.komentum.user.dto;
 
+import com.komentum.global.security.UserRole;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "사용자 정보 조회 응답 DTO")
+@Schema(description = "본인 정보 조회 응답 DTO")
 public class UserResponseDto {
 
   @Schema(description = "사용자 이메일", example = "test@test.com")
@@ -49,7 +50,8 @@ public class UserResponseDto {
   private Gender gender;
   @Schema(description = "사용자의 생년월일", example = "2000-01-01")
   private LocalDate birth;
-
+  @Schema(description = "사용자 권한", example = "USER")
+  private UserRole role;
 
   public static UserResponseDto from(User user, int followers, int following, int uploads,
       String profileImageUrl) {
@@ -59,6 +61,7 @@ public class UserResponseDto {
         .introduce(user.getIntroduce())
         .gender(user.getGender())
         .birth(user.getBirth())
+        .role(user.getRole())
         .publicUserId(user.getPublicUserId())
         .profileImage(profileImageUrl)
         .profileImageName(user.getProfileImgName())

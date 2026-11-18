@@ -8,6 +8,7 @@ import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserBirthUpdateDto;
 import com.komentum.user.dto.UserGenderUpdateDto;
 import com.komentum.user.dto.UserProfileUpdateDto;
+import com.komentum.user.dto.UserPublicResponseDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.repository.FollowRepository;
 import com.komentum.user.repository.UserRepository;
@@ -49,6 +50,20 @@ public class UserService implements UserEntityFinder {
     //업로드 수
     int uploads = postService.countPost(publicUserId);
     return UserResponseDto.from(user, followers, following, uploads, user.getProfileImgUrl());
+  }
+
+  /**
+   * 다른 사용자에게 공개되는 프로필 정보를 조회한다.
+   *
+   * @throws RuntimeException 해당 공개 ID의 사용자가 없는 경우
+   */
+  public UserPublicResponseDto getPublicUserByPublicId(String publicUserId) {
+    User user = findUserEntityByPublicId(publicUserId);
+    int followers = followRepository.countByFollowee_PublicUserId(publicUserId);
+    int following = followRepository.countByFollower_PublicUserId(publicUserId);
+    int uploads = postService.countPost(publicUserId);
+    return UserPublicResponseDto.from(user, followers, following, uploads,
+        user.getProfileImgUrl());
   }
 
   public User findUserEntity(String PublicUserId) {

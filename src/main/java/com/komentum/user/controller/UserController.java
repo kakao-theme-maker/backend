@@ -6,6 +6,7 @@ import com.komentum.user.dto.PasswordChangeRequsetDto;
 import com.komentum.user.dto.UserBirthUpdateDto;
 import com.komentum.user.dto.UserGenderUpdateDto;
 import com.komentum.user.dto.UserProfileUpdateDto;
+import com.komentum.user.dto.UserPublicResponseDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.service.UserAuthService;
 import com.komentum.user.service.UserService;
@@ -40,10 +41,10 @@ public class UserController {
   // 유저 정보 조회
   @GetMapping("")
   @Operation(summary = "사용자의 공개 ID(UUID)를 기반으로 사용자 정보를 조회한다")
-  public ResponseEntity<CustomResponse<UserResponseDto>> getUserByPublicId(
+  public ResponseEntity<CustomResponse<UserPublicResponseDto>> getUserByPublicId(
       @RequestParam String userPublicID) {
     try {
-      UserResponseDto user = userService.getUserByPublicId(userPublicID);
+      UserPublicResponseDto user = userService.getPublicUserByPublicId(userPublicID);
       // 유저 조회 성공
       return ResponseEntity.ok(CustomResponse.ok(user));
     } catch (RuntimeException e) {

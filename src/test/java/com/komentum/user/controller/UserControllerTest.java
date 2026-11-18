@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.contains;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.komentum.global.dto.CustomResponse;
+import com.komentum.global.security.UserRole;
 import com.komentum.global.utils.FileManager;
 import com.komentum.post.domain.Post;
 import com.komentum.post.domain.enums.PostType;
@@ -17,11 +18,13 @@ import com.komentum.test.data.UserDataGenerator;
 import com.komentum.test.dto.MockMvcMultipartRequestDto;
 import com.komentum.test.dto.MockMvcRequestDto;
 import com.komentum.test.dto.TestClientDto;
+import com.komentum.test.fixture.user.UserFixture;
 import com.komentum.user.domain.Follow;
 import com.komentum.user.domain.Gender;
 import com.komentum.user.domain.User;
 import com.komentum.user.dto.UserBirthUpdateDto;
 import com.komentum.user.dto.UserGenderUpdateDto;
+import com.komentum.user.dto.UserPublicResponseDto;
 import com.komentum.user.dto.UserResponseDto;
 import com.komentum.user.repository.FollowRepository;
 import com.komentum.user.repository.UserRepository;
@@ -133,13 +136,10 @@ public class UserControllerTest {
         new Follow(user, followerA)
     ));
 
-    UserResponseDto userResponseDto =
-        UserResponseDto.builder()
-            .userEmail(user.getUserEmail())
+    UserPublicResponseDto expected =
+        UserPublicResponseDto.builder()
             .name(user.getName())
             .introduce(user.getIntroduce())
-            .gender(user.getGender())
-            .birth(user.getBirth())
             .profileImage(user.getProfileImgUrl())
             .profileImageName(user.getProfileImgName())
             .publicUserId(user.getPublicUserId())
@@ -149,8 +149,8 @@ public class UserControllerTest {
             .build();
 
     //when
-    UserResponseDto result = mockMvcUtils.doAuthUnwrappedRequest(
-        MockMvcRequestDto.<Void, CustomResponse<UserResponseDto>>builder()
+    UserPublicResponseDto result = mockMvcUtils.doAuthUnwrappedRequest(
+        MockMvcRequestDto.<Void, CustomResponse<UserPublicResponseDto>>builder()
             .mockMvc(mockMvc)
             .path("/api/users")
             .httpMethod(HttpMethod.GET)
@@ -167,7 +167,32 @@ public class UserControllerTest {
     assertThat(result)
         .usingRecursiveComparison()
         .ignoringFields("createdAt")
-        .isEqualTo(userResponseDto);
+        .isEqualTo(expected);
+  }
+
+  @Test
+  @DisplayName("다른 사용자 정보 조회 응답에는 이메일, 성별, 생년월일, 권한이 포함되지 않는다")
+  void retrieveUser_excludesPrivateFields() throws Exception {
+    // given
+    User viewer = userDataGenerator.generateTestUser(UUID.randomUUID() + "@test.com");
+
+    // when
+    Map<String, Object> result = mockMvcUtils.doAuthUnwrappedRequest(
+        MockMvcRequestDto.<Void, CustomResponse<Map<String, Object>>>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users")
+            .httpMethod(HttpMethod.GET)
+            .params(params(Map.of("userPublicID", user.getPublicUserId())))
+            .clientDto(TestClientDto.fromEntity(viewer))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+
+    // then
+    assertThat(result).containsEntry("publicUserId", user.getPublicUserId());
+    assertThat(result).doesNotContainKeys("userEmail", "gender", "birth", "role");
   }
 
   @Test
@@ -194,6 +219,30 @@ public class UserControllerTest {
     assertThat(response.getName()).isEqualTo(targetUser.getName());
     assertThat(response.getIntroduce()).isEqualTo(targetUser.getIntroduce());
     assertThat(response.getPublicUserId()).isEqualTo(targetUser.getPublicUserId());
+    assertThat(response.getRole()).isEqualTo(UserRole.USER);
+  }
+
+  @Test
+  @DisplayName("관리자 계정으로 현재 사용자 정보 조회 시 ADMIN 권한을 함께 반환한다")
+  void retrieveCurrentUser_returnsAdminRole() throws Exception {
+    // given
+    User admin = userRepository.saveAndFlush(
+        UserFixture.user(UUID.randomUUID() + "@test.com", UserRole.ADMIN));
+    // when
+    UserResponseDto response = mockMvcUtils.doAuthRequest(
+        MockMvcRequestDto.<Void, UserResponseDto>builder()
+            .mockMvc(mockMvc)
+            .path("/api/users/me")
+            .httpMethod(HttpMethod.GET)
+            .clientDto(TestClientDto.fromEntity(admin))
+            .statusCode(200)
+            .responseType(new TypeReference<>() {
+            })
+            .build()
+    );
+    // then
+    assertThat(response.getPublicUserId()).isEqualTo(admin.getPublicUserId());
+    assertThat(response.getRole()).isEqualTo(UserRole.ADMIN);
   }
 
   @Test
