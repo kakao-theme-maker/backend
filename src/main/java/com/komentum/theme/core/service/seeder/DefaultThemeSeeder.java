@@ -16,6 +16,7 @@ import com.komentum.designcomponent.service.PlatformColorStyleService;
 import com.komentum.designcomponent.service.PlatformComponentTypeService;
 import com.komentum.global.utils.FileManager;
 import com.komentum.global.utils.JsonUtils;
+import com.komentum.global.utils.RegexValidator;
 import com.komentum.theme.android.utils.ThemePathManager;
 import com.komentum.theme.android.utils.XmlEditor;
 import com.komentum.theme.core.domain.ThemeComponent;
@@ -98,6 +99,7 @@ public class DefaultThemeSeeder {
     private final String resourceGroup;
     private final String resourceName;
     private final String color;
+    private final int alpha;
   }
 
   @Getter
@@ -305,11 +307,17 @@ public class DefaultThemeSeeder {
           .themeComponent(theme)
           .colorStyle(colorStyle)
           .color(colorResourceInfo.color)
+          .alpha(colorResourceInfo.alpha)
           .build());
     }
     themeStyleRepository.saveAll(themeStyles);
   }
 
+  /**
+   * Android 색상 리소스를 읽어 RGB와 백분율 불투명도로 분리한다.
+   *
+   * @throws IllegalArgumentException 지원하지 않는 색상 형식이 포함된 경우
+   */
   private List<ColorResourceInfo> readColorSheet(Path colorSheetPath) {
     String resourceGroup = "color";
     Document document = xmlEditor.loadDocument(colorSheetPath.toAbsolutePath().toString());
@@ -317,10 +325,19 @@ public class DefaultThemeSeeder {
     List<ColorResourceInfo> colorResourceInfoList = new ArrayList<>();
     for (int i = 0; i < colors.getLength(); i++) {
       Element colorElement = (Element) colors.item(i);
-      String colorCode = colorElement.getTextContent();
+      String colorCode = colorElement.getTextContent().strip();
       String resourceName = colorElement.getAttribute("name");
+      if (!RegexValidator.isValidHexColor(colorCode)) {
+        throw new IllegalArgumentException("Invalid default theme color: " + resourceName);
+      }
+      String hex = colorCode.startsWith("#") ? colorCode.substring(1) : colorCode;
+      boolean hasAlpha = hex.length() == 8;
+      String rgb = hasAlpha ? hex.substring(2) : hex;
+      int alpha = hasAlpha ? Math.round(Integer.parseInt(hex.substring(0, 2), 16) * 100 / 255f)
+          : 100;
       colorResourceInfoList.add(ColorResourceInfo.builder()
-          .color(colorCode)
+          .color("#" + rgb)
+          .alpha(alpha)
           .resourceGroup(resourceGroup)
           .resourceName(resourceName)
           .build());

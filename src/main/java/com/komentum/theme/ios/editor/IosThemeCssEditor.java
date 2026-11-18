@@ -62,10 +62,10 @@ public class IosThemeCssEditor {
   }
 
   /**
-   * iOS 테마 내 말풍선들의 inset을 수정한다
+   * iOS 테마 내 말풍선들의 inset을 수정한다. inset이 없으면 템플릿에 정의된 값을 유지한다.
    * @param workDir iOS 테마 루트 디렉토리
    * @param bubbles 말풍선 이미지 목록
-   * @throws IllegalArgumentException 말풍선 이미지가 아니거나 말풍선인데 inset 정보가 없는 경우
+   * @throws IllegalArgumentException 말풍선 이미지가 아니거나 전달된 inset 값이 일부 누락된 경우
    * */
   public void editBubbleInset(Path workDir, List<ThemeImage> bubbles) throws IOException {
     Path cssPath = IosThemePathManager.getCssPath(workDir);
@@ -77,7 +77,10 @@ public class IosThemeCssEditor {
         throw new IllegalArgumentException(
             "[IosThemeCssEditor] themeImage is not bubble : " + typeCode);
       }
-      if (bubble.getImageInset() == null || !bubble.getImageInset().hasAllValue()) {
+      if (bubble.getImageInset() == null) {
+        continue;
+      }
+      if (!bubble.getImageInset().hasAllValue()) {
         throw new IllegalArgumentException(
             "[IosThemeCssEditor] invalid image bubble inset");
       }

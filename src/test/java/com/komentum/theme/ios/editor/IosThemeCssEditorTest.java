@@ -402,9 +402,72 @@ class IosThemeCssEditorTest {
     assertThat(resultCss).contains("-ios-group-title-edgeinsets: 50px 50px 50px 50px;");
   }
 
+  /**
+   * inset이 없는 말풍선은 실제 템플릿의 CSS를 그대로 사용하는지 검증한다.
+   */
   @Test
-  @DisplayName("메서드의 파라미터 내에는 말풍선 이미지만 허용되고 inset 정보가 있어야한다")
-  void editBubbleInset_whenImage() throws Exception {
+  @DisplayName("말풍선 inset이 없으면 템플릿 CSS 전체를 유지한다")
+  void editBubbleInset_keepsTemplateWhenInsetIsMissing() throws Exception {
+    new IosThemeTemplateExtractor().extractTemplate(tempDir);
+    Path cssPath = tempDir.resolve("KakaoTalkTheme.css");
+    byte[] originalCss = Files.readAllBytes(cssPath);
+    ThemeImage bubble = ThemeImage.builder()
+        .componentType(ComponentType.builder()
+            .typeCode(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
+            .build())
+        .build();
+
+    editor.editBubbleInset(tempDir, List.of(bubble));
+
+    assertThat(Files.readAllBytes(cssPath)).isEqualTo(originalCss);
+  }
+
+  /**
+   * inset 누락 항목과 정상 항목이 함께 있으면 정상 항목의 속성만 수정하는지 검증한다.
+   */
+  @Test
+  @DisplayName("inset이 없는 말풍선은 유지하고 정상 inset이 있는 말풍선만 수정한다")
+  void editBubbleInset_updatesOnlyBubblesWithInset() throws Exception {
+    String css = """
+        MessageCellStyle-Send
+        {
+            -ios-background-image: 'first.png' 10px 10px;
+            -ios-selected-background-image: 'first-selected.png' 10px 10px;
+            -ios-title-edgeinsets: 10px 10px 10px 10px;
+            -ios-group-background-image: 'group.png' 10px 10px;
+            -ios-group-selected-background-image: 'group-selected.png' 10px 10px;
+            -ios-group-title-edgeinsets: 10px 10px 10px 10px;
+        }
+        """;
+    Path cssPath = tempDir.resolve("KakaoTalkTheme.css");
+    Files.writeString(cssPath, css, StandardCharsets.UTF_8);
+    ThemeImage firstBubble = ThemeImage.builder()
+        .componentType(ComponentType.builder()
+            .typeCode(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
+            .build())
+        .build();
+    ThemeImage groupBubble = ThemeImage.builder()
+        .componentType(ComponentType.builder()
+            .typeCode(TypeCode.MESSAGE_CELL_STYLE_SEND_GROUP_BACKGROUND_IMAGE)
+            .build())
+        .imageInset(new ImageInset(20, 30, 4, 5, 6, 7))
+        .build();
+
+    editor.editBubbleInset(tempDir, List.of(firstBubble, groupBubble));
+
+    assertThat(Files.readString(cssPath, StandardCharsets.UTF_8)).isEqualTo(css
+        .replace("'group.png' 10px 10px", "'group.png' 20px 30px")
+        .replace("'group-selected.png' 10px 10px", "'group-selected.png' 20px 30px")
+        .replace("-ios-group-title-edgeinsets: 10px 10px 10px 10px;",
+            "-ios-group-title-edgeinsets: 4px 5px 6px 7px;"));
+  }
+
+  /**
+   * 잘못된 이미지 타입과 일부 값이 빠진 inset을 계속 거부하는지 검증한다.
+   */
+  @Test
+  @DisplayName("말풍선이 아니거나 inset 값이 일부 누락되면 예외가 발생한다")
+  void editBubbleInset_rejectsInvalidTypeOrIncompleteInset() throws Exception {
     // given
     String css = """
         MessageCellStyle-Send
@@ -423,15 +486,19 @@ class IosThemeCssEditorTest {
             .typeCode(TypeCode.MAINVIEW_STYLE_PRIMARY_BACKGROUND_IMAGE)
             .build())
         .build();
-    ThemeImage bubbleImageWithoutInset = ThemeImage.builder()
+    ThemeImage bubbleImageWithIncompleteInset = ThemeImage.builder()
         .componentType(ComponentType.builder()
             .typeCode(TypeCode.MESSAGE_CELL_STYLE_SEND_BACKGROUND_IMAGE)
             .build())
+        .imageInset(new ImageInset(50, null, 10, 10, 10, 10))
         .build();
     // when & then
     assertThatThrownBy(() -> editor.editBubbleInset(tempDir, List.of(invalidBubbleImage)))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> editor.editBubbleInset(tempDir, List.of(bubbleImageWithoutInset)))
-        .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("themeImage is not bubble");
+    assertThatThrownBy(() -> editor.editBubbleInset(tempDir,
+        List.of(bubbleImageWithIncompleteInset)))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("invalid image bubble inset");
   }
 }
