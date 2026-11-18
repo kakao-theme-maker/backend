@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "사용자 정보 조회 응답 DTO")
+@Schema(description = "본인 정보 조회 응답 DTO")
 public class UserResponseDto {
 
   @Schema(description = "사용자 이메일", example = "test@test.com")
