@@ -19,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,26 +42,31 @@ public class DevDataGenerator {
   private final PlatformColorStyleSeeder platformColorStyleSeeder;
   private final DefaultThemeSeeder defaultThemeSeeder;
 
+  @Value("${app.seed.sample-data-enabled:true}")
+  private boolean sampleDataGenerationEnabled;
+
   @PostConstruct
   @Transactional
   public void init() {
-    List<User> users = new ArrayList<>(userSeeder.seedData(10));
     User rootUser = userSeeder.createOrRetrieveRootUser();
-    users.add(rootUser); // 11
     // seed component type, color style, platform component type, platform color style
     componentTypeSeeder.upsertComponentType();
     colorStyleSeeder.upsertColorStyleSeed();
     platformComponentTypeSeeder.upsertPlatformComponentType();
     platformColorStyleSeeder.upsertPlatformColorStyle();
-    List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
-        users); // 110
-    List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users,
-        designComponents); // 110
-    // seed theme board, design board, comment, prefer
-    themeBoardSeeder.seedData(themeComponents.subList(0, 90)); //
-    designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
-    commentSeeder.seedPerPost(5, users); // 550
-    preferSeeder.seedPerPost(5, users, 0.5); // 550
+    if (sampleDataGenerationEnabled) {
+      List<User> users = new ArrayList<>(userSeeder.seedData(10));
+      users.add(rootUser); // 11
+      List<DesignComponent> designComponents = designComponentSeeder.seedPeruser(10,
+          users); // 110
+      List<ThemeComponent> themeComponents = themeComponentSeeder.seedPerUser(10, users,
+          designComponents); // 110
+      // seed theme board, design board, comment, prefer
+      themeBoardSeeder.seedData(themeComponents.subList(0, 90)); //
+      designBoardSeeder.seedData(designComponents.subList(0, 90)); // 100
+      commentSeeder.seedPerPost(5, users); // 550
+      preferSeeder.seedPerPost(5, users, 0.5); // 550
+    }
     // seed default theme
     defaultThemeSeeder.seedDefaultThemes(rootUser.getPublicUserId());
   }
