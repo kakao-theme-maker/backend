@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,6 +42,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
@@ -60,6 +63,7 @@ public class UserPostControllerTest {
 
   private static final String PREVIEW_IMAGE_URL = "http://mocked-url/user-post-preview.png";
   private static final String PREVIEW_IMAGE_NAME = "user-post-preview.png";
+  private static final String PUBLIC_UPLOAD_POSTS_PATH = "/api/users/{publicUserId}/upload-posts";
   private static final List<String> USER_POST_PATHS = List.of(
       "/api/users/me/upload-posts",
       "/api/users/me/bookmarked-posts",
@@ -105,6 +109,7 @@ public class UserPostControllerTest {
   private ComponentTypeRepository componentTypeRepository;
 
   private User client;
+  private User otherAuthor;
   private Post customCategoryOnlyPost;
   private PostScenarioSupport.Result postResult;
   private Map<Long, Post> postById;
@@ -125,6 +130,7 @@ public class UserPostControllerTest {
         .build()
         .users();
     client = users.get(0);
+    otherAuthor = users.get(1);
 
     List<DesignComponent> designComponents = designComponentScenarioSupport.builder(users)
         .withCountPerUser(2)
@@ -166,6 +172,77 @@ public class UserPostControllerTest {
         expectedUploadedPostIds(PostType.THEME_BOARD),
         expectedUploadedPostIds(PostType.DESIGN_BOARD)
     );
+  }
+
+  /** 지정한 작성자의 게시글 조회와 테마 게시글의 최신순 페이지 이동을 검증한다. */
+  @Test
+  @DisplayName("다른 사용자의 게시글을 조회하고 테마 게시글만 최신순으로 페이지 조회한다")
+  void publicUserPostList_filtersAndPaginatesOtherAuthorsPosts() throws Exception {
+    String path = publicUploadPostsPath(otherAuthor);
+    List<Long> allPosts = expectedUploadedPostIds(otherAuthor, null);
+    assertUserPostListResponse(readUserPosts(performGet(path + "?page=0", null, 2)),
+        allPosts.subList(0, 2));
+
+    List<Long> themePosts = expectedUploadedPostIds(otherAuthor, PostType.THEME_BOARD);
+    assertThat(readUserPosts(performGet(path + "?page=1", PostType.THEME_BOARD, 1)))
+        .extracting(UserPostListResponseDto::getPostId)
+        .containsExactly(themePosts.get(1));
+  }
+
+  /** 좋아요와 북마크가 인증된 조회자에게만 반영되는지 검증한다. */
+  @Test
+  @DisplayName("공개 목록에서 좋아요와 북마크는 조회자 기준이며 비로그인 요청에는 false다")
+  void publicUserPostList_usesViewerForInteractionFlags() throws Exception {
+    Long postId = expectedUploadedPostIds(otherAuthor, PostType.DESIGN_BOARD).get(0);
+    Category bookmark = categoryRepository.findByCategoryTypeAndOwner(CategoryType.BOOKMARK, client)
+        .orElseThrow();
+    categoryPostRepository.save(CategoryPost.builder()
+        .category(bookmark)
+        .post(postById.get(postId))
+        .build());
+
+    String path = publicUploadPostsPath(otherAuthor);
+    MockHttpServletRequestBuilder authenticatedRequest = get(path)
+        .queryParam("postType", PostType.DESIGN_BOARD.name());
+    mockMvc.perform(mockMvcUtils.addAuthentication(authenticatedRequest,
+            TestClientDto.fromEntity(client)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].postId").value(postId))
+        .andExpect(jsonPath("$[0].preferred").value(true))
+        .andExpect(jsonPath("$[0].bookmarked").value(true));
+
+    mockMvc.perform(get(path).queryParam("postType", PostType.DESIGN_BOARD.name()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].postId").value(postId))
+        .andExpect(jsonPath("$[0].preferred").value(false))
+        .andExpect(jsonPath("$[0].bookmarked").value(false));
+
+    mockMvc.perform(get("/api/users/me/upload-posts").queryParam("size", "1"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  /** 작성한 게시글이 없는 사용자와 등록되지 않은 사용자를 구분하는지 검증한다. */
+  @Test
+  @DisplayName("게시글이 없는 사용자는 빈 배열을 반환하고 등록되지 않은 사용자는 404를 반환한다")
+  void publicUserPostList_distinguishesEmptyAndMissingAuthor() throws Exception {
+    User emptyAuthor = userScenarioSupport.builder().withUsers(1).build().getFirstUser();
+
+    mockMvc.perform(get(publicUploadPostsPath(emptyAuthor)))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+    mockMvc.perform(get(PUBLIC_UPLOAD_POSTS_PATH, UUID.randomUUID()))
+        .andExpect(status().isNotFound());
+  }
+
+  /** 잘못된 사용자 ID와 게시글 종류를 거부하는지 검증한다. */
+  @Test
+  @DisplayName("잘못된 공개 ID 또는 postType으로 조회하면 400을 반환한다")
+  void publicUserPostList_rejectsInvalidFilters() throws Exception {
+    mockMvc.perform(get(PUBLIC_UPLOAD_POSTS_PATH, "not-a-uuid"))
+        .andExpect(status().isBadRequest());
+    mockMvc.perform(get(publicUploadPostsPath(otherAuthor)).queryParam("postType", "INVALID"))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -274,13 +351,20 @@ public class UserPostControllerTest {
         default -> expectedPreferredPostIds(PostType.THEME_BOARD);
       };
       assertUserPostListResponse(requestUserPosts(path, null), expectedThemePostIds);
-      MvcResult result = performGet(path, null, 1);
-      List<UserPostListResponseDto> firstPage = objectMapper.readValue(
-          result.getResponse().getContentAsString(), new TypeReference<>() {
-          });
+      List<UserPostListResponseDto> firstPage = readUserPosts(performGet(path, null, 1));
       assertThat(firstPage).extracting(UserPostListResponseDto::getPostId)
           .containsExactly(expectedThemePostIds.get(0));
     }
+
+    List<UserPostListResponseDto> publicFirstPage = readUserPosts(
+        performGet(publicUploadPostsPath(client), null, 1));
+    assertThat(publicFirstPage).extracting(UserPostListResponseDto::getPostId)
+        .containsExactly(expectedUploadedPostIds(PostType.THEME_BOARD).get(0));
+  }
+
+  /** 작성자의 공개 ID가 포함된 게시글 목록 경로를 반환한다. */
+  private String publicUploadPostsPath(User author) {
+    return PUBLIC_UPLOAD_POSTS_PATH.replace("{publicUserId}", author.getPublicUserId());
   }
 
   private void assertEndpointFilters(String path, List<Long> allPostIds, List<Long> themePostIds,
@@ -317,7 +401,11 @@ public class UserPostControllerTest {
 
   private List<UserPostListResponseDto> requestUserPosts(String path, PostType postType)
       throws Exception {
-    MvcResult result = performGet(path, postType);
+    return readUserPosts(performGet(path, postType));
+  }
+
+  /** 게시글 목록 응답을 DTO 목록으로 역직렬화한다. */
+  private List<UserPostListResponseDto> readUserPosts(MvcResult result) throws Exception {
     return objectMapper.readValue(
         result.getResponse().getContentAsString(),
         new TypeReference<>() {
@@ -341,8 +429,13 @@ public class UserPostControllerTest {
   }
 
   private List<Long> expectedUploadedPostIds(PostType postType) {
+    return expectedUploadedPostIds(client, postType);
+  }
+
+  /** 작성자와 게시글 종류를 기준으로 기대하는 게시글 ID를 정렬해 반환한다. */
+  private List<Long> expectedUploadedPostIds(User author, PostType postType) {
     return orderedPostIds(postResult.posts().stream()
-        .filter(post -> post.getUser().getUserId().equals(client.getUserId()))
+        .filter(post -> post.getUser().getUserId().equals(author.getUserId()))
         .toList(), postType);
   }
 
