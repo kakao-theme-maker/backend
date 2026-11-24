@@ -113,13 +113,15 @@ public class PostService {
   }
 
   /**
-   * 특정 사용자의 게시글 목록 반환
+   * 작성자의 게시글을 조회자 기준으로 반환한다.
    *
+   * @param author 게시글 작성자
+   * @param viewer 조회자 (비로그인 요청이면 null)
    */
   @Transactional(readOnly = true)
-  public List<PostQuery.UserPostListRow> findUserPostList(User user, PostType postType,
+  public List<PostQuery.UserPostListRow> findAuthoredPosts(User author, User viewer, PostType postType,
       Pageable pageable) {
-    return postRepositorySupport.findMyPostsByUser(user, postType, pageable);
+    return postRepositorySupport.findAuthoredPosts(author, viewer, postType, pageable);
   }
 
   // 업로드 수 count 반환 메서드

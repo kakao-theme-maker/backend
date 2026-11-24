@@ -143,18 +143,21 @@ public class PostRepositorySupport {
   }
 
   /**
-   * 사용자가 소유한 게시글을 최신순으로 페이징한다.
+   * 작성자의 게시글을 최신순으로 페이징하고 조회자의 좋아요와 북마크 여부를 조회한다.
    * 활성 에셋이 없는 디자인 게시글은 페이징 전에 제외하고 테마 게시글은 유지한다.
+   *
+   * @param author 게시글 작성자
+   * @param viewer 조회자 (비로그인 요청이면 null)
    */
-  public List<PostQuery.UserPostListRow> findMyPostsByUser(User client, PostType postType,
+  public List<PostQuery.UserPostListRow> findAuthoredPosts(User author, User viewer, PostType postType,
       Pageable pageable) {
     QPost post = QPost.post;
     QUser user = QUser.user;
-    return queryFactory.select(userPostListProjection(post, user, client))
+    return queryFactory.select(userPostListProjection(post, user, viewer))
         .from(post)
         .join(post.user, user)
         .where(
-            post.user.eq(client),
+            post.user.eq(author),
             postTypeEq(post, postType),
             PostPredicate.visibleDesignPost(post)
         )
