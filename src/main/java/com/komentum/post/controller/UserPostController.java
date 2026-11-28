@@ -7,7 +7,12 @@ import com.komentum.post.facade.PostManagementFacade;
 import com.komentum.post.service.PostService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +20,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,8 +45,40 @@ public class UserPostController {
       @AuthenticationPrincipal CustomUserDetails userDetails,
       @RequestParam(name = "postType", required = false) PostType postType,
       @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
+    String publicUserId = userDetails.getPublicUserId();
     return ResponseEntity.ok(
-        postManagementFacade.findMyPostsByUser(userDetails.getUsername(), postType, pageable));
+        postManagementFacade.findAuthoredPosts(publicUserId, publicUserId, postType, pageable));
+  }
+
+  /**
+   * 공개 ID로 지정한 사용자의 게시글을 반환하고 조회자의 좋아요와 북마크 여부를 표시한다.
+   *
+   * @param publicUserId 게시글 작성자의 공개 ID
+   * @param userDetails 인증된 조회자 정보 (비로그인 요청이면 null)
+   */
+  @GetMapping("/{publicUserId}/upload-posts")
+  @Operation(
+      summary = "특정 사용자가 작성한 테마·디자인 에셋 게시글을 조회한다",
+      description = "최신순으로 조회합니다. 활성 에셋이 없는 디자인 게시글은 제외합니다. "
+          + "비로그인 조회에서는 좋아요와 북마크 여부가 모두 false입니다.",
+      parameters = {
+          @Parameter(name = "page", in = ParameterIn.QUERY, description = "페이지 번호 (0부터 시작)",
+              schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")),
+          @Parameter(name = "size", in = ParameterIn.QUERY, description = "페이지당 게시글 수",
+              schema = @Schema(type = "integer", defaultValue = "20", minimum = "1"))
+      })
+  @ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공")
+  @ApiResponse(responseCode = "400", description = "잘못된 공개 ID 또는 게시글 유형")
+  @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자")
+  public ResponseEntity<List<UserPostListResponseDto>> findAuthoredPosts(
+      @PathVariable("publicUserId") UUID publicUserId,
+      @AuthenticationPrincipal CustomUserDetails userDetails,
+      @Parameter(description = "게시글 유형 (생략하면 전체 조회)")
+      @RequestParam(name = "postType", required = false) PostType postType,
+      @PageableDefault(size = 20) @Parameter(hidden = true) Pageable pageable) {
+    String viewerPublicUserId = userDetails == null ? null : userDetails.getPublicUserId();
+    return ResponseEntity.ok(postManagementFacade.findAuthoredPosts(publicUserId.toString(),
+        viewerPublicUserId, postType, pageable));
   }
 
   /**
